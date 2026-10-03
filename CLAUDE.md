@@ -19,3 +19,5 @@
   přes `DJANGO_MIGRATE_ON_START=1`).
 - VPS Centrum v nginx blokuje cesty a subdomény `config|tmp|temp|log|logs|bin|inc` (403) –
   tyto názvy nepoužívat v URL aplikace.
+- E-maily členům: odesílání je do spuštění aplikace vypnuté; pozvánky jen hromadnou ruční
+  akcí admina, nikdy automaticky při založení osoby.

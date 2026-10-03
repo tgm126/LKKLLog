@@ -120,7 +120,7 @@
 
 ### Přihlašování
 
-- Admin založí uživatele → systém mu pošle e-mail s odkazem → uživatel si nastaví heslo.
+- Admin založí uživatele. **Pozvánky (e-mail s odkazem pro nastavení hesla) se neposílají automaticky**, ale hromadně jedním tlačítkem v administraci, až bude aplikace hotová a představená. Do té doby aplikace členům žádné e-maily neposílá (hlavní vypínač odesílání v nastavení).
 - Pak se přihlašuje **e-mailem a heslem** a na svém zařízení **zůstane přihlášený ~6 měsíců** (zaškrtávací „Zapamatovat“). Při startu letadla se tedy nic nevyplňuje.
 - Zapomenuté heslo: odkaz e-mailem.
 - Používáme klasickou **session cookie** (server si pamatuje přihlášení a prohlížeč nosí jen náhodný identifikátor), ne JWT tokeny. Je to jednodušší a bezpečnější, protože frontend i backend běží na stejné doméně.
