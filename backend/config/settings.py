@@ -68,8 +68,23 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
-# Sestavený React frontend (frontend/dist). V Docker image leží v /srv/lkkllog/frontend_dist.
-FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST", BASE_DIR.parent / "frontend" / "dist"))
+
+# Sestavený React frontend: v Docker image vedle backendu (frontend_dist), při vývoji
+# frontend/dist. Proměnná FRONTEND_DIST se použije, jen pokud složka opravdu existuje
+# (VPS Centrum si pamatuje proměnné ze starších verzí image).
+def najdi_frontend() -> Path:
+    kandidati = [
+        Path(os.environ["FRONTEND_DIST"]) if os.environ.get("FRONTEND_DIST") else None,
+        BASE_DIR / "frontend_dist",
+        BASE_DIR.parent / "frontend" / "dist",
+    ]
+    for cesta in kandidati:
+        if cesta and (cesta / "index.html").exists():
+            return cesta
+    return BASE_DIR.parent / "frontend" / "dist"
+
+
+FRONTEND_DIST = najdi_frontend()
 
 TEMPLATES = [
     {

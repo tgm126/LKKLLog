@@ -16,8 +16,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
-    PATH=/opt/venv/bin:$PATH \
-    FRONTEND_DIST=/srv/lkkllog/frontend_dist
+    PATH=/opt/venv/bin:$PATH
 
 # Ne /app: tam VPS Centrum připojuje složku s nahraným zdrojovým kódem.
 WORKDIR /srv/lkkllog
