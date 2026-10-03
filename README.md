@@ -1,7 +1,7 @@
 # LKKL Log
 
 Evidence letů aeroklubu LKKL: start a přistání z mobilu, přehled dne, opravy s historií,
-výpisy a exporty pro účetnictví. Poběží na `https://log.lkkl.cz`.
+výpisy a exporty pro účetnictví. Poběží na `https://lety.lkkl.cz`.
 
 Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md)
 

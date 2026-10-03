@@ -42,7 +42,7 @@
 | Server | `one12.vas-server.cz`, Debian 13 (trixie), 4 GB RAM, 20 GB disk | Pro desítky uživatelů výkonově stačí. |
 | Disk | 65 % obsazeno, volných ~7 GB | Stačí. Staré Docker image se musí pravidelně mazat (nasazovací skript to bude dělat sám). |
 | Paměť | Při měření obsazeno ~89 % (3,7 z 4 GB) | **Je potřeba ověřit.** Může jít jen o cache systému (nevadí), nebo o skutečně plnou paměť (vadí). Aplikace i s databází potřebuje cca 300–500 MB. |
-| Subdoména `log.lkkl.cz` | ve VPS Centru neexistuje. V DNS je ale záznam `*.lkkl.cz`, takže adresa už vede na server. | Ve VPS Centru se založí v etapě 0. DNS záznam není potřeba. |
+| Subdoména `lety.lkkl.cz` | ve VPS Centru neexistuje. V DNS je ale záznam `*.lkkl.cz`, takže adresa už vede na server. | Ve VPS Centru se založí v etapě 0. DNS záznam není potřeba. |
 | DNS `lkkl.cz` | spravuje Váš Hosting, provoz jde přes **Cloudflare proxy** (prostředník, který chrání web a zrychluje ho) | Funguje to. Aplikace musí brát skutečnou IP adresu uživatele z hlavičky od Cloudflare, jinak by omezení pokusů o přihlášení blokovalo všechny najednou. |
 | Schránka `info@lkkl.cz` | neexistuje. Doména nemá MX záznam (adresu poštovního serveru) a SPF `v=spf1 -all` spolu s DMARC `p=reject` říkají, že **z `lkkl.cz` se nesmí odesílat žádná pošta**. | Založí se ve VPS Centru. Pak je potřeba upravit DNS: přidat MX, povolit server v SPF a přidat DKIM (elektronický podpis pošty). Jinak budou e-maily z aplikace odmítnuty. |
 | Databáze | neexistuje | **Ve VPS Centru se zakládat nebude.** PostgreSQL poběží v Dockeru spolu s aplikací. |
@@ -51,7 +51,7 @@
 
 ## 1. Jak aplikace funguje jako celek
 
-**Jedna webová aplikace** na adrese `https://log.lkkl.cz`. Otevírá se v prohlížeči na mobilu, tabletu i počítači a vzhled se přizpůsobí velikosti displeje. Na mobilu se dá „nainstalovat“ na plochu jako ikona. Technicky jde o tzv. **PWA** (Progressive Web App, tedy webovou stránku, která se chová jako aplikace a nepotřebuje App Store).
+**Jedna webová aplikace** na adrese `https://lety.lkkl.cz`. Otevírá se v prohlížeči na mobilu, tabletu i počítači a vzhled se přizpůsobí velikosti displeje. Na mobilu se dá „nainstalovat“ na plochu jako ikona. Technicky jde o tzv. **PWA** (Progressive Web App, tedy webovou stránku, která se chová jako aplikace a nepotřebuje App Store).
 
 ```
  Mobil / tablet / PC / TV na věži
@@ -512,7 +512,7 @@ Smazané staré image nevadí ani při návratu k minulé verzi, protože všech
 ### 7.4 Co je potřeba ověřit nebo připravit
 - **Docker ve VPS Centru se ovládá klikáním.** V etapě 0 je potřeba zjistit, jestli VPS Centrum:
   - umí spustit sestavu podle `docker-compose.yml` (aplikace + databáze), nebo jen jednotlivé kontejnery;
-  - napojí subdoménu `log.lkkl.cz` (nginx + certifikát) na port kontejneru;
+  - napojí subdoménu `lety.lkkl.cz` (nginx + certifikát) na port kontejneru;
   - snese, že kontejnery aktualizuje automat přes SSH (`docker compose pull && up -d`), aniž by se to tlouklo s jeho vlastní správou.
 
   **Nejpravděpodobnější řešení:** VPS Centrum použijeme na subdoménu, certifikát a předání požadavků na port. Kontejnery bude spravovat Docker Compose z GitHub Actions. Pokud by to nešlo, přizpůsobíme nasazování tomu, co VPS Centrum umí.
@@ -523,7 +523,7 @@ Smazané staré image nevadí ani při návratu k minulé verzi, protože všech
 ### 7.5 Pracovní postup
 - Větev `main` = to, co běží na serveru.
 - Každá změna vzniká ve vlastní větvi a do `main` se dostane přes Pull Request se zelenými testy. S přípravou změn i Pull Requestů vám budu pomáhat.
-- Později lze přidat **testovací prostředí** (`test.log.lkkl.cz`), pokud to paměť serveru dovolí.
+- Později lze přidat **testovací prostředí** (`test.lety.lkkl.cz`), pokud to paměť serveru dovolí.
 
 ---
 
@@ -554,7 +554,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 
 | # | Etapa | Výsledek |
 |---|---|---|
-| 0 | **Kostra a nasazení:** GitHub repozitář, Docker Compose lokálně (Docker Desktop na Windows), prázdná Django aplikace s vlastní tabulkou uživatelů, PostgreSQL. Subdoména `log.lkkl.cz`, HTTPS, **GitHub Actions až po nasazení**. | Stránka „Ahoj“ běží na serveru a každá změna se nasadí sama. |
+| 0 | **Kostra a nasazení:** GitHub repozitář, Docker Compose lokálně (Docker Desktop na Windows), prázdná Django aplikace s vlastní tabulkou uživatelů, PostgreSQL. Subdoména `lety.lkkl.cz`, HTTPS, **GitHub Actions až po nasazení**. | Stránka „Ahoj“ běží na serveru a každá změna se nasadí sama. |
 | 1 | **Datový model a číselníky:** tabulky, Django administrace, úvodní načtení (osoby, letadla, letiště, úlohy) | Admin spravuje číselníky v prohlížeči. |
 | 2 | **Přihlášení a role:** schránka `info@lkkl.cz`, e-mail s nastavením hesla, role | Lidé se přihlásí. |
 | 3 | **Jádro: Přehled dne, Nový let (normální a výcvik), Vzlet, Přistání** (React), autorefresh | **První použitelná verze (MVP).** |
