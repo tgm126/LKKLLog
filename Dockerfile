@@ -17,13 +17,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
-    FRONTEND_DIST=/app/frontend_dist
+    FRONTEND_DIST=/srv/lkkllog/frontend_dist
 
-WORKDIR /app
+# Ne /app: tam VPS Centrum připojuje složku s nahraným zdrojovým kódem.
+WORKDIR /srv/lkkllog
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev
 COPY backend/ ./
-COPY --from=frontend /frontend/dist /app/frontend_dist
+COPY --from=frontend /frontend/dist /srv/lkkllog/frontend_dist
 RUN DJANGO_SECRET_KEY=build-only python manage.py collectstatic --noinput
 
 ARG APP_VERSION=dev
@@ -36,6 +37,6 @@ ENV HOME=/tmp
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
-ENTRYPOINT ["sh", "docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "/srv/lkkllog/docker-entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", \
      "--access-logfile", "-"]

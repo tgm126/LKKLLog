@@ -68,7 +68,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
-# Sestavený React frontend (frontend/dist). V Docker image leží v /app/frontend_dist.
+# Sestavený React frontend (frontend/dist). V Docker image leží v /srv/lkkllog/frontend_dist.
 FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST", BASE_DIR.parent / "frontend" / "dist"))
 
 TEMPLATES = [
