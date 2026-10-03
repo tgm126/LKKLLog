@@ -3,13 +3,13 @@
 Evidence letů aeroklubu LKKL: start a přistání z mobilu, přehled dne, opravy s historií,
 výpisy a exporty pro účetnictví. Poběží na `https://lety.lkkl.cz`.
 
-Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md)
+Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na serveru: [docs/provoz.md](docs/provoz.md)
 
 ## Stav
 
 | Etapa | Obsah | Stav |
 |---|---|---|
-| 0 | Kostra, Docker, CI | lokálně hotovo, chybí nasazení na server |
+| 0 | Kostra, Docker, CI, nasazení na server | hotovo |
 | 1 | Datový model, administrace, import číselníků | hotovo |
 | 2 | Přihlášení a role | – |
 | 3 | Přehled dne, nový let, vzlet, přistání | – |
@@ -24,9 +24,9 @@ backend/    Django (Python 3.14, uv) – API, administrace, databázový model
   tests/      testy (pytest, běží proti PostgreSQL)
 frontend/   React + TypeScript + Vite + Mantine
 docs/       návrh aplikace
-compose.yaml       provoz (server): aplikace + databáze
+compose.yaml       zkouška celé aplikace lokálně: aplikace + databáze
 compose.dev.yaml   vývoj: jen databáze
-Dockerfile         jeden image: sestavený frontend + backend
+Dockerfile         jeden image: sestavený frontend + backend (podle něj staví i VPS Centrum)
 ```
 
 ## Lokální vývoj

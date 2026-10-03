@@ -451,6 +451,11 @@ Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požada
 
 ## 7. Vývoj a automatické nasazování
 
+> **Aktualizace (4. 10. 2026):** nakonec aplikace běží jako **Docker aplikace ve VPS Centru**.
+> VPS Centrum zajišťuje proxy, HTTPS, databázi (PostgreSQL serveru, zálohovanou hostingem)
+> i sestavení image. GitHub po testech pošle kód do gitu VPS Centra. Popis: [provoz.md](provoz.md).
+> Následující kapitola je původní návrh (GHCR + SSH) a slouží jen pro srovnání.
+
 ### 7.1 Jak to bude fungovat
 
 ```
