@@ -1,0 +1,154 @@
+"""Nastavení Django projektu LKKL Log.
+
+Vše, co se liší mezi počítačem vývojáře a serverem (hesla, adresy), se čte
+z proměnných prostředí. Na serveru je dodá soubor `.env`, lokálně
+`backend/.env` (vzor je v `.env.example`).
+"""
+
+import os
+from pathlib import Path
+
+import dj_database_url
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    return os.environ.get(name, str(default)).lower() in ("1", "true", "yes", "ano")
+
+
+def env_list(name: str, default: str = "") -> list[str]:
+    return [v.strip() for v in os.environ.get(name, default).split(",") if v.strip()]
+
+
+# Lokálně se proměnné načtou z backend/.env (na serveru je předá Docker Compose).
+_env_file = BASE_DIR / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _key, _value = _line.split("=", 1)
+            os.environ.setdefault(_key.strip(), _value.strip())
+
+DEBUG = env_bool("DJANGO_DEBUG")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise RuntimeError("Chybí DJANGO_SECRET_KEY (viz .env.example).")
+    SECRET_KEY = "dev-only-insecure-key"
+
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+APP_VERSION = os.environ.get("APP_VERSION", "dev")
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.postgres",
+    "osoby",
+    "lety",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+# Sestavený React frontend (frontend/dist). V Docker image leží v /app/frontend_dist.
+FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST", BASE_DIR.parent / "frontend" / "dist"))
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+
+DATABASES = {
+    "default": dj_database_url.config(
+        default="postgres://lkkllog:lkkllog@127.0.0.1:5432/lkkllog",
+        conn_max_age=60,
+        conn_health_checks=True,
+    )
+}
+# Bez časového limitu by se aplikace při nedostupné databázi zasekla.
+DATABASES["default"].setdefault("OPTIONS", {})["connect_timeout"] = 5
+
+# Vlastní tabulka uživatelů – musí být nastavená od první migrace.
+AUTH_USER_MODEL = "osoby.Osoba"
+
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# Přihlášení vydrží na zařízení ~6 měsíců (pilot nic nevyplňuje při startu).
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 180
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+LANGUAGE_CODE = "cs"
+# Vše se ukládá a počítá v UTC (letecký standard).
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+# Soubory frontendu (JS, CSS, ikony) servíruje WhiteNoise přímo z kořene webu.
+WHITENOISE_ROOT = FRONTEND_DIST if FRONTEND_DIST.exists() else None
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Domovské letiště – souřadnice pro výpočet západu slunce a soumraku.
+LETISTE_SOURADNICE = (50.134, 14.087)  # LKKL Kladno – přibližně, ověřit podle AIP
+
+if not DEBUG:
+    # Aplikace běží za nginx (a Cloudflare), které ukončují HTTPS.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+}

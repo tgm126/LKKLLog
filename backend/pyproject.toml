@@ -1,0 +1,83 @@
+[project]
+
+name = "lkkllog"
+
+version = "0.1.0"
+
+description = "LKKL Log – evidence letů aeroklubu"
+
+authors = [
+
+    { name = "tgm126", email = "tomas@mandlik.net" }
+
+]
+
+requires-python = ">=3.14"
+
+dependencies = [
+
+    "argon2-cffi>=25.1.0",
+
+    "astral>=3.2",
+
+    "dj-database-url>=3.1.2",
+
+    "django>=6,<7",
+
+    "django-ninja>=1.7.1",
+
+    "gunicorn>=26.2.0",
+
+    "openpyxl>=3.1.5",
+
+    "psycopg[binary]>=3.3.6",
+
+    "whitenoise>=6.12.0",
+
+]
+
+
+
+[dependency-groups]
+
+dev = [
+
+    "pytest>=9.1.1",
+
+    "pytest-django>=4.14.0",
+
+    "ruff>=0.16.10",
+
+]
+
+
+
+[tool.uv]
+
+package = false
+
+
+
+[tool.pytest.ini_options]
+
+DJANGO_SETTINGS_MODULE = "config.settings"
+
+python_files = ["test_*.py"]
+# STATIC_ROOT vzniká až při collectstatic (v Docker image).
+filterwarnings = ["ignore:No directory at:UserWarning"]
+
+
+
+[tool.ruff]
+
+line-length = 100
+
+target-version = "py314"
+extend-exclude = ["*/migrations/*"]
+
+
+
+[tool.ruff.lint]
+
+select = ["E", "F", "I", "B", "UP", "DJ"]
+
