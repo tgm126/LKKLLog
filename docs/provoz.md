@@ -41,7 +41,17 @@ push do main na GitHubu
 ```bash
 docker ps --filter name=vpsc-app-lkkl-cz-lkkllog
 docker logs --tail 100 vpsc-app-lkkl-cz-lkkllog
-docker exec -it vpsc-app-lkkl-cz-lkkllog python manage.py createsuperuser
+docker exec -it vpsc-app-lkkl-cz-lkkllog python /srv/lkkllog/manage.py createsuperuser
 ```
 
 Logy, restart a proměnné prostředí jsou i v detailu aplikace ve VPS Centru.
+
+> Kontejner startuje v `/app` (připojený zdrojový kód), proto se `manage.py` volá
+> s plnou cestou `/srv/lkkllog/manage.py`. VPS Centrum si navíc pamatuje proměnné
+> prostředí z prvního image – aplikace proto na proměnné z `Dockerfile` nespoléhá.
+
+## Firewall a SSH
+
+SSH je na serveru povolené jen z vybraných zemí (GeoIP). Kvůli nasazování z GitHub
+Actions je povolené i USA. fail2ban banuje IP adresy po několika rychlých spojeních
+za sebou (např. `ssh-keyscan`); odblokování: VPS Centrum → Zabezpečení → fail2ban.
