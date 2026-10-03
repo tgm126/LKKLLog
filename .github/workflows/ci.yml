@@ -1,5 +1,5 @@
 # Testy při každé změně; po sloučení do main se sestaví Docker image a uloží do GHCR.
-# Nasazení na server (deploy) přibude, až bude server připravený.
+# Nasazení na server se zapne proměnnou DEPLOY_ENABLED=true (viz deploy/NAVOD.md).
 name: CI
 
 on:
@@ -83,3 +83,29 @@ jobs:
             ${{ steps.nazev.outputs.image }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      vars.DEPLOY_ENABLED == 'true'
+    needs: [image]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - name: Nasazení na server
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ vars.DEPLOY_HOST }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # Server spustí jen deploy.sh; verzi předáme jako příkaz, token pro GHCR na vstup.
+          printf '%s' "$TOKEN" | ssh lkkllog@"$HOST" "${{ github.sha }}"
