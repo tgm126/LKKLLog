@@ -14,3 +14,8 @@
 - Na Windows v `DATABASE_URL` používat `127.0.0.1`, ne `localhost`.
 - Před commitem: `uv run ruff check . && uv run ruff format --check . && uv run pytest`
   (v `backend/`) a `npm run lint && npm run build` (ve `frontend/`).
+- Server: aplikace běží jako Docker aplikace ve VPS Centru (jeden kontejner z `Dockerfile`,
+  databáze PostgreSQL serveru přes `DB_*` proměnné a unixový socket, migrace při startu
+  přes `DJANGO_MIGRATE_ON_START=1`).
+- VPS Centrum v nginx blokuje cesty a subdomény `config|tmp|temp|log|logs|bin|inc` (403) –
+  tyto názvy nepoužívat v URL aplikace.

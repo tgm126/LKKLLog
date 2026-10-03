@@ -88,8 +88,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+
+def databaze_z_vps_centra() -> dict | None:
+    """Databáze přiřazená ve VPS Centru: přijde jako DB_HOST/DB_USER/DB_NAME/DB_SOCKET.
+
+    Připojení jde přes unixový socket bez hesla (PostgreSQL ověří uživatele podle
+    systémového účtu, pod kterým kontejner běží).
+    """
+    if not os.environ.get("DB_NAME"):
+        return None
+    host = os.environ.get("DB_SOCKET") or os.environ.get("DB_HOST", "")
+    port = ""
+    # DB_SOCKET může být cesta k souboru socketu (…/.s.PGSQL.5432) – psycopg chce složku.
+    if "/.s.PGSQL." in host:
+        host, port = host.rsplit("/.s.PGSQL.", 1)
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ["DB_NAME"],
+        "USER": os.environ.get("DB_USER", ""),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "HOST": host,
+        "PORT": port,
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
+    }
+
+
 DATABASES = {
-    "default": dj_database_url.config(
+    "default": databaze_z_vps_centra()
+    or dj_database_url.config(
         default="postgres://lkkllog:lkkllog@127.0.0.1:5432/lkkllog",
         conn_max_age=60,
         conn_health_checks=True,

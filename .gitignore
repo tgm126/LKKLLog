@@ -20,3 +20,7 @@ frontend/dist/
 .claude/settings.local.json
 .vscode/
 .idea/
+
+# Balíček pro VPS Centrum
+*.zip
+vps-promenne.txt

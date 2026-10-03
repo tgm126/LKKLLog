@@ -31,8 +31,11 @@ ENV APP_VERSION=$APP_VERSION
 
 RUN useradd --system --uid 10001 --create-home aplikace
 USER aplikace
+# VPS Centrum může kontejner spustit pod jiným uživatelem – domovská složka musí být zapisovatelná.
+ENV HOME=/tmp
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
+ENTRYPOINT ["sh", "docker-entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", \
      "--access-logfile", "-"]
