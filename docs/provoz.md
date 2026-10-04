@@ -92,3 +92,34 @@ Obnova z exportu: `pg_restore --clean --if-exists -d lkkllog lkkllog-RRRR-MM-DD.
 GitHub Actions (`.github/workflows/dostupnost.yml`) se jednou za hodinu zeptá
 `https://lety.lkkl.cz/api/health`. Když aplikace neodpoví, běh selže a GitHub pošle e-mail.
 Častější kontrola by v soukromém repozitáři spotřebovávala bezplatné minuty GitHub Actions.
+
+## Zálohy a obnova
+
+**Co se zálohuje:**
+
+| Záloha | Kde | Jak dlouho |
+|---|---|---|
+| Zálohy hostingu (celý server včetně databáze `lkkllog`) | Váš Hosting, mimo server; VPS Centrum → Zálohování | denní 7 dní, týdenní 30 dní |
+| Měsíční export databáze (`pg_dump`) | `/var/backups/lkkllog` na serveru + e-mail administrátorům | 24 měsíců na serveru, v e-mailu trvale |
+
+Kód zálohovat netřeba (je na GitHubu), Docker image se z kódu sestaví znovu.
+Tajné údaje v Env proměnných aplikace nejsou nenahraditelné: nový `DJANGO_SECRET_KEY`
+jen odhlásí všechny uživatele a zneplatní rozeslané odkazy na nastavení hesla,
+heslo ke schránce jde ve VPS Centru nastavit znovu.
+
+**Zkouška obnovy** (doporučeno jednou za čtvrtletí, z počítače správce, běžící
+`compose.dev.yaml`): `bash scripts/zkouska-obnovy.sh` – stáhne poslední export, obnoví ho
+do zkušební databáze, ověří data a databázi smaže. První zkouška 4. 10. 2026: v pořádku.
+
+**Postup při problému** (vždy nejdřív zastavit aplikaci ve VPS Centru, ať se mezitím nic nezapisuje):
+
+1. *Chybná data z posledních 30 dní:* VPS Centrum → Zálohování → obnovit databázi
+   `lkkllog` k vybranému dni. Pozor, přepíše celou databázi – změny od zálohy se ztratí.
+   Když jde jen o pár záznamů, je lepší obnovit zálohu do jiné databáze a záznamy
+   přenést ručně.
+2. *Starší data:* z měsíčního exportu na serveru (jako `postgres`):
+   `pg_restore --clean --if-exists -d lkkllog /var/backups/lkkllog/lkkllog-RRRR-MM-DD.dump`
+3. *Ztráta celého serveru:* nový server s Dockerem → ve VPS Centru PostgreSQL databáze
+   `lkkllog` → `pg_restore` posledního exportu (nebo zálohy hostingu) → Docker aplikace
+   podle začátku tohoto dokumentu (ZIP z GitHubu, Dockerfile, port 8000, Env proměnné,
+   databáze, subdoména `lety`) → SSH klíč pro GitHub Actions u uživatele VPS Centra.
