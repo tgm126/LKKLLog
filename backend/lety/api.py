@@ -10,7 +10,7 @@ from ninja.security import django_auth
 from osoby.models import Kategorie, Opravneni, Osoba
 from provoz.models import Nastaveni
 
-from . import obdobi, sluzby, uzaverky, vypis
+from . import nalet, obdobi, sluzby, uzaverky, vypis
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -824,3 +824,51 @@ def _let_displej(let: Let) -> dict:
     for clen in data["posadka"]:
         clen["funkce_nazev"] = funkce[clen["funkce"]]
     return data
+
+
+# --- můj nálet (etapa 11) -----------------------------------------------------------------
+
+
+class MujLetOut(LetOut):
+    moje_funkce: str
+
+
+class NaletOut(Schema):
+    od: date
+    do: date
+    souhrn: dict
+    lety: list[MujLetOut]
+
+
+def _muj_nalet(request, od: date | None, do: date | None):
+    dnes = timezone.now().date()
+    od = od or dnes.replace(month=1, day=1)
+    do = do or dnes
+    return od, do, nalet.lety(request.user, od, do, _lety())
+
+
+@router.get("/nalet", response=NaletOut, summary="Můj nálet za období (neoficiální)")
+def muj_nalet(request, od: date | None = None, do: date | None = None):
+    od, do, seznam = _muj_nalet(request, od, do)
+    uzavreno = Uzavreno.nacti()
+    return {
+        "od": od,
+        "do": do,
+        "souhrn": nalet.souhrn(seznam),
+        "lety": [
+            {**_let_out(m.let, request.user, uzavreno), "moje_funkce": m.funkce}
+            for m in reversed(seznam)  # nejnovější nahoře
+        ],
+    }
+
+
+@router.get("/nalet/export.xlsx", summary="Můj nálet do Excelu")
+def export_naletu(request, od: date | None = None, do: date | None = None):
+    od, do, seznam = _muj_nalet(request, od, do)
+    odpoved = HttpResponse(
+        nalet.excel(request.user, seznam, od, do),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    nazev = f"lkkllog-nalet-{od:%Y-%m-%d}-{do:%Y-%m-%d}.xlsx"
+    odpoved["Content-Disposition"] = f'attachment; filename="{nazev}"'
+    return odpoved

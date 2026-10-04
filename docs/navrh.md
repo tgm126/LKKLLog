@@ -316,6 +316,20 @@ Uzávěrka **není zámek**, ale **oficiální souhrn** uložený k danému okam
 ### 4.8 Můj nálet (neoficiální)
 Součty hodin a startů za období podle kategorie a účelu (PIC, žák, přezkoušený). Seznam vlastních letů.
 
+**Stav po etapě 11:**
+- Obrazovka *Můj nálet* je pro všechny přihlášené a ukazuje jen vlastní lety.
+- Období: tento rok, posledních 12 nebo 24 měsíců (typické lhůty pro praxi), nebo vlastní.
+- **Počítají se** ukončené lety ve funkci PIC, žák nebo přezkoušený, a to i na soukromých
+  letadlech, protože jde o osobní nálet. Zrušené lety a dozor ze země se nepočítají.
+- **Obrazovka ukazuje:**
+  - lety, dobu a přistání celkem;
+  - tabulku podle kategorie letadla a funkce;
+  - starty podle způsobu vzletu (naviják, vlek…);
+  - tabulku podle účelu;
+  - seznam letů; ťuknutím se otevře detail a historie, oprava podle běžných práv.
+- **Excel** s listy *Lety*, *Souhrn* a *Parametry* slouží jako podklad pro zápisník letů.
+  Má i sloupec s ostatní posádkou.
+
 ### 4.9 Velký displej (TV na věži nebo v klubovně)
 Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, západ slunce a soumrak a dnešní souhrn. Obnovuje se sám a otevírá se tajným odkazem bez přihlašování (odkaz lze kdykoli zneplatnit).
 
@@ -542,7 +556,7 @@ Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požada
 | Zrušit let (s důvodem) | `POST /api/lety/{id}/zrusit` |
 | Historie letu | `GET /api/lety/{id}/historie` |
 | Výpis / export | `GET /api/vypis?…`, `GET /api/vypis/export.xlsx?…` |
-| Můj nálet | `GET /api/nalet/ja?od=…&do=…` |
+| Můj nálet | `GET /api/nalet?od=…&do=…`, `GET /api/nalet/export.xlsx?od=…&do=…` |
 | Uzavřít den / měsíc (znovu = přepočet, nová verze) | `POST /api/uzaverky` |
 | Dny měsíce a stav uzávěrek / souhrn před uzavřením | `GET /api/uzaverky?mesic=…`, `GET /api/uzaverky/nahled?typ=…&obdobi=…` |
 | Verze uzávěrky a změny po ní / Excel souhrnu | `GET /api/uzaverky/detail?typ=…&obdobi=…`, `GET /api/uzaverky/{id}/export.xlsx` |

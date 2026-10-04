@@ -20,6 +20,7 @@ export function Navigace() {
     <Group gap={4} px="md" pb="xs">
       {odkaz('/', 'Dnes')}
       {odkaz('/vypis', 'Výpis')}
+      {odkaz('/nalet', 'Můj nálet')}
       {(role?.casomeric || role?.ucetni || role?.admin) && odkaz('/uzaverky', 'Uzávěrky')}
     </Group>
   )
