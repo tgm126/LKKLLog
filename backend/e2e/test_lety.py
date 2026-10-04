@@ -85,3 +85,41 @@ def test_letici_pilot_nemuze_vzletnout_znovu(mobil, svet):
     mobil.get_by_role("button", name="Dál").click()
     mobil.get_by_role("button", name="VZLET TEĎ").click()
     expect(mobil.get_by_text("Adam Pilot je právě ve vzduchu na OK-TCS")).to_be_visible()
+
+
+def test_vlek_dvojice_startuje_spolecne(mobil, svet):
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="+ NOVÝ LET").click()
+    mobil.get_by_role("button", name=re.compile("^OK-T101")).click()
+    mobil.get_by_role("button", name="Normální").click()
+    vybrat(mobil, "PIC", "Pilot Adam")
+    mobil.get_by_role("button", name="Dál").click()
+    mobil.get_by_text("Vlek", exact=True).click()
+    expect(mobil.get_by_role("button", name="Dál")).to_be_disabled()
+    vybrat(mobil, "Vlečné letadlo", "OK-TZL (Zlin vlečný)")
+    vybrat(mobil, "Vlekař", "Vlekař Gustav")
+    mobil.get_by_role("button", name="Dál").click()
+    mobil.get_by_role("button", name="Připravit (vzlet zmáčknu později)").click()
+
+    expect(mobil.get_by_text("Připravené (2)")).to_be_visible()
+    mobil.get_by_role("button", name="VZLET").first.click()
+    expect(mobil.get_by_text("Ve vzduchu (2)")).to_be_visible()
+    expect(mobil.get_by_text("⇄ vlek OK-TZL (Gustav Vlekař)")).to_be_visible()
+    expect(mobil.get_by_text("⇄ vleče OK-T101 (Adam Pilot)")).to_be_visible()
+
+
+def test_dalsi_let_odsud_po_mezipristani(mobil, svet):
+    let = let_pilota(svet, stav=StavLetu.UKONCEN, minut=60)
+    let.misto_pristani = svet.letnany
+    let.save()
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="Další akce").click()
+    mobil.get_by_role("menuitem", name="Další let odsud…").click()
+    expect(mobil.get_by_text("Krok 5/5: Vzlet")).to_be_visible()
+    mobil.get_by_role("button", name="VZLET TEĎ").click()
+
+    expect(mobil.get_by_text("Ve vzduchu (1)")).to_be_visible()
+    novy = Let.objects.get(stav=StavLetu.VE_VZDUCHU)
+    assert novy.misto_vzletu == svet.letnany
+    assert novy.letadlo == let.letadlo
+    assert list(novy.posadka.values_list("osoba_id", flat=True)) == [svet.pilot.pk]

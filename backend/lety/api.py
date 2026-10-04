@@ -184,6 +184,8 @@ class LetOut(Schema):
     dodatecne: bool
     verze: int
     muze_ovladat: bool
+    vlek_id: int | None
+    vlek: str | None
 
 
 def _misto(letiste: Letiste | None) -> str | None:
@@ -228,14 +230,38 @@ def _let_out(let: Let, osoba: Osoba) -> dict:
         "dodatecne": bool(let.cas_pristani and let.zalozeno > let.cas_pristani),
         "verze": let.verze,
         "muze_ovladat": sluzby.muze_ovladat(osoba, let),
+        **_dvojice(let),
     }
 
 
+def _dvojice(let: Let) -> dict:
+    """Druhý let z dvojice vleku: u kluzáku vlečná a vlekař, u vlečné vlečený kluzák."""
+    if let.vlecny_let_id:
+        druhy, popis = let.vlecny_let, "vlek"
+    else:
+        druhy = getattr(let, "vleceny_let", None)
+        popis = "vleče"
+    if druhy is None:
+        return {"vlek_id": None, "vlek": None}
+    pic = next((p.osoba.get_full_name() for p in druhy.posadka.all() if p.funkce == "pic"), "")
+    return {"vlek_id": druhy.pk, "vlek": f"{popis} {druhy.letadlo.imatrikulace} ({pic})"}
+
+
 def _lety():
+    posadka = Posadka.objects.select_related("osoba").order_by("id")
     return Let.objects.select_related(
-        "letadlo", "uloha", "platce", "misto_vzletu", "misto_pristani", "zalozil"
+        "letadlo",
+        "uloha",
+        "platce",
+        "misto_vzletu",
+        "misto_pristani",
+        "zalozil",
+        "vlecny_let__letadlo",
+        "vleceny_let__letadlo",
     ).prefetch_related(
-        Prefetch("posadka", queryset=Posadka.objects.select_related("osoba").order_by("id"))
+        Prefetch("posadka", queryset=posadka),
+        Prefetch("vlecny_let__posadka", queryset=posadka),
+        Prefetch("vleceny_let__posadka", queryset=posadka),
     )
 
 
@@ -283,6 +309,12 @@ class ClenIn(Schema):
     funkce: str
 
 
+class VlekIn(Schema):
+    letadlo_id: int
+    vlekar_id: int
+    cas_pristani: datetime | None = None
+
+
 class NovyLetIn(Schema):
     letadlo_id: int
     ucel: str
@@ -299,6 +331,7 @@ class NovyLetIn(Schema):
     misto_pristani_id: int | None = None
     pocet_tg: int = 0
     kratky_let: str = ""
+    vlek: VlekIn | None = None
 
 
 def _znovu(let: Let, osoba: Osoba) -> dict:

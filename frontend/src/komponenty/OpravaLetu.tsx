@@ -69,6 +69,7 @@ export function OpravaLetu({
 
   const letadlo = c?.letadla.find((l) => String(l.id) === letadloId)
   const sloty = SLOTY[ucel] ?? SLOTY.normalni
+  const tah = let_.ucel === 'vlek'
   const ukonceny = let_.stav === 'ukoncen'
   const maVzlet = let_.stav !== 'pripraven'
   const veVzduchu = new Set(
@@ -148,7 +149,9 @@ export function OpravaLetu({
           label="Letadlo"
           size="md"
           searchable={hledani}
-          data={c.letadla.map((l) => ({ value: String(l.id), label: `${l.imatrikulace} (${l.typ})` }))}
+          data={c.letadla
+            .filter((l) => !tah || l.vlecne)
+            .map((l) => ({ value: String(l.id), label: `${l.imatrikulace} (${l.typ})` }))}
           value={letadloId}
           onChange={(v) => {
             if (!v) return
@@ -157,7 +160,8 @@ export function OpravaLetu({
           }}
           allowDeselect={false}
         />
-        <Stack gap={4}>
+        {tah && <Text fz="sm">Let vlečného letadla{let_.vlek ? ` – ${let_.vlek}` : ''}</Text>}
+        <Stack gap={4} display={tah ? 'none' : undefined}>
           <Text fz="sm" fw={500}>
             Účel
           </Text>
@@ -202,7 +206,7 @@ export function OpravaLetu({
             onChange={setDruhy}
           />
         )}
-        {ucel === 'normalni' && (
+        {ucel === 'normalni' && !tah && (
           <Pocitadlo
             popis="Hosté mimo klub (počet)"
             hodnota={hoste}
@@ -219,6 +223,7 @@ export function OpravaLetu({
           placeholder="Podle účelu letu"
         />
         <Select
+          display={tah ? 'none' : undefined}
           label="Úloha"
           size="md"
           searchable={hledani}
@@ -228,7 +233,10 @@ export function OpravaLetu({
           value={ulohaId}
           onChange={setUlohaId}
         />
-        {letadlo.kategorie === 'kluzak' && (
+        {let_.zpusob_vzletu === 'vlek' && (
+          <Text fz="sm">Vzlet ve vleku ({let_.vlek}) – opravou nejde změnit.</Text>
+        )}
+        {letadlo.kategorie === 'kluzak' && let_.zpusob_vzletu !== 'vlek' && (
           <SegmentedControl
             value={zpusob}
             onChange={setZpusob}

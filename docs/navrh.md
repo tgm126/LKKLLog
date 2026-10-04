@@ -149,6 +149,10 @@
 | **Přezkoušení** | examinátor nebo instruktor | **přezkoušený pilot** | – | vždy dvoumístné letadlo |
 | **Vlek** | vlekař | – | – | **nevybírá se**: přiřadí se automaticky letadlu, které vleče kluzák (jen letadlo s příznakem „vlečné“) |
 
+**Vlek v praxi (etapa 6):** u kluzáku se zvolí způsob vzletu „Vlek“, vlečné letadlo a vlekař. Vzniknou dva propojené lety; VZLET (a tlačítko Zpět po založení či vzletu) platí pro oba, přistání každý zvlášť. Vlečný let platí plátce kluzáku. Vzlet ve vleku ani účel „vlek“ nejde opravou přepnout na jiný – let se zruší a založí znovu.
+
+**Mezipřistání:** u ukončeného letu akce „Další let odsud“ otevře nový let se stejným letadlem, účelem a posádkou a s místem vzletu tam, kde letadlo přistálo.
+
 Ve výpisu se typ zobrazuje spojeně, např. „Plachtařský · výcvik sólo“ nebo „Motorový · přezkoušení“.
 
 **Úlohy** jsou přiřazené k účelu a kategorii. Při výcviku se nabízejí úlohy z osnovy, při přezkoušení **typy přezkoušení** (může jich být víc) a u normálního letu běžné úlohy (např. let do prostoru).

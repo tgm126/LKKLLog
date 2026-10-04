@@ -81,6 +81,7 @@ PRAVIDLA_POSADKY = {
     Ucel.VYCVIK: ({FunkcePosadky.ZAK}, {FunkcePosadky.ZAK}),
     Ucel.VYCVIK_SOLO: ({FunkcePosadky.DOZOR}, {FunkcePosadky.DOZOR}),
     Ucel.PREZKOUSENI: ({FunkcePosadky.PREZKOUSENY}, {FunkcePosadky.PREZKOUSENY}),
+    Ucel.VLEK: (set(), set()),  # jen vlekař (PIC)
 }
 
 NAZEV_FUNKCE = dict(FunkcePosadky.choices)
@@ -110,12 +111,12 @@ class NovyLet:
     misto_pristani_id: int | None = None
     pocet_tg: int = 0
     kratky_let: str = ""
+    # U kluzáku ve vleku: {"letadlo_id", "vlekar_id", "cas_pristani" (jen u dopsaného letu)}
+    vlek: dict | None = None
     osoby: dict[int, Osoba] = field(default_factory=dict)
 
 
 def _over_posadku(data: NovyLet, letadlo: Letadlo) -> None:
-    if data.ucel == Ucel.VLEK:
-        raise ChybaLetu("Vlek se zakládá spolu s kluzákem (připravujeme).")
     if data.ucel not in PRAVIDLA_POSADKY:
         raise ChybaLetu("Neznámý účel letu.")
     povinne, dovolene = PRAVIDLA_POSADKY[data.ucel]
@@ -190,9 +191,11 @@ def _over_ulohu(data: NovyLet, letadlo: Letadlo) -> Uloha | None:
 
 def _over_zpusob_vzletu(data: NovyLet, letadlo: Letadlo) -> None:
     if letadlo.kategorie == Kategorie.KLUZAK:
-        if data.zpusob_vzletu == ZpusobVzletu.VLEK:
-            raise ChybaLetu("Vlek se zakládá spolu s vlečným letadlem (připravujeme).")
-        if data.zpusob_vzletu not in (ZpusobVzletu.NAVIJAK, ZpusobVzletu.AUTOSTART):
+        if data.zpusob_vzletu not in (
+            ZpusobVzletu.NAVIJAK,
+            ZpusobVzletu.AUTOSTART,
+            ZpusobVzletu.VLEK,
+        ):
             raise ChybaLetu("U kluzáku vyberte způsob vzletu.")
     else:
         data.zpusob_vzletu = ZpusobVzletu.VLASTNI
@@ -283,17 +286,46 @@ def _uloz(let: Let) -> None:
         ) from e
 
 
+def partner(let: Let) -> Let | None:
+    """Druhý let z dvojice kluzák + vlek (nebo None)."""
+    if let.vlecny_let_id:
+        return let.vlecny_let
+    return Let.objects.filter(vlecny_let=let).first()
+
+
+def _over_vlek(data: NovyLet, letadlo: Letadlo) -> tuple[Letadlo, Osoba] | None:
+    """U kluzáku ve vleku ověří vlečné letadlo a vlekaře."""
+    if data.zpusob_vzletu != ZpusobVzletu.VLEK or letadlo.kategorie != Kategorie.KLUZAK:
+        if data.vlek:
+            raise ChybaLetu("Vlečné letadlo se zadává jen u kluzáku ve vleku.")
+        return None
+    if not data.vlek or not data.vlek.get("letadlo_id") or not data.vlek.get("vlekar_id"):
+        raise ChybaLetu("U vleku vyberte vlečné letadlo a vlekaře.")
+    vlecne = Letadlo.objects.filter(pk=data.vlek["letadlo_id"], aktivni=True, vlecne=True).first()
+    if vlecne is None:
+        raise ChybaLetu("Vlečné letadlo neexistuje, není aktivní nebo nemůže vlekat.")
+    vlekar = Osoba.objects.filter(pk=data.vlek["vlekar_id"], is_active=True, externi=False).first()
+    if vlekar is None:
+        raise ChybaLetu("Vlekař neexistuje nebo není aktivní.")
+    if vlekar.pk in {c.osoba_id for c in data.posadka}:
+        raise ChybaLetu("Vlekař nemůže být zároveň v posádce kluzáku.")
+    return vlecne, vlekar
+
+
 @transaction.atomic
 def zalozit(data: NovyLet, kdo: Osoba) -> Let:
     letadlo = Letadlo.objects.filter(pk=data.letadlo_id, aktivni=True).first()
     if letadlo is None:
         raise ChybaLetu("Letadlo neexistuje nebo není aktivní.")
+    if data.ucel == Ucel.VLEK:
+        raise ChybaLetu("Vlek se zakládá u kluzáku volbou způsobu vzletu „Vlek“.")
     if data.pocet_hostu < 0 or data.pocet_tg < 0:
         raise ChybaLetu("Počty nemohou být záporné.")
     _over_posadku(data, letadlo)
     _over_platce(data)
     uloha = _over_ulohu(data, letadlo)
     _over_zpusob_vzletu(data, letadlo)
+    vlek = _over_vlek(data, letadlo)
 
     let = Let(
         letadlo=letadlo,
@@ -328,6 +360,8 @@ def zalozit(data: NovyLet, kdo: Osoba) -> Let:
 
     if let.cas_vzletu:
         _over_volne_osoby(_letici(data.posadka), let.cas_vzletu, let.cas_pristani, None)
+    if vlek:
+        let.vlecny_let = _zalozit_vlek(let, data, vlek, kdo)
     _uloz(let)
     let.posadka.bulk_create(
         [let.posadka.model(let=let, osoba_id=c.osoba_id, funkce=c.funkce) for c in data.posadka]
@@ -347,6 +381,48 @@ def zalozit(data: NovyLet, kdo: Osoba) -> Let:
         },
     )
     return let
+
+
+def _zalozit_vlek(kluzak: Let, data: NovyLet, vlek: tuple[Letadlo, Osoba], kdo: Osoba) -> Let:
+    """Let vlečného letadla: stejný vzlet jako kluzák, platí ho plátce kluzáku."""
+    vlecne, vlekar = vlek
+    tah = Let(
+        letadlo=vlecne,
+        ucel=Ucel.VLEK,
+        zpusob_vzletu=ZpusobVzletu.VLASTNI,
+        misto_vzletu=kluzak.misto_vzletu,
+        platce_id=kluzak.platce_id,
+        plati_aeroklub=kluzak.plati_aeroklub,
+        soukrome=vlecne.soukrome,
+        zalozil=kdo,
+        stav=kluzak.stav,
+        cas_vzletu=kluzak.cas_vzletu,
+    )
+    if kluzak.stav == StavLetu.UKONCEN:  # dopsaný let – vlečná má vlastní přistání
+        cas = data.vlek.get("cas_pristani")
+        if not cas:
+            raise ChybaLetu("U dopsaného vleku zadejte i přistání vlečného letadla.")
+        tah.cas_pristani = _over_cas(_datum(cas), "Přistání vlečné")
+        if tah.cas_pristani < tah.cas_vzletu:
+            raise ChybaLetu("Přistání vlečné nemůže být dřív než vzlet.")
+        tah.misto_pristani = kluzak.misto_vzletu
+        tah.kratky_let = _kratky_let(tah, KratkyLet.NORMALNI)
+    if tah.cas_vzletu:
+        _over_volne_osoby([vlekar.pk], tah.cas_vzletu, tah.cas_pristani, None)
+    _uloz(tah)
+    tah.posadka.create(osoba=vlekar, funkce=FunkcePosadky.PIC)
+    audit.zapsat(
+        kdo,
+        "zalozeni",
+        "let",
+        tah.pk,
+        zmeny={"vlek pro": kluzak.letadlo.imatrikulace, "vlekař": vlekar.get_full_name()},
+    )
+    return tah
+
+
+def _datum(hodnota) -> datetime:
+    return hodnota if isinstance(hodnota, datetime) else datetime.fromisoformat(str(hodnota))
 
 
 def _zamknout(let_id: int) -> Let:
@@ -387,12 +463,21 @@ def vzlet(let_id: int, kdo: Osoba, cas: datetime | None = None) -> Let:
             kod="uz_zapsano",
             let_id=let.pk,
         )
-    let.cas_vzletu = _over_cas(cas or timezone.now(), "Vzlet")
-    _over_volne_osoby(_letici(let.posadka.all()), let.cas_vzletu, None, let.pk)
-    let.stav = StavLetu.VE_VZDUCHU
-    let.verze += 1
-    _uloz(let)
-    audit.zapsat(kdo, "vzlet", "let", let.pk, zmeny={"cas_vzletu": let.cas_vzletu.isoformat()})
+    cas_vzletu = _over_cas(cas or timezone.now(), "Vzlet")
+    dvojice = [let]
+    druhy = partner(let)
+    if druhy is not None:  # kluzák a vlečná startují spolu
+        druhy = _zamknout(druhy.pk)
+        if druhy.stav != StavLetu.PRIPRAVEN:
+            raise ChybaLetu(f"{druhy.letadlo.imatrikulace} z dvojice vleku už není připravený.")
+        dvojice.append(druhy)
+    for jeden in dvojice:
+        jeden.cas_vzletu = cas_vzletu
+        _over_volne_osoby(_letici(jeden.posadka.all()), cas_vzletu, None, jeden.pk)
+        jeden.stav = StavLetu.VE_VZDUCHU
+        jeden.verze += 1
+        _uloz(jeden)
+        audit.zapsat(kdo, "vzlet", "let", jeden.pk, zmeny={"cas_vzletu": cas_vzletu.isoformat()})
     return let
 
 
@@ -534,6 +619,11 @@ def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
         )
     if data.duvod not in DuvodOpravy.values:
         raise ChybaLetu("Vyberte důvod opravy.")
+    if (data.ucel == Ucel.VLEK) != (let.ucel == Ucel.VLEK):
+        raise ChybaLetu("Let vlečného letadla nejde opravou změnit na jiný účel ani naopak.")
+    if (data.zpusob_vzletu == ZpusobVzletu.VLEK) != (let.zpusob_vzletu == ZpusobVzletu.VLEK):
+        raise ChybaLetu("Vzlet ve vleku nejde opravou změnit – zrušte let a založte ho znovu.")
+    data.vlek = None
 
     letadlo = (
         let.letadlo
@@ -542,6 +632,8 @@ def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
     )
     if letadlo is None:
         raise ChybaLetu("Letadlo neexistuje nebo není aktivní.")
+    if let.ucel == Ucel.VLEK and not letadlo.vlecne:
+        raise ChybaLetu("Vybrané letadlo nemůže vlekat.")
     if data.pocet_hostu < 0 or data.pocet_tg < 0:
         raise ChybaLetu("Počty nemohou být záporné.")
     _over_posadku(data, letadlo)
@@ -619,14 +711,27 @@ def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
     ):
         raise ChybaLetu("Akci už nejde vrátit – použijte opravu letu.", status=409, kod="nelze")
 
+    _vratit(let, posledni.akce, kdo)
+    # Založení a vzlet vleku se týkají obou letů dvojice.
+    druhy = partner(let)
+    if druhy is not None and posledni.akce in ("zalozeni", "vzlet"):
+        druhy = _zamknout(druhy.pk)
+        if (posledni.akce == "vzlet" and druhy.stav == StavLetu.VE_VZDUCHU) or (
+            posledni.akce == "zalozeni" and druhy.stav != StavLetu.ZRUSEN
+        ):
+            _vratit(druhy, posledni.akce, kdo)
+    return let
+
+
+def _vratit(let: Let, akce: str, kdo: Osoba) -> None:
     pred = _popis(let)
-    if posledni.akce == "pristani":
+    if akce == "pristani":
         let.stav = StavLetu.VE_VZDUCHU
         let.cas_pristani = None
         let.misto_pristani = None
         let.pocet_tg = 0
         let.kratky_let = ""
-    elif posledni.akce == "vzlet":
+    elif akce == "vzlet":
         let.stav = StavLetu.PRIPRAVEN
         let.cas_vzletu = None
     else:  # založení omylem
@@ -635,6 +740,5 @@ def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
     let.verze += 1
     _uloz(let)
     zmeny = _rozdil(pred, _popis(let))
-    zmeny["vráceno"] = [posledni.akce, ""]
+    zmeny["vráceno"] = [akce, ""]
     audit.zapsat(kdo, "zpet", "let", let.pk, zmeny=zmeny)
-    return let

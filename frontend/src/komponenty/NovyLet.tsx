@@ -19,7 +19,7 @@ import { useMemo, useState } from 'react'
 
 import { type Let, type NovyLet as NovyLetData, zalozitLet } from '../api/lety'
 import { KATEGORIE_LETU } from '../nazvy'
-import { jmeno, KROKY, nabidka, SLOTY, UCELY } from '../posadka'
+import { jmeno, KROKY, nabidka, SLOT_VLEKAR, SLOTY, UCELY } from '../posadka'
 import { PREHLED_KLIC, useCiselniky } from '../useLety'
 import { oznamitSeZpet } from '../zpet'
 import { naMinuty } from '../cas'
@@ -31,11 +31,14 @@ export function NovyLet({
   onZavrit,
   lety,
   ted,
+  vychozi,
 }: {
   otevreno: boolean
   onZavrit: () => void
   lety: Let[]
   ted: Date
+  /** „Další let odsud“: stejné letadlo a posádka, vzlet z místa přistání. */
+  vychozi?: Let
 }) {
   const { data: c } = useCiselniky()
   const mobil = useMediaQuery('(max-width: 48em)')
@@ -43,16 +46,35 @@ export function NovyLet({
   const hledani = useMediaQuery('(pointer: fine)') ?? true
   const klient = useQueryClient()
 
-  const [krok, setKrok] = useState(0)
-  const [letadloId, setLetadloId] = useState<number | null>(null)
-  const [ucel, setUcel] = useState('normalni')
-  const [pic, setPic] = useState<string | null>(null)
-  const [druhy, setDruhy] = useState<string | null>(null)
-  const [hoste, setHoste] = useState(0)
-  const [platce, setPlatce] = useState<string | null>(null) // null = podle pravidla
-  const [ulohaId, setUlohaId] = useState<string | null>(null)
-  const [zpusob, setZpusob] = useState('navijak')
-  const [mistoVzletu, setMistoVzletu] = useState<string | null>(null)
+  const clenVychozi = (f: (funkce: string) => boolean) => {
+    const c = vychozi?.posadka.find((p) => f(p.funkce))
+    return c ? String(c.osoba_id) : null
+  }
+  const [krok, setKrok] = useState(vychozi ? 4 : 0)
+  const [letadloId, setLetadloId] = useState<number | null>(vychozi?.letadlo_id ?? null)
+  const [ucel, setUcel] = useState(vychozi?.ucel ?? 'normalni')
+  const [pic, setPic] = useState<string | null>(clenVychozi((f) => f === 'pic'))
+  const [druhy, setDruhy] = useState<string | null>(
+    clenVychozi((f) => f !== 'pic' && f !== 'clen'),
+  )
+  const [hoste, setHoste] = useState(vychozi?.pocet_hostu ?? 0)
+  const [platce, setPlatce] = useState<string | null>(
+    vychozi?.plati_aeroklub ? 'aeroklub' : vychozi?.platce_id ? String(vychozi.platce_id) : null,
+  ) // null = podle pravidla
+  const [ulohaId, setUlohaId] = useState<string | null>(
+    vychozi?.uloha_id ? String(vychozi.uloha_id) : null,
+  )
+  const [zpusob, setZpusob] = useState(
+    vychozi && vychozi.zpusob_vzletu !== 'vlek' && vychozi.zpusob_vzletu !== 'vlastni'
+      ? vychozi.zpusob_vzletu
+      : 'navijak',
+  )
+  const [vlecnaId, setVlecnaId] = useState<string | null>(null)
+  const [vlekar, setVlekar] = useState<string | null>(null)
+  const [pristaniVlecne, setPristaniVlecne] = useState(() => naMinuty(new Date()))
+  const [mistoVzletu, setMistoVzletu] = useState<string | null>(
+    vychozi?.misto_pristani_id ? String(vychozi.misto_pristani_id) : null,
+  )
   const [rezim, setRezim] = useState<'ted' | 'cas' | 'dopsat' | null>(null)
   const [casVzletu, setCasVzletu] = useState(() => naMinuty(new Date()))
   const [casPristani, setCasPristani] = useState(() => naMinuty(new Date()))
@@ -74,6 +96,8 @@ export function NovyLet({
     setPlatce(null)
     setUlohaId(null)
     setMistoVzletu(null)
+    setVlecnaId(null)
+    setVlekar(null)
     setRezim(null)
     setTg(0)
     onZavrit()
@@ -126,6 +150,13 @@ export function NovyLet({
         posadka,
         uloha_id: ulohaId ? Number(ulohaId) : null,
         zpusob_vzletu: letadlo?.kategorie === 'kluzak' ? zpusob : 'vlastni',
+        vlek: veVleku
+          ? {
+              letadlo_id: Number(vlecnaId),
+              vlekar_id: Number(vlekar),
+              cas_pristani: akce === 'dopsat' ? pristaniVlecne.toISOString() : null,
+            }
+          : null,
         misto_vzletu_id: mistoVzletu ? Number(mistoVzletu) : null,
         pocet_hostu: ucel === 'normalni' ? hoste : 0,
         platce_id: platceVyber && platceVyber !== 'aeroklub' ? Number(platceVyber) : null,
@@ -144,18 +175,21 @@ export function NovyLet({
     },
     onSuccess: (l, akce) => {
       const co = { pripravit: 'připraven', vzlet: 've vzduchu', dopsat: 'zapsán' }[akce]
-      oznamitSeZpet(l, `Let ${l.imatrikulace} ${co}.`, klient)
+      const vlek = l.vlek ? ` (${l.vlek})` : ''
+      oznamitSeZpet(l, `Let ${l.imatrikulace}${vlek} ${co}.`, klient)
       void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
       zavrit()
     },
     onError: (e) => notifications.show({ message: e.message, color: 'red', autoClose: 8000 }),
   })
 
+  const veVleku = letadlo?.kategorie === 'kluzak' && zpusob === 'vlek'
+  const vlecna = c?.letadla.find((l) => String(l.id) === vlecnaId)
   const muzeDal = [
     letadloId !== null,
     true,
     pic !== null && (!sloty.druhy || druhy !== null),
-    true,
+    !veVleku || (vlecnaId !== null && vlekar !== null),
   ][krok]
 
   const letisteData = (c?.letiste ?? []).map((l) => ({
@@ -340,11 +374,43 @@ export function NovyLet({
                 onChange={setZpusob}
                 data={[
                   { value: 'navijak', label: 'Naviják' },
+                  { value: 'vlek', label: 'Vlek' },
                   { value: 'autostart', label: 'Autostart' },
-                  { value: 'vlek', label: 'Vlek (brzy)', disabled: true },
                 ]}
               />
             </Stack>
+          )}
+          {veVleku && c && (
+            <>
+              <Select
+                label="Vlečné letadlo"
+                size="md"
+                data={c.letadla
+                  .filter((l) => l.vlecne && stavLetadla(l.id) !== 've_vzduchu')
+                  .map((l) => ({ value: String(l.id), label: `${l.imatrikulace} (${l.typ})` }))}
+                value={vlecnaId}
+                onChange={setVlecnaId}
+                nothingFoundMessage="Žádné volné vlečné letadlo"
+              />
+              <Select
+                label="Vlekař"
+                size="md"
+                searchable={hledani}
+                data={nabidka(
+                  c.osoby.filter((o) => !posadka.some((p) => p.osoba_id === o.id)),
+                  vlecna?.kategorie ?? 'motor',
+                  SLOT_VLEKAR,
+                  false,
+                  veVzduchu,
+                )}
+                value={vlekar}
+                onChange={setVlekar}
+              />
+              <Text fz="xs" c="dimmed">
+                Vlek platí plátce kluzáku. Kluzák i vlečná odstartují jedním tlačítkem,
+                přistávají každý zvlášť.
+              </Text>
+            </>
           )}
           <Select
             label="Místo vzletu"
@@ -414,6 +480,14 @@ export function NovyLet({
                 allowDeselect={false}
               />
               <Pocitadlo popis="Touch-and-go" hodnota={tg} onZmena={setTg} />
+              {veVleku && (
+                <CasVolba
+                  popis={`Přistání vlečné ${vlecna?.imatrikulace ?? ''} (UTC)`}
+                  hodnota={pristaniVlecne}
+                  onZmena={setPristaniVlecne}
+                  ted={ted}
+                />
+              )}
               {kratkyDopsany && casPristani >= casVzletu && (
                 <Stack gap={4}>
                   <Text fz="sm" c="orange" fw={500}>

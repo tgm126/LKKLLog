@@ -80,6 +80,9 @@ export type Let = {
   dodatecne: boolean
   verze: number
   muze_ovladat: boolean
+  /** Druhý let z dvojice vleku, např. „vlek OK-TZL (Gustav Vlekař)“. */
+  vlek_id: number | null
+  vlek: string | null
 }
 
 export type Prehled = {
@@ -106,6 +109,7 @@ export type NovyLet = {
   misto_pristani_id?: number | null
   pocet_tg?: number
   kratky_let?: string
+  vlek?: { letadlo_id: number; vlekar_id: number; cas_pristani?: string | null } | null
 }
 
 export type Pristani = {

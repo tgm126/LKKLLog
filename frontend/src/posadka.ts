@@ -19,7 +19,11 @@ export const SLOTY: Record<string, { pic: Slot; druhy: Slot | null }> = {
     pic: { funkce: 'pic', popis: 'Examinátor / instruktor (PIC)', min: 2, max: 3 },
     druhy: { funkce: 'prezkouseny', popis: 'Přezkoušený pilot', min: 0, max: 3 },
   },
+  vlek: { pic: { funkce: 'pic', popis: 'Vlekař (PIC)', min: 1, max: 3 }, druhy: null },
 }
+
+/** Vlekař: pilot s oprávněním pro kategorii vlečného letadla. */
+export const SLOT_VLEKAR: Slot = { funkce: 'pic', popis: 'Vlekař', min: 1, max: 3 }
 
 export const UCELY = [
   { hodnota: 'normalni', nazev: 'Normální' },

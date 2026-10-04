@@ -41,6 +41,7 @@ def svet(transactional_db, live_server, settings):
 
     s = type("Svet", (), {})()
     s.lkkl = Letiste.objects.create(icao="LKKL", nazev="Kladno", domovske=True)
+    s.letnany = Letiste.objects.create(icao="LKLT", nazev="Letňany")
     s.cessna = Letadlo.objects.create(
         imatrikulace="OK-TCS",
         typ="Cessna 172",
@@ -51,6 +52,16 @@ def svet(transactional_db, live_server, settings):
     s.zlin = Letadlo.objects.create(
         imatrikulace="OK-TVA", typ="Z-226", kategorie=Kategorie.MOTOR, pocet_mist=2
     )
+    s.kluzak = Letadlo.objects.create(
+        imatrikulace="OK-T101", typ="L-13 Blaník", kategorie=Kategorie.KLUZAK, pocet_mist=2
+    )
+    s.vlecna = Letadlo.objects.create(
+        imatrikulace="OK-TZL",
+        typ="Zlin vlečný",
+        kategorie=Kategorie.MOTOR,
+        pocet_mist=2,
+        vlecne=True,
+    )
 
     def osoba(email, jmeno, prijmeni, **kw):
         return Osoba.objects.create_user(email, HESLO, jmeno=jmeno, prijmeni=prijmeni, **kw)
@@ -60,6 +71,9 @@ def svet(transactional_db, live_server, settings):
     s.pilot = osoba("pilot@example.com", "Adam", "Pilot")
     s.jiny_pilot = osoba("ivan@example.com", "Ivan", "Pilot")
     s.zak = osoba("zak@example.com", "Bára", "Žák")
+    s.vlekar = osoba("vlekar@example.com", "Gustav", "Vlekař")
+    Opravneni.objects.create(osoba=s.vlekar, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
+    Opravneni.objects.create(osoba=s.pilot, kategorie=Kategorie.KLUZAK, uroven=Uroven.PILOT)
     for o in (s.pilot, s.jiny_pilot):
         Opravneni.objects.create(osoba=o, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
     Opravneni.objects.create(osoba=s.zak, kategorie=Kategorie.MOTOR, uroven=Uroven.ZAK)

@@ -20,6 +20,7 @@ export function PrehledDne() {
   const ted = useServerovyCas(prehled?.ted)
   const klient = useQueryClient()
   const [novy, setNovy] = useState(false)
+  const [vychozi, setVychozi] = useState<Let | undefined>()
   const [pristani, setPristani] = useState<Let | null>(null)
   const [zruseni, setZruseni] = useState<Let | null>(null)
   const [detailId, setDetailId] = useState<number | null>(null)
@@ -27,7 +28,8 @@ export function PrehledDne() {
 
   const start = useMutation({
     mutationFn: (l: Let) => vzlet(l.id),
-    onSuccess: (l) => oznamitSeZpet(l, `${l.imatrikulace} vzlétl.`, klient),
+    onSuccess: (l) =>
+      oznamitSeZpet(l, `${l.imatrikulace}${l.vlek ? ` + ${l.vlek}` : ''} vzlétl.`, klient),
     onError: (e) => notifications.show({ message: e.message, color: 'red' }),
     onSettled: () => klient.invalidateQueries({ queryKey: PREHLED_KLIC }),
   })
@@ -68,6 +70,10 @@ export function PrehledDne() {
       onZrusit={() => setZruseni(l)}
       onDetail={() => setDetailId(l.id)}
       onOpravit={() => setOpravaId(l.id)}
+      onDalsi={() => {
+        setVychozi(l)
+        setNovy(true)
+      }}
     />
   )
 
@@ -117,7 +123,19 @@ export function PrehledDne() {
         </Container>
       </Affix>
 
-      <NovyLet otevreno={novy} onZavrit={() => setNovy(false)} lety={prehled.lety} ted={ted} />
+      {novy && (
+        <NovyLet
+          key={vychozi?.id ?? 'novy'}
+          otevreno
+          onZavrit={() => {
+            setNovy(false)
+            setVychozi(undefined)
+          }}
+          lety={prehled.lety}
+          ted={ted}
+          vychozi={vychozi}
+        />
+      )}
       <PristaniDialog let_={pristani} onZavrit={() => setPristani(null)} />
       <ZruseniDialog let_={zruseni} onZavrit={() => setZruseni(null)} />
       <DetailLetu

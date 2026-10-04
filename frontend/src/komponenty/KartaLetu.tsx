@@ -15,6 +15,7 @@ export function KartaLetu({
   onZrusit,
   onDetail,
   onOpravit,
+  onDalsi,
   pracuje,
 }: {
   let_: Let
@@ -25,6 +26,7 @@ export function KartaLetu({
   onZrusit: () => void
   onDetail: () => void
   onOpravit: () => void
+  onDalsi: () => void
   pracuje: boolean
 }) {
   const { data: c } = useCiselniky()
@@ -69,6 +71,11 @@ export function KartaLetu({
           )}
         </Group>
         <Text fz="sm">{posadka}</Text>
+        {let_.vlek && (
+          <Text fz="sm" c="blue">
+            ⇄ {let_.vlek}
+          </Text>
+        )}
         <Group gap={6}>
           {let_.uloha && <Badge variant="light">úl. {let_.uloha}</Badge>}
           {let_.pocet_hostu > 0 && <Badge variant="light">hosté: {let_.pocet_hostu}</Badge>}
@@ -126,6 +133,9 @@ export function KartaLetu({
               <Menu.Dropdown>
                 <Menu.Item onClick={onDetail}>Detail a historie</Menu.Item>
                 <Menu.Item onClick={onOpravit}>Opravit…</Menu.Item>
+                {let_.stav === 'ukoncen' && let_.ucel !== 'vlek' && (
+                  <Menu.Item onClick={onDalsi}>Další let odsud…</Menu.Item>
+                )}
                 <Menu.Item color="red" onClick={onZrusit}>
                   Zrušit let…
                 </Menu.Item>
