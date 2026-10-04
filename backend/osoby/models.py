@@ -19,6 +19,8 @@ class Uroven(models.TextChoices):
     PILOT = "pilot", "Pilot"
     INSTRUKTOR = "instruktor", "Instruktor"
     EXAMINATOR = "examinator", "Examinátor"
+    # Není to úroveň, ale příznak: klub dovoluje vlekat (u kategorie vlečného letadla).
+    VLEKAR = "vlekar", "Vlekař"
 
 
 class OsobaManager(BaseUserManager):
@@ -122,7 +124,8 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
 
 
 class Opravneni(models.Model):
-    """Co kdo smí létat. Zatím jen pro řazení lidí ve výběrech, nic neblokuje."""
+    """Co kdo smí v klubu létat: úroveň v kategorii (žák, pilot, instruktor, examinátor)
+    a příznak vlekař. Podle toho se nabízejí lidé ve výběrech posádky; nic neblokuje."""
 
     osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="opravneni")
     kategorie = models.CharField(max_length=10, choices=Kategorie.choices)

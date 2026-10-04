@@ -26,6 +26,7 @@ import { muzeTg, naMinuty } from '../cas'
 import { CasVolba } from './CasVolba'
 import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
+import { VyberOsoby } from './VyberOsoby'
 import { VarovaniPosadky } from './Rozletanost'
 
 export function NovyLet({
@@ -306,18 +307,16 @@ export function NovyLet({
 
       {krok === 2 && letadlo && c && (
         <Stack>
-          <Select
+          <VyberOsoby
             label={sloty.pic.popis}
-            size="md"
             searchable={hledani}
-            data={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
+            nabidka={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
             value={pic}
             onChange={(v) => {
               setPic(v)
               setClenove((cl) => cl.filter((id) => id !== v))
               setPlatce(null)
             }}
-            nothingFoundMessage="Nikdo takový"
           />
           {ucel === 'normalni' && (
             <DalsiClenove
@@ -336,11 +335,10 @@ export function NovyLet({
             />
           )}
           {sloty.druhy && (
-            <Select
+            <VyberOsoby
               label={sloty.druhy.popis}
-              size="md"
               searchable={hledani}
-              data={nabidka(
+              nabidka={nabidka(
                 c.osoby.filter((o) => String(o.id) !== pic),
                 letadlo.kategorie,
                 sloty.druhy,
@@ -417,11 +415,10 @@ export function NovyLet({
                 onChange={setVlecnaId}
                 nothingFoundMessage="Žádné volné vlečné letadlo"
               />
-              <Select
+              <VyberOsoby
                 label="Vlekař"
-                size="md"
                 searchable={hledani}
-                data={nabidka(
+                nabidka={nabidka(
                   c.osoby.filter((o) => !posadka.some((p) => p.osoba_id === o.id)),
                   vlecna?.kategorie ?? 'motor',
                   SLOT_VLEKAR,

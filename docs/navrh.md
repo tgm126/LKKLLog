@@ -465,12 +465,14 @@ a nápovědu.
 | externi | externí osoba (examinátor): jen jméno, žádný e-mail, přihlášení ani notifikace |
 | testovaci | účet jen pro zkoušení aplikace; úklid před spuštěním ho smaže (kap. 9.1) |
 
-**`opravneni`**: co kdo smí létat. Zatím **jen určuje, kde a v jakém pořadí se osoba nabízí ve výběrech** (nic neblokuje). Úrovně platí „nahoru“: examinátor je zároveň instruktor a pilot, instruktor zároveň pilot. Později: licence a platnosti si **spravuje každý pilot sám** ve svém profilu (otevřené: smí si sám měnit i úroveň, např. žák → pilot, nebo to potvrzuje instruktor/admin?).
+**`opravneni`**: co kdo smí v klubu létat. **Určuje, koho výběry posádky nabízejí** (nic neblokuje). Úrovně platí „nahoru“: examinátor je zároveň instruktor a pilot, instruktor zároveň pilot. **Vlekař** je příznak u kategorie vlečného letadla (znamená i pilota).
+
+Výběry osob v průvodci a v opravě letu ukazují **jen doporučené**: PIC podle kategorie letadla, u výcviku instruktory, žáky, dozor, přezkoušené a vlekaře. Ostatní se ukážou až po ťuknutí na *Ukázat i ostatní*. Když v číselníku nikdo vhodný není, nabídnou se rovnou všichni. Další členy posádky (cestující z klubu) lze vybrat ze všech. Později: licence a platnosti si **spravuje každý pilot sám** ve svém profilu (otevřené: smí si sám měnit i úroveň, např. žák → pilot, nebo to potvrzuje instruktor/admin?).
 | sloupec | význam |
 |---|---|
 | osoba_id | → osoba |
 | kategorie | motor / TMG / kluzák / UL |
-| uroven | žák / pilot / instruktor / examinátor |
+| uroven | žák / pilot / instruktor / examinátor, nebo příznak vlekař |
 | platne_do | nepovinné, připraveno pro budoucí hlídání |
 
 **`letadlo`**

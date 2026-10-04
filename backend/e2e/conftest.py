@@ -74,6 +74,7 @@ def svet(transactional_db, live_server, settings):
     s.zak = osoba("zak@example.com", "Bára", "Žák")
     s.vlekar = osoba("vlekar@example.com", "Gustav", "Vlekař")
     Opravneni.objects.create(osoba=s.vlekar, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
+    Opravneni.objects.create(osoba=s.vlekar, kategorie=Kategorie.MOTOR, uroven=Uroven.VLEKAR)
     Opravneni.objects.create(osoba=s.pilot, kategorie=Kategorie.KLUZAK, uroven=Uroven.PILOT)
     for o in (s.pilot, s.jiny_pilot):
         Opravneni.objects.create(osoba=o, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)

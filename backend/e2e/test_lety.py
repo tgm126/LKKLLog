@@ -145,3 +145,18 @@ def test_dalsi_let_odsud_s_prohozenim_roli(mobil, svet):
     posadka = dict(novy.posadka.values_list("osoba_id", "funkce"))
     assert posadka == {svet.jiny_pilot.pk: "pic", svet.pilot.pk: "clen"}
     assert novy.platce == svet.jiny_pilot
+
+
+def test_nabidka_jen_doporucenych_a_ostatni_na_pozadani(mobil, svet):
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="+ NOVÝ LET").click()
+    mobil.get_by_role("button", name=re.compile("^OK-TZL")).click()
+    mobil.get_by_role("button", name="Normální").click()
+    # Na motorovém letadle se nabízejí jen piloti s motorovým oprávněním, ne žák.
+    mobil.get_by_role("combobox", name="PIC").click()
+    expect(mobil.get_by_role("option", name="Pilot Adam")).to_be_visible()
+    expect(mobil.get_by_role("option", name="Žák Bára")).to_have_count(0)
+    mobil.keyboard.press("Escape")
+    mobil.get_by_role("button", name=re.compile("Ukázat i ostatní")).click()
+    vybrat(mobil, "PIC", "Žák Bára")
+    expect(mobil.get_by_role("combobox", name="PIC")).to_have_value("Žák Bára")

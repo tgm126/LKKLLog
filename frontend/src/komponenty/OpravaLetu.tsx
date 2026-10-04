@@ -23,6 +23,7 @@ import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { CasVolba } from './CasVolba'
 import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
+import { VyberOsoby } from './VyberOsoby'
 
 /** Oprava letu: stejná pole jako při zakládání + povinný důvod. Otevírá se s klíčem
  * podle verze letu, takže pole vždy začínají z aktuálního stavu. */
@@ -189,11 +190,10 @@ export function OpravaLetu({
             ))}
           </SimpleGrid>
         </Stack>
-        <Select
+        <VyberOsoby
           label={sloty.pic.popis}
-          size="md"
           searchable={hledani}
-          data={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
+          nabidka={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
           value={pic}
           onChange={(v) => {
             setPic(v)
@@ -216,11 +216,10 @@ export function OpravaLetu({
           />
         )}
         {sloty.druhy && (
-          <Select
+          <VyberOsoby
             label={sloty.druhy.popis}
-            size="md"
             searchable={hledani}
-            data={nabidka(
+            nabidka={nabidka(
               c.osoby.filter((o) => String(o.id) !== pic),
               letadlo.kategorie,
               sloty.druhy,

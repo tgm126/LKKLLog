@@ -1,8 +1,10 @@
 import type { OsobaVyber } from './api/lety'
 
-export const UROVEN: Record<string, number> = { zak: 0, pilot: 1, instruktor: 2, examinator: 3 }
+/** Úrovně oprávnění v kategorii; vlekař je příznak, ale znamená i pilota. */
+export const UROVEN: Record<string, number> = { zak: 0, pilot: 1, vlekar: 1, instruktor: 2, examinator: 3 }
 
-export type Slot = { funkce: string; popis: string; min: number; max: number }
+/** Políčko posádky: kdo se doporučí (rozsah úrovní, případně jen vlekaři). */
+export type Slot = { funkce: string; popis: string; min: number; max: number; vlekar?: boolean }
 
 /** Políčka posádky podle účelu letu (kap. 3.1 návrhu). */
 export const SLOTY: Record<string, { pic: Slot; druhy: Slot | null }> = {
@@ -19,11 +21,11 @@ export const SLOTY: Record<string, { pic: Slot; druhy: Slot | null }> = {
     pic: { funkce: 'pic', popis: 'Examinátor / instruktor (PIC)', min: 2, max: 3 },
     druhy: { funkce: 'prezkouseny', popis: 'Přezkoušený pilot', min: 0, max: 3 },
   },
-  vlek: { pic: { funkce: 'pic', popis: 'Vlekař (PIC)', min: 1, max: 3 }, druhy: null },
+  vlek: { pic: { funkce: 'pic', popis: 'Vlekař (PIC)', min: 1, max: 3, vlekar: true }, druhy: null },
 }
 
-/** Vlekař: pilot s oprávněním pro kategorii vlečného letadla. */
-export const SLOT_VLEKAR: Slot = { funkce: 'pic', popis: 'Vlekař', min: 1, max: 3 }
+/** Vlekař: pilot s příznakem vlekař pro kategorii vlečného letadla. */
+export const SLOT_VLEKAR: Slot = { funkce: 'pic', popis: 'Vlekař', min: 1, max: 3, vlekar: true }
 
 export const UCELY = [
   { hodnota: 'normalni', nazev: 'Normální' },
@@ -36,19 +38,25 @@ export const KROKY = ['Letadlo', 'Účel', 'Posádka', 'Úloha', 'Vzlet']
 
 export const jmeno = (o: OsobaVyber) => `${o.prijmeni} ${o.jmeno}`
 
-/** Nabídka osob: nahoře ti s odpovídajícím oprávněním, pak ostatní. */
+export type PolozkaOsoby = { value: string; label: string }
+
+/** Nabídka osob rozdělená na doporučené (podle oprávnění) a ostatní. */
 export function nabidka(
   osoby: OsobaVyber[],
   kategorie: string,
   slot: Slot,
   externiSmi: boolean,
   veVzduchu: Set<number>,
-) {
-  const uroven = (o: OsobaVyber) =>
-    Math.max(-1, ...o.opravneni.filter((op) => op.kategorie === kategorie).map((op) => UROVEN[op.uroven]))
+): { doporuceni: PolozkaOsoby[]; ostatni: PolozkaOsoby[] } {
+  const opravneni = (o: OsobaVyber) => o.opravneni.filter((op) => op.kategorie === kategorie)
+  const uroven = (o: OsobaVyber) => Math.max(-1, ...opravneni(o).map((op) => UROVEN[op.uroven] ?? -1))
+  const vhodny = (o: OsobaVyber) =>
+    slot.vlekar
+      ? opravneni(o).some((op) => op.uroven === 'vlekar')
+      : uroven(o) >= slot.min && uroven(o) <= slot.max
   const vhodne = osoby.filter((o) => externiSmi || !o.externi)
   const doporuceni = vhodne
-    .filter((o) => uroven(o) >= slot.min && uroven(o) <= slot.max)
+    .filter(vhodny)
     .sort((a, b) => uroven(b) - uroven(a) || jmeno(a).localeCompare(jmeno(b), 'cs'))
   const ostatni = vhodne.filter((o) => !doporuceni.includes(o))
   const polozky = (seznam: OsobaVyber[]) =>
@@ -57,8 +65,5 @@ export function nabidka(
       label:
         jmeno(o) + (o.externi ? ' (externí)' : '') + (veVzduchu.has(o.id) ? ' – ✈ ve vzduchu' : ''),
     }))
-  return [
-    { group: 'Doporučení', items: polozky(doporuceni) },
-    { group: 'Ostatní', items: polozky(ostatni) },
-  ].filter((g) => g.items.length > 0)
+  return { doporuceni: polozky(doporuceni), ostatni: polozky(ostatni) }
 }
