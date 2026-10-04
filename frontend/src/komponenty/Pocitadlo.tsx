@@ -7,8 +7,10 @@ export function Pocitadlo({
   onZmena,
   min = 0,
   max = 99,
+  popisek,
 }: {
   popis: string
+  popisek?: string
   hodnota: number
   onZmena: (n: number) => void
   min?: number
@@ -19,6 +21,11 @@ export function Pocitadlo({
       <Text fz="sm" fw={500}>
         {popis}
       </Text>
+      {popisek && (
+        <Text fz="xs" c="dimmed" mt={-4}>
+          {popisek}
+        </Text>
+      )}
       <Group gap="sm" wrap="nowrap">
         <Button
           variant="default"

@@ -20,6 +20,7 @@ import { type Let, type Oprava, opravitLet } from '../api/lety'
 import { jmeno, nabidka, SLOTY, UCELY } from '../posadka'
 import { PREHLED_KLIC, useCiselniky } from '../useLety'
 import { CasVolba } from './CasVolba'
+import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
 
 /** Oprava letu: stejná pole jako při zakládání + povinný důvod. Otevírá se s klíčem
@@ -49,7 +50,9 @@ export function OpravaLetu({
   const [druhy, setDruhy] = useState<string | null>(
     druhyPuvodni ? String(druhyPuvodni.osoba_id) : null,
   )
-  const clenove = let_.posadka.filter((p) => p.funkce === 'clen')
+  const [clenove, setClenove] = useState<string[]>(
+    let_.posadka.filter((p) => p.funkce === 'clen').map((p) => String(p.osoba_id)),
+  )
   const [hoste, setHoste] = useState(let_.pocet_hostu)
   const [platce, setPlatce] = useState<string | null>(
     let_.plati_aeroklub ? 'aeroklub' : let_.platce_id ? String(let_.platce_id) : null,
@@ -81,7 +84,9 @@ export function OpravaLetu({
   const posadka = [
     ...(pic ? [{ osoba_id: Number(pic), funkce: 'pic' }] : []),
     ...(druhy && sloty.druhy ? [{ osoba_id: Number(druhy), funkce: sloty.druhy.funkce }] : []),
-    ...(ucel === 'normalni' ? clenove.map((p) => ({ osoba_id: p.osoba_id, funkce: 'clen' })) : []),
+    ...(ucel === 'normalni' && !tah
+      ? clenove.map((id) => ({ osoba_id: Number(id), funkce: 'clen' }))
+      : []),
   ]
   const moznostiPlatce = (c?.osoby ?? [])
     .filter((o) => posadka.some((p) => p.osoba_id === o.id && p.funkce !== 'dozor') && !o.externi)
@@ -174,6 +179,7 @@ export function OpravaLetu({
                   if (u.hodnota === ucel) return
                   setUcel(u.hodnota)
                   setDruhy(null)
+                  setClenove([])
                   setUlohaId(null)
                 }}
               >
@@ -188,8 +194,26 @@ export function OpravaLetu({
           searchable={hledani}
           data={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
           value={pic}
-          onChange={setPic}
+          onChange={(v) => {
+            setPic(v)
+            setClenove((cl) => cl.filter((id) => id !== v))
+          }}
         />
+        {ucel === 'normalni' && !tah && (
+          <DalsiClenove
+            osoby={c.osoby}
+            pic={pic}
+            hodnota={clenove}
+            onZmena={setClenove}
+            onProhodit={() => {
+              setClenove(pic ? [pic] : [])
+              setPic(clenove[0])
+            }}
+            veVzduchu={veVzduchu}
+            hledani={hledani}
+            maxPocet={Math.max(0, letadlo.pocet_mist - 1 - hoste)}
+          />
+        )}
         {sloty.druhy && (
           <Select
             label={sloty.druhy.popis}
@@ -208,10 +232,11 @@ export function OpravaLetu({
         )}
         {ucel === 'normalni' && !tah && (
           <Pocitadlo
-            popis="Hosté mimo klub (počet)"
+            popis="Hosté – nečlenové aeroklubu (počet)"
+            popisek="Jen lidé mimo aeroklub, eviduje se počet bez jmen."
             hodnota={hoste}
             onZmena={setHoste}
-            max={Math.max(0, letadlo.pocet_mist - 1)}
+            max={Math.max(0, letadlo.pocet_mist - 1 - clenove.length)}
           />
         )}
         <Select

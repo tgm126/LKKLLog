@@ -108,18 +108,26 @@ def test_vlek_dvojice_startuje_spolecne(mobil, svet):
     expect(mobil.get_by_text("⇄ vleče OK-T101 (Adam Pilot)")).to_be_visible()
 
 
-def test_dalsi_let_odsud_po_mezipristani(mobil, svet):
+def test_dalsi_let_odsud_s_prohozenim_roli(mobil, svet):
+    """Dva členové letí tam a zpátky a na zpáteční cestě si prohodí role."""
     let = let_pilota(svet, stav=StavLetu.UKONCEN, minut=60)
+    let.posadka.create(osoba=svet.jiny_pilot, funkce="clen")
     let.misto_pristani = svet.letnany
     let.save()
     prihlasit(mobil, svet, "casomeric@example.com")
     mobil.get_by_role("button", name="Další akce").click()
     mobil.get_by_role("menuitem", name="Další let odsud…").click()
-    expect(mobil.get_by_text("Krok 5/5: Vzlet")).to_be_visible()
+    expect(mobil.get_by_text("Krok 3/5: Posádka")).to_be_visible()
+    mobil.get_by_role("button", name="⇅ Prohodit role (PIC ↔ člen)").click()
+    expect(mobil.get_by_role("combobox", name="PIC")).to_have_value("Pilot Ivan")
+    mobil.get_by_role("button", name="Dál").click()
+    mobil.get_by_role("button", name="Dál").click()
     mobil.get_by_role("button", name="VZLET TEĎ").click()
 
     expect(mobil.get_by_text("Ve vzduchu (1)")).to_be_visible()
     novy = Let.objects.get(stav=StavLetu.VE_VZDUCHU)
     assert novy.misto_vzletu == svet.letnany
     assert novy.letadlo == let.letadlo
-    assert list(novy.posadka.values_list("osoba_id", flat=True)) == [svet.pilot.pk]
+    posadka = dict(novy.posadka.values_list("osoba_id", "funkce"))
+    assert posadka == {svet.jiny_pilot.pk: "pic", svet.pilot.pk: "clen"}
+    assert novy.platce == svet.jiny_pilot

@@ -24,6 +24,7 @@ import { PREHLED_KLIC, useCiselniky } from '../useLety'
 import { oznamitSeZpet } from '../zpet'
 import { naMinuty } from '../cas'
 import { CasVolba } from './CasVolba'
+import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
 
 export function NovyLet({
@@ -50,12 +51,15 @@ export function NovyLet({
     const c = vychozi?.posadka.find((p) => f(p.funkce))
     return c ? String(c.osoba_id) : null
   }
-  const [krok, setKrok] = useState(vychozi ? 4 : 0)
+  const [krok, setKrok] = useState(vychozi ? 2 : 0)
   const [letadloId, setLetadloId] = useState<number | null>(vychozi?.letadlo_id ?? null)
   const [ucel, setUcel] = useState(vychozi?.ucel ?? 'normalni')
   const [pic, setPic] = useState<string | null>(clenVychozi((f) => f === 'pic'))
   const [druhy, setDruhy] = useState<string | null>(
     clenVychozi((f) => f !== 'pic' && f !== 'clen'),
+  )
+  const [clenove, setClenove] = useState<string[]>(
+    (vychozi?.posadka ?? []).filter((p) => p.funkce === 'clen').map((p) => String(p.osoba_id)),
   )
   const [hoste, setHoste] = useState(vychozi?.pocet_hostu ?? 0)
   const [platce, setPlatce] = useState<string | null>(
@@ -118,8 +122,9 @@ export function NovyLet({
     const p: { osoba_id: number; funkce: string }[] = []
     if (pic) p.push({ osoba_id: Number(pic), funkce: 'pic' })
     if (druhy && sloty.druhy) p.push({ osoba_id: Number(druhy), funkce: sloty.druhy.funkce })
+    if (ucel === 'normalni') clenove.forEach((id) => p.push({ osoba_id: Number(id), funkce: 'clen' }))
     return p
-  }, [pic, druhy, sloty])
+  }, [pic, druhy, sloty, ucel, clenove])
 
   // Výchozí plátce: výcvik žák, přezkoušení přezkoušený, jinak PIC (sólo = žák jako PIC).
   const vychoziPlatce =
@@ -285,6 +290,7 @@ export function NovyLet({
                   setUcel(u.hodnota)
                   setPic(null)
                   setDruhy(null)
+                  setClenove([])
                   setPlatce(null)
                   setUlohaId(null)
                   setKrok(2)
@@ -307,10 +313,27 @@ export function NovyLet({
             value={pic}
             onChange={(v) => {
               setPic(v)
+              setClenove((cl) => cl.filter((id) => id !== v))
               setPlatce(null)
             }}
             nothingFoundMessage="Nikdo takový"
           />
+          {ucel === 'normalni' && (
+            <DalsiClenove
+              osoby={c.osoby}
+              pic={pic}
+              hodnota={clenove}
+              onZmena={setClenove}
+              onProhodit={() => {
+                setClenove(pic ? [pic] : [])
+                setPic(clenove[0])
+                setPlatce(null)
+              }}
+              veVzduchu={veVzduchu}
+              hledani={hledani}
+              maxPocet={Math.max(0, letadlo.pocet_mist - 1 - hoste)}
+            />
+          )}
           {sloty.druhy && (
             <Select
               label={sloty.druhy.popis}
@@ -332,10 +355,11 @@ export function NovyLet({
           )}
           {ucel === 'normalni' && (
             <Pocitadlo
-              popis="Hosté mimo klub (počet)"
+              popis="Hosté – nečlenové aeroklubu (počet)"
+              popisek="Jen lidé mimo aeroklub, eviduje se počet bez jmen."
               hodnota={hoste}
               onZmena={setHoste}
-              max={Math.max(0, letadlo.pocet_mist - 1)}
+              max={Math.max(0, letadlo.pocet_mist - 1 - clenove.length)}
             />
           )}
           <Select
