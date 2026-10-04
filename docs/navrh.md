@@ -1,8 +1,12 @@
 # LKKL Log – návrh aplikace pro evidenci letů
 
-*Verze návrhu 5.1 · 3. 10. 2026*
+*Verze návrhu 6 · 4. 10. 2026*
 
-**Změny oproti verzi 4:**
+**Změny oproti verzi 5:**
+- **fáze spuštění** (kap. 9.1): nejdřív jen správce, pak testovací skupina, pak celý klub;
+- režim odesílání e-mailů, „Přihlásit se jako…“, označení testovacího provozu, úklid před spuštěním.
+
+**Změny ve verzi 5 oproti verzi 4:**
 - **kdo let platí** (plátce);
 - zjištění z DNS (Cloudflare, e-mail zatím zakázaný);
 - potvrzená oprávnění.
@@ -575,6 +579,24 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | později | Výcvik vlekařů (instruktor v obou letadlech), platnosti licencí a techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 
 Etapy 0–5 jsou minimum, se kterým lze jít do zkušebního provozu.
+
+---
+
+### 9.1 Fáze spuštění
+
+| Fáze | Kdo aplikaci používá | E-maily | Data |
+|---|---|---|---|
+| **1. Správce** | jen správce, testuje všechny role | jen na povolené adresy (správce) | skutečné číselníky, testovací lety |
+| **2. Testovací skupina** | správce + vybraní členové | jen na povolené adresy (testeři) | dtto, případně souběžně s papírem |
+| **3. Celý klub** | všichni | všem; pozvánky hromadně jedním krokem | testovací lety smazané |
+
+Co aplikace k tomu potřebuje:
+- **Režim odesílání e-mailů** v nastavení (mění admin, bez nového nasazení): *vypnuto* / *jen povolené adresy* / *všem*. Založení osoby nikdy nic neodešle. Pozvánky se posílají ručně, **vybraným** (fáze 2) nebo **všem** (fáze 3).
+- **Testovací účty** pro jednotlivé role. Správce může použít Gmail adresy s přídavkem (`jmeno+pilot@gmail.com`), které se doručí do jeho schránky.
+- **„Přihlásit se jako…“** pro admina: zobrazí aplikaci očima zvoleného uživatele. Nahoře je výrazný pruh s návratem a každé přepnutí se zapíše do auditního logu.
+- **Označení „TESTOVACÍ PROVOZ“** v záhlaví (přepínač v nastavení), dokud aplikace neběží ostře.
+- **Úklid před spuštěním:** jeden příkaz smaže testovací lety, posádky, uzávěrky a auditní log (jinak chráněný proti mazání) a ponechá číselníky. Testovací lety se nepřenášejí.
+- Jedna instance aplikace, samostatné testovací prostředí zatím ne.
 
 ---
 
