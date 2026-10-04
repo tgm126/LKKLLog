@@ -21,7 +21,6 @@ from provoz.models import Nastaveni
 from . import audit, vypis
 from .models import AuditLog, FunkcePosadky, Let, StavLetu, Ucel, Uzaverka, ZpusobVzletu
 from .obdobi import MESIC, Uzavreno, dalsi_mesic, den_letu, rozsah, zacatek_mesice
-from .slunce import slunce
 from .sluzby import ChybaLetu
 
 Typ = Uzaverka.Typ
@@ -250,17 +249,19 @@ AUTOMATICKY_ZPET = timedelta(days=31)
 
 
 def uzavrit_automaticky(ted: datetime | None = None) -> list[Uzaverka]:
-    """Uzavře dny, kdy se létalo, když už po soumraku nic neletí ani není připravené.
+    """Uzavře minulé dny, kdy se létalo, pokud v nich nic neletí ani není připravené.
 
-    Spouští ho cron každých 15 minut. Den, který už někdy uzavřený byl (i když ho admin
-    znovu otevřel), nechává lidem. Neukončený let den neuzavře – počká se na opravu.
+    Spouští ho cron serveru každý den v 5:00 (český čas), takže se uzavírá předchozí den
+    a piloti mají celý večer na dopsání letů. Dnešek se nikdy neuzavírá. Den, který už
+    někdy uzavřený byl (i když ho admin znovu otevřel), nechává lidem. Neukončený let
+    den neuzavře – zkusí se to znovu další ráno.
     """
     nastaveni = Nastaveni.aktualni()
     if not nastaveni.automaticka_uzaverka:
         return []
     ted = ted or timezone.now()
     dnes = ted.astimezone(UTC).date()
-    zacatek, konec = rozsah(dnes - AUTOMATICKY_ZPET, dnes)
+    zacatek, konec = rozsah(dnes - AUTOMATICKY_ZPET, dnes - timedelta(days=1))
     dny = {
         den_letu(let)
         for let in Let.objects.filter(cas_vzletu__gte=zacatek, cas_vzletu__lt=konec)
@@ -271,12 +272,9 @@ def uzavrit_automaticky(ted: datetime | None = None) -> list[Uzaverka]:
         Uzaverka.objects.filter(typ=Typ.DEN, obdobi__in=dny).values_list("obdobi", flat=True)
     )
     uzavreno = Uzavreno.nacti()
-    odklad = timedelta(minutes=nastaveni.uzaverka_po_soumraku_min)
     vysledek = []
     for den in sorted(dny - uz_byly):
-        if ted < slunce(den)["soumrak"] + odklad or uzavreno.stav(den) == MESIC:
-            continue
-        if _neukoncene(den, den, dnes):
+        if uzavreno.stav(den) == MESIC or _neukoncene(den, den, dnes):
             continue
         p = Priprava(Typ.DEN, den, den, den, lety_obdobi(den, den))
         with transaction.atomic():

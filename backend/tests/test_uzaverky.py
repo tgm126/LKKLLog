@@ -262,14 +262,12 @@ def test_akce_znovu_otevrit_v_administraci(client, svet, den):
     assert AuditLog.objects.filter(akce="otevreni").count() == 1
 
 
-def test_automaticka_uzaverka_po_soumraku(svet, den):
-    from lety.slunce import slunce
+def test_automaticka_uzaverka_druhy_den_rano(svet, den):
     from provoz.models import Nastaveni
 
     let_v(svet, v(den, 9))
-    soumrak = slunce(den)["soumrak"]
-    assert uzaverky.uzavrit_automaticky(soumrak + timedelta(minutes=30)) == []
-    [u] = uzaverky.uzavrit_automaticky(soumrak + timedelta(minutes=61))
+    assert uzaverky.uzavrit_automaticky(v(den, 23, 59)) == []  # týž den nikdy
+    [u] = uzaverky.uzavrit_automaticky(v(den + timedelta(days=1), 3))
     assert u.obdobi == den and u.uzavrel is None
     assert uzaverky.info(u)["uzavrel"] == "automaticky"
     assert AuditLog.objects.get(akce="uzaverka").zmeny["automaticky"] is True

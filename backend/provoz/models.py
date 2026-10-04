@@ -37,14 +37,9 @@ class Nastaveni(models.Model):
         "automatická denní uzávěrka",
         default=True,
         help_text=(
-            "Den se uzavře sám, když po soumraku nic neletí ani není připravené. "
-            "Piloti pak už do dne nic nedopíší – zapíše to časoměřič nebo účetní."
+            "Každý den v 5:00 se uzavře předchozí den, pokud v něm nic neletí ani není "
+            "připravené. Piloti pak už do dne nic nedopíší – zapíše to časoměřič nebo účetní."
         ),
-    )
-    uzaverka_po_soumraku_min = models.PositiveSmallIntegerField(
-        "automatická uzávěrka po konci soumraku [min]",
-        default=60,
-        help_text="Kolik minut po konci občanského soumraku se den uzavře.",
     )
 
     class Meta:

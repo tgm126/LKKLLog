@@ -85,7 +85,7 @@
 4. Motorová letadla, TMG a UL mají vedle **Přistál** tlačítko **T&G**: každé ťuknutí zapíše touch-and-go s časem (dvě ťuknutí do 30 s se berou jako jedno, omyl vrátí tlačítko Zpět). Kluzáky T&G nemají.
 5. Při přistání stačí ťuknout na **Přistál**; počet touch-and-go je předvyplněný z letu a jde upravit tlačítky +/−.
 6. Zapomenutý start nebo stop se opraví a důvod opravy se vybere z nabídky. Každá změna se zapíše do historie.
-7. Večer časoměřič nebo věž den **uzavře** (nebo se po soumraku uzavře sám, když nic neletí). Účetní na konci měsíce zkontroluje lety, opraví chyby, uzavře měsíc a vyexportuje data.
+7. Večer časoměřič nebo věž den **uzavře** (jinak se uzavře sám druhý den v 5:00). Účetní na konci měsíce zkontroluje lety, opraví chyby, uzavře měsíc a vyexportuje data.
 
 ### Zásady, na kterých návrh stojí
 
@@ -307,11 +307,11 @@ Uzávěrka **není zámek**, ale **oficiální souhrn** uložený k danému okam
   zůstanou v historii.
 - Limit „čas nejvýš měsíc zpátky“ neplatí pro účetní a admina, aby mohli opravovat
   i v uzavřeném měsíci.
-- **Automatická denní uzávěrka:** cron serveru každých 15 minut uzavře den, kdy se létalo,
-  jakmile uplyne nastavená doba po konci občanského soumraku (výchozí 60 min) a nic neletí
-  ani není připravené. Neukončený let den neuzavře. Den, který už někdy uzavřený byl
-  (i znovu otevřený adminem), nechává lidem. Zapínání a odklad jsou v *Nastavení provozu*.
-  Uzávěrka pak má jako autora „automaticky“.
+- **Automatická denní uzávěrka:** cron serveru každý den v 5:00 (český čas) uzavře
+  předchozí dny, kdy se létalo, pokud v nich nic neletí ani není připravené. Piloti tak mají
+  celý večer na dopsání letů. Neukončený let den neuzavře (zkusí se to další ráno). Den,
+  který už někdy uzavřený byl (i znovu otevřený adminem), nechává lidem. Zapíná se
+  v *Nastavení provozu*; uzávěrka má jako autora „automaticky“.
 
 ### 4.8 Můj nálet (neoficiální)
 Součty hodin a startů za období podle kategorie a účelu (PIC, žák, přezkoušený). Seznam vlastních letů.

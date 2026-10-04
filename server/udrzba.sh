@@ -4,7 +4,7 @@
 #   udrzba.sh prihlaseni    smaže prošlá přihlášení (denně)
 #   udrzba.sh docker-uklid  zmenší mezipaměť sestavení Dockeru na 1 GB (týdně)
 #   udrzba.sh export        export databáze, uchová 52 posledních, pošle e-mailem (týdně)
-#   udrzba.sh uzaverka      automatická denní uzávěrka po soumraku (každých 15 minut)
+#   udrzba.sh uzaverka      automatická uzávěrka předchozích dnů (denně v 5:00)
 set -euo pipefail
 
 KONTEJNER=vpsc-app-lkkl-cz-lkkllog

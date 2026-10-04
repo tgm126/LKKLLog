@@ -7,4 +7,4 @@ MAILTO=tomas.mandlik@gmail.com
 17 3 * * *  root  /usr/local/lib/lkkllog/udrzba.sh prihlaseni
 27 3 * * 0  root  /usr/local/lib/lkkllog/udrzba.sh docker-uklid
 37 3 * * 1  root  /usr/local/lib/lkkllog/udrzba.sh export
-*/15 * * * * root  /usr/local/lib/lkkllog/udrzba.sh uzaverka
+0 5 * * *   root  /usr/local/lib/lkkllog/udrzba.sh uzaverka

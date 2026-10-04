@@ -9,7 +9,7 @@ class NastaveniAdmin(admin.ModelAdmin):
     fieldsets = [
         ("E-maily", {"fields": ["email_rezim", "povolene_adresy"]}),
         ("Provoz", {"fields": ["testovaci_provoz"]}),
-        ("Uzávěrky", {"fields": ["automaticka_uzaverka", "uzaverka_po_soumraku_min"]}),
+        ("Uzávěrky", {"fields": ["automaticka_uzaverka"]}),
     ]
 
     def has_add_permission(self, request):
