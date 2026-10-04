@@ -7,6 +7,7 @@ import { Navigace } from './komponenty/Navigace'
 import { Pruhy } from './komponenty/Pruhy'
 import { Paticka, Zahlavi } from './komponenty/Zahlavi'
 import { NastavitHeslo } from './stranky/NastavitHeslo'
+import { Ciselniky } from './stranky/Ciselniky'
 import { Displej } from './stranky/Displej'
 import { Licence } from './stranky/Licence'
 import { MujNalet } from './stranky/MujNalet'
@@ -41,6 +42,7 @@ function Obsah() {
       <Route path="/nalet" element={ja?.prihlasen ? <MujNalet /> : <Prihlaseni />} />
       <Route path="/licence" element={ja?.prihlasen ? <Licence /> : <Prihlaseni />} />
       <Route path="/sprava" element={ja?.prihlasen ? <Sprava /> : <Prihlaseni />} />
+      <Route path="/ciselniky" element={ja?.prihlasen ? <Ciselniky /> : <Prihlaseni />} />
       <Route path="*" element={ja?.prihlasen ? <PrehledDne /> : <Prihlaseni />} />
     </Routes>
     </>

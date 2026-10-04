@@ -381,6 +381,24 @@ Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, zá
 ### 4.11 Profil
 Změna hesla, odhlášení.
 
+### 4.13 Číselníky (etapa 14)
+Číselník je **seznam možných hodnot**, na které se odkazují karty osob a letadel. Spravuje
+je admin v menu *Číselníky*: kompaktní tabulka, přidání, úprava a deaktivace. Smazat jde
+jen nepoužívanou hodnotu.
+
+| Číselník | Vazba |
+|---|---|
+| Typy letadel | → kategorie |
+| Druhy průkazů (PPL(A), LAPL(A), SPL, ULL, osvědčení instruktora, pověření examinátora, medical, radiofonní průkaz, angličtina ICAO) | → kategorie, které průkaz pokrývá |
+| Kvalifikace (SEP, TMG, noc, akrobacie, vlekání, způsoby vzletu, FI(A), FI(S), FE(S), třídy medicalu, OFL/VFL, ICAO 4–6…) | → druh průkazu; u každé údaj, zda má datum platnosti |
+| Provozní oprávnění (navijákář, služba RADIO, vyhlídkové lety) | – |
+| Druhy termínů letadel (ARC, prohlídky, pojištění…) | – |
+| Letiště, osnovy a úlohy | úloha → osnova |
+
+Výchozí hodnoty se naplní při instalaci (migrace). Hodnoty se **systémovým kódem** zná
+aplikace a počítá s nimi pravidla: jdou přejmenovat a deaktivovat, ne smazat. Hodnoty
+přidané adminem se jen evidují.
+
 ### 4.12 Licence, medical a rozlétanost (etapa 12)
 Pravidla podle předpisů, zdroje a postup výpočtu jsou v
 [`docs/licence-a-rozletanost.md`](licence-a-rozletanost.md). Je to i podklad pro manuál

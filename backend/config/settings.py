@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "osoby",
     "lety",
     "provoz",
+    "ciselniky",
 ]
 
 MIDDLEWARE = [
