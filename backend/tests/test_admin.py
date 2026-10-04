@@ -43,9 +43,6 @@ def test_admin_zalozi_osobu_bez_prihlaseni(admin_client):
         "/admin/",
         "/admin/osoby/osoba/",
         "/admin/osoby/osoba/add/",
-        "/admin/lety/letadlo/add/",
-        "/admin/lety/uloha/add/",
-        "/admin/lety/osnova/add/",
         "/admin/lety/let/",
         "/admin/lety/let/add/",
         "/admin/lety/auditlog/",
@@ -53,3 +50,11 @@ def test_admin_zalozi_osobu_bez_prihlaseni(admin_client):
 )
 def test_stranky_administrace_se_zobrazi(admin_client, url):
     assert admin_client.get(url).status_code == 200
+
+
+def test_administrace_odkazuje_na_aplikaci(admin_client):
+    stranka = admin_client.get("/admin/").content.decode()
+    assert 'href="/ciselniky"' in stranka and 'href="/letadla"' in stranka
+    # Co se spravuje v aplikaci, v Django administraci není.
+    assert admin_client.get("/admin/lety/letadlo/").status_code == 404
+    assert admin_client.get("/admin/ciselniky/typletadla/").status_code == 404

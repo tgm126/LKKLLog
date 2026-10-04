@@ -1,90 +1,15 @@
-from django import forms
 from django.contrib import admin, messages
 
 from . import uzaverky
 from .models import (
     AuditLog,
     Let,
-    Letadlo,
-    Letiste,
-    Osnova,
     Posadka,
-    TerminLetadla,
-    Ucel,
-    Uloha,
     Upozorneni,
     Uzaverka,
 )
 
-
-class TerminLetadlaInline(admin.TabularInline):
-    model = TerminLetadla
-    extra = 0
-
-
-@admin.register(Letadlo)
-class LetadloAdmin(admin.ModelAdmin):
-    inlines = [TerminLetadlaInline]
-    list_display = [
-        "imatrikulace",
-        "typ",
-        "kategorie",
-        "pocet_mist",
-        "max_doba_min",
-        "vlecne",
-        "soukrome",
-        "aktivni",
-        "poradi",
-    ]
-    list_filter = ["kategorie", "aktivni", "soukrome", "vlecne"]
-    list_editable = ["poradi"]
-    search_fields = ["imatrikulace", "typ"]
-
-
-@admin.register(Letiste)
-class LetisteAdmin(admin.ModelAdmin):
-    list_display = ["icao", "nazev", "domovske", "teren", "aktivni", "poradi"]
-    list_filter = ["aktivni", "domovske", "teren"]
-    list_editable = ["poradi"]
-    search_fields = ["icao", "nazev"]
-
-
-class UlohaForm(forms.ModelForm):
-    # Účely (ArrayField) jako zaškrtávátka místo textu odděleného čárkami.
-    ucely = forms.MultipleChoiceField(
-        label="Účely", choices=Ucel.choices, widget=forms.CheckboxSelectMultiple
-    )
-
-    class Meta:
-        model = Uloha
-        fields = ["osnova", "kod", "nazev", "ucely", "aktivni", "poradi"]
-
-
-class UlohaInline(admin.TabularInline):
-    model = Uloha
-    form = UlohaForm
-    extra = 0
-
-
-@admin.register(Osnova)
-class OsnovaAdmin(admin.ModelAdmin):
-    inlines = [UlohaInline]
-    list_display = ["nazev", "kategorie", "aktivni", "poradi"]
-    list_filter = ["kategorie", "aktivni"]
-    list_editable = ["poradi"]
-
-
-@admin.register(Uloha)
-class UlohaAdmin(admin.ModelAdmin):
-    form = UlohaForm
-    list_display = ["kod", "nazev", "osnova", "ucely_text", "aktivni", "poradi"]
-    list_filter = ["osnova__kategorie", "osnova", "aktivni"]
-    list_editable = ["poradi"]
-    search_fields = ["kod", "nazev"]
-
-    @admin.display(description="účely")
-    def ucely_text(self, obj):
-        return ", ".join(Ucel(u).label for u in obj.ucely)
+# Letadla, letiště, osnovy a úlohy se spravují v aplikaci (Letadla, Číselníky).
 
 
 class PosadkaInline(admin.TabularInline):

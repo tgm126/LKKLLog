@@ -1,0 +1,19 @@
+{% extends "admin/index.html" %}
+{% block content %}
+<div class="module" style="margin-bottom: 20px">
+  <h2>Správa v aplikaci</h2>
+  <p style="padding: 8px 10px; margin: 0">
+    Osoby (karty s průkazy, výcvikem a přeškolením), letadla (karty s deníkem a termíny)
+    a všechny číselníky (typy letadel, průkazy, letiště, osnovy a úlohy…) se spravují přímo
+    v aplikaci:
+    <a href="/osoby"><b>Osoby</b></a> ·
+    <a href="/letadla"><b>Letadla</b></a> ·
+    <a href="/ciselniky"><b>Číselníky</b></a>.
+  </p>
+  <p style="padding: 0 10px 8px; margin: 0">
+    Tady zůstává technická správa: účty a pozvánky, nastavení, lety, uzávěrky, upozornění
+    a auditní log.
+  </p>
+</div>
+{{ block.super }}
+{% endblock %}

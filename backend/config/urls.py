@@ -7,7 +7,7 @@ from .api import api
 
 admin.site.site_header = "LKKL Log – administrace"
 admin.site.site_title = "LKKL Log"
-admin.site.index_title = "Číselníky a správa"
+admin.site.index_title = "Technická správa"
 
 
 def frontend(request):

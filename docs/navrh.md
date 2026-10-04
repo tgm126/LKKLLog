@@ -377,6 +377,11 @@ Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, zá
 ### 4.10 Administrace (admin)
 - Osoby a jejich oprávnění, letadla, letiště, úlohy, nastavení, auditní log s filtrováním, znovuotevření uzávěrky.
 - V první verzi poslouží **vestavěná Django administrace**, kterou dostaneme zdarma. Hezčí vlastní obrazovky přijdou později, pokud budou potřeba.
+- **Od etapy 14** se osoby (karty), letadla (karty) a všechny číselníky včetně letišť, osnov
+  a úloh spravují **jen v aplikaci** (menu *Osoby*, *Letadla*, *Číselníky*). Z Django
+  administrace zmizely, aby nebyla dvě místa pro totéž. Ta zůstává jako **technická
+  administrace** (odkaz v menu se jménem): účty a pozvánky, nastavení, lety, uzávěrky,
+  upozornění a auditní log. Na úvodní stránce má odkazy na obrazovky aplikace.
 
 ### 4.11 Profil
 Změna hesla, odhlášení.
@@ -703,7 +708,9 @@ Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požada
 | Verze uzávěrky a změny po ní / Excel souhrnu | `GET /api/uzaverky/detail?typ=…&obdobi=…`, `GET /api/uzaverky/{id}/export.xlsx` |
 | Data pro displej (bez přihlášení, tajný klíč) | `GET /api/displej?klic=…` |
 | Kontrola stavu (pro nasazování) | `GET /api/health` |
-| Správa číselníků | Django administrace |
+| Číselníky (jen admin) | `GET /api/sprava/ciselniky`, `GET/POST /api/sprava/ciselniky/{klic}`, `POST …/{klic}/{id}/smazat` |
+| Karty osob (admin, správce) | `GET/POST /api/sprava/osoby[/{id}]`, `GET …/volby`, `GET …/{id}/telefon` |
+| Karty letadel (admin, správce) | `GET/POST /api/sprava/letadla[/{id}]`, `GET …/volby` |
 
 **Dvě důležité vlastnosti API:**
 - **Idempotence** (opakované stisknutí nic nepokazí): když časoměřič i pilot zmáčknou PŘISTÁL zároveň, platí první stisk. Druhý dostane zprávu „Už ukončeno ve 12:40:07 (Novák)“ a nevznikne chyba ani dvojí záznam.

@@ -4,24 +4,9 @@ from django.shortcuts import redirect
 
 from . import ucty
 from .forms import OsobaChangeForm, OsobaCreationForm
-from .models import KvalifikaceOsoby, Osoba, PrukazOsoby
+from .models import Osoba
 
-# Doklady, přeškolení a výcvik se zadávají na kartě osoby v aplikaci (Osoby);
-# tady jsou průkazy jen pro nouzi.
-
-
-class KvalifikaceOsobyInline(admin.TabularInline):
-    model = KvalifikaceOsoby
-    extra = 0
-
-
-@admin.register(PrukazOsoby)
-class PrukazOsobyAdmin(admin.ModelAdmin):
-    list_display = ["osoba", "druh", "cislo", "zmeneno"]
-    list_filter = ["druh"]
-    search_fields = ["osoba__prijmeni", "osoba__jmeno", "cislo"]
-    autocomplete_fields = ["osoba"]
-    inlines = [KvalifikaceOsobyInline]
+# Doklady, přeškolení a výcvik se zadávají na kartě osoby v aplikaci (Osoby).
 
 
 @admin.register(Osoba)

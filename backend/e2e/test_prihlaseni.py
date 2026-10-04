@@ -47,7 +47,7 @@ def test_prihlasit_se_jako_a_vratit_se(page, svet):
     page.get_by_label("E-mail").fill("admin@example.com")
     page.get_by_label("Heslo").fill(HESLO)
     page.locator("input[type=submit]").click()
-    expect(page.get_by_text("Číselníky a správa")).to_be_visible()
+    expect(page.get_by_role("heading", name="Technická správa")).to_be_visible()
     page.goto(f"{svet.url}/admin/osoby/osoba/?q=Žák")
     page.get_by_role("checkbox", name=re.compile("Žák Bára")).check()
     page.locator("select[name=action]").select_option("prihlasit_jako")
@@ -61,4 +61,4 @@ def test_prihlasit_se_jako_a_vratit_se(page, svet):
 def test_odkaz_do_administrace_jen_pro_admina(page, svet):
     prihlasit(page, svet, "pilot@example.com")
     page.get_by_role("button", name="Adam").click()
-    expect(page.get_by_role("menuitem", name="Administrace")).to_have_count(0)
+    expect(page.get_by_role("menuitem", name="Technická administrace")).to_have_count(0)

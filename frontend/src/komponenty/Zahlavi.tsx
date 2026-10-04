@@ -39,7 +39,7 @@ export function Zahlavi() {
               </Group>
               {ja.role?.admin && !ja.zastupce && (
                 <Menu.Item component="a" href="/admin/">
-                  Administrace
+                  Technická administrace
                 </Menu.Item>
               )}
               {(ja.role?.admin || ja.role?.spravce) && (
