@@ -21,3 +21,5 @@
   tyto názvy nepoužívat v URL aplikace.
 - E-maily členům: režim odesílání (vypnuto / jen povolené adresy / všem, viz návrh kap. 9.1);
   pozvánky jen ruční akcí admina (vybraným nebo všem), nikdy automaticky při založení osoby.
+- Telefon osoby: nikdy v seznamech, číselnících ani na displeji; jen na vyžádání
+  (samostatné volání API po ťuknutí na „Zobrazit telefon“), pro všechny přihlášené.

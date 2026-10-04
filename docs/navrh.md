@@ -292,7 +292,7 @@ Změna hesla, odhlášení.
 | id | – |
 | jmeno, prijmeni | – |
 | email | unikátní. Kdo ho nemá, nemůže se přihlásit, ale může být v posádce. |
-| telefon | mobil v mezinárodním tvaru (+420…), kontakt např. pro účetní; kdo ho uvidí – otevřená otázka |
+| telefon | mobil v mezinárodním tvaru (+420…). Vidí ho všichni přihlášení, ale **jen na vyžádání**: v seznamech a výběrech se nezobrazuje, ukáže se až po ťuknutí na „Zobrazit telefon“ (s odkazem pro zavolání). Nikdy na velkém displeji. |
 | heslo (hash) | heslo uložené jen jako jednosměrný otisk, nikdy čitelně |
 | role | admin / časoměřič-věž / účetní. Jedna osoba může mít víc rolí, každý přihlášený je zároveň „pilot“. Časoměřič a služba na věži mají stejná práva, proto mají jednu společnou roli. |
 | aktivni | neaktivní osoba se nenabízí ve výběrech, ale zůstává ve starých letech |
@@ -434,6 +434,7 @@ Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požada
 |---|---|
 | Přihlášení / odhlášení / reset hesla | `POST /api/auth/login`, `/logout`, `/reset` |
 | Kdo jsem a jaké mám role | `GET /api/me` |
+| Telefon osoby (jen na vyžádání, ne v číselnících) | `GET /api/osoby/{id}/telefon` |
 | Číselníky najednou (letadla, osoby, úlohy, letiště) | `GET /api/ciselniky` |
 | Přehled dne (+ západ slunce, soumrak, stav uzávěrky) | `GET /api/prehled?den=2026-10-03` |
 | Založit let (příp. rovnou se vzletem, příp. dvojici pro vlek) | `POST /api/lety` |
