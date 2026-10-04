@@ -5,20 +5,17 @@ export const hhmm = (iso: string | Date | null | undefined) =>
 
 export const hhmmss = (iso: string | Date) => new Date(iso).toISOString().slice(11, 19)
 
-/** Doba ve formátu h:mm (např. 1:05). */
+/** Doba v leteckém zápisu: 1°4" = hodina a čtyři minuty. */
 export function doba(minuty: number | null | undefined): string {
   if (minuty === null || minuty === undefined) return '–'
-  const h = Math.floor(minuty / 60)
-  const m = Math.round(minuty % 60)
-  return `${h}:${String(m).padStart(2, '0')}`
+  const celkem = Math.round(minuty)
+  return `${Math.floor(celkem / 60)}°${celkem % 60}"`
 }
 
-/** Běžící čas od vzletu ve formátu h:mm:ss. */
-export function bezi(odIso: string, ted: Date): string {
+/** Běžící čas od vzletu: letecký zápis hodin a minut + sekundy zvlášť. */
+export function bezi(odIso: string, ted: Date): { cas: string; sekundy: string } {
   const s = Math.max(0, Math.floor((ted.getTime() - new Date(odIso).getTime()) / 1000))
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  return `${h}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+  return { cas: doba(Math.floor(s / 60)), sekundy: String(s % 60).padStart(2, '0') }
 }
 
 export const minutOd = (odIso: string, ted: Date) =>
