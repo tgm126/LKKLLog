@@ -69,8 +69,18 @@ class FunkcePosadky(models.TextChoices):
 
 class Letadlo(models.Model):
     imatrikulace = models.CharField(max_length=10, unique=True, help_text="např. OK-0815")
-    typ = models.CharField(max_length=60, help_text="např. L-13 Blaník")
+    typ = models.CharField(
+        max_length=60, help_text="např. L-13 Blaník (při zadání typu z číselníku se doplní)"
+    )
     kategorie = models.CharField(max_length=10, choices=Kategorie.choices)
+    typ_letadla = models.ForeignKey(
+        "ciselniky.TypLetadla",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="letadla",
+        verbose_name="typ z číselníku",
+    )
     pocet_mist = models.PositiveSmallIntegerField("počet míst", default=2)
     max_doba_min = models.PositiveIntegerField(
         "max. doba letu [min]",
@@ -118,6 +128,13 @@ class Letadlo(models.Model):
 
     def __str__(self):
         return f"{self.imatrikulace} ({self.typ})"
+
+    def save(self, *args, **kwargs):
+        # Typ z číselníku určuje název typu i kategorii (název se drží kvůli výpisům).
+        if self.typ_letadla_id:
+            self.typ = self.typ_letadla.nazev
+            self.kategorie = self.typ_letadla.kategorie
+        super().save(*args, **kwargs)
 
 
 class Letiste(models.Model):

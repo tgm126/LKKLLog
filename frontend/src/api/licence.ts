@@ -1,29 +1,5 @@
 import { api } from './klient'
 
-export type Volba = { hodnota: string; nazev: string }
-export type KvalifikaceData = { druh: string; platnost_do: string | null }
-
-export type Licence = {
-  id: number
-  typ: string
-  cislo: string
-  poznamka: string
-  kvalifikace: KvalifikaceData[]
-}
-
-export type Medical = { id: number; trida: string; platnost_do: string }
-
-export type LicenceStav = {
-  osoba_id: number
-  jmeno: string
-  licence: Licence[]
-  medicaly: Medical[]
-  typy: Volba[]
-  /** Které kvalifikace patří ke kterému typu licence. */
-  kvalifikace: Record<string, Volba[]>
-  tridy: Volba[]
-}
-
 export type Kontrola = {
   /** Modul hlídání: způsobilost (doklady), nebo rozlétanost (nálet za období). */
   modul: 'zpusobilost' | 'rozletanost'
@@ -50,33 +26,11 @@ export type KontrolaPosadky = {
   vlek: { letadlo_id: number; vlekar_id: number } | null
 }
 
-/** Bez `osoba` vlastní licence; správce a admin mohou spravovat licence kohokoli. */
-const proOsobu = (osoba?: number | null) => (osoba ? `?osoba=${osoba}` : '')
-
-export const nactiLicence = (osoba?: number | null) =>
-  api<LicenceStav>(`/ucet/licence${proOsobu(osoba)}`)
-export const ulozitLicenci = (data: Omit<Licence, 'id'> & { id?: number }, osoba?: number | null) =>
-  api<LicenceStav>(`/ucet/licence${proOsobu(osoba)}`, data)
-export const smazatLicenci = (id: number, osoba?: number | null) =>
-  api<LicenceStav>(`/ucet/licence/${id}/smazat${proOsobu(osoba)}`, {})
-/** Platnost medicalu po třídách; null = třídu nemá. */
-export const ulozitMedicalTridy = (tridy: Record<string, string | null>, osoba?: number | null) =>
-  api<LicenceStav>(`/ucet/medical/tridy${proOsobu(osoba)}`, { tridy })
-
 export const nactiRozletanost = () => api<Rozletanost>('/nalet/rozletanost')
 export const kontrolaPosadky = (data: KontrolaPosadky) =>
   api<{ varovani: string[] }>('/kontrola-posadky', data)
 
 // --- přehled pro správce licencí a letadel ---
-
-export type Pilot = {
-  id: number
-  jmeno: string
-  testovaci: boolean
-  licence: string[]
-  stav: Kontrola['stav']
-  problemy: string[]
-}
 
 export type Termin = {
   id: number
@@ -103,8 +57,6 @@ export type LetadloSprava = {
   terminy: Termin[]
 }
 
-export const nactiPiloty = () => api<Pilot[]>('/sprava/piloti')
-export const nactiPilota = (id: number) => api<Rozletanost>(`/sprava/piloti/${id}`)
 export const nactiLetadlaSprava = () => api<LetadloSprava[]>('/sprava/letadla')
 export const ulozitDenik = (
   id: number,

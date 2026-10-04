@@ -14,15 +14,6 @@ class Kategorie(models.TextChoices):
     UL = "ul", "UL"
 
 
-class Uroven(models.TextChoices):
-    ZAK = "zak", "Žák"
-    PILOT = "pilot", "Pilot"
-    INSTRUKTOR = "instruktor", "Instruktor"
-    EXAMINATOR = "examinator", "Examinátor"
-    # Není to úroveň, ale příznak: klub dovoluje vlekat (u kategorie vlečného letadla).
-    VLEKAR = "vlekar", "Vlekař"
-
-
 class OsobaManager(BaseUserManager):
     use_in_migrations = True
 
@@ -94,6 +85,12 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField("admin", default=False, help_text="Přístup do administrace.")
     vytvoreno = models.DateTimeField("vytvořeno", auto_now_add=True)
     pozvanka_odeslana = models.DateTimeField("pozvánka odeslána", null=True, blank=True)
+    provozni_opravneni = models.ManyToManyField(
+        "ciselniky.ProvozniOpravneni",
+        blank=True,
+        related_name="+",
+        verbose_name="provozní oprávnění",
+    )
 
     objects = OsobaManager()
 
@@ -123,33 +120,13 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
         return self.jmeno
 
 
-class Opravneni(models.Model):
-    """Co kdo smí v klubu létat: úroveň v kategorii (žák, pilot, instruktor, examinátor)
-    a příznak vlekař. Podle toho se nabízejí lidé ve výběrech posádky; nic neblokuje."""
-
-    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="opravneni")
-    kategorie = models.CharField(max_length=10, choices=Kategorie.choices)
-    uroven = models.CharField("úroveň", max_length=12, choices=Uroven.choices)
-    platne_do = models.DateField("platné do", null=True, blank=True)
-
-    class Meta:
-        verbose_name = "oprávnění"
-        verbose_name_plural = "oprávnění"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["osoba", "kategorie", "uroven"], name="opravneni_unikatni"
-            ),
-        ]
-
-    def __str__(self):
-        return f"{self.get_kategorie_display()} – {self.get_uroven_display()}"
-
-
-# --- licence a medical (etapa 12) ------------------------------------------------------
+# --- systémové kódy z číselníků (pravidla licencí, medicalu a rozlétanosti) -------------
 # Podklady k předpisům: docs/licence-a-rozletanost.md
 
 
 class TypLicence(models.TextChoices):
+    """Systémové kódy druhů průkazů (číselník ciselniky.DruhPrukazu)."""
+
     PPL_A = "ppl_a", "PPL(A)"
     LAPL_A = "lapl_a", "LAPL(A)"
     SPL = "spl", "SPL"
@@ -159,6 +136,8 @@ class TypLicence(models.TextChoices):
 
 
 class DruhKvalifikace(models.TextChoices):
+    """Systémové kódy kvalifikací (číselník ciselniky.KvalifikacePrukazu)."""
+
     SEP = "sep", "SEP (land)"
     TMG = "tmg", "TMG"
     NAVIJAK = "navijak", "Naviják / auto"
@@ -171,83 +150,15 @@ class DruhKvalifikace(models.TextChoices):
     EN_4 = "en_4", "ICAO 4"
     EN_5 = "en_5", "ICAO 5"
     EN_6 = "en_6", "ICAO 6"
-
-
-# Které kvalifikace (třídy, způsoby vzletu) patří ke kterému typu licence.
-KVALIFIKACE_LICENCE = {
-    TypLicence.PPL_A: [DruhKvalifikace.SEP, DruhKvalifikace.TMG],
-    TypLicence.LAPL_A: [DruhKvalifikace.SEP, DruhKvalifikace.TMG],
-    TypLicence.SPL: [
-        DruhKvalifikace.NAVIJAK,
-        DruhKvalifikace.VLEK,
-        DruhKvalifikace.SAMOSTART,
-        DruhKvalifikace.GUMA,
-        DruhKvalifikace.TMG,
-    ],
-    TypLicence.ULL: [DruhKvalifikace.ULL],
-    TypLicence.RADIO: [DruhKvalifikace.OFL, DruhKvalifikace.VFL],
-    # Angličtina ICAO (FCL.055) – jen informace, provoz aeroklubu ji nevyžaduje (česky).
-    TypLicence.JAZYK: [DruhKvalifikace.EN_4, DruhKvalifikace.EN_5, DruhKvalifikace.EN_6],
-}
-
-
-class Licence(models.Model):
-    """Pilotní průkaz. Zadává ho pilot sám nebo admin."""
-
-    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="licence")
-    typ = models.CharField(max_length=8, choices=TypLicence.choices)
-    cislo = models.CharField("číslo průkazu", max_length=40, blank=True)
-    poznamka = models.CharField("poznámka", max_length=200, blank=True)
-    zmeneno = models.DateTimeField("změněno", auto_now=True)
-
-    class Meta:
-        verbose_name = "licence"
-        verbose_name_plural = "licence"
-        ordering = ["osoba", "typ"]
-        constraints = [
-            models.UniqueConstraint(fields=["osoba", "typ"], name="licence_jednou"),
-        ]
-
-    def __str__(self):
-        return f"{self.osoba} – {self.get_typ_display()}"
-
-
-class Kvalifikace(models.Model):
-    """Třída (SEP, TMG), způsob vzletu kluzáku nebo ULL v rámci licence."""
-
-    licence = models.ForeignKey(Licence, on_delete=models.CASCADE, related_name="kvalifikace")
-    druh = models.CharField(max_length=10, choices=DruhKvalifikace.choices)
-    platnost_do = models.DateField(
-        "platnost do",
-        null=True,
-        blank=True,
-        help_text=(
-            "U PPL(A) konec platnosti kvalifikace SEP/TMG, u ULL a radiofonního průkazu "
-            "platnost průkazu."
-        ),
-    )
-
-    class Meta:
-        verbose_name = "kvalifikace"
-        verbose_name_plural = "kvalifikace"
-        constraints = [
-            models.UniqueConstraint(fields=["licence", "druh"], name="kvalifikace_jednou"),
-        ]
-
-    def __str__(self):
-        return self.get_druh_display()
-
-    def clean(self):
-        if self.licence_id and self.druh not in KVALIFIKACE_LICENCE[self.licence.typ]:
-            raise ValidationError(
-                f"Kvalifikace {self.get_druh_display()} k licenci "
-                f"{self.licence.get_typ_display()} nepatří."
-            )
+    VLEKANI = "vlekani", "Vlekání kluzáků"
+    FI_S_OMEZENY = "fi_s_omezeny", "FI(S) omezený"
 
 
 class TridaMedicalu(models.TextChoices):
-    T1 = "1", "Třída 1"
-    T2 = "2", "Třída 2"
+    """Systémové kódy tříd medicalu (číselník kvalifikací průkazu Medical)."""
+
+    T1 = "t1", "Třída 1"
+    T2 = "t2", "Třída 2"
     LAPL = "lapl", "LAPL"
 
 
@@ -260,26 +171,119 @@ MEDICAL_LICENCE = {
 }
 
 
-class Medical(models.Model):
-    """Platnost medicalu pro jednu třídu. Jedno osvědčení může mít platnost pro víc tříd
-    (např. třída 2 a LAPL s jiným datem) – pak jsou to dva záznamy."""
-
-    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="medicaly")
-    trida = models.CharField("třída", max_length=4, choices=TridaMedicalu.choices)
-    platnost_do = models.DateField("platnost do")
-
-    class Meta:
-        verbose_name = "medical"
-        verbose_name_plural = "medicaly"
-        ordering = ["osoba", "trida"]
-        constraints = [
-            models.UniqueConstraint(fields=["osoba", "trida"], name="medical_jednou"),
-        ]
-
-    def __str__(self):
-        return f"{self.osoba} – {self.get_trida_display()} do {self.platnost_do:%d.%m.%Y}"
-
-
 def smi_spravovat_licence(osoba) -> bool:
     """Licence a medical všech pilotů a termíny letadel: správce a admin."""
     return osoba.is_staff or osoba.role_spravce
+
+
+# --- doklady osoby podle číselníků (etapa 14) -------------------------------------------
+# Průkazy, medical, radiofonní průkaz, osvědčení instruktora a pověření examinátora jsou
+# všechny „průkaz osoby“ s kvalifikacemi z číselníku (ciselniky.DruhPrukazu a
+# KvalifikacePrukazu). Pravidla aplikace pracují se systémovými kódy (TypLicence,
+# DruhKvalifikace výše).
+
+
+class PrukazOsoby(models.Model):
+    """Průkaz nebo doklad osoby (pilotní průkaz, medical, osvědčení instruktora…)."""
+
+    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="prukazy")
+    druh = models.ForeignKey(
+        "ciselniky.DruhPrukazu", on_delete=models.PROTECT, related_name="+", verbose_name="druh"
+    )
+    cislo = models.CharField("číslo průkazu", max_length=40, blank=True)
+    poznamka = models.CharField("poznámka", max_length=200, blank=True)
+    zmeneno = models.DateTimeField("změněno", auto_now=True)
+
+    class Meta:
+        verbose_name = "průkaz osoby"
+        verbose_name_plural = "průkazy osob"
+        constraints = [
+            models.UniqueConstraint(fields=["osoba", "druh"], name="prukaz_osoby_jednou"),
+        ]
+
+    def __str__(self):
+        return f"{self.osoba} – {self.druh}"
+
+    @property
+    def typ(self) -> str:
+        """Systémový kód druhu (ppl_a, spl, medical…), u vlastních druhů prázdný."""
+        return self.druh.kod or ""
+
+    def get_typ_display(self) -> str:
+        return self.druh.nazev
+
+
+class KvalifikaceOsoby(models.Model):
+    """Kvalifikace v průkazu osoby (SEP, naviják, třída 2, FI(S)…) a její platnost."""
+
+    prukaz = models.ForeignKey(PrukazOsoby, on_delete=models.CASCADE, related_name="kvalifikace")
+    kvalifikace = models.ForeignKey(
+        "ciselniky.KvalifikacePrukazu", on_delete=models.PROTECT, related_name="+"
+    )
+    platnost_do = models.DateField("platnost do", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "kvalifikace osoby"
+        verbose_name_plural = "kvalifikace osob"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["prukaz", "kvalifikace"], name="kvalifikace_osoby_jednou"
+            ),
+        ]
+
+    def __str__(self):
+        return self.kvalifikace.nazev
+
+    @property
+    def druh(self) -> str:
+        """Systémový kód kvalifikace (sep, navijak, t2…), u vlastních prázdný."""
+        return self.kvalifikace.kod or ""
+
+    def get_druh_display(self) -> str:
+        return self.kvalifikace.nazev
+
+    def clean(self):
+        if self.prukaz_id and self.kvalifikace.druh_id != self.prukaz.druh_id:
+            raise ValidationError("Kvalifikace k tomuto průkazu nepatří.")
+
+
+class Preskoleni(models.Model):
+    """Přeškolení na typ letadla – platí pro všechna letadla toho typu."""
+
+    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="preskoleni")
+    typ = models.ForeignKey(
+        "ciselniky.TypLetadla", on_delete=models.PROTECT, related_name="+", verbose_name="typ"
+    )
+    datum = models.DateField("přeškolen dne", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "přeškolení na typ"
+        verbose_name_plural = "přeškolení na typy"
+        constraints = [models.UniqueConstraint(fields=["osoba", "typ"], name="preskoleni_jednou")]
+
+    def __str__(self):
+        return f"{self.osoba} – {self.typ}"
+
+
+class Vycvik(models.Model):
+    """Výcvik žáka na pilotní průkaz (FCL.020: sólo jen s povolením instruktora)."""
+
+    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="vycviky")
+    druh = models.ForeignKey(
+        "ciselniky.DruhPrukazu",
+        on_delete=models.PROTECT,
+        related_name="+",
+        verbose_name="výcvik na",
+    )
+    zahajen = models.DateField("zahájen", null=True, blank=True)
+    solo_povoleno = models.DateField("první sólo povoleno", null=True, blank=True)
+    ukoncen = models.DateField("ukončen", null=True, blank=True)
+    poznamka = models.CharField("poznámka", max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "výcvik"
+        verbose_name_plural = "výcviky"
+        ordering = ["-zahajen"]
+
+    def __str__(self):
+        return f"{self.osoba} – výcvik {self.druh}"

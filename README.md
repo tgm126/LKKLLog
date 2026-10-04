@@ -96,15 +96,11 @@ uv run playwright install chromium   # jednou
 uv run pytest e2e
 ```
 
-## Číselníky (úvodní načtení)
+## Číselníky, osoby a letadla
 
-```bash
-cd backend
-uv run python manage.py sablona_ciselniku ciselniky.xlsx   # prázdná šablona s návodem
-uv run python manage.py nacti_ciselniky ciselniky.xlsx     # načtení (při chybě se nezmění nic)
-```
-
-Soubory `*.xlsx` se necommitují (obsahují jména lidí).
+Číselníky (typy letadel, druhy průkazů, kvalifikace…) se naplní výchozími hodnotami při
+migraci a upravují se v aplikaci (menu *Číselníky*, admin). Osoby a letadla se zadávají
+na jejich kartách v aplikaci.
 
 ## Zkouška celé aplikace v Dockeru
 

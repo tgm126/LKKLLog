@@ -12,14 +12,25 @@ export type Letadlo = {
   max_doba_min: number | null
   soukrome: boolean
   vlecne: boolean
+  typ_letadla_id: number | null
 }
 
+/** Osoba pro výběry posádky: kategorie letadel, ve kterých se hodí do které role. */
 export type OsobaVyber = {
   id: number
   jmeno: string
   prijmeni: string
   externi: boolean
-  opravneni: { kategorie: string; uroven: string }[]
+  pilot: string[]
+  vlekar: string[]
+  instruktor: string[]
+  /** Neomezený instruktor – smí dozorovat sólo. */
+  dozor: string[]
+  examinator: string[]
+  /** Probíhající výcvik. */
+  zak: string[]
+  /** Přeškolen na typy letadel (id z číselníku). */
+  typy: number[]
 }
 
 export type Letiste = {

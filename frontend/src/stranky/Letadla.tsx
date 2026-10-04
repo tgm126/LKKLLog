@@ -1,7 +1,6 @@
 import {
   Alert,
   Autocomplete,
-  Badge,
   Button,
   Card,
   Container,
@@ -9,9 +8,7 @@ import {
   Loader,
   Modal,
   NumberInput,
-  SegmentedControl,
   Stack,
-  Switch,
   Text,
   TextInput,
   Title,
@@ -19,30 +16,18 @@ import {
 import { notifications } from '@mantine/notifications'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link } from 'react-router'
 
 import {
-  type Kontrola,
   type LetadloSprava,
   nactiLetadlaSprava,
-  nactiPilota,
-  nactiPiloty,
-  type Pilot,
   smazatTermin,
   type Termin,
   ulozitDenik,
   ulozitTermin,
 } from '../api/licence'
 import { doba } from '../cas'
-import { SeznamKontrol } from '../komponenty/Rozletanost'
+import { BARVA_STAVU } from '../stav'
 
-const BARVA: Record<Kontrola['stav'], string> = { ok: 'green', pozor: 'orange', chyba: 'red', info: 'gray' }
-const TEXT_STAVU: Record<Kontrola['stav'], string> = {
-  ok: 'v pořádku',
-  pozor: 'brzy vyprší',
-  chyba: 'neplatné',
-  info: 'info',
-}
 const BEZNE_TERMINY = [
   'ARC',
   'Roční prohlídka',
@@ -57,85 +42,6 @@ const BEZNE_TERMINY = [
 
 const datum = (iso: string | null) =>
   iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString('cs-CZ', { timeZone: 'UTC' }) : ''
-
-function DetailPilota({ pilot, onZavrit }: { pilot: Pilot; onZavrit: () => void }) {
-  const detail = useQuery({ queryKey: ['sprava', 'pilot', pilot.id], queryFn: () => nactiPilota(pilot.id) })
-  return (
-    <Modal opened onClose={onZavrit} title={pilot.jmeno} size="lg">
-      <Stack gap="xs">
-        {detail.isPending && <Loader size="sm" />}
-        {detail.data && <SeznamKontrol kontroly={detail.data.kontroly} />}
-        <Button component={Link} to={`/licence?osoba=${pilot.id}`} variant="light">
-          Upravit licence a medical
-        </Button>
-      </Stack>
-    </Modal>
-  )
-}
-
-function Piloti() {
-  const piloti = useQuery({ queryKey: ['sprava', 'piloti'], queryFn: nactiPiloty })
-  const [jenProblemy, setJenProblemy] = useState(false)
-  const [detail, setDetail] = useState<Pilot | null>(null)
-  if (piloti.isPending) return <Loader />
-  if (piloti.isError) return <Alert color="red">{piloti.error.message}</Alert>
-  const seznam = piloti.data.filter((p) => !jenProblemy || p.stav === 'chyba' || p.stav === 'pozor')
-  return (
-    <Stack gap="xs">
-      <Switch label="Jen piloti s problémem" checked={jenProblemy} onChange={(e) => setJenProblemy(e.currentTarget.checked)} />
-      <Text fz="xs" c="dimmed">
-        Piloti = aktivní členové s licencí nebo oprávněním. Stav počítá licence, medical a rozlétanost z
-        letů v LKKL Log.
-      </Text>
-      {seznam.map((p) => (
-        <Card
-          key={p.id}
-          withBorder
-          padding="sm"
-          onClick={() => setDetail(p)}
-          style={{ cursor: 'pointer', borderLeft: `4px solid var(--mantine-color-${BARVA[p.stav]}-6)` }}
-        >
-          <Group justify="space-between" wrap="nowrap">
-            <Group gap={6}>
-              <Text fw={700}>{p.jmeno}</Text>
-              {p.testovaci && (
-                <Badge color="yellow" variant="light" size="xs">
-                  testovací
-                </Badge>
-              )}
-            </Group>
-            <Badge color={BARVA[p.stav]} variant="light">
-              {TEXT_STAVU[p.stav]}
-            </Badge>
-          </Group>
-          <Group gap={4} mt={4}>
-            {p.licence.length === 0 && (
-              <Text fz="sm" c="dimmed">
-                bez licence
-              </Text>
-            )}
-            {p.licence.map((l) => (
-              <Badge key={l} variant="outline" color="gray">
-                {l}
-              </Badge>
-            ))}
-          </Group>
-          {p.problemy.slice(0, 3).map((pr) => (
-            <Text key={pr} fz="xs" c="dimmed">
-              {pr}
-            </Text>
-          ))}
-          {p.problemy.length > 3 && (
-            <Text fz="xs" c="dimmed">
-              … a další ({p.problemy.length - 3})
-            </Text>
-          )}
-        </Card>
-      ))}
-      {detail && <DetailPilota pilot={detail} onZavrit={() => setDetail(null)} />}
-    </Stack>
-  )
-}
 
 function useUlozeniLetadel<T>(fn: (data: T) => Promise<LetadloSprava[]>, zprava: string, hotovo: () => void) {
   const klient = useQueryClient()
@@ -250,7 +156,7 @@ function TerminDialog({
   )
 }
 
-function Letadla() {
+function SeznamLetadel() {
   const letadla = useQuery({ queryKey: ['sprava', 'letadla'], queryFn: nactiLetadlaSprava })
   const [denik, setDenik] = useState<LetadloSprava | null>(null)
   const [termin, setTermin] = useState<{ letadlo: LetadloSprava; termin: Termin | null } | null>(null)
@@ -301,12 +207,12 @@ function Letadla() {
               style={{ cursor: 'pointer' }}
             >
               <Text fz="sm">
-                <Text span c={BARVA[t.stav]} fw={800}>
+                <Text span c={BARVA_STAVU[t.stav]} fw={800}>
                   ●
                 </Text>{' '}
                 {t.nazev}
               </Text>
-              <Text fz="sm" c={t.stav === 'ok' ? 'dimmed' : BARVA[t.stav]} ta="right">
+              <Text fz="sm" c={t.stav === 'ok' ? 'dimmed' : BARVA_STAVU[t.stav]} ta="right">
                 {t.text}
               </Text>
             </Group>
@@ -319,22 +225,13 @@ function Letadla() {
   )
 }
 
-/** Piloti a letadla: přehled pro správce licencí a letadel (a admina). */
-export function Sprava() {
-  const [pohled, setPohled] = useState('piloti')
+/** Letadla: nálet z deníku a evidence, termíny (admin, správce licencí a letadel). */
+export function Letadla() {
   return (
-    <Container size="sm" pb="xl">
-      <Stack gap="md">
-        <Title order={2}>Piloti a letadla</Title>
-        <SegmentedControl
-          value={pohled}
-          onChange={setPohled}
-          data={[
-            { value: 'piloti', label: 'Piloti' },
-            { value: 'letadla', label: 'Letadla' },
-          ]}
-        />
-        {pohled === 'piloti' ? <Piloti /> : <Letadla />}
+    <Container size="lg" pb="xl">
+      <Stack gap="sm">
+        <Title order={3}>Letadla</Title>
+        <SeznamLetadel />
       </Stack>
     </Container>
   )

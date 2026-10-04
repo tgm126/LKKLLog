@@ -310,7 +310,7 @@ export function NovyLet({
           <VyberOsoby
             label={sloty.pic.popis}
             searchable={hledani}
-            nabidka={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
+            nabidka={nabidka(c.osoby, letadlo, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
             value={pic}
             onChange={(v) => {
               setPic(v)
@@ -340,7 +340,7 @@ export function NovyLet({
               searchable={hledani}
               nabidka={nabidka(
                 c.osoby.filter((o) => String(o.id) !== pic),
-                letadlo.kategorie,
+                letadlo,
                 sloty.druhy,
                 false,
                 veVzduchu,
@@ -420,7 +420,7 @@ export function NovyLet({
                 searchable={hledani}
                 nabidka={nabidka(
                   c.osoby.filter((o) => !posadka.some((p) => p.osoba_id === o.id)),
-                  vlecna?.kategorie ?? 'motor',
+                  vlecna ?? { kategorie: 'motor', typ_letadla_id: null },
                   SLOT_VLEKAR,
                   false,
                   veVzduchu,

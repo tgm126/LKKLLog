@@ -1,10 +1,11 @@
-"""Testovací licence, medical, radiofonní průkazy a angličtina ICAO.
+"""Testovací průkazy, medical, radiofonní průkazy a angličtina ICAO.
 
-Jen pro osoby s příznakem „Testovací“ (úklid před spuštěním je smaže i s licencemi).
+Jen pro osoby s příznakem „Testovací“ (úklid před spuštěním je smaže i s doklady).
 Data jsou pestrá, aby šlo vyzkoušet všechny stavy: v pořádku, brzy vyprší, prošlé,
-chybějící. Řídí se oprávněními osoby (kategorie a úroveň). Spuštění:
+chybějící. Kategorie se řídí přeškolením osoby na typy letadel, žák = probíhající výcvik.
+Osvědčení instruktora a pověření examinátora se nemění. Spuštění:
 
-    uv run python manage.py testovaci_licence            # jen osoby bez licencí
+    uv run python manage.py testovaci_licence            # jen osoby bez dokladů
     uv run python manage.py testovaci_licence --prepsat  # znovu u všech testovacích
 """
 
@@ -14,35 +15,48 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
+from ciselniky.models import DruhPrukazu, KvalifikacePrukazu, SkupinaPrukazu
 from osoby.models import (
-    DruhKvalifikace as D,
-)
-from osoby.models import (
+    DruhKvalifikace,
     Kategorie,
-    Licence,
-    Medical,
+    KvalifikaceOsoby,
     Osoba,
+    PrukazOsoby,
     TridaMedicalu,
     TypLicence,
-    Uroven,
 )
 
+D, M = DruhKvalifikace, TridaMedicalu  # krátké názvy pro přehledné tabulky dat níže
 
-def _licence(osoba):
-    """Funkce, která osobě založí licenci daného typu s kvalifikacemi."""
+# Doklady, které příkaz vytváří (osvědčení instruktora/examinátora nechává být).
+GENEROVANE = [
+    SkupinaPrukazu.PILOTNI,
+    SkupinaPrukazu.MEDICAL,
+    SkupinaPrukazu.RADIO,
+    SkupinaPrukazu.JAZYK,
+]
 
-    def zalozit(typ, *kvalifikace):
-        lic = Licence.objects.create(
-            osoba=osoba, typ=typ, cislo=f"TEST-{osoba.pk}-{typ}", poznamka="testovací"
+
+def _zakladac(osoba):
+    """Funkce, která osobě založí průkaz daného druhu s kvalifikacemi (podle kódů)."""
+
+    def zalozit(kod, *kvalifikace):
+        druh = DruhPrukazu.objects.get(kod=kod)
+        prukaz = PrukazOsoby.objects.create(
+            osoba=osoba, druh=druh, cislo=f"TEST-{osoba.pk}-{kod}", poznamka="testovací"
         )
-        for druh, platnost in kvalifikace:
-            lic.kvalifikace.create(druh=druh, platnost_do=platnost)
+        for k_kod, platnost in kvalifikace:
+            KvalifikaceOsoby.objects.create(
+                prukaz=prukaz,
+                kvalifikace=KvalifikacePrukazu.objects.get(druh=druh, kod=k_kod),
+                platnost_do=platnost,
+            )
 
     return zalozit
 
 
 class Command(BaseCommand):
-    help = "Doplní testovací licence a medical osobám s příznakem Testovací."
+    help = "Doplní testovací průkazy a medical osobám s příznakem Testovací."
 
     def add_arguments(self, parser):
         parser.add_argument("--prepsat", action="store_true", help="Smazat a vytvořit znovu.")
@@ -56,28 +70,27 @@ class Command(BaseCommand):
         )
         hotovo = 0
         for i, osoba in enumerate(osoby):
+            generovane = PrukazOsoby.objects.filter(osoba=osoba, druh__skupina__in=GENEROVANE)
             if prepsat:
-                Licence.objects.filter(osoba=osoba).delete()
-                Medical.objects.filter(osoba=osoba).delete()
-            elif osoba.licence.exists() or osoba.medicaly.exists():
-                continue  # už má zadané údaje – nepřepisujeme
-            opravneni = list(osoba.opravneni.all())
-            kategorie = {o.kategorie for o in opravneni if o.uroven != Uroven.ZAK}
-            jen_zak = opravneni and not kategorie
+                generovane.delete()
+            elif generovane.exists():
+                continue  # už má zadané doklady – nepřepisujeme
+            kategorie = {p.typ.kategorie for p in osoba.preskoleni.select_related("typ")}
+            zak = osoba.vycviky.filter(ukoncen__isnull=True).exists()
+            if not kategorie and not zak:
+                continue  # nelétá
+            zalozit = _zakladac(osoba)
 
             # Medical: třída 2 a LAPL s různou platností; někdo prošlý, někdo brzy vyprší.
             if i % 5 == 0:
-                medical = {TridaMedicalu.T2: za(-10), TridaMedicalu.LAPL: za(400)}
+                zalozit("medical", (M.T2, za(-10)), (M.LAPL, za(400)))
             elif i % 5 == 1:
-                medical = {TridaMedicalu.T2: za(20)}
+                zalozit("medical", (M.T2, za(20)))
             else:
-                medical = {TridaMedicalu.T2: za(300 + 50 * i), TridaMedicalu.LAPL: za(900)}
-            for trida, platnost in medical.items():
-                Medical.objects.create(osoba=osoba, trida=trida, platnost_do=platnost)
-            licence = _licence(osoba)
-            if jen_zak:  # žák: bez licence, ale medical a radiofonní průkaz kvůli sólu
+                zalozit("medical", (M.T2, za(300 + 50 * i)), (M.LAPL, za(900)))
+            if zak and not kategorie:  # žák: medical a radiofonní průkaz kvůli sólu
                 if i % 4 != 0:
-                    licence(TypLicence.RADIO, (D.OFL, za(3000)))
+                    zalozit(TypLicence.RADIO, (D.OFL, za(3000)))
                 hotovo += 1
                 continue
 
@@ -85,22 +98,23 @@ class Command(BaseCommand):
                 tridy = [D.SEP] if Kategorie.MOTOR in kategorie else []
                 if Kategorie.TMG in kategorie:
                     tridy.append(D.TMG)
+                vlekani = [(D.VLEKANI, None)] if i % 2 == 0 else []
                 if i % 2 == 0:  # PPL(A) s datem platnosti kvalifikací
                     platnost = za(-5) if i % 6 == 4 else za(200 + 40 * i)
-                    licence(TypLicence.PPL_A, *[(t, platnost) for t in tridy])
+                    zalozit(TypLicence.PPL_A, *[(t, platnost) for t in tridy], *vlekani)
                 else:
-                    licence(TypLicence.LAPL_A, *[(t, None) for t in tridy])
+                    zalozit(TypLicence.LAPL_A, *[(t, None) for t in tridy])
             if Kategorie.KLUZAK in kategorie:
                 zpusoby = [(D.NAVIJAK, None), (D.VLEK, None)]
                 if i % 3 == 0:
                     zpusoby.append((D.SAMOSTART, None))
-                licence(TypLicence.SPL, *zpusoby)
+                zalozit(TypLicence.SPL, *zpusoby)
             if Kategorie.UL in kategorie:
-                licence(TypLicence.ULL, (D.ULL, za(-100) if i % 5 == 3 else za(365)))
+                zalozit(TypLicence.ULL, (D.ULL, za(-100) if i % 5 == 3 else za(365)))
 
             if i % 4 != 0:  # každý čtvrtý bez radiofonního průkazu
-                licence(TypLicence.RADIO, (D.OFL, za(40) if i % 7 == 2 else za(2500)))
+                zalozit(TypLicence.RADIO, (D.OFL, za(40) if i % 7 == 2 else za(2500)))
             if i % 4 == 1:  # angličtinu ICAO má jen pár lidí
-                licence(TypLicence.JAZYK, (D.EN_4, za(700)) if i % 8 == 1 else (D.EN_6, None))
+                zalozit(TypLicence.JAZYK, (D.EN_4, za(700)) if i % 8 == 1 else (D.EN_6, None))
             hotovo += 1
-        self.stdout.write(f"Testovací licence a medical doplněny {hotovo} osobám.")
+        self.stdout.write(f"Testovací doklady doplněny {hotovo} osobám.")

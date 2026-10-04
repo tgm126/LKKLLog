@@ -9,10 +9,11 @@ import { Paticka, Zahlavi } from './komponenty/Zahlavi'
 import { NastavitHeslo } from './stranky/NastavitHeslo'
 import { Ciselniky } from './stranky/Ciselniky'
 import { Displej } from './stranky/Displej'
-import { Licence } from './stranky/Licence'
+import { KartaOsoby } from './stranky/KartaOsoby'
+import { Letadla } from './stranky/Letadla'
 import { MujNalet } from './stranky/MujNalet'
 import { Prihlaseni } from './stranky/Prihlaseni'
-import { Sprava } from './stranky/Sprava'
+import { Osoby } from './stranky/Osoby'
 import { PrehledDne } from './stranky/PrehledDne'
 import { Uzaverky } from './stranky/Uzaverky'
 import { Vypis } from './stranky/Vypis'
@@ -40,8 +41,10 @@ function Obsah() {
       <Route path="/vypis" element={ja?.prihlasen ? <Vypis /> : <Prihlaseni />} />
       <Route path="/uzaverky" element={ja?.prihlasen ? <Uzaverky /> : <Prihlaseni />} />
       <Route path="/nalet" element={ja?.prihlasen ? <MujNalet /> : <Prihlaseni />} />
-      <Route path="/licence" element={ja?.prihlasen ? <Licence /> : <Prihlaseni />} />
-      <Route path="/sprava" element={ja?.prihlasen ? <Sprava /> : <Prihlaseni />} />
+      <Route path="/osoby" element={ja?.prihlasen ? <Osoby /> : <Prihlaseni />} />
+      <Route path="/osoby/:id" element={ja?.prihlasen ? <KartaOsoby /> : <Prihlaseni />} />
+      <Route path="/letadla" element={ja?.prihlasen ? <Letadla /> : <Prihlaseni />} />
+      <Route path="/sprava" element={<Navigate to="/letadla" replace />} />
       <Route path="/ciselniky" element={ja?.prihlasen ? <Ciselniky /> : <Prihlaseni />} />
       <Route path="*" element={ja?.prihlasen ? <PrehledDne /> : <Prihlaseni />} />
     </Routes>

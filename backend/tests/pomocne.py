@@ -55,3 +55,31 @@ def let_v(svet, vzlet, minut=30, letadlo=None, pilot=None, **kw):
     )
     novy.posadka.create(osoba=pilot, funkce="pic")
     return novy
+
+
+def prukaz(osoba, kod, *kvalifikace):
+    """Průkaz osoby podle systémových kódů: prukaz(o, "ppl_a", ("sep", date(…)))."""
+    from ciselniky.models import DruhPrukazu, KvalifikacePrukazu
+    from osoby.models import KvalifikaceOsoby, PrukazOsoby
+
+    druh = DruhPrukazu.objects.get(kod=kod)
+    p, _ = PrukazOsoby.objects.get_or_create(osoba=osoba, druh=druh)
+    for k_kod, platnost in kvalifikace:
+        KvalifikaceOsoby.objects.create(
+            prukaz=p,
+            kvalifikace=KvalifikacePrukazu.objects.get(druh=druh, kod=k_kod),
+            platnost_do=platnost,
+        )
+    return p
+
+
+def typ_letadla(letadlo):
+    """Napojí letadlo na typ z číselníku (založí ho, když neexistuje)."""
+    from ciselniky.models import TypLetadla
+
+    typ, _ = TypLetadla.objects.get_or_create(
+        nazev=letadlo.typ, defaults={"kategorie": letadlo.kategorie}
+    )
+    letadlo.typ_letadla = typ
+    letadlo.save()
+    return typ

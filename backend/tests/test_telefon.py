@@ -1,6 +1,6 @@
 import pytest
 
-from lety.ciselniky import _telefon
+from osoby.telefon import normalizovat as _telefon
 
 
 @pytest.mark.parametrize(

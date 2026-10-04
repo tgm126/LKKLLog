@@ -42,9 +42,11 @@ export function Zahlavi() {
                   Administrace
                 </Menu.Item>
               )}
-              <Menu.Item component={Link} to="/licence">
-                Licence a medical
-              </Menu.Item>
+              {(ja.role?.admin || ja.role?.spravce) && (
+                <Menu.Item component={Link} to={`/osoby/${ja.id}`}>
+                  Moje karta
+                </Menu.Item>
+              )}
               {!ja.zastupce && (
                 <Menu.Item onClick={() => setUpozorneni(true)}>Upozornění na telefon…</Menu.Item>
               )}

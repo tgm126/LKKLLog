@@ -16,9 +16,11 @@ import pytest  # noqa: E402
 from django.utils import timezone  # noqa: E402
 from playwright.sync_api import Page, expect  # noqa: E402
 
+from ciselniky.models import DruhPrukazu  # noqa: E402
 from lety.models import Let, Letadlo, Letiste, Osnova, StavLetu, Ucel, Uloha  # noqa: E402
-from osoby.models import Kategorie, Opravneni, Osoba, Uroven  # noqa: E402
+from osoby.models import Kategorie, Osoba, Vycvik  # noqa: E402
 from provoz.models import EmailRezim, Nastaveni  # noqa: E402
+from tests.pomocne import prukaz  # noqa: E402
 
 HESLO = "Zkusebni-Heslo-2026"
 
@@ -31,9 +33,20 @@ def _bez_manifestu(settings):
     }
 
 
+def _ciselniky():
+    """Výchozí číselníky z migrace – klikací testy mezi sebou vyprazdňují celou databázi."""
+    import importlib
+
+    from django.apps import apps
+
+    if not DruhPrukazu.objects.exists():
+        importlib.import_module("ciselniky.migrations.0002_vychozi_hodnoty").naplnit(apps, None)
+
+
 @pytest.fixture
 def svet(transactional_db, live_server, settings):
     """Malý aeroklub se zkušebními účty."""
+    _ciselniky()
     settings.APP_URL = live_server.url
     nastaveni = Nastaveni.aktualni()
     nastaveni.email_rezim = EmailRezim.POVOLENE
@@ -73,12 +86,12 @@ def svet(transactional_db, live_server, settings):
     s.jiny_pilot = osoba("ivan@example.com", "Ivan", "Pilot")
     s.zak = osoba("zak@example.com", "Bára", "Žák")
     s.vlekar = osoba("vlekar@example.com", "Gustav", "Vlekař")
-    Opravneni.objects.create(osoba=s.vlekar, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
-    Opravneni.objects.create(osoba=s.vlekar, kategorie=Kategorie.MOTOR, uroven=Uroven.VLEKAR)
-    Opravneni.objects.create(osoba=s.pilot, kategorie=Kategorie.KLUZAK, uroven=Uroven.PILOT)
-    for o in (s.pilot, s.jiny_pilot):
-        Opravneni.objects.create(osoba=o, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
-    Opravneni.objects.create(osoba=s.zak, kategorie=Kategorie.MOTOR, uroven=Uroven.ZAK)
+    # Doklady podle karty osoby: průkazy s kvalifikacemi, výcvik žáka.
+    prukaz(s.vlekar, "ppl_a", ("sep", None), ("vlekani", None))
+    prukaz(s.pilot, "spl", ("navijak", None), ("vlek", None))
+    prukaz(s.pilot, "ppl_a", ("sep", None))
+    prukaz(s.jiny_pilot, "lapl_a", ("sep", None))
+    Vycvik.objects.create(osoba=s.zak, druh=DruhPrukazu.objects.get(kod="ppl_a"))
     osnova = Osnova.objects.create(kategorie=Kategorie.MOTOR, nazev="Ostatní lety")
     Uloha.objects.create(osnova=osnova, kod="LP", nazev="Let do prostoru", ucely=[Ucel.NORMALNI])
     s.url = live_server.url

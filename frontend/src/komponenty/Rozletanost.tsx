@@ -1,6 +1,5 @@
-import { Alert, Button, Card, Group, Loader, Stack, Text, Title } from '@mantine/core'
+import { Alert, Box, Group, Loader, Paper, Stack, Text, Title } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router'
 
 import { type Kontrola, kontrolaPosadky, type KontrolaPosadky, nactiRozletanost } from '../api/licence'
 
@@ -12,36 +11,34 @@ const BARVA: Record<Kontrola['stav'], string> = {
 }
 const ZNAK: Record<Kontrola['stav'], string> = { ok: '✓', pozor: '!', chyba: '✗', info: 'i' }
 
-/** Seznam kontrol licencí, medicalu a rozlétanosti s barevným stavem. */
+/** Podrobnosti na jeden řádek; za uvozením s dvojtečkou bez oddělovače. */
+const spojit = (p: string[]) => p.reduce((s, x, i) => (i === 0 ? x : s + (s.endsWith(':') ? ' ' : ' · ') + x), '')
+
+/** Seznam kontrol licencí, medicalu a rozlétanosti: hustý seznam řádků s barevným stavem. */
 export function SeznamKontrol({ kontroly }: { kontroly: Kontrola[] }) {
   return (
-    <>
+    <Paper withBorder radius="sm">
       {kontroly.map((k, i) => (
-        <Card
-          key={i}
-          withBorder
-          padding="xs"
-          style={{ borderLeft: `4px solid var(--mantine-color-${BARVA[k.stav]}-6)` }}
-        >
-          <Group justify="space-between" wrap="nowrap" align="flex-start">
-            <Text fz="sm" fw={600}>
-              <Text span c={BARVA[k.stav]} fw={800}>
+        <Box key={i} px="sm" py={5} style={i ? { borderTop: '1px solid var(--mantine-color-default-border)' } : undefined}>
+          <Group justify="space-between" wrap="nowrap" align="flex-start" gap="sm">
+            <Text fz="sm" fw={500}>
+              <Text span c={BARVA[k.stav]} fw={700}>
                 {ZNAK[k.stav]}
               </Text>{' '}
               {k.nazev.startsWith(k.oblast) ? k.nazev : `${k.oblast} · ${k.nazev}`}
             </Text>
-            <Text fz="sm" ta="right">
+            <Text fz="sm" ta="right" c={k.stav === 'ok' || k.stav === 'info' ? 'dimmed' : BARVA[k.stav]}>
               {k.text}
             </Text>
           </Group>
-          {k.podrobnosti.map((p) => (
-            <Text key={p} fz="xs" c="dimmed">
-              {p}
+          {k.podrobnosti.length > 0 && (
+            <Text fz="xs" c="dimmed">
+              {spojit(k.podrobnosti)}
             </Text>
-          ))}
-        </Card>
+          )}
+        </Box>
       ))}
-    </>
+    </Paper>
   )
 }
 
@@ -54,11 +51,8 @@ export function Rozletanost() {
     return (
       <Group justify="space-between">
         <Text fz="sm" c="dimmed">
-          Licence a medical si můžete zadat už teď; hlídání rozlétanosti zapne admin.
+          Průkazy a medical zadává admin na kartě osoby; hlídání rozlétanosti zapne admin.
         </Text>
-        <Button component={Link} to="/licence" size="xs" variant="light">
-          Licence a medical
-        </Button>
       </Group>
     )
   }
@@ -66,9 +60,9 @@ export function Rozletanost() {
     <Stack gap="xs">
       <Group justify="space-between">
         <Title order={4}>Licence a rozlétanost</Title>
-        <Button component={Link} to="/licence" size="xs" variant="light">
-          Upravit licence a medical
-        </Button>
+        <Text fz="xs" c="dimmed">
+          Údaje zadává admin
+        </Text>
       </Group>
       {(!d.moduly.zpusobilost || !d.moduly.rozletanost) && (
         <Alert color="gray" p="xs">

@@ -22,7 +22,8 @@ export function Navigace() {
       {odkaz('/vypis', 'Výpis')}
       {odkaz('/nalet', 'Můj nálet')}
       {(role?.casomeric || role?.ucetni || role?.admin) && odkaz('/uzaverky', 'Uzávěrky')}
-      {(role?.spravce || role?.admin) && odkaz('/sprava', 'Piloti a letadla')}
+      {(role?.spravce || role?.admin) && odkaz('/osoby', 'Osoby')}
+      {(role?.spravce || role?.admin) && odkaz('/letadla', 'Letadla')}
       {role?.admin && odkaz('/ciselniky', 'Číselníky')}
     </Group>
   )

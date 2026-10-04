@@ -163,7 +163,7 @@ Ve výpisu se typ zobrazuje spojeně, např. „Plachtařský · výcvik sólo�
 - Přesně jeden PIC. Každá osoba je na letu nejvýš jednou.
 - Osoby na palubě + hosté ≤ počet míst letadla. Dozorující instruktor se nepočítá, protože je na zemi.
 - **Formulář posádky se přizpůsobí účelu:** zobrazí jen políčka, která daný účel potřebuje. Například u „Výcvik“ políčka *Instruktor (PIC)* a *Žák*, u „Výcvik sólo“ políčka *Žák (PIC)* a *Dozorující instruktor*. V každém políčku se nabízejí nejdřív lidé s odpovídajícím oprávněním.
-- **Oprávnění** (žák / pilot / instruktor / examinátor) se v první verzi používají jen k **řazení a nabízení** lidí ve výběru (u výcviku jsou nahoře instruktoři). Let nikdy nezablokují. Hlídání licencí přijde v pozdější fázi.
+- **Doklady osoby** (průkazy, výcvik, přeškolení na typy) určují, koho výběry posádky nabízejí (u výcviku instruktory, u vleku vlekaře…). Let nikdy nezablokují; hlídání platnosti a rozlétanosti jen varuje (kap. 4.12).
 
 ### 3.3 Externí osoby
 
@@ -381,6 +381,24 @@ Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, zá
 ### 4.11 Profil
 Změna hesla, odhlášení.
 
+### 4.14 Osoby a karta osoby (etapa 14)
+Menu *Osoby* (admin, správce):
+- **Seznam osob** je hustá tabulka: jméno, průkazy (i „žák PPL(A)“), role a stav dokladů
+  (v pořádku / brzy vyprší / neplatné s počtem problémů). Má hledání a filtry „jen
+  s problémem“ a „i neaktivní“.
+- **Karta osoby** má všechno na jedné obrazovce ve dvou sloupcích:
+  - údaje (mobil jen na vyžádání), role v aplikaci (mění jen admin);
+  - pilotní průkazy s kvalifikacemi (zaškrtávátka, datum u těch s platností);
+  - instruktor a examinátor;
+  - doklady (medical, radiofonní průkaz, angličtina);
+  - přeškolení na typy, provozní oprávnění, výcvik;
+  - stav dokladů a rozlétanosti.
+
+  Hodnoty se vybírají z číselníků a ukládá se celá karta najednou.
+- **Rozlétanost vlekaře:** s kvalifikací vlekání se hlídá aspoň 5 vleků jako PIC za
+  24 měsíců (FCL.805, SFCL.205). Varuje se jen při zakládání vleku.
+- **Hromadný import z Excelu zanikl**; osoby a letadla se zadávají přes karty.
+
 ### 4.13 Číselníky (etapa 14)
 Číselník je **seznam možných hodnot**, na které se odkazují karty osob a letadel. Spravuje
 je admin v menu *Číselníky*: kompaktní tabulka, přidání, úprava a deaktivace. Smazat jde
@@ -405,8 +423,8 @@ Pravidla podle předpisů, zdroje a postup výpočtu jsou v
 a nápovědu.
 
 - **Licence a medical:**
-  - Pilot si je zadává sám v menu se jménem → *Licence a medical*. Admin je spravuje
-    u všech v administraci (u osoby, kvalifikace v detailu licence).
+  - Od etapy 14 je zadává admin (nebo správce) na **kartě osoby** (menu *Osoby*);
+    samostatná obrazovka *Licence a medical* zanikla.
   - Typy licencí: PPL(A), LAPL(A), SPL, ULL.
   - Kvalifikace: SEP/TMG, způsoby vzletu kluzáku (naviják, aerovlek, samostart, guma),
     ULL. U PPL(A) a ULL se zadává konec platnosti.
@@ -432,7 +450,7 @@ a nápovědu.
     termín.
 
   U vypnutého modulu vidí kontroly v Můj nálet jen admin (pro kontrolu dat) a varování
-  se neukazují. Přehled *Piloti a letadla* ukazuje vše vždy.
+  se neukazují. Karta osoby a seznam *Osoby* ukazují stav vždy.
 - **Žák před prvním sólem** musí mít platný medical a radiofonní průkaz. U letu *Výcvik
   sólo* (žák je PIC) se proto kontroluje jen tohle, ne licence ani rozlétanost.
 - **Testovací data:**
@@ -451,8 +469,8 @@ a nápovědu.
 - **Angličtina ICAO** (FCL.055, úroveň 4/5/6) se jen eviduje. Provoz klubu je česky
   (licence na češtinu neexistuje), takže se nehlídá ani nevaruje.
 - Medical má **platnost pro každou třídu zvlášť** a posuzuje se podle licence.
-- Nová role **správce licencí a letadel** (zaškrtávátko u osoby, sloupec v Excelu
-  s číselníky). Obrazovka *Piloti a letadla* je pro správce a admina:
+- Nová role **správce licencí a letadel** (zaškrtávátko u osoby). Obrazovka *Piloti a
+  letadla* je pro správce a admina (od etapy 14 rozdělená na *Osoby* a *Letadla*):
   - **Piloti** (včetně testovacích osob s označením): stav každého pilota (v pořádku / brzy vyprší / neplatné) se seznamem
     problémů. Detail ukáže všechny kontroly a vede k úpravě jeho licencí a medicalu.
     Žák bez licence není chyba.
@@ -483,15 +501,34 @@ a nápovědu.
 | externi | externí osoba (examinátor): jen jméno, žádný e-mail, přihlášení ani notifikace |
 | testovaci | účet jen pro zkoušení aplikace; úklid před spuštěním ho smaže (kap. 9.1) |
 
-**`opravneni`**: co kdo smí v klubu létat. **Určuje, koho výběry posádky nabízejí** (nic neblokuje). Úrovně platí „nahoru“: examinátor je zároveň instruktor a pilot, instruktor zároveň pilot. **Vlekař** je příznak u kategorie vlečného letadla (znamená i pilota).
+**Doklady osoby (od etapy 14):** všechno, co osoba „má“, je **průkaz osoby** s kvalifikacemi
+z číselníku (kap. 4.13). Patří sem:
+- pilotní průkazy (PPL(A), LAPL(A), SPL, ULL) s třídami, způsoby vzletu, vlekáním…;
+- osvědčení instruktora (FI(A), FI(S), FI(S) omezený, CRI, instruktor ULL);
+- pověření examinátora;
+- medical (třídy), radiofonní průkaz, angličtina ICAO.
 
-Výběry osob v průvodci a v opravě letu ukazují **jen doporučené**: PIC podle kategorie letadla, u výcviku instruktory, žáky, dozor, přezkoušené a vlekaře. Ostatní se ukážou až po ťuknutí na *Ukázat i ostatní*. Když v číselníku nikdo vhodný není, nabídnou se rovnou všichni. Další členy posádky (cestující z klubu) lze vybrat ze všech. Později: licence a platnosti si **spravuje každý pilot sám** ve svém profilu (otevřené: smí si sám měnit i úroveň, např. žák → pilot, nebo to potvrzuje instruktor/admin?).
-| sloupec | význam |
+K tomu jsou u osoby **přeškolení na typy letadel**, **výcvik** (žák: na jaký průkaz,
+zahájení, povolení sóla, ukončení) a **provozní oprávnění** (navijákář, služba RADIO…).
+
+| tabulka | sloupce |
 |---|---|
-| osoba_id | → osoba |
-| kategorie | motor / TMG / kluzák / UL |
-| uroven | žák / pilot / instruktor / examinátor, nebo příznak vlekař |
-| platne_do | nepovinné, připraveno pro budoucí hlídání |
+| prukaz_osoby | osoba, druh (→ číselník), číslo, poznámka |
+| kvalifikace_osoby | průkaz, kvalifikace (→ číselník), platnost do |
+| preskoleni | osoba, typ letadla (→ číselník), datum |
+| vycvik | osoba, druh průkazu, zahájen, sólo povoleno, ukončen |
+| osoba_provozni_opravneni | osoba ↔ provozní oprávnění |
+
+**Nabídky posádky v průvodci** ukazují **jen doporučené**:
+- **PIC:** pilotní průkaz s kvalifikací pro kategorii letadla a přeškolení na jeho typ;
+- **instruktor:** osvědčení instruktora;
+- **dozor u sóla:** neomezený instruktor;
+- **examinátor:** pověření nebo osvědčení instruktora;
+- **žák:** probíhající výcvik;
+- **vlekař:** kvalifikace vlekání a přeškolení na typ vlečné.
+
+Ostatní lidé se ukážou až po ťuknutí na *Ukázat i ostatní*. Když nikdo vhodný není,
+nabídnou se rovnou všichni. Další členy posádky (cestující z klubu) lze vybrat ze všech.
 
 **`letadlo`**
 | sloupec | význam |
@@ -624,8 +661,9 @@ Opravy v uzavřeném dni nebo měsíci se označí a objeví v přehledu „Změ
 Číst a vyhledávat smí všichni přihlášení. Exportovat smí účetní a admin.
 
 **Správce licencí a letadel** (od etapy 13) do provozu letů nezasahuje (jako pilot). Navíc
-vidí a upravuje licence a medical všech pilotů a stav deníku a termíny letadel (obrazovka
-*Piloti a letadla*). Medical (třídu a platnost) vidí jen sám pilot, správce a admin.
+vidí a upravuje karty osob (doklady, výcvik, přeškolení, provozní oprávnění) a letadla
+(obrazovky *Osoby* a *Letadla*); role v aplikaci mění jen admin. Medical (třídu a platnost)
+vidí jen sám pilot, správce a admin.
 
 ### 6.2 Hlavní operace (REST API)
 
@@ -810,13 +848,12 @@ Co aplikace k tomu potřebuje:
 1. Úklid před spuštěním: smazat testovací lety, uzávěrky, upozornění, testovací osoby
    (i s jejich licencemi) a testovací termíny letadel (poznámka „testovací“).
 2. **Stav provozních deníků letadel:** celkový nálet a starty každého letadla ke dni
-   spuštění. Zadává se v *Piloti a letadla → Letadla → Stav deníku*, nebo hromadně
-   v Excelu s číselníky (list Letadla, sloupce *Nálet z deníku [h:mm]*, *Starty z deníku*,
-   *Stav deníku ke dni*). Bez toho nesedí celkový nálet ani termíny podle náletu.
+   spuštění. Zadává se na kartě letadla (*Letadla*). Bez toho nesedí celkový nálet ani
+   termíny podle náletu.
    Přehled letadel na chybějící stav upozorní.
 3. Termíny letadel (ARC, prohlídky, pojištění…).
-4. Licence, medical a radiofonní průkaz pilotů (případně angličtina ICAO). Zadají si je piloti
-   sami, nebo správce licencí. Kontrola v přehledu *Piloti a letadla*.
+4. Karty osob: průkazy, medical, radiofonní průkaz, instruktoři, výcvik žáků, přeškolení
+   na typy a provozní oprávnění. Zadává admin nebo správce; kontrola v seznamu *Osoby*.
 5. Až jsou data kompletní, zapnout v *Nastavení provozu* moduly **Hlídat způsobilost
    pilotů**, **Hlídat rozlétanost pilotů** a **Hlídat způsobilost letadel**. Každý jde
    zapnout samostatně, až budou jeho data v pořádku.

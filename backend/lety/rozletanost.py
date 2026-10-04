@@ -15,20 +15,19 @@ from datetime import UTC, date, timedelta
 
 from django.utils import timezone
 
+from ciselniky.models import SkupinaPrukazu
 from osoby.models import (
     MEDICAL_LICENCE,
     DruhKvalifikace,
     Kategorie,
-    Licence,
-    Medical,
-    Opravneni,
+    KvalifikaceOsoby,
     Osoba,
+    PrukazOsoby,
     TridaMedicalu,
     TypLicence,
-    Uroven,
 )
 
-from .models import FunkcePosadky, Posadka, StavLetu, ZpusobVzletu
+from .models import FunkcePosadky, Posadka, StavLetu, Ucel, ZpusobVzletu
 from .obdobi import rozsah
 from .vypis import letecky
 
@@ -69,6 +68,7 @@ class Zaznam:
     vzlety: int
     pristani: int
     zpusob: str
+    ucel: str = ""
 
     @property
     def pic(self) -> bool:
@@ -100,6 +100,7 @@ def zaznamy(osoba: Osoba, do: date) -> list[Zaznam]:
                 vzlety=let.pocet_pristani or 1,  # každé T&G je i vzlet
                 pristani=let.pocet_pristani,
                 zpusob=let.zpusob_vzletu,
+                ucel=let.ucel,
             )
         )
     return vysledek
@@ -153,6 +154,7 @@ class Kontrola:
     zpusob: str | None = None  # jen pro tento způsob vzletu kluzáku
     licence_typy: tuple = ()  # u medicalu: pro které licence platí
     modul: str = ZPUSOBILOST  # způsobilost (doklady), nebo rozlétanost (nálet)
+    vlek: bool = False  # týká se jen vlekaře při vleku
 
 
 def _stav_data(plati_do: date | None, dnes: date, brzy: timedelta = BRZY) -> str:
@@ -161,13 +163,12 @@ def _stav_data(plati_do: date | None, dnes: date, brzy: timedelta = BRZY) -> str
     return POZOR if plati_do - dnes <= brzy else OK
 
 
-def _medicaly(osoba: Osoba, licence: list[Licence], dnes: date) -> list[Kontrola]:
+def _medicaly(medicaly: list, licence: list[PrukazOsoby], dnes: date) -> list[Kontrola]:
     """Medical pro každou skupinu licencí se stejnými požadavky na třídu.
 
     PPL(A) potřebuje třídu 1 nebo 2, LAPL(A), SPL a ULL stačí i LAPL. Jedno osvědčení
     může mít pro různé třídy různou platnost – rozhoduje nejdelší platnost vhodné třídy.
     """
-    medicaly = list(Medical.objects.filter(osoba=osoba))
     skupiny: dict[tuple, list[str]] = {}
     for lic in licence:
         if lic.typ in MEDICAL_LICENCE:
@@ -179,14 +180,14 @@ def _medicaly(osoba: Osoba, licence: list[Licence], dnes: date) -> list[Kontrola
         nazev = "Medical"
         if len(skupiny) > 1:
             nazev += " pro " + ", ".join(TypLicence(t).label for t in typy)
-        vhodne = [m for m in medicaly if m.trida in tridy]
+        vhodne = [m for m in medicaly if m.druh in tridy]
         if not vhodne:
             text = "Není zadaný." if not medicaly else "Chybí vhodná třída."
             vysledek.append(Kontrola("Medical", nazev, CHYBA, text, licence_typy=tuple(typy)))
             continue
         nejlepsi = max(vhodne, key=lambda m: m.platnost_do)
         stav = _stav_data(nejlepsi.platnost_do, dnes)
-        trida = nejlepsi.get_trida_display()
+        trida = nejlepsi.get_druh_display()
         text = (
             f"{trida} neplatí od {datum(nejlepsi.platnost_do + timedelta(1))}."
             if stav == CHYBA
@@ -258,7 +259,37 @@ def _platnost(oblast: str, nazev: str, plati_do: date | None, dnes: date, kat: s
     return Kontrola(oblast, nazev, stav, text, plati_do, kategorie=kat)
 
 
-def _radio(licence: Licence, dnes: date) -> list[Kontrola]:
+def prukazy(osoba: Osoba) -> list[PrukazOsoby]:
+    """Průkazy osoby s kvalifikacemi (jeden dotaz na průkazy, jeden na kvalifikace)."""
+    return list(
+        PrukazOsoby.objects.filter(osoba=osoba)
+        .select_related("druh")
+        .prefetch_related("kvalifikace__kvalifikace")
+        .order_by("druh__poradi")
+    )
+
+
+def _platnosti(prukaz: PrukazOsoby, dnes: date) -> list[Kontrola]:
+    """Kvalifikace s datem platnosti (osvědčení instruktora, pověření examinátora…)."""
+    vysledek = []
+    for kv in prukaz.kvalifikace.all():
+        if not kv.kvalifikace.ma_platnost:
+            continue
+        nazev = kv.get_druh_display()
+        if kv.platnost_do is None:
+            vysledek.append(Kontrola(prukaz.druh.nazev, nazev, POZOR, "Chybí datum platnosti."))
+            continue
+        stav = _stav_data(kv.platnost_do, dnes, brzy=timedelta(days=60))
+        text = (
+            f"Neplatí od {datum(kv.platnost_do + timedelta(1))}."
+            if stav == CHYBA
+            else f"Platí do {datum(kv.platnost_do)}."
+        )
+        vysledek.append(Kontrola(prukaz.druh.nazev, nazev, stav, text, kv.platnost_do))
+    return vysledek
+
+
+def _radio(licence: PrukazOsoby, dnes: date) -> list[Kontrola]:
     """Průkaz radiotelefonisty (ČTÚ): platí 10 let, prodlužuje se o 5 let."""
     kvalifikace = list(licence.kvalifikace.all())
     if not kvalifikace:
@@ -283,7 +314,7 @@ def _radio(licence: Licence, dnes: date) -> list[Kontrola]:
     return vysledek
 
 
-def _anglictina(licence: Licence, dnes: date) -> list[Kontrola]:
+def _anglictina(licence: PrukazOsoby, dnes: date) -> list[Kontrola]:
     """Angličtina ICAO (FCL.055): jen informace (např. pro službu RADIO v angličtině).
 
     Provoz aeroklubu ji nevyžaduje, takže se nehlídá ani nevaruje. Úroveň 4 platí 4 roky,
@@ -303,9 +334,10 @@ def _anglictina(licence: Licence, dnes: date) -> list[Kontrola]:
     return vysledek
 
 
-def _ppl(licence: Licence, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
+def _ppl(licence: PrukazOsoby, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
     kontroly = []
-    for kv in licence.kvalifikace.all():
+    tridy = (DruhKvalifikace.SEP, DruhKvalifikace.TMG)  # jen třídy mají datum platnosti
+    for kv in (k for k in licence.kvalifikace.all() if k.druh in tridy):
         kat = Kategorie.MOTOR if kv.druh == DruhKvalifikace.SEP else Kategorie.TMG
         k = _platnost("PPL(A)", f"Kvalifikace {kv.get_druh_display()}", kv.platnost_do, dnes, kat)
         if kv.platnost_do and kv.platnost_do >= dnes:
@@ -338,7 +370,7 @@ def _ppl(licence: Licence, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
     return kontroly
 
 
-def _lapl(licence: Licence, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
+def _lapl(licence: PrukazOsoby, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
     letouny = [z for z in lety if z.kategorie in (Kategorie.MOTOR, Kategorie.TMG)]
     return [
         _rolling(
@@ -359,7 +391,7 @@ def _lapl(licence: Licence, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
     ]
 
 
-def _spl(licence: Licence, lety: list[Zaznam], dnes: date, tmg_jinde: bool) -> list[Kontrola]:
+def _spl(licence: PrukazOsoby, lety: list[Zaznam], dnes: date, tmg_jinde: bool) -> list[Kontrola]:
     kluzaky = [z for z in lety if z.kategorie == Kategorie.KLUZAK]
     kontroly = [
         _rolling(
@@ -433,7 +465,7 @@ def _spl(licence: Licence, lety: list[Zaznam], dnes: date, tmg_jinde: bool) -> l
     return kontroly
 
 
-def _ull(licence: Licence, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
+def _ull(licence: PrukazOsoby, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
     kontroly = []
     for kv in licence.kvalifikace.all():
         k = _platnost("ULL", "Platnost průkazu", kv.platnost_do, dnes, Kategorie.UL)
@@ -452,11 +484,15 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
     """Všechny kontroly licencí, medicalu a rozlétanosti pilota k danému dni."""
     dnes = dnes or timezone.now().astimezone(UTC).date()
     lety = zaznamy(osoba, dnes)
-    licence = list(Licence.objects.filter(osoba=osoba).prefetch_related("kvalifikace"))
-    vysledek = _medicaly(osoba, licence, dnes)
-    radio = [lic for lic in licence if lic.typ == TypLicence.RADIO]
-    jazyk = [lic for lic in licence if lic.typ == TypLicence.JAZYK]
-    licence = [lic for lic in licence if lic.typ not in (TypLicence.RADIO, TypLicence.JAZYK)]
+    vse = prukazy(osoba)
+    skupina = lambda s: [p for p in vse if p.druh.skupina == s]  # noqa: E731
+    licence = skupina(SkupinaPrukazu.PILOTNI)
+    radio = skupina(SkupinaPrukazu.RADIO)
+    jazyk = skupina(SkupinaPrukazu.JAZYK)
+    medicaly = [kv for p in skupina(SkupinaPrukazu.MEDICAL) for kv in p.kvalifikace.all()]
+    vysledek = _medicaly(medicaly, licence, dnes)
+    for p in skupina(SkupinaPrukazu.INSTRUKTOR) + skupina(SkupinaPrukazu.EXAMINATOR):
+        vysledek += _platnosti(p, dnes)
     if radio:
         vysledek += _radio(radio[0], dnes)
     else:
@@ -464,9 +500,7 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
     if jazyk:
         vysledek += _anglictina(jazyk[0], dnes)
     if not licence:
-        if Opravneni.objects.filter(osoba=osoba).exclude(uroven=Uroven.ZAK).exists() or not (
-            Opravneni.objects.filter(osoba=osoba).exists()
-        ):
+        if not osoba.vycviky.filter(ukoncen__isnull=True).exists():
             vysledek.append(Kontrola("Licence", "Licence", CHYBA, "Pilotní licence není zadaná."))
         else:  # žák licenci ještě mít nemůže
             k = Kontrola("Licence", "Licence", INFO, "Žák – zatím bez licence.")
@@ -485,6 +519,8 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
             vysledek += _spl(lic, lety, dnes, tmg_jinde=tmg_fcl)
         elif lic.typ == TypLicence.ULL:
             vysledek += _ull(lic, lety, dnes)
+        else:  # průkaz přidaný adminem do číselníku – jen data platnosti
+            vysledek += _platnosti(lic, dnes)
 
     # Let s cestujícími (FCL.060, SFCL.160(e)) – podle kategorií, které licence pokrývají.
     if any(d == DruhKvalifikace.SEP for _, d in druhy):
@@ -493,6 +529,20 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
         vysledek.append(_cestujici("Cestující", lety, Kategorie.TMG, dnes, "vzlety a přistání"))
     if any(lic.typ == TypLicence.SPL for lic in licence):
         vysledek.append(_cestujici("Cestující", lety, Kategorie.KLUZAK, dnes, "starty"))
+    # Vlekání kluzáků (FCL.805, SFCL.205): aspoň 5 vleků za posledních 24 měsíců.
+    if any(d == DruhKvalifikace.VLEKANI for _, d in druhy):
+        k = _rolling(
+            "Vlekání kluzáků",
+            "Vlekání kluzáků",
+            [z for z in lety if z.pic and z.ucel == Ucel.VLEK],
+            [Podminka("vleky jako PIC", 5, lambda z: 1)],
+            dnes,
+            None,
+        )
+        if k.stav == CHYBA:
+            k.podrobnosti.append("Chybějící vleky dolétat s instruktorem nebo pod dohledem.")
+        k.vlek = True
+        vysledek.append(k)
     return vysledek
 
 
@@ -520,12 +570,13 @@ def varovani_pilota(
     cestujici: bool,
     zpusob: str | None = None,
     moduly: frozenset = frozenset({ZPUSOBILOST, ROZLETANOST}),
+    vlek: bool = False,
 ) -> list[str]:
     """Co u PIC nesedí pro let v dané kategorii (jen varování, nic se neblokuje)."""
     if not moduly:
         return []
     jmeno = osoba.get_full_name()
-    licence = list(Licence.objects.filter(osoba=osoba).prefetch_related("kvalifikace"))
+    licence = [p for p in prukazy(osoba) if p.druh.skupina == SkupinaPrukazu.PILOTNI]
     druhy = {(lic.typ, kv.druh) for lic in licence for kv in lic.kvalifikace.all()}
     typy = {lic.typ for lic in licence}
     povoleno = OPRAVNUJE[kategorie]
@@ -554,6 +605,8 @@ def varovani_pilota(
             tyka_se = False
         if k.zpusob and k.zpusob != zpusob:
             tyka_se = False
+        if k.vlek and not vlek:
+            tyka_se = False
         if tyka_se:
             vysledek.append(f"{jmeno}: {k.nazev} – {k.text}")
     if ZPUSOBILOST in moduly and zpusob in KVALIFIKACE_ZPUSOBU and kategorie == Kategorie.KLUZAK:
@@ -570,11 +623,9 @@ def varovani_pred_solem(osoba: Osoba, dnes: date | None = None) -> list[str]:
     dnes = dnes or timezone.now().astimezone(UTC).date()
     jmeno = osoba.get_full_name()
     vysledek = []
-    if not Medical.objects.filter(osoba=osoba, platnost_do__gte=dnes).exists():
+    platne = KvalifikaceOsoby.objects.filter(prukaz__osoba=osoba, platnost_do__gte=dnes)
+    if not platne.filter(prukaz__druh__skupina=SkupinaPrukazu.MEDICAL).exists():
         vysledek.append(f"{jmeno}: před sólem musí mít platný medical.")
-    radio = Licence.objects.filter(
-        osoba=osoba, typ=TypLicence.RADIO, kvalifikace__platnost_do__gte=dnes
-    )
-    if not radio.exists():
+    if not platne.filter(prukaz__druh__skupina=SkupinaPrukazu.RADIO).exists():
         vysledek.append(f"{jmeno}: před sólem musí mít platný radiofonní průkaz.")
     return vysledek

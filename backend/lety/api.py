@@ -7,7 +7,8 @@ from django.utils import timezone
 from ninja import Router, Schema
 from ninja.security import django_auth
 
-from osoby.models import Kategorie, Licence, Opravneni, Osoba, TypLicence, smi_spravovat_licence
+from osoby import nabidky
+from osoby.models import Kategorie, Osoba, smi_spravovat_licence
 from provoz.models import Nastaveni
 
 from . import audit, letadla, nalet, obdobi, rozletanost, sluzby, uzaverky, vypis
@@ -56,19 +57,23 @@ class LetadloOut(Schema):
     max_doba_min: int | None
     soukrome: bool
     vlecne: bool
-
-
-class OpravneniOut(Schema):
-    kategorie: str
-    uroven: str
+    typ_letadla_id: int | None
 
 
 class OsobaOut(Schema):
+    """Osoba pro výběry posádky: kategorie, ve kterých se hodí do které role (osoby.nabidky)."""
+
     id: int
     jmeno: str
     prijmeni: str
     externi: bool
-    opravneni: list[OpravneniOut]
+    pilot: list[str]
+    vlekar: list[str]
+    instruktor: list[str]
+    dozor: list[str]
+    examinator: list[str]
+    zak: list[str]
+    typy: list[int]
 
 
 class LetisteOut(Schema):
@@ -110,30 +115,13 @@ class CiselnikyOut(Schema):
 @router.get("/ciselniky", response=CiselnikyOut, summary="Vše pro výběry v aplikaci")
 def ciselniky(request):
     # Telefon se tu záměrně neposílá – jen na vyžádání (viz návrh).
-    osoby = (
-        Osoba.objects.filter(is_active=True)
-        .only("id", "jmeno", "prijmeni", "externi")
-        .prefetch_related(
-            Prefetch(
-                "opravneni", queryset=Opravneni.objects.only("osoba_id", "kategorie", "uroven")
-            )
-        )
-    )
+    osoby = Osoba.objects.filter(is_active=True).only("id", "jmeno", "prijmeni", "externi")
     osnovy = Osnova.objects.filter(aktivni=True).prefetch_related(
         Prefetch("ulohy", queryset=Uloha.objects.filter(aktivni=True))
     )
     return {
         "letadla": Letadlo.objects.filter(aktivni=True),
-        "osoby": [
-            {
-                "id": o.pk,
-                "jmeno": o.jmeno,
-                "prijmeni": o.prijmeni,
-                "externi": o.externi,
-                "opravneni": list(o.opravneni.all()),
-            }
-            for o in osoby
-        ],
+        "osoby": nabidky.pro_nabidky(osoby),
         "letiste": Letiste.objects.filter(aktivni=True),
         "osnovy": [
             {"id": o.pk, "kategorie": o.kategorie, "nazev": o.nazev, "ulohy": list(o.ulohy.all())}
@@ -968,7 +956,9 @@ def kontrola_letu(request, data: KontrolaLetuIn):
     if data.vlek and (vlekar := Osoba.objects.filter(pk=data.vlek.vlekar_id).first()):
         vlecne = Letadlo.objects.filter(pk=data.vlek.letadlo_id).first()
         if vlecne:
-            varovani += rozletanost.varovani_pilota(vlekar, vlecne.kategorie, False, moduly=moduly)
+            varovani += rozletanost.varovani_pilota(
+                vlekar, vlecne.kategorie, False, moduly=moduly, vlek=True
+            )
     return {"varovani": varovani}
 
 
@@ -978,50 +968,6 @@ def kontrola_letu(request, data: KontrolaLetuIn):
 def _jen_spravce(request):
     if not smi_spravovat_licence(request.user):
         raise sluzby.ChybaLetu("Přehled je pro správce licencí a letadel a admina.", status=403)
-
-
-class PilotOut(Schema):
-    id: int
-    jmeno: str
-    testovaci: bool
-    licence: list[str]
-    stav: str
-    problemy: list[str]
-
-
-@router.get("/sprava/piloti", response=list[PilotOut], summary="Přehled pilotů (správce)")
-def sprava_piloti(request):
-    """Piloti = aktivní členové s licencí nebo oprávněním (bez externích).
-
-    Testovací osoby se ukazují taky (s označením) – před spuštěním se smažou.
-    """
-    _jen_spravce(request)
-    typy = dict(TypLicence.choices)
-    osoby = (
-        Osoba.objects.filter(is_active=True, externi=False)
-        .filter(Q(licence__isnull=False) | Q(opravneni__isnull=False))
-        .distinct()
-        .order_by("prijmeni", "jmeno")
-    )
-    poradi = [rozletanost.OK, rozletanost.INFO, rozletanost.POZOR, rozletanost.CHYBA]
-    vysledek = []
-    for o in osoby:
-        kontroly = rozletanost.kontroly(o)
-        vysledek.append(
-            {
-                "id": o.pk,
-                "jmeno": o.get_full_name(),
-                "testovaci": o.testovaci,
-                "licence": [typy[lic.typ] for lic in Licence.objects.filter(osoba=o)],
-                "stav": max((k.stav for k in kontroly), key=poradi.index),
-                "problemy": [
-                    f"{k.nazev}: {k.text}"
-                    for k in kontroly
-                    if k.stav in (rozletanost.POZOR, rozletanost.CHYBA)
-                ],
-            }
-        )
-    return vysledek
 
 
 @router.get("/sprava/piloti/{osoba_id}", response=RozletanostOut, summary="Rozlétanost pilota")

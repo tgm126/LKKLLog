@@ -4,47 +4,30 @@ from django.shortcuts import redirect
 
 from . import ucty
 from .forms import OsobaChangeForm, OsobaCreationForm
-from .models import Kvalifikace, Licence, Medical, Opravneni, Osoba
+from .models import KvalifikaceOsoby, Osoba, PrukazOsoby
+
+# Doklady, přeškolení a výcvik se zadávají na kartě osoby v aplikaci (Osoby);
+# tady jsou průkazy jen pro nouzi.
 
 
-class OpravneniInline(admin.TabularInline):
-    model = Opravneni
+class KvalifikaceOsobyInline(admin.TabularInline):
+    model = KvalifikaceOsoby
     extra = 0
 
 
-class LicenceInline(admin.TabularInline):
-    """Kvalifikace a data platnosti se upravují v detailu licence (odkaz „Změnit“)."""
-
-    model = Licence
-    extra = 0
-    show_change_link = True
-    fields = ["typ", "cislo", "poznamka"]
-
-
-class MedicalInline(admin.TabularInline):
-    model = Medical
-    extra = 0
-
-
-class KvalifikaceInline(admin.TabularInline):
-    model = Kvalifikace
-    extra = 0
-
-
-@admin.register(Licence)
-class LicenceAdmin(admin.ModelAdmin):
-    list_display = ["osoba", "typ", "cislo", "zmeneno"]
-    list_filter = ["typ"]
+@admin.register(PrukazOsoby)
+class PrukazOsobyAdmin(admin.ModelAdmin):
+    list_display = ["osoba", "druh", "cislo", "zmeneno"]
+    list_filter = ["druh"]
     search_fields = ["osoba__prijmeni", "osoba__jmeno", "cislo"]
     autocomplete_fields = ["osoba"]
-    inlines = [KvalifikaceInline]
+    inlines = [KvalifikaceOsobyInline]
 
 
 @admin.register(Osoba)
 class OsobaAdmin(UserAdmin):
     add_form = OsobaCreationForm
     form = OsobaChangeForm
-    inlines = [OpravneniInline, LicenceInline, MedicalInline]
     ordering = ["prijmeni", "jmeno"]
     list_display = [
         "prijmeni",

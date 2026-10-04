@@ -4,10 +4,10 @@ import pytest
 from django.utils import timezone
 
 from lety.rozletanost import CHYBA, OK, POZOR, kontroly, plus_mesice
-from osoby.models import DruhKvalifikace, Licence, Medical, TridaMedicalu, TypLicence
+from osoby.models import DruhKvalifikace, PrukazOsoby, TridaMedicalu, TypLicence
 from provoz.models import Nastaveni
 
-from .pomocne import let_v, post
+from .pomocne import let_v, post, prukaz
 
 pytestmark = pytest.mark.django_db
 
@@ -19,16 +19,11 @@ def pred(dny: int) -> datetime:
 
 
 def licence(osoba, typ, *kvalifikace):
-    lic = Licence.objects.create(osoba=osoba, typ=typ)
-    for druh, platnost in kvalifikace:
-        lic.kvalifikace.create(druh=druh, platnost_do=platnost)
-    return lic
+    return prukaz(osoba, typ, *kvalifikace)
 
 
 def medical(osoba, dni=365):
-    Medical.objects.create(
-        osoba=osoba, trida=TridaMedicalu.T2, platnost_do=DNES + timedelta(days=dni)
-    )
+    prukaz(osoba, "medical", (TridaMedicalu.T2, DNES + timedelta(days=dni)))
 
 
 def podle_nazvu(osoba):
@@ -68,7 +63,7 @@ def test_cestujici_tri_vzlety_za_90_dni_i_s_tg(svet):
     assert k.stav == OK and k.plati_do == DNES - timedelta(days=20) + timedelta(days=90)
 
     let_v(svet, pred(100), minut=40, pocet_tg=5)  # mimo 90 dní se nepočítá
-    Licence.objects.all().delete()
+    PrukazOsoby.objects.all().delete()
     licence(svet.cizi_pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES + timedelta(days=300)))
     k = podle_nazvu(svet.cizi_pilot)["Cestující – motorové"]
     assert k.stav == POZOR
@@ -78,7 +73,7 @@ def test_ppl_platnost_kvalifikace_a_prodlouzeni(svet):
     licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES - timedelta(days=1)))
     assert podle_nazvu(svet.pilot)["Kvalifikace SEP (land)"].stav == CHYBA
 
-    Licence.objects.all().delete()
+    PrukazOsoby.objects.all().delete()
     licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES + timedelta(days=100)))
     let_v(svet, pred(10), minut=90)
     k = podle_nazvu(svet.pilot)["Kvalifikace SEP (land)"]
@@ -163,54 +158,15 @@ def test_varovani_pri_zakladani_letu(jako, svet):
     assert bez_hostu == {"varovani": []}
 
 
-def test_sprava_vlastnich_licenci(jako, svet):
-    klient = jako(svet.pilot)
-    stav = klient.get("/api/ucet/licence").json()
-    assert stav["licence"] == [] and [v["hodnota"] for v in stav["kvalifikace"]["ppl_a"]] == [
-        "sep",
-        "tmg",
-    ]
-    data = {
-        "typ": "ppl_a",
-        "cislo": "CZ.FCL.123",
-        "kvalifikace": [{"druh": "sep", "platnost_do": "2027-05-31"}],
-    }
-    stav = post(klient, "/api/ucet/licence", data).json()
-    [lic] = stav["licence"]
-    assert lic["kvalifikace"] == [{"druh": "sep", "platnost_do": "2027-05-31"}]
-
-    assert post(klient, "/api/ucet/licence", data).status_code == 400  # podruhé stejný typ
-    spatne = {**data, "typ": "spl", "kvalifikace": [{"druh": "sep"}]}
-    assert post(klient, "/api/ucet/licence", spatne).status_code == 400
-
-    zmena = {**data, "id": lic["id"], "kvalifikace": [{"druh": "tmg", "platnost_do": None}]}
-    stav = post(klient, "/api/ucet/licence", zmena).json()
-    assert stav["licence"][0]["kvalifikace"] == [{"druh": "tmg", "platnost_do": None}]
-
-    # Cizí licenci pilot nezmění ani nesmaže.
-    cizi = jako(svet.cizi_pilot)
-    assert post(cizi, "/api/ucet/licence", zmena).status_code == 404
-    post(cizi, f"/api/ucet/licence/{lic['id']}/smazat")
-    assert Licence.objects.count() == 1
-
-    stav = post(klient, "/api/ucet/medical", {"trida": "2", "platnost_do": "2028-01-31"}).json()
-    [med] = stav["medicaly"]
-    stav = post(
-        klient, "/api/ucet/medical", {"id": med["id"], "trida": "2", "platnost_do": "2029-01-31"}
-    ).json()
-    assert stav["medicaly"][0]["platnost_do"] == "2029-01-31"
-    assert post(klient, f"/api/ucet/medical/{med['id']}/smazat").json()["medicaly"] == []
-
-
 def test_medical_podle_tridy_pro_licenci(svet):
     """PPL(A) potřebuje třídu 2, SPL stačí LAPL – jedno osvědčení, dvě platnosti."""
     licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES + timedelta(days=300)))
     licence(svet.pilot, TypLicence.SPL, (DruhKvalifikace.NAVIJAK, None))
-    Medical.objects.create(
-        osoba=svet.pilot, trida=TridaMedicalu.T2, platnost_do=DNES - timedelta(days=5)
-    )
-    Medical.objects.create(
-        osoba=svet.pilot, trida=TridaMedicalu.LAPL, platnost_do=DNES + timedelta(days=200)
+    prukaz(
+        svet.pilot,
+        "medical",
+        (TridaMedicalu.T2, DNES - timedelta(days=5)),
+        (TridaMedicalu.LAPL, DNES + timedelta(days=200)),
     )
     k = podle_nazvu(svet.pilot)
     assert k["Medical pro PPL(A)"].stav == CHYBA
@@ -249,10 +205,6 @@ def test_anglictina_icao_jen_informace(jako, svet):
     k = podle_nazvu(svet.pilot)["Angličtina ICAO 4"]
     assert k.stav == INFO and k.text.startswith("Neplatí od")
     assert varovani_pilota(svet.pilot, Kategorie.MOTOR, False) == []
-
-    data = {"typ": "jazyk", "kvalifikace": [{"druh": "en_4"}, {"druh": "en_5"}]}
-    Licence.objects.filter(typ="jazyk").delete()
-    assert post(jako(svet.pilot), "/api/ucet/licence", data).status_code == 400
 
 
 def test_moduly_zpusobilost_a_rozletanost_zvlast(jako, svet):
@@ -309,3 +261,32 @@ def test_zak_pred_solem_potrebuje_medical_a_radiofonni_prukaz(jako, svet):
     medical(svet.zak)
     licence(svet.zak, TypLicence.RADIO, (DruhKvalifikace.OFL, DNES + timedelta(days=3000)))
     assert post(klient, "/api/kontrola-posadky", solo).json() == {"varovani": []}
+
+
+def test_vlekani_pet_vleku_za_24_mesicu(svet):
+    from lety.models import Letadlo, Ucel
+    from lety.rozletanost import varovani_pilota
+    from osoby.models import Kategorie
+
+    licence(
+        svet.pilot,
+        TypLicence.PPL_A,
+        (DruhKvalifikace.SEP, DNES + timedelta(days=300)),
+        (DruhKvalifikace.VLEKANI, None),
+    )
+    k = podle_nazvu(svet.pilot)
+    assert "Kvalifikace Vlekání kluzáků" not in k  # vlekání nemá datum platnosti
+    assert k["Vlekání kluzáků"].stav == CHYBA
+
+    # Na obyčejném letu se rozlétanost vlekaře nehlásí, při vleku ano.
+    obycejny = varovani_pilota(svet.pilot, Kategorie.MOTOR, False)
+    vlek = varovani_pilota(svet.pilot, Kategorie.MOTOR, False, vlek=True)
+    assert not any("Vlekání" in v for v in obycejny)
+    assert any("Vlekání" in v for v in vlek)
+
+    vlecna = Letadlo.objects.create(
+        imatrikulace="OK-VLK", typ="Zlin", kategorie=Kategorie.MOTOR, vlecne=True
+    )
+    for i in range(5):
+        let_v(svet, pred(10 + i), minut=8, letadlo=vlecna, ucel=Ucel.VLEK)
+    assert podle_nazvu(svet.pilot)["Vlekání kluzáků"].stav == OK
