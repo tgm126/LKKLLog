@@ -1,0 +1,87 @@
+import re
+
+from playwright.sync_api import expect
+
+from lety.models import Let, StavLetu
+
+from .conftest import let_pilota, prihlasit
+
+
+def vybrat(stranka, pole: str, volba: str) -> None:
+    stranka.get_by_role("combobox", name=pole).click()
+    stranka.get_by_role("option", name=volba).click()
+
+
+def test_cely_let_na_mobilu(mobil, svet):
+    """Časoměřič založí let, odstartuje ho a zapíše přistání – vše ťukáním."""
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="+ NOVÝ LET").click()
+    expect(mobil.get_by_text("Krok 1/5: Letadlo")).to_be_visible()
+    mobil.get_by_role("button", name=re.compile("^OK-TCS")).click()
+    mobil.get_by_role("button", name="Normální").click()
+    vybrat(mobil, "PIC", "Pilot Adam")
+    expect(mobil.get_by_role("combobox", name="Platí")).to_have_value("Pilot Adam")
+    mobil.get_by_role("button", name="Dál").click()
+    vybrat(mobil, "Úloha", "LP – Let do prostoru")
+    mobil.get_by_role("button", name="Dál").click()
+    mobil.get_by_role("button", name="VZLET TEĎ").click()
+
+    expect(mobil.get_by_text("Ve vzduchu (1)")).to_be_visible()
+    expect(mobil.get_by_text("Adam Pilot (PIC)")).to_be_visible()
+
+    mobil.get_by_role("button", name="PŘISTÁL").click()
+    mobil.get_by_role("button", name="Potvrdit přistání").click()
+    # Let trval pár sekund → aplikace se zeptá, jak ho brát.
+    mobil.get_by_role("button", name="Normální let (skutečný čas)").click()
+    expect(mobil.get_by_text("Ukončené (1)")).to_be_visible()
+    assert Let.objects.get().stav == StavLetu.UKONCEN
+
+
+def test_zpet_po_omylem_zapsanem_pristani(mobil, svet):
+    let_pilota(svet)
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="PŘISTÁL").click()
+    mobil.get_by_role("button", name="Potvrdit přistání").click()
+    expect(mobil.get_by_text("Ukončené (1)")).to_be_visible()
+
+    mobil.locator(".mantine-Notification-root").get_by_role("button", name="Zpět").click()
+    expect(mobil.get_by_text("Ve vzduchu (1)")).to_be_visible()
+
+
+def test_oprava_s_duvodem_a_historie(mobil, svet):
+    let_pilota(svet, stav=StavLetu.UKONCEN, minut=60)
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_text("OK-TCS", exact=True).click()
+    mobil.get_by_role("button", name="Opravit…").click()
+    mobil.get_by_role("button", name="Touch-and-go: více").click()
+    mobil.get_by_role("button", name="Touch-and-go: více").click()
+    expect(mobil.get_by_role("button", name="Uložit opravu")).to_be_disabled()
+    vybrat(mobil, "Důvod opravy", "Zapomenutý stop")
+    mobil.get_by_role("button", name="Uložit opravu").click()
+    expect(mobil.get_by_text("T&G 2")).to_be_visible()
+
+    mobil.get_by_text("OK-TCS", exact=True).click()
+    dialog = mobil.get_by_role("dialog")
+    expect(dialog.get_by_text("Oprava · Eva Časoměřič")).to_be_visible()
+    expect(dialog.get_by_text("Zapomenutý stop")).to_be_visible()
+    expect(dialog.get_by_text("touch-and-go:")).to_be_visible()
+
+
+def test_pilot_neovlada_cizi_let(mobil, svet):
+    let_pilota(svet)
+    prihlasit(mobil, svet, "ivan@example.com")
+    expect(mobil.get_by_text("Adam Pilot (PIC)")).to_be_visible()
+    expect(mobil.get_by_role("button", name="PŘISTÁL")).to_have_count(0)
+
+
+def test_letici_pilot_nemuze_vzletnout_znovu(mobil, svet):
+    let_pilota(svet)
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="+ NOVÝ LET").click()
+    mobil.get_by_role("button", name=re.compile("^OK-TVA")).click()
+    mobil.get_by_role("button", name="Normální").click()
+    vybrat(mobil, "PIC", "Pilot Adam – ✈ ve vzduchu")
+    mobil.get_by_role("button", name="Dál").click()
+    mobil.get_by_role("button", name="Dál").click()
+    mobil.get_by_role("button", name="VZLET TEĎ").click()
+    expect(mobil.get_by_text("Adam Pilot je právě ve vzduchu na OK-TCS")).to_be_visible()

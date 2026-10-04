@@ -23,3 +23,6 @@
   pozvánky jen ruční akcí admina (vybraným nebo všem), nikdy automaticky při založení osoby.
 - Telefon osoby: nikdy v seznamech, číselnících ani na displeji; jen na vyžádání
   (samostatné volání API po ťuknutí na „Zobrazit telefon“), pro všechny přihlášené.
+- Klikací testy v prohlížeči (Playwright): `backend/e2e`, spuštění `uv run pytest e2e`
+  (frontend musí být sestavený). Běží v CI a nasazení čeká, až projdou. Před čekáním na
+  prvek po přechodu stránky vždy ověřit nadpis nové stránky (jinak hrozí souběh).

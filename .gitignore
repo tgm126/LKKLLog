@@ -25,3 +25,5 @@ frontend/dist/
 *.zip
 vps-promenne.txt
 backend/.dev-prihlaseni.txt
+backend/e2e-vysledky/
+backend/test-results/

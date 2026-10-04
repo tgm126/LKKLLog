@@ -80,6 +80,14 @@ cd frontend
 npm run lint && npm run build
 ```
 
+Klikací testy v prohlížeči (Playwright, potřebují sestavený frontend a běžící databázi):
+
+```bash
+cd backend
+uv run playwright install chromium   # jednou
+uv run pytest e2e
+```
+
 ## Číselníky (úvodní načtení)
 
 ```bash

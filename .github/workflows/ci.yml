@@ -55,6 +55,56 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
+  e2e:
+    # Klikací testy v prohlížeči (Playwright) proti zkušební kopii aplikace.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lkkllog
+          POSTGRES_USER: lkkllog
+          POSTGRES_PASSWORD: lkkllog
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lkkllog" --health-interval 5s --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://lkkllog:lkkllog@127.0.0.1:5432/lkkllog
+      DJANGO_SECRET_KEY: ci-only
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Sestavení frontendu
+        working-directory: frontend
+        run: npm ci && npm run build
+      - uses: astral-sh/setup-uv@v10.2.0
+      - working-directory: backend
+        run: uv sync --frozen
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('backend/uv.lock') }}
+      - name: Prohlížeč Chromium
+        working-directory: backend
+        run: uv run playwright install --with-deps chromium
+      - name: Klikací testy
+        working-directory: backend
+        run: >-
+          uv run pytest e2e -q --video retain-on-failure --screenshot only-on-failure
+          --output e2e-vysledky
+      - name: Videa a snímky z neúspěšných testů
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-vysledky
+          path: backend/e2e-vysledky
+          retention-days: 7
+
   image:
     # Kontrola, že se Docker image sestaví (na serveru ho sestavuje VPS Centrum).
     needs: [backend, frontend]
@@ -73,7 +123,7 @@ jobs:
     # Otestovaná verze z main se pošle do git repozitáře ve VPS Centru,
     # které aplikaci samo sestaví a restartuje (migrace proběhnou při startu).
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [image]
+    needs: [image, e2e]
     runs-on: ubuntu-latest
     concurrency:
       group: deploy
