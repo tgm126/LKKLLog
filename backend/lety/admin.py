@@ -1,9 +1,7 @@
 from django import forms
 from django.contrib import admin
 
-from osoby.models import Kategorie
-
-from .models import AuditLog, Let, Letadlo, Letiste, Posadka, Ucel, Uloha, Uzaverka
+from .models import AuditLog, Let, Letadlo, Letiste, Osnova, Posadka, Ucel, Uloha, Uzaverka
 
 
 @admin.register(Letadlo)
@@ -33,34 +31,41 @@ class LetisteAdmin(admin.ModelAdmin):
 
 
 class UlohaForm(forms.ModelForm):
-    # Seznamy (ArrayField) jako zaškrtávátka místo textu odděleného čárkami.
+    # Účely (ArrayField) jako zaškrtávátka místo textu odděleného čárkami.
     ucely = forms.MultipleChoiceField(
         label="Účely", choices=Ucel.choices, widget=forms.CheckboxSelectMultiple
-    )
-    kategorie = forms.MultipleChoiceField(
-        label="Kategorie", choices=Kategorie.choices, widget=forms.CheckboxSelectMultiple
     )
 
     class Meta:
         model = Uloha
-        fields = ["kod", "nazev", "osnova", "ucely", "kategorie", "aktivni", "poradi"]
+        fields = ["osnova", "kod", "nazev", "ucely", "aktivni", "poradi"]
+
+
+class UlohaInline(admin.TabularInline):
+    model = Uloha
+    form = UlohaForm
+    extra = 0
+
+
+@admin.register(Osnova)
+class OsnovaAdmin(admin.ModelAdmin):
+    inlines = [UlohaInline]
+    list_display = ["nazev", "kategorie", "aktivni", "poradi"]
+    list_filter = ["kategorie", "aktivni"]
+    list_editable = ["poradi"]
 
 
 @admin.register(Uloha)
 class UlohaAdmin(admin.ModelAdmin):
     form = UlohaForm
-    list_display = ["kod", "nazev", "osnova", "ucely_text", "kategorie_text", "aktivni", "poradi"]
-    list_filter = ["aktivni", "osnova"]
+    list_display = ["kod", "nazev", "osnova", "ucely_text", "aktivni", "poradi"]
+    list_filter = ["osnova__kategorie", "osnova", "aktivni"]
     list_editable = ["poradi"]
     search_fields = ["kod", "nazev"]
 
     @admin.display(description="účely")
     def ucely_text(self, obj):
         return ", ".join(Ucel(u).label for u in obj.ucely)
-
-    @admin.display(description="kategorie")
-    def kategorie_text(self, obj):
-        return ", ".join(Kategorie(k).label for k in obj.kategorie)
 
 
 class PosadkaInline(admin.TabularInline):

@@ -2,7 +2,7 @@ import pytest
 from openpyxl import load_workbook
 
 from lety.ciselniky import ChybaNacteni, nacti, vytvor_sablonu
-from lety.models import Letadlo, Letiste, Ucel, Uloha
+from lety.models import Letadlo, Letiste, Osnova, Ucel, Uloha
 from osoby.models import Kategorie, Opravneni, Osoba, Uroven
 
 pytestmark = pytest.mark.django_db
@@ -24,16 +24,14 @@ def vyplnena_sablona(tmp_path):
     wb["Oprávnění"].append(["Karel", "Cizí", "Motorové", "Examinátor", None])
     wb["Letadla"].append(["ok-0815", "L-13 Blaník", "Kluzák", 2, None, None, None, None, 1])
     wb["Letadla"].append(["OK-ABC", "Z-226", "Motorové", 2, 150, "ano", None, None, 2])
-    wb["Úlohy"].append(["ZVP kluzáky", "12", "Okruhy", "Výcvik, Výcvik sólo", "Kluzák", 12])
+    wb["Osnovy"].append(["Kluzák", "Základní výcvik", 1])
+    wb["Osnovy"].append(["Motorové", "Přezkoušení mimo osnovy", 9])
+    wb["Úlohy"].append(["Kluzák", "Základní výcvik", "12", "Okruhy", "Výcvik, Výcvik sólo", 12])
     wb["Úlohy"].append(
-        [
-            "Přezkoušení",
-            "PZ-1",
-            "Přezkoušení odborné způsobilosti",
-            "Přezkoušení",
-            "Kluzák, Motorové, TMG",
-            None,
-        ]
+        ["Kluzák", "Základní výcvik", "PS", "Přezkoušení před sólem", "Přezkoušení", 13]
+    )
+    wb["Úlohy"].append(
+        ["Motorové", "Přezkoušení mimo osnovy", "POZ", "Periodické ověření", "Přezkoušení"]
     )
     wb.save(cesta)
     return cesta
@@ -42,7 +40,14 @@ def vyplnena_sablona(tmp_path):
 def test_nacteni_ciselniku(vyplnena_sablona):
     vysledek = nacti(vyplnena_sablona)
 
-    assert vysledek.zalozeno == {"Osoby": 3, "Oprávnění": 2, "Letadla": 2, "Letiště": 2, "Úlohy": 2}
+    assert vysledek.zalozeno == {
+        "Osoby": 3,
+        "Oprávnění": 2,
+        "Letadla": 2,
+        "Letiště": 2,
+        "Osnovy": 2,
+        "Úlohy": 3,
+    }
     novak = Osoba.objects.get(email="novak@example.com")
     assert novak.role_casomeric and not novak.has_usable_password()
     assert Osoba.objects.get(prijmeni="Cizí").externi
@@ -55,6 +60,9 @@ def test_nacteni_ciselniku(vyplnena_sablona):
     assert Letiste.objects.get(domovske=True).icao == "LKKL"
     uloha = Uloha.objects.get(kod="12")
     assert uloha.ucely == [Ucel.VYCVIK, Ucel.VYCVIK_SOLO]
+    assert uloha.osnova == Osnova.objects.get(nazev="Základní výcvik")
+    assert uloha.kategorie == Kategorie.KLUZAK
+    assert Uloha.objects.get(kod="POZ").osnova.kategorie == Kategorie.MOTOR
 
 
 def test_opakovane_nacteni_jen_aktualizuje(vyplnena_sablona):

@@ -16,7 +16,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from osoby.models import Kategorie, Opravneni, Osoba, Uroven
 
-from .models import Letadlo, Letiste, Ucel, Uloha
+from .models import Letadlo, Letiste, Osnova, Ucel, Uloha
 
 ANO_NE = ["ano", "ne"]
 
@@ -59,13 +59,20 @@ LISTY: dict[str, list[tuple[str, bool, list[str] | None]]] = {
         ("Mimo letiště (terén)", False, ANO_NE),
         ("Pořadí", False, None),
     ],
+    "Osnovy": [
+        ("Kategorie", True, Kategorie.labels),
+        ("Název", True, None),
+        ("Pořadí", False, None),
+        ("Aktivní", False, ANO_NE),
+    ],
     "Úlohy": [
-        ("Osnova", False, None),
+        ("Kategorie", True, Kategorie.labels),
+        ("Osnova", True, None),
         ("Kód", True, None),
         ("Název", True, None),
         ("Účely", True, None),
-        ("Kategorie", True, None),
         ("Pořadí", False, None),
+        ("Aktivní", False, ANO_NE),
     ],
 }
 
@@ -79,11 +86,12 @@ NAVOD = [
     "• Mobil: libovolně s mezerami, bez předvolby se doplní +420 (např. 731 123 456).",
     "• Oprávnění: osoba se dohledá podle jména a příjmení z listu Osoby.",
     "  Každé oprávnění na samostatném řádku (např. kluzák–instruktor, motorové–pilot).",
-    "• Úlohy: Účely a Kategorie mohou mít více hodnot oddělených čárkou,",
-    f"  účely: {', '.join(Ucel.labels[:4])}",
-    f"  kategorie: {', '.join(Kategorie.labels)}",
-    "  příklad: Účely = „Výcvik, Výcvik sólo“, Kategorie = „Kluzák“",
-    "• Přezkoušení zapište jako úlohy s účelem „Přezkoušení“ (jedna úloha = jeden typ).",
+    "• Osnovy: každá kategorie má své osnovy (např. Kluzák – Základní výcvik).",
+    "  Přezkoušení mimo osnovy (např. POZ) dejte do osnovy typu „Přezkoušení mimo osnovy“.",
+    "• Úlohy: Kategorie + Osnova musí přesně odpovídat řádku v listu Osnovy.",
+    "  Účely = u kterých účelů letu se úloha nabízí, může jich být víc oddělených čárkou:",
+    f"  {', '.join(Ucel.labels[:4])}",
+    "  příklad: běžná úloha výcviku = „Výcvik, Výcvik sólo“, přezkoušení = „Přezkoušení“",
     "• Letiště LKKL a „Mimo letiště (terén)“ jsou předvyplněná.",
     "• Načtení lze opakovat: existující záznamy se aktualizují, nic se nemaže.",
 ]
@@ -225,6 +233,7 @@ def nacti(cesta) -> Vysledek:
             ("Oprávnění", _opravneni),
             ("Letadla", _letadlo),
             ("Letiště", _letiste),
+            ("Osnovy", _osnova),
             ("Úlohy", _uloha),
         ]:
             for cislo, radek in _radky(wb, list_):
@@ -332,16 +341,31 @@ def _letiste(r) -> bool:
     return novy
 
 
+def _osnova(r) -> bool:
+    kategorie, nazev = _volba(r[0], Kategorie.choices), _text(r[1])
+    if not nazev:
+        raise ValueError("chybí název osnovy")
+    osnova, novy = Osnova.objects.get_or_create(kategorie=kategorie, nazev=nazev)
+    osnova.poradi = _cislo(_bunka(r, 2), 100)
+    osnova.aktivni = _ano_ne(_bunka(r, 3), True)
+    osnova.full_clean()
+    osnova.save()
+    return novy
+
+
 def _uloha(r) -> bool:
-    osnova, kod = _text(r[0]), _text(r[1])
+    kategorie, nazev_osnovy, kod = _volba(r[0], Kategorie.choices), _text(r[1]), _text(r[2])
     if not kod:
         raise ValueError("chybí kód")
+    osnova = Osnova.objects.filter(kategorie=kategorie, nazev=nazev_osnovy).first()
+    if osnova is None:
+        raise ValueError(f"osnova „{nazev_osnovy}“ pro tuto kategorii není v listu Osnovy")
     uloha = Uloha.objects.filter(osnova=osnova, kod=kod).first() or Uloha(osnova=osnova, kod=kod)
     novy = uloha.pk is None
-    uloha.nazev = _text(r[2])
-    uloha.ucely = _volby(r[3], Ucel.choices)
-    uloha.kategorie = _volby(r[4], Kategorie.choices)
-    uloha.poradi = _cislo(r[5], 100)
+    uloha.nazev = _text(r[3])
+    uloha.ucely = _volby(r[4], Ucel.choices)
+    uloha.poradi = _cislo(_bunka(r, 5), 100)
+    uloha.aktivni = _ano_ne(_bunka(r, 6), True)
     uloha.full_clean()
     uloha.save()
     return novy

@@ -41,6 +41,7 @@ def test_admin_zalozi_osobu_bez_prihlaseni(admin_client):
         "/admin/osoby/osoba/add/",
         "/admin/lety/letadlo/add/",
         "/admin/lety/uloha/add/",
+        "/admin/lety/osnova/add/",
         "/admin/lety/let/",
         "/admin/lety/let/add/",
         "/admin/lety/auditlog/",

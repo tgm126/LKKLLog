@@ -119,18 +119,36 @@ class Letiste(models.Model):
         return f"{self.icao} {self.nazev}" if self.icao else self.nazev
 
 
+class Osnova(models.Model):
+    """Osnova (např. Základní výcvik) – vždy pro jednu kategorii letadel."""
+
+    kategorie = models.CharField(max_length=10, choices=Kategorie.choices)
+    nazev = models.CharField("název", max_length=80)
+    aktivni = models.BooleanField("aktivní", default=True)
+    poradi = models.PositiveSmallIntegerField("pořadí", default=100)
+
+    class Meta:
+        verbose_name = "osnova"
+        verbose_name_plural = "osnovy"
+        ordering = ["kategorie", "poradi", "nazev"]
+        constraints = [
+            models.UniqueConstraint(fields=["kategorie", "nazev"], name="osnova_unikatni"),
+        ]
+
+    def __str__(self):
+        return f"{self.get_kategorie_display()} – {self.nazev}"
+
+
 class Uloha(models.Model):
+    """Úloha patří do jedné osnovy (a tím do jedné kategorie)."""
+
+    osnova = models.ForeignKey(Osnova, on_delete=models.PROTECT, related_name="ulohy")
     kod = models.CharField("kód", max_length=20)
     nazev = models.CharField("název", max_length=120)
-    osnova = models.CharField(max_length=60, blank=True, help_text="Ke které osnově patří.")
     ucely = ArrayField(
         models.CharField(max_length=12, choices=Ucel.choices),
         verbose_name="účely",
-        help_text="Pro které účely letu se úloha nabízí.",
-    )
-    kategorie = ArrayField(
-        models.CharField(max_length=10, choices=Kategorie.choices),
-        help_text="Pro které kategorie letadel se úloha nabízí.",
+        help_text="U kterých účelů letu se úloha nabízí (např. Výcvik a Výcvik sólo).",
     )
     aktivni = models.BooleanField("aktivní", default=True)
     poradi = models.PositiveSmallIntegerField("pořadí", default=100)
@@ -138,13 +156,17 @@ class Uloha(models.Model):
     class Meta:
         verbose_name = "úloha"
         verbose_name_plural = "úlohy"
-        ordering = ["poradi", "kod"]
+        ordering = ["osnova", "poradi", "kod"]
         constraints = [
             models.UniqueConstraint(fields=["osnova", "kod"], name="uloha_unikatni_kod"),
         ]
 
     def __str__(self):
         return f"{self.kod} – {self.nazev}"
+
+    @property
+    def kategorie(self) -> str:
+        return self.osnova.kategorie
 
 
 class DobaLetuMin(Func):

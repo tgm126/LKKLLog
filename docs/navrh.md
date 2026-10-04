@@ -321,14 +321,22 @@ Změna hesla, odhlášení.
 
 **`letiste`**: ICAO kód (např. LKKL, může být prázdný), název, příznak domovské. Zvláštní položka „Mimo letiště (terén)“.
 
-**`uloha`**
+**`osnova`**: osnova výcviku nebo skupina úloh, vždy pro **jednu kategorii** (např. *Kluzák – Základní výcvik*, *Kluzák – Pokračovací výcvik*, *Motorové – Přezkoušení mimo osnovy*). Co platí pro víc kategorií, se v číselníku zduplikuje.
 | sloupec | význam |
 |---|---|
-| kod, nazev | např. „12 – okruhy“, „PZ-LAPL – přezkoušení LAPL“ |
-| ucel | pro jaký účel se nabízí (normální / výcvik / výcvik sólo / přezkoušení) |
-| kategorie | pro které kategorie (jedna nebo více) |
-| osnova | ke které osnově patří (informativně) |
+| kategorie | motor / TMG / kluzák / UL |
+| nazev | např. „Základní výcvik“ |
 | aktivni, poradi | – |
+
+**`uloha`**: úloha patří do **jedné osnovy**, a tím i do jedné kategorie
+| sloupec | význam |
+|---|---|
+| osnova_id | → osnova |
+| kod, nazev | např. „12 – Okruhy“, „PS – Přezkoušení před prvním sólem“ |
+| ucely | u kterých účelů letu se úloha nabízí: běžná úloha výcviku = výcvik + výcvik sólo, přezkoušení = přezkoušení (i uvnitř osnovy) |
+| aktivni, poradi | – |
+
+Při zakládání letu je kategorie daná letadlem. Výběr úlohy nabídne osnovy této kategorie a v nich úlohy pro zvolený účel. Přezkoušení mimo osnovy (např. POZ, periodické ověření znalostí) patří do osnovy typu „Přezkoušení mimo osnovy“. Otevřené: kam patří úlohy běžných letů (např. let do prostoru).
 
 **Účel letu** a **způsob vzletu** jsou **pevné seznamy v kódu**, ne tabulky, protože na nich závisí logika aplikace (pravidla posádky).
 
@@ -393,6 +401,7 @@ erDiagram
     OSOBA ||--o{ POSADKA : "letí jako"
     LET ||--|{ POSADKA : "má posádku"
     LETADLO ||--o{ LET : "na letadle"
+    OSNOVA ||--o{ ULOHA : "obsahuje"
     ULOHA ||--o{ LET : "úloha"
     LETISTE ||--o{ LET : "vzlet / přistání"
     LET |o--o| LET : "kluzák → vlečná"
