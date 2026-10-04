@@ -16,7 +16,7 @@ def test_ucetni_stahne_excel(page, svet, tmp_path):
     page.get_by_role("link", name="Výpis").click()
     expect(page.get_by_role("heading", name="Výpis letů")).to_be_visible()
     expect(page.get_by_text("Lety (1)")).to_be_visible()
-    expect(page.get_by_role("cell", name='0°10"').first).to_be_visible()
+    expect(page.get_by_role("cell", name='10"').first).to_be_visible()
 
     with page.expect_download() as stazeni:
         page.get_by_role("link", name="Stáhnout Excel").click()

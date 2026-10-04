@@ -5,11 +5,12 @@ export const hhmm = (iso: string | Date | null | undefined) =>
 
 export const hhmmss = (iso: string | Date) => new Date(iso).toISOString().slice(11, 19)
 
-/** Doba v leteckém zápisu: 1°4" = hodina a čtyři minuty. */
+/** Doba v leteckém zápisu: 1°4" = hodina a čtyři minuty, 10" = deset minut (bez 0°). */
 export function doba(minuty: number | null | undefined): string {
   if (minuty === null || minuty === undefined) return '–'
   const celkem = Math.round(minuty)
-  return `${Math.floor(celkem / 60)}°${celkem % 60}"`
+  const hodiny = Math.floor(celkem / 60)
+  return hodiny > 0 ? `${hodiny}°${celkem % 60}"` : `${celkem}"`
 }
 
 /** Běžící čas od vzletu: letecký zápis hodin a minut + sekundy zvlášť. */

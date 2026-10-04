@@ -123,7 +123,10 @@ def souhrn(seznam: list[Let]) -> dict:
 
 
 def letecky(minuty: int | None) -> str:
-    return "" if minuty is None else f'{minuty // 60}°{minuty % 60}"'
+    """Letecký zápis doby: 1°4" = hodina a čtyři minuty, 10" = deset minut (bez 0°)."""
+    if minuty is None:
+        return ""
+    return f'{minuty // 60}°{minuty % 60}"' if minuty >= 60 else f'{minuty}"'
 
 
 SLOUPCE = [
