@@ -122,13 +122,14 @@ def test_ull_platnost(svet):
 
 def test_rozletanost_vidi_jen_admin_dokud_je_hlidani_vypnute(jako, svet):
     data = jako(svet.pilot).get("/api/nalet/rozletanost").json()
-    assert data == {"hlidani": False, "zobrazit": False, "kontroly": []}
+    vypnuto = {"zpusobilost": False, "rozletanost": False}
+    assert data == {"moduly": vypnuto, "zobrazit": False, "kontroly": []}
     svet.pilot.is_staff = True
     svet.pilot.save()
     assert jako(svet.pilot).get("/api/nalet/rozletanost").json()["zobrazit"] is True
 
     nastaveni = Nastaveni.aktualni()
-    nastaveni.hlidat_licence = True
+    nastaveni.hlidat_zpusobilost = nastaveni.hlidat_rozletanost = True
     nastaveni.save()
     data = jako(svet.cizi_pilot).get("/api/nalet/rozletanost").json()
     assert data["zobrazit"] is True
@@ -145,7 +146,7 @@ def test_varovani_pri_zakladani_letu(jako, svet):
     assert post(klient, "/api/kontrola-posadky", let).json() == {"varovani": []}  # vypnuto
 
     nastaveni = Nastaveni.aktualni()
-    nastaveni.hlidat_licence = True
+    nastaveni.hlidat_zpusobilost = nastaveni.hlidat_rozletanost = True
     nastaveni.save()
     varovani = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
     assert varovani == ["Test Pilot: nemá zadanou licenci pro kategorii motorové."]
@@ -219,7 +220,7 @@ def test_medical_podle_tridy_pro_licenci(svet):
     assert k["Medical pro SPL"].stav == OK
 
     nastaveni = Nastaveni.aktualni()
-    nastaveni.hlidat_licence = True
+    nastaveni.hlidat_zpusobilost = nastaveni.hlidat_rozletanost = True
     nastaveni.save()
     from lety.rozletanost import varovani_pilota
     from osoby.models import Kategorie
@@ -267,3 +268,36 @@ def test_jazykova_zpusobilost(jako, svet):
     data = {"typ": "jazyk", "kvalifikace": [{"druh": "en_4"}, {"druh": "en_5"}]}
     Licence.objects.all().delete()
     assert post(jako(svet.pilot), "/api/ucet/licence", data).status_code == 400
+
+
+def test_moduly_zpusobilost_a_rozletanost_zvlast(jako, svet):
+    medical(svet.pilot)
+    licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES - timedelta(days=1)))
+    nastaveni = Nastaveni.aktualni()
+    nastaveni.hlidat_rozletanost = True
+    nastaveni.save()
+    data = jako(svet.pilot).get("/api/nalet/rozletanost").json()
+    assert {k["modul"] for k in data["kontroly"]} == {"rozletanost"}
+
+    let = {
+        "letadlo_id": svet.motor.pk,
+        "posadka": [{"osoba_id": svet.pilot.pk, "funkce": "pic"}],
+        "pocet_hostu": 1,
+    }
+    varovani = post(jako(svet.casomeric), "/api/kontrola-posadky", let).json()["varovani"]
+    # Jen rozlétanost (cestující); prošlá kvalifikace SEP patří ke způsobilosti.
+    assert len(varovani) == 1 and "cestující" in varovani[0]
+
+
+def test_varovani_na_prosly_termin_letadla(jako, svet):
+    from lety.models import TerminLetadla
+
+    TerminLetadla.objects.create(letadlo=svet.motor, nazev="ARC", datum=DNES - timedelta(days=2))
+    let = {"letadlo_id": svet.motor.pk, "posadka": [{"osoba_id": svet.pilot.pk, "funkce": "pic"}]}
+    klient = jako(svet.casomeric)
+    assert post(klient, "/api/kontrola-posadky", let).json() == {"varovani": []}
+    nastaveni = Nastaveni.aktualni()
+    nastaveni.hlidat_letadla = True
+    nastaveni.save()
+    [varovani] = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
+    assert varovani.startswith("OK-TCS: ARC – prošlo")

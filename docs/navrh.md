@@ -407,9 +407,18 @@ a nápovědu.
   - veze cestující a nemá 3 vzlety za 90 dní.
 
   Varování nic neblokuje.
-- **Přepínač** *Hlídat licence, medical a rozlétanost* v *Nastavení provozu* zapne admin,
-  až budou data kompletní. Do té doby vidí přehled jen admin (pro kontrolu) a varování
-  se neukazují.
+- V *Nastavení provozu* jsou **tři přepínače modulů** (zapíná admin, až budou data kompletní; varování nic neblokují):
+  - *Hlídat způsobilost pilotů*: licence, kvalifikace, medical, radiofonní průkaz,
+    jazyková způsobilost;
+  - *Hlídat rozlétanost pilotů*: nálet a starty za období, cestující (90 dní);
+  - *Hlídat způsobilost letadel*: varování při zakládání letu, když má letadlo prošlý
+    termín.
+
+  U vypnutého modulu vidí kontroly v Můj nálet jen admin (pro kontrolu dat) a varování
+  se neukazují. Přehled *Piloti a letadla* ukazuje vše vždy.
+- **Testovací data:** příkaz `manage.py testovaci_licence` doplní pestré licence a medical
+  osobám s příznakem *Testovací* (v pořádku, brzy vyprší, prošlé, chybějící).
+  `--prepsat` je vytvoří znovu.
 - Počítá se jen z letů v LKKL Log. Uvažuje se o importu starších letů z Flight Office,
   se kterým by výpočet byl úplnější.
 
@@ -781,8 +790,9 @@ Co aplikace k tomu potřebuje:
 3. Termíny letadel (ARC, prohlídky, pojištění…).
 4. Licence, medical, radiofonní průkaz a jazyková způsobilost pilotů. Zadají si je piloti
    sami, nebo správce licencí. Kontrola v přehledu *Piloti a letadla*.
-5. Až jsou data kompletní, zapnout v *Nastavení provozu* **Hlídat licence, medical
-   a rozlétanost**.
+5. Až jsou data kompletní, zapnout v *Nastavení provozu* moduly **Hlídat způsobilost
+   pilotů**, **Hlídat rozlétanost pilotů** a **Hlídat způsobilost letadel**. Každý jde
+   zapnout samostatně, až budou jeho data v pořádku.
 6. Vypnout pruh „TESTOVACÍ PROVOZ“, přepnout režim e-mailů na *všem* a rozeslat pozvánky.
 
 ---

@@ -33,6 +33,7 @@ from .obdobi import rozsah
 from .vypis import letecky
 
 OK, POZOR, CHYBA, INFO = "ok", "pozor", "chyba", "info"
+ZPUSOBILOST, ROZLETANOST = "zpusobilost", "rozletanost"  # moduly hlídání
 JAZYK = "Jazyková způsobilost"
 BRZY = timedelta(days=30)  # varovat, když něco brzy vyprší
 DNY_CESTUJICI = 90
@@ -151,6 +152,7 @@ class Kontrola:
     cestujici: bool = False  # jen pro let s cestujícími
     zpusob: str | None = None  # jen pro tento způsob vzletu kluzáku
     licence_typy: tuple = ()  # u medicalu: pro které licence platí
+    modul: str = ZPUSOBILOST  # způsobilost (doklady), nebo rozlétanost (nálet)
 
 
 def _stav_data(plati_do: date | None, dnes: date, brzy: timedelta = BRZY) -> str:
@@ -219,7 +221,7 @@ def _rolling(
         stav, text = _stav_data(plati_do, dnes), f"Splněno, platí do {datum(plati_do)}."
     else:
         stav, text = CHYBA, f"Nesplněno za posledních {mesicu} měsíců."
-    return Kontrola(oblast, nazev, stav, text, plati_do, popisy, kategorie)
+    return Kontrola(oblast, nazev, stav, text, plati_do, popisy, kategorie, modul=ROZLETANOST)
 
 
 def _cestujici(oblast: str, lety: list[Zaznam], kategorie: str, dnes: date, co: str) -> Kontrola:
@@ -239,7 +241,9 @@ def _cestujici(oblast: str, lety: list[Zaznam], kategorie: str, dnes: date, co: 
         stav, text = _stav_data(plati_do, dnes), f"Smí vozit cestující do {datum(plati_do)}."
     else:
         stav, text = POZOR, f"Za 90 dní nemá 3 {co} jako PIC – nesmí vozit cestující."
-    return Kontrola(oblast, nazev, stav, text, plati_do, popisy, kategorie, cestujici=True)
+    return Kontrola(
+        oblast, nazev, stav, text, plati_do, popisy, kategorie, cestujici=True, modul=ROZLETANOST
+    )
 
 
 def _platnost(oblast: str, nazev: str, plati_do: date | None, dnes: date, kat: str) -> Kontrola:
@@ -515,25 +519,34 @@ OPRAVNUJE = {
 
 
 def varovani_pilota(
-    osoba: Osoba, kategorie: str, cestujici: bool, zpusob: str | None = None
+    osoba: Osoba,
+    kategorie: str,
+    cestujici: bool,
+    zpusob: str | None = None,
+    moduly: frozenset = frozenset({ZPUSOBILOST, ROZLETANOST}),
 ) -> list[str]:
     """Co u PIC nesedí pro let v dané kategorii (jen varování, nic se neblokuje)."""
+    if not moduly:
+        return []
     jmeno = osoba.get_full_name()
     licence = list(Licence.objects.filter(osoba=osoba).prefetch_related("kvalifikace"))
     druhy = {(lic.typ, kv.druh) for lic in licence for kv in lic.kvalifikace.all()}
     typy = {lic.typ for lic in licence}
     povoleno = OPRAVNUJE[kategorie]
     if not any((t, d) in druhy if d else t in typy for t, d in povoleno):
+        if ZPUSOBILOST not in moduly:
+            return []  # bez licence nejde posoudit ani rozlétanost
         nazev = dict(Kategorie.choices)[kategorie].lower()
         return [f"{jmeno}: nemá zadanou licenci pro kategorii {nazev}."]
 
     # Licence, které let v této kategorii pokrývají – podle nich se posuzuje medical.
     kryji = {t for t, d in povoleno if ((t, d) in druhy if d else t in typy)}
     vysledek = []
-    vse = kontroly(osoba)
+    vse = [k for k in kontroly(osoba) if k.modul in moduly]
     # Jazyková způsobilost stačí v jednom jazyce (angličtina, nebo čeština v ČR).
     jazyky = [k for k in vse if k.oblast == JAZYK]
-    if all(k.stav == CHYBA or k.text in ("Není zadaná.", "Chybí jazyk a úroveň.") for k in jazyky):
+    neplatne = ("Není zadaná.", "Chybí jazyk a úroveň.")
+    if jazyky and all(k.stav == CHYBA or k.text in neplatne for k in jazyky):
         vysledek.append(f"{jmeno}: nemá platnou jazykovou způsobilost.")
     for k in vse:
         if k.oblast == JAZYK:
@@ -554,7 +567,7 @@ def varovani_pilota(
             tyka_se = False
         if tyka_se:
             vysledek.append(f"{jmeno}: {k.nazev} – {k.text}")
-    if zpusob in KVALIFIKACE_ZPUSOBU and kategorie == Kategorie.KLUZAK:
+    if ZPUSOBILOST in moduly and zpusob in KVALIFIKACE_ZPUSOBU and kategorie == Kategorie.KLUZAK:
         druh = KVALIFIKACE_ZPUSOBU[zpusob]
         if (TypLicence.SPL, druh) not in druhy:
             vysledek.append(

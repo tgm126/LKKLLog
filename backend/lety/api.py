@@ -885,23 +885,43 @@ class KontrolaOut(Schema):
     text: str
     plati_do: date | None
     podrobnosti: list[str]
+    modul: str
+
+
+class ModulyOut(Schema):
+    zpusobilost: bool
+    rozletanost: bool
 
 
 class RozletanostOut(Schema):
-    hlidani: bool
+    moduly: ModulyOut
     zobrazit: bool
     kontroly: list[KontrolaOut]
 
 
+def _moduly_pilotu() -> frozenset:
+    nastaveni = Nastaveni.aktualni()
+    return frozenset(
+        m
+        for m, zapnuto in (
+            (rozletanost.ZPUSOBILOST, nastaveni.hlidat_zpusobilost),
+            (rozletanost.ROZLETANOST, nastaveni.hlidat_rozletanost),
+        )
+        if zapnuto
+    )
+
+
 @router.get("/nalet/rozletanost", response=RozletanostOut, summary="Moje licence a rozlétanost")
 def moje_rozletanost(request):
-    """Při vypnutém hlídání to vidí jen admin (kontrola dat před zapnutím)."""
-    hlidani = Nastaveni.aktualni().hlidat_licence
-    zobrazit = hlidani or request.user.is_staff
+    """Pilot vidí kontroly zapnutých modulů; admin všechny (kontrola dat před zapnutím)."""
+    moduly = _moduly_pilotu()
+    kontroly = rozletanost.kontroly(request.user) if moduly or request.user.is_staff else []
+    if not request.user.is_staff:
+        kontroly = [k for k in kontroly if k.modul in moduly]
     return {
-        "hlidani": hlidani,
-        "zobrazit": zobrazit,
-        "kontroly": rozletanost.kontroly(request.user) if zobrazit else [],
+        "moduly": {m: m in moduly for m in (rozletanost.ZPUSOBILOST, rozletanost.ROZLETANOST)},
+        "zobrazit": bool(kontroly) or bool(moduly),
+        "kontroly": kontroly,
     }
 
 
@@ -919,23 +939,31 @@ class VarovaniOut(Schema):
 
 @router.post("/kontrola-posadky", response=VarovaniOut, summary="Varování k posádce před letem")
 def kontrola_letu(request, data: KontrolaLetuIn):
-    """Licence, medical a rozlétanost PIC (a vlekaře). Jen varuje, nic neblokuje."""
-    if not Nastaveni.aktualni().hlidat_licence:
-        return {"varovani": []}
+    """Letadlo, licence, medical a rozlétanost PIC (a vlekaře) podle zapnutých modulů.
+
+    Jen varuje, nic neblokuje.
+    """
+    moduly = _moduly_pilotu()
+    varovani = []
+    if Nastaveni.aktualni().hlidat_letadla:
+        varovani += letadla.varovani_letadla(data.letadlo_id)
+        if data.vlek:
+            varovani += letadla.varovani_letadla(data.vlek.letadlo_id)
+    if not moduly:
+        return {"varovani": varovani}
     letadlo = Letadlo.objects.filter(pk=data.letadlo_id).first()
     pic = next((c for c in data.posadka if c.funkce == FunkcePosadky.PIC), None)
-    varovani = []
     if letadlo and pic and (osoba := Osoba.objects.filter(pk=pic.osoba_id).first()):
         cestujici = data.pocet_hostu > 0 or any(
             c.funkce == FunkcePosadky.CLEN for c in data.posadka
         )
         varovani += rozletanost.varovani_pilota(
-            osoba, letadlo.kategorie, cestujici, data.zpusob_vzletu
+            osoba, letadlo.kategorie, cestujici, data.zpusob_vzletu, moduly
         )
     if data.vlek and (vlekar := Osoba.objects.filter(pk=data.vlek.vlekar_id).first()):
         vlecne = Letadlo.objects.filter(pk=data.vlek.letadlo_id).first()
         if vlecne:
-            varovani += rozletanost.varovani_pilota(vlekar, vlecne.kategorie, False)
+            varovani += rozletanost.varovani_pilota(vlekar, vlecne.kategorie, False, moduly=moduly)
     return {"varovani": varovani}
 
 
@@ -992,7 +1020,11 @@ def sprava_pilot(request, osoba_id: int):
     osoba = Osoba.objects.filter(pk=osoba_id).first()
     if osoba is None:
         raise sluzby.ChybaLetu("Osoba neexistuje.", status=404)
-    return {"hlidani": True, "zobrazit": True, "kontroly": rozletanost.kontroly(osoba)}
+    return {
+        "moduly": {"zpusobilost": True, "rozletanost": True},
+        "zobrazit": True,
+        "kontroly": rozletanost.kontroly(osoba),
+    }
 
 
 class TerminOut(Schema):

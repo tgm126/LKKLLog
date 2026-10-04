@@ -72,8 +72,9 @@ jen když nemá platnou úroveň v žádném jazyce. Na blížící se konec pla
   tak, že se od nejnovějších letů sčítá, dokud není podmínka splněná. K datu letu, který ji
   doplnil, se přičte lhůta (90 dní nebo 24 měsíců).
 - **Kategorie:** motorové = třída SEP, TMG = TMG, kluzák = kluzáky bez TMG, UL = ULL.
-- **Hlídání** (varování při zakládání letu a přehled rozlétanosti) zapíná admin v *Nastavení
-  provozu*, až budou licence a medical zadané u všech pilotů. Varování nic neblokuje.
+- **Hlídání** zapíná admin v *Nastavení provozu* po modulech: způsobilost pilotů (doklady),
+  rozlétanost pilotů (nálet za období, cestující) a způsobilost letadel (termíny). Zapne je,
+  až budou data kompletní. Varování nic neblokuje.
 
 ## Kdo co vydává
 

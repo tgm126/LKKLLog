@@ -70,9 +70,13 @@ export function Rozletanost() {
           Upravit licence a medical
         </Button>
       </Group>
-      {!d.hlidani && (
+      {(!d.moduly.zpusobilost || !d.moduly.rozletanost) && (
         <Alert color="gray" p="xs">
-          Hlídání je v Nastavení provozu vypnuté – tento přehled teď vidí jen admin.
+          V Nastavení provozu je vypnuté hlídání{' '}
+          {[!d.moduly.zpusobilost && 'způsobilosti', !d.moduly.rozletanost && 'rozlétanosti']
+            .filter(Boolean)
+            .join(' a ')}{' '}
+          – tyto kontroly teď vidí jen admin.
         </Alert>
       )}
       <SeznamKontrol kontroly={d.kontroly} />

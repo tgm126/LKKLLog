@@ -102,3 +102,18 @@ def prehled(dnes: date | None = None) -> list[dict]:
             }
         )
     return vysledek
+
+
+def varovani_letadla(letadlo_id: int, dnes: date | None = None) -> list[str]:
+    """Prošlé termíny letadla (datum nebo nálet) – pro varování při zakládání letu."""
+    dnes = dnes or timezone.now().astimezone(UTC).date()
+    letadlo = s_naletem().filter(pk=letadlo_id).prefetch_related("terminy").first()
+    if letadlo is None:
+        return []
+    nalet = nalet_min(letadlo)
+    vysledek = []
+    for t in letadlo.terminy.all():
+        stav, text = stav_terminu(t, nalet, dnes)
+        if stav == CHYBA:
+            vysledek.append(f"{letadlo.imatrikulace}: {t.nazev} – {text}.")
+    return vysledek

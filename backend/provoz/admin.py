@@ -24,7 +24,9 @@ class NastaveniForm(forms.ModelForm):
             "povolene_adresy",
             "testovaci_provoz",
             "automaticka_uzaverka",
-            "hlidat_licence",
+            "hlidat_zpusobilost",
+            "hlidat_rozletanost",
+            "hlidat_letadla",
         ]
 
 
@@ -36,7 +38,10 @@ class NastaveniAdmin(admin.ModelAdmin):
         ("E-maily", {"fields": ["email_rezim", "povolene_adresy"]}),
         ("Provoz", {"fields": ["testovaci_provoz"]}),
         ("Uzávěrky", {"fields": ["automaticka_uzaverka"]}),
-        ("Licence a rozlétanost", {"fields": ["hlidat_licence"]}),
+        (
+            "Hlídání (zapněte, až budou data kompletní)",
+            {"fields": ["hlidat_zpusobilost", "hlidat_rozletanost", "hlidat_letadla"]},
+        ),
         ("Velký displej", {"fields": ["odkaz", "displej"]}),
     ]
 

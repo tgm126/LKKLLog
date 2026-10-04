@@ -12,7 +12,7 @@ from .test_lety import vybrat
 
 def test_pilot_zada_licenci_a_vidi_rozletanost(mobil, svet):
     nastaveni = Nastaveni.aktualni()
-    nastaveni.hlidat_licence = True
+    nastaveni.hlidat_zpusobilost = nastaveni.hlidat_rozletanost = True
     nastaveni.save()
     prihlasit(mobil, svet, "pilot@example.com")
 
@@ -38,7 +38,7 @@ def test_pilot_zada_licenci_a_vidi_rozletanost(mobil, svet):
 
 def test_varovani_v_pruvodci_letem(mobil, svet):
     nastaveni = Nastaveni.aktualni()
-    nastaveni.hlidat_licence = True
+    nastaveni.hlidat_zpusobilost = nastaveni.hlidat_rozletanost = True
     nastaveni.save()
     prihlasit(mobil, svet, "casomeric@example.com")
     mobil.get_by_role("button", name="+ NOVÝ LET").click()

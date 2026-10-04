@@ -9,6 +9,7 @@ import os
 # Playwright běží ve vlastní smyčce událostí; Django by jinak odmítlo přístup do databáze.
 os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
 
+import re  # noqa: E402
 from datetime import timedelta  # noqa: E402
 
 import pytest  # noqa: E402
@@ -117,4 +118,5 @@ def prihlasit(stranka: Page, svet, email: str) -> None:
     stranka.get_by_role("textbox", name="E-mail").fill(email)
     stranka.locator("input[type=password]").fill(HESLO)
     stranka.get_by_role("button", name="Přihlásit se").click()
-    expect(stranka.get_by_text("Ve vzduchu")).to_be_visible()
+    # Nadpis, ne text: po soumraku karta letu píše „…stále ve vzduchu“.
+    expect(stranka.get_by_role("heading", name=re.compile(r"^Ve vzduchu"))).to_be_visible()

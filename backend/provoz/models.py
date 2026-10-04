@@ -44,13 +44,24 @@ class Nastaveni(models.Model):
         ),
     )
 
-    hlidat_licence = models.BooleanField(
-        "hlídat licence, medical a rozlétanost",
+    # Moduly hlídání – zapínají se, až jsou data kompletní. Varování nic neblokují.
+    hlidat_zpusobilost = models.BooleanField(
+        "hlídat způsobilost pilotů",
         default=False,
         help_text=(
-            "Varování při zakládání letu a přehled rozlétanosti v Můj nálet. Zapněte až "
-            "budou licence a medical zadané u všech pilotů. Varování nic neblokuje."
+            "Licence, kvalifikace, medical, radiofonní průkaz a jazyková způsobilost: "
+            "varování při zakládání letu a přehled v Můj nálet."
         ),
+    )
+    hlidat_rozletanost = models.BooleanField(
+        "hlídat rozlétanost pilotů",
+        default=False,
+        help_text="Nálet a starty za období, cestující (90 dní): varování a přehled v Můj nálet.",
+    )
+    hlidat_letadla = models.BooleanField(
+        "hlídat způsobilost letadel",
+        default=False,
+        help_text="Varování při zakládání letu, když má letadlo prošlý termín (ARC, prohlídka…).",
     )
     displej_klic = models.CharField(
         "klíč velkého displeje",

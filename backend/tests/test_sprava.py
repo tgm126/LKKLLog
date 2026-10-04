@@ -86,3 +86,26 @@ def test_zak_bez_licence_neni_chyba(jako, svet, spravce):
     piloti = jako(spravce).get("/api/sprava/piloti").json()
     [zak] = [p for p in piloti if p["id"] == svet.zak.pk]
     assert "Licence: Pilotní licence není zadaná." not in zak["problemy"]
+
+
+def test_testovaci_licence(svet):
+    from django.core.management import call_command
+
+    from osoby.models import Kategorie, Uroven
+
+    pilot = osoba("Testovací pilot", testovaci=True)
+    Opravneni.objects.create(osoba=pilot, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
+    Opravneni.objects.create(osoba=pilot, kategorie=Kategorie.KLUZAK, uroven=Uroven.PILOT)
+    zak = osoba("Testovací žák", testovaci=True)
+    Opravneni.objects.create(osoba=zak, kategorie=Kategorie.KLUZAK, uroven=Uroven.ZAK)
+    Opravneni.objects.create(osoba=svet.pilot, kategorie=Kategorie.MOTOR, uroven=Uroven.PILOT)
+
+    call_command("testovaci_licence")
+    typy = set(Licence.objects.filter(osoba=pilot).values_list("typ", flat=True))
+    assert {"spl", "jazyk"} <= typy and typy & {"ppl_a", "lapl_a"}
+    assert not Licence.objects.filter(osoba=zak).exists() and zak.medicaly.exists()
+    assert not Licence.objects.filter(osoba=svet.pilot).exists()  # skutečné osoby ne
+
+    pocet = Licence.objects.count()
+    call_command("testovaci_licence")  # bez --prepsat nic nového
+    assert Licence.objects.count() == pocet

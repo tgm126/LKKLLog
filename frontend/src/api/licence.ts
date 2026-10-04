@@ -25,6 +25,8 @@ export type LicenceStav = {
 }
 
 export type Kontrola = {
+  /** Modul hlídání: způsobilost (doklady), nebo rozlétanost (nálet za období). */
+  modul: 'zpusobilost' | 'rozletanost'
   oblast: string
   nazev: string
   stav: 'ok' | 'pozor' | 'chyba' | 'info'
@@ -33,7 +35,11 @@ export type Kontrola = {
   podrobnosti: string[]
 }
 
-export type Rozletanost = { hlidani: boolean; zobrazit: boolean; kontroly: Kontrola[] }
+export type Rozletanost = {
+  moduly: { zpusobilost: boolean; rozletanost: boolean }
+  zobrazit: boolean
+  kontroly: Kontrola[]
+}
 
 export type KontrolaPosadky = {
   letadlo_id: number
