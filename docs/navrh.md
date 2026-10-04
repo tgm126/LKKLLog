@@ -1,6 +1,8 @@
 # LKKL Log – návrh aplikace pro evidenci letů
 
-*Verze návrhu 6 · 4. 10. 2026*
+*Verze návrhu 6.1 · 4. 10. 2026*
+
+**Změny ve verzi 6.1:** zpětná vazba od členů (kap. 3.6): dodatečný zápis letu, souběh, OGN.
 
 **Změny oproti verzi 5:**
 - **fáze spuštění** (kap. 9.1): nejdřív jen správce, pak testovací skupina, pak celý klub;
@@ -188,6 +190,15 @@ Každý let má **plátce**: jednu osobu z klubu, nebo **Aeroklub** (služební 
 
 ---
 
+### 3.6 Zpětná vazba od členů (4. 10. 2026)
+- **Dodatečný zápis:** pilot, který létá sám, často nebude chtít zapisovat v letadle. Potřebuje **„Dopsat proběhlý let“**: vzlet i přistání zadá výběrem času (bez psaní) a let se rovnou uloží jako ukončený. Takový let se označí jako *zapsaný dodatečně*, aby ho účetní a časoměřiči odlišili. Dopsat vlastní let smí pilot do denní uzávěrky, potom jen časoměřič nebo účetní.
+- **Lidé chybují a zapomínají:** opravy s důvodem, tlačítko Zpět, zvýraznění letů, které běží příliš dlouho nebo po soumraku, a denní uzávěrka, která nepustí neukončené lety.
+- **Souběh:** založení letu i stisk VZLET/PŘISTÁL může udělat víc lidí najednou (pilot i časoměřič). Aplikace musí:
+  - u stisků platit první a ostatním ukázat, kdo už let zapsal (idempotence),
+  - u zakládání nedovolit druhý let stejného letadla ve stejném čase (pojistka v databázi) a místo chyby nabídnout otevření už založeného letu,
+  - upozornit, pokud pro stejné letadlo už existuje *připravený* let.
+- **OGN tracker:** porovnání s logbookem OGN (Open Glider Network, síť přijímačů polohy kluzáků a letadel), zpočátku jen jako **kontrola souladu**, později případně návrh časů. Probrat až po rozjetí aplikace.
+
 ## 4. Obrazovky
 
 ### 4.1 Přihlášení
@@ -230,7 +241,7 @@ E-mail, heslo, „Zapamatovat“, „Zapomenuté heslo“.
 5. **Způsob vzletu** (jen u kluzáků): naviják / vlek / autostart.
    U vleku následuje výběr vlečného letadla a vlekaře a aplikace založí spárovaný let s účelem „Vlek“.
 6. **Místo vzletu:** předvyplněno LKKL, lze změnit.
-7. Tlačítka **[VZLET TEĎ]** nebo **[PŘIPRAVIT]** (vzlet se zmáčkne později), případně „Vzlet byl v…“ s výběrem času.
+7. Tlačítka **[VZLET TEĎ]** nebo **[PŘIPRAVIT]** (vzlet se zmáčkne později), případně „Vzlet byl v…“ s výběrem času, nebo **[DOPSAT PROBĚHLÝ LET]** s výběrem času vzletu i přistání (kap. 3.6).
 
 ### 4.4 Přistání
 Po stisku **PŘISTÁL** se zobrazí malé okno s místem přistání (předvyplněno LKKL), počtem touch-and-go (+/−) a tlačítkem **Potvrdit**.
@@ -359,7 +370,7 @@ Při zakládání letu je kategorie daná letadlem. Výběr úlohy nabídne osno
 | plati_aeroklub | ano/ne |
 | soukrome | **kopie** příznaku z letadla v okamžiku letu, aby změna vlastníka letadla nezměnila staré výpisy |
 | duvod_zruseni | jen u zrušených letů |
-| zalozil_id, zalozeno, zmeneno | kdo a kdy |
+| zalozil_id, zalozeno, zmeneno | kdo a kdy. Let založený až po přistání (`zalozeno` > `cas_pristani`) je *zapsaný dodatečně*. |
 | verze | číslo verze, chrání před tím, aby si dva lidé navzájem přepsali opravu |
 
 **`posadka`**: kdo na letu byl
@@ -588,7 +599,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 9 | **Velký displej**, zvýraznění podle maximální doby letu a soumraku | TV na věži. |
 | 10 | **E-mailová upozornění:** let přes maximální dobu, neukončen po soumraku | – |
 | 11 | **Můj nálet** | – |
-| později | Výcvik vlekařů (instruktor v obou letadlech), licence a platnosti spravované samotnými piloty, platnosti techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
+| později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), licence a platnosti spravované samotnými piloty, platnosti techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 
 Etapy 0–5 jsou minimum, se kterým lze jít do zkušebního provozu.
 
