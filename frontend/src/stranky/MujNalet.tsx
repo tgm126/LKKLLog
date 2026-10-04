@@ -20,6 +20,7 @@ import { nactiNalet, odkazExportuNaletu, type RadekNaletu } from '../api/nalet'
 import { doba, hhmm } from '../cas'
 import { DetailLetu } from '../komponenty/DetailLetu'
 import { OpravaLetu } from '../komponenty/OpravaLetu'
+import { Rozletanost } from '../komponenty/Rozletanost'
 import { Dlazdice } from '../komponenty/Souhrn'
 import { ZruseniDialog } from '../komponenty/ZruseniDialog'
 import { KATEGORIE_LETU, useNazvy } from '../nazvy'
@@ -112,6 +113,8 @@ export function MujNalet() {
             soukromých letadlech). Nenahrazuje zápisník letů.
           </Text>
         </div>
+
+        <Rozletanost />
 
         <SegmentedControl
           value={volba}

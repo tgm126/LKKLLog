@@ -44,6 +44,14 @@ class Nastaveni(models.Model):
         ),
     )
 
+    hlidat_licence = models.BooleanField(
+        "hlídat licence, medical a rozlétanost",
+        default=False,
+        help_text=(
+            "Varování při zakládání letu a přehled rozlétanosti v Můj nálet. Zapněte až "
+            "budou licence a medical zadané u všech pilotů. Varování nic neblokuje."
+        ),
+    )
     displej_klic = models.CharField(
         "klíč velkého displeje",
         max_length=64,

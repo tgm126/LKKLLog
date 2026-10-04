@@ -1,6 +1,9 @@
+from datetime import date
+
 from django.contrib.auth import authenticate, login, logout, password_validation
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.middleware.csrf import get_token
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -9,11 +12,21 @@ from ninja.errors import HttpError
 from ninja.security import django_auth
 from ninja.utils import check_csrf
 
+from lety import audit
 from provoz import push
 from provoz.models import Nastaveni, PushOdber
 
 from . import ucty
-from .models import Osoba
+from .models import (
+    KVALIFIKACE_LICENCE,
+    DruhKvalifikace,
+    Kvalifikace,
+    Licence,
+    Medical,
+    Osoba,
+    TridaMedicalu,
+    TypLicence,
+)
 
 router = Router(tags=["přihlášení"])
 
@@ -230,3 +243,175 @@ def push_zkouska(request):
         znacka="zkouska",
     )
     return {"pocet": pocet}
+
+
+# --- licence a medical (etapa 12) ----------------------------------------------------------
+# Pilot spravuje své, admin všechny (v administraci).
+
+
+class Volba(Schema):
+    hodnota: str
+    nazev: str
+
+
+class KvalifikaceIO(Schema):
+    druh: str
+    platnost_do: date | None = None
+
+
+class LicenceOut(Schema):
+    id: int
+    typ: str
+    cislo: str
+    poznamka: str
+    kvalifikace: list[KvalifikaceIO]
+
+
+class MedicalOut(Schema):
+    id: int
+    trida: str
+    platnost_do: date
+
+
+class LicenceStavOut(Schema):
+    licence: list[LicenceOut]
+    medicaly: list[MedicalOut]
+    typy: list[Volba]
+    kvalifikace: dict[str, list[Volba]]
+    tridy: list[Volba]
+
+
+class LicenceIn(Schema):
+    id: int | None = None
+    typ: str
+    cislo: str = ""
+    poznamka: str = ""
+    kvalifikace: list[KvalifikaceIO] = []
+
+
+class MedicalIn(Schema):
+    id: int | None = None
+    trida: str
+    platnost_do: date
+
+
+def _volby(choices) -> list[dict]:
+    return [{"hodnota": h, "nazev": n} for h, n in choices]
+
+
+def _licence_stav(osoba: Osoba) -> dict:
+    nazvy = dict(DruhKvalifikace.choices)
+    return {
+        "licence": [
+            {
+                "id": lic.pk,
+                "typ": lic.typ,
+                "cislo": lic.cislo,
+                "poznamka": lic.poznamka,
+                "kvalifikace": [
+                    {"druh": k.druh, "platnost_do": k.platnost_do}
+                    for k in lic.kvalifikace.order_by("id")
+                ],
+            }
+            for lic in osoba.licence.prefetch_related("kvalifikace")
+        ],
+        "medicaly": list(osoba.medicaly.all()),
+        "typy": _volby(TypLicence.choices),
+        "kvalifikace": {
+            typ: [{"hodnota": d, "nazev": nazvy[d]} for d in druhy]
+            for typ, druhy in KVALIFIKACE_LICENCE.items()
+        },
+        "tridy": _volby(TridaMedicalu.choices),
+    }
+
+
+@router.get("/licence", response=LicenceStavOut, auth=django_auth, summary="Moje licence")
+def moje_licence(request):
+    return _licence_stav(request.user)
+
+
+@router.post("/licence", response=LicenceStavOut, auth=django_auth, summary="Uložit licenci")
+def ulozit_licenci(request, data: LicenceIn):
+    osoba = request.user
+    if data.typ not in TypLicence.values:
+        raise HttpError(400, "Neznámý typ licence.")
+    povolene = KVALIFIKACE_LICENCE[data.typ]
+    druhy = [k.druh for k in data.kvalifikace]
+    if any(d not in povolene for d in druhy) or len(set(druhy)) != len(druhy):
+        raise HttpError(400, "Kvalifikace k tomuto typu licence nepatří.")
+    try:
+        with transaction.atomic():
+            if data.id:
+                licence = Licence.objects.filter(pk=data.id, osoba=osoba).first()
+                if licence is None:
+                    raise HttpError(404, "Licence neexistuje.")
+                licence.typ = data.typ
+            else:
+                licence = Licence(osoba=osoba, typ=data.typ)
+            licence.cislo = data.cislo.strip()[:40]
+            licence.poznamka = data.poznamka.strip()[:200]
+            licence.save()
+            licence.kvalifikace.all().delete()
+            Kvalifikace.objects.bulk_create(
+                [
+                    Kvalifikace(licence=licence, druh=k.druh, platnost_do=k.platnost_do)
+                    for k in data.kvalifikace
+                ]
+            )
+    except IntegrityError as e:
+        raise HttpError(400, "Tento typ licence už máte zadaný.") from e
+    audit.zapsat(
+        request.user,
+        "licence",
+        "osoba",
+        osoba.pk,
+        zmeny={
+            "typ": data.typ,
+            "kvalifikace": [[k.druh, str(k.platnost_do or "")] for k in data.kvalifikace],
+        },
+    )
+    return _licence_stav(osoba)
+
+
+@router.post("/licence/{licence_id}/smazat", response=LicenceStavOut, auth=django_auth)
+def smazat_licenci(request, licence_id: int):
+    smazano, _ = Licence.objects.filter(pk=licence_id, osoba=request.user).delete()
+    if smazano:
+        audit.zapsat(request.user, "licence_smazana", "osoba", request.user.pk)
+    return _licence_stav(request.user)
+
+
+@router.post("/medical", response=LicenceStavOut, auth=django_auth, summary="Uložit medical")
+def ulozit_medical(request, data: MedicalIn):
+    osoba = request.user
+    if data.trida not in TridaMedicalu.values:
+        raise HttpError(400, "Neznámá třída medicalu.")
+    try:
+        with transaction.atomic():
+            if data.id:
+                medical = Medical.objects.filter(pk=data.id, osoba=osoba).first()
+                if medical is None:
+                    raise HttpError(404, "Medical neexistuje.")
+            else:
+                medical = Medical(osoba=osoba)
+            medical.trida = data.trida
+            medical.platnost_do = data.platnost_do
+            medical.save()
+    except IntegrityError as e:
+        raise HttpError(400, "Medical této třídy už máte zadaný – upravte ho.") from e
+    audit.zapsat(
+        request.user,
+        "medical",
+        "osoba",
+        osoba.pk,
+        zmeny={"trida": data.trida, "platnost_do": str(data.platnost_do)},
+    )
+    return _licence_stav(osoba)
+
+
+@router.post("/medical/{medical_id}/smazat", response=LicenceStavOut, auth=django_auth)
+def smazat_medical(request, medical_id: int):
+    smazano, _ = Medical.objects.filter(pk=medical_id, osoba=request.user).delete()
+    if smazano:
+        audit.zapsat(request.user, "medical_smazan", "osoba", request.user.pk)
+    return _licence_stav(request.user)

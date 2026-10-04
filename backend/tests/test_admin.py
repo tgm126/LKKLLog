@@ -25,6 +25,10 @@ def test_admin_zalozi_osobu_bez_prihlaseni(admin_client):
             # prázdný formulář oprávnění (inline)
             "opravneni-TOTAL_FORMS": "0",
             "opravneni-INITIAL_FORMS": "0",
+            "licence-TOTAL_FORMS": "0",
+            "licence-INITIAL_FORMS": "0",
+            "medicaly-TOTAL_FORMS": "0",
+            "medicaly-INITIAL_FORMS": "0",
         },
     )
     assert odpoved.status_code == 302, odpoved.content.decode()[:2000]

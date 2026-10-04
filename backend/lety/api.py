@@ -10,7 +10,7 @@ from ninja.security import django_auth
 from osoby.models import Kategorie, Opravneni, Osoba
 from provoz.models import Nastaveni
 
-from . import nalet, obdobi, sluzby, uzaverky, vypis
+from . import nalet, obdobi, rozletanost, sluzby, uzaverky, vypis
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -872,3 +872,67 @@ def export_naletu(request, od: date | None = None, do: date | None = None):
     nazev = f"lkkllog-nalet-{od:%Y-%m-%d}-{do:%Y-%m-%d}.xlsx"
     odpoved["Content-Disposition"] = f'attachment; filename="{nazev}"'
     return odpoved
+
+
+# --- licence, medical a rozlétanost (etapa 12) ----------------------------------------------
+
+
+class KontrolaOut(Schema):
+    oblast: str
+    nazev: str
+    stav: str
+    text: str
+    plati_do: date | None
+    podrobnosti: list[str]
+
+
+class RozletanostOut(Schema):
+    hlidani: bool
+    zobrazit: bool
+    kontroly: list[KontrolaOut]
+
+
+@router.get("/nalet/rozletanost", response=RozletanostOut, summary="Moje licence a rozlétanost")
+def moje_rozletanost(request):
+    """Při vypnutém hlídání to vidí jen admin (kontrola dat před zapnutím)."""
+    hlidani = Nastaveni.aktualni().hlidat_licence
+    zobrazit = hlidani or request.user.is_staff
+    return {
+        "hlidani": hlidani,
+        "zobrazit": zobrazit,
+        "kontroly": rozletanost.kontroly(request.user) if zobrazit else [],
+    }
+
+
+class KontrolaLetuIn(Schema):
+    letadlo_id: int
+    posadka: list[ClenIn]
+    pocet_hostu: int = 0
+    zpusob_vzletu: str = ZpusobVzletu.VLASTNI
+    vlek: VlekIn | None = None
+
+
+class VarovaniOut(Schema):
+    varovani: list[str]
+
+
+@router.post("/kontrola-posadky", response=VarovaniOut, summary="Varování k posádce před letem")
+def kontrola_letu(request, data: KontrolaLetuIn):
+    """Licence, medical a rozlétanost PIC (a vlekaře). Jen varuje, nic neblokuje."""
+    if not Nastaveni.aktualni().hlidat_licence:
+        return {"varovani": []}
+    letadlo = Letadlo.objects.filter(pk=data.letadlo_id).first()
+    pic = next((c for c in data.posadka if c.funkce == FunkcePosadky.PIC), None)
+    varovani = []
+    if letadlo and pic and (osoba := Osoba.objects.filter(pk=pic.osoba_id).first()):
+        cestujici = data.pocet_hostu > 0 or any(
+            c.funkce == FunkcePosadky.CLEN for c in data.posadka
+        )
+        varovani += rozletanost.varovani_pilota(
+            osoba, letadlo.kategorie, cestujici, data.zpusob_vzletu
+        )
+    if data.vlek and (vlekar := Osoba.objects.filter(pk=data.vlek.vlekar_id).first()):
+        vlecne = Letadlo.objects.filter(pk=data.vlek.letadlo_id).first()
+        if vlecne:
+            varovani += rozletanost.varovani_pilota(vlekar, vlecne.kategorie, False)
+    return {"varovani": varovani}

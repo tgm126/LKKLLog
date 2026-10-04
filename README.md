@@ -21,6 +21,7 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 | 9 | Velký displej (TV) bez přihlášení přes tajný odkaz | hotovo |
 | 10 | Upozornění na neukončené lety e-mailem a push notifikacemi | hotovo |
 | 11 | Můj nálet: osobní součty hodin a startů, seznam a Excel vlastních letů | hotovo |
+| 12 | Licence, medical a rozlétanost: správa, přehled, varování při zakládání letu | hotovo |
 
 ## Struktura
 

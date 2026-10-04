@@ -8,6 +8,7 @@ import { Pruhy } from './komponenty/Pruhy'
 import { Paticka, Zahlavi } from './komponenty/Zahlavi'
 import { NastavitHeslo } from './stranky/NastavitHeslo'
 import { Displej } from './stranky/Displej'
+import { Licence } from './stranky/Licence'
 import { MujNalet } from './stranky/MujNalet'
 import { Prihlaseni } from './stranky/Prihlaseni'
 import { PrehledDne } from './stranky/PrehledDne'
@@ -37,6 +38,7 @@ function Obsah() {
       <Route path="/vypis" element={ja?.prihlasen ? <Vypis /> : <Prihlaseni />} />
       <Route path="/uzaverky" element={ja?.prihlasen ? <Uzaverky /> : <Prihlaseni />} />
       <Route path="/nalet" element={ja?.prihlasen ? <MujNalet /> : <Prihlaseni />} />
+      <Route path="/licence" element={ja?.prihlasen ? <Licence /> : <Prihlaseni />} />
       <Route path="*" element={ja?.prihlasen ? <PrehledDne /> : <Prihlaseni />} />
     </Routes>
     </>

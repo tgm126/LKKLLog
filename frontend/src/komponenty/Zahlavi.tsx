@@ -1,6 +1,7 @@
 import { Anchor, Badge, Button, Group, Menu, Text, Title } from '@mantine/core'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Link } from 'react-router'
 
 import { odhlasit } from '../api/ucet'
 import { useJa, useNastavJa } from '../useJa'
@@ -40,6 +41,9 @@ export function Zahlavi() {
                   Administrace
                 </Menu.Item>
               )}
+              <Menu.Item component={Link} to="/licence">
+                Licence a medical
+              </Menu.Item>
               {!ja.zastupce && (
                 <Menu.Item onClick={() => setUpozorneni(true)}>Upozornění na telefon…</Menu.Item>
               )}

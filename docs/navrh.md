@@ -381,6 +381,38 @@ Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, zá
 ### 4.11 Profil
 Změna hesla, odhlášení.
 
+### 4.12 Licence, medical a rozlétanost (etapa 12)
+Pravidla podle předpisů, zdroje a postup výpočtu jsou v
+[`docs/licence-a-rozletanost.md`](licence-a-rozletanost.md). Je to i podklad pro manuál
+a nápovědu.
+
+- **Licence a medical:**
+  - Pilot si je zadává sám v menu se jménem → *Licence a medical*. Admin je spravuje
+    u všech v administraci (u osoby, kvalifikace v detailu licence).
+  - Typy licencí: PPL(A), LAPL(A), SPL, ULL.
+  - Kvalifikace: SEP/TMG, způsoby vzletu kluzáku (naviják, aerovlek, samostart, guma),
+    ULL. U PPL(A) a ULL se zadává konec platnosti.
+  - Medical: třída 1, 2 nebo LAPL a platnost.
+  - Každá změna se zapíše do auditního logu.
+- **Přehled rozlétanosti** v *Můj nálet*:
+  - medical;
+  - platnost kvalifikací a postup k prodloužení zkušeností (PPL);
+  - průběžná rozlétanost (LAPL 24 měsíců, SPL 24 měsíců, způsoby vzletu, TMG pod SPL);
+  - lety s cestujícími (90 dní);
+  - u každé podmínky „platí do“.
+- **Varování v průvodci novým letem** (krok Vzlet), když PIC nebo vlekař:
+  - nemá licenci pro kategorii,
+  - má neplatný medical nebo kvalifikaci,
+  - nesplňuje rozlétanost,
+  - veze cestující a nemá 3 vzlety za 90 dní.
+
+  Varování nic neblokuje.
+- **Přepínač** *Hlídat licence, medical a rozlétanost* v *Nastavení provozu* zapne admin,
+  až budou data kompletní. Do té doby vidí přehled jen admin (pro kontrolu) a varování
+  se neukazují.
+- Počítá se jen z letů v LKKL Log. Uvažuje se o importu starších letů z Flight Office,
+  se kterým by výpočet byl úplnější.
+
 ---
 
 ## 5. Databáze
@@ -693,7 +725,8 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 9 | **Velký displej**, zvýraznění podle maximální doby letu a soumraku | TV na věži. |
 | 10 ✔ | **Upozornění na neukončené lety:** let přes maximální dobu, neukončen po soumraku, den, který kvůli neukončenému letu nejde uzavřít. Kromě e-mailu i **push notifikace** na telefon (Web Push – upozornění z webové aplikace i se zavřeným prohlížečem; na iPhonu jen po přidání aplikace na plochu) | – |
 | 11 | **Můj nálet** | – |
-| později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), licence a platnosti spravované samotnými piloty, platnosti techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
+| 12 | **Licence, medical a rozlétanost:** správa pilotem i adminem, přehled v Můj nálet, varování při zakládání letu, přepínač hlídání | – |
+| později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), platnosti techniky, export pro Flight Office a import starších letů z Flight Office, manuál a nápověda, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 
 Etapy 0–5 jsou minimum, se kterým lze jít do zkušebního provozu.
 

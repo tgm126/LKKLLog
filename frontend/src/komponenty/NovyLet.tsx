@@ -26,6 +26,7 @@ import { muzeTg, naMinuty } from '../cas'
 import { CasVolba } from './CasVolba'
 import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
+import { VarovaniPosadky } from './Rozletanost'
 
 export function NovyLet({
   otevreno,
@@ -449,6 +450,22 @@ export function NovyLet({
 
       {krok === 4 && (
         <Stack>
+          <VarovaniPosadky
+            data={
+              letadloId
+                ? {
+                    letadlo_id: letadloId,
+                    posadka,
+                    pocet_hostu: ucel === 'normalni' ? hoste : 0,
+                    zpusob_vzletu: letadlo?.kategorie === 'kluzak' ? zpusob : 'vlastni',
+                    vlek:
+                      veVleku && vlecnaId && vlekar
+                        ? { letadlo_id: Number(vlecnaId), vlekar_id: Number(vlekar) }
+                        : null,
+                  }
+                : null
+            }
+          />
           {rezim === null && (
             <>
               <Button

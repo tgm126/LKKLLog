@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
@@ -134,3 +135,115 @@ class Opravneni(models.Model):
 
     def __str__(self):
         return f"{self.get_kategorie_display()} – {self.get_uroven_display()}"
+
+
+# --- licence a medical (etapa 12) ------------------------------------------------------
+# Podklady k předpisům: docs/licence-a-rozletanost.md
+
+
+class TypLicence(models.TextChoices):
+    PPL_A = "ppl_a", "PPL(A)"
+    LAPL_A = "lapl_a", "LAPL(A)"
+    SPL = "spl", "SPL"
+    ULL = "ull", "Pilot ULL (LAA ČR)"
+
+
+class DruhKvalifikace(models.TextChoices):
+    SEP = "sep", "SEP (land)"
+    TMG = "tmg", "TMG"
+    NAVIJAK = "navijak", "Naviják / auto"
+    VLEK = "vlek", "Aerovlek"
+    SAMOSTART = "samostart", "Samostart"
+    GUMA = "guma", "Guma (bungee)"
+    ULL = "ull", "ULL"
+
+
+# Které kvalifikace (třídy, způsoby vzletu) patří ke kterému typu licence.
+KVALIFIKACE_LICENCE = {
+    TypLicence.PPL_A: [DruhKvalifikace.SEP, DruhKvalifikace.TMG],
+    TypLicence.LAPL_A: [DruhKvalifikace.SEP, DruhKvalifikace.TMG],
+    TypLicence.SPL: [
+        DruhKvalifikace.NAVIJAK,
+        DruhKvalifikace.VLEK,
+        DruhKvalifikace.SAMOSTART,
+        DruhKvalifikace.GUMA,
+        DruhKvalifikace.TMG,
+    ],
+    TypLicence.ULL: [DruhKvalifikace.ULL],
+}
+
+
+class Licence(models.Model):
+    """Pilotní průkaz. Zadává ho pilot sám nebo admin."""
+
+    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="licence")
+    typ = models.CharField(max_length=8, choices=TypLicence.choices)
+    cislo = models.CharField("číslo průkazu", max_length=40, blank=True)
+    poznamka = models.CharField("poznámka", max_length=200, blank=True)
+    zmeneno = models.DateTimeField("změněno", auto_now=True)
+
+    class Meta:
+        verbose_name = "licence"
+        verbose_name_plural = "licence"
+        ordering = ["osoba", "typ"]
+        constraints = [
+            models.UniqueConstraint(fields=["osoba", "typ"], name="licence_jednou"),
+        ]
+
+    def __str__(self):
+        return f"{self.osoba} – {self.get_typ_display()}"
+
+
+class Kvalifikace(models.Model):
+    """Třída (SEP, TMG), způsob vzletu kluzáku nebo ULL v rámci licence."""
+
+    licence = models.ForeignKey(Licence, on_delete=models.CASCADE, related_name="kvalifikace")
+    druh = models.CharField(max_length=10, choices=DruhKvalifikace.choices)
+    platnost_do = models.DateField(
+        "platnost do",
+        null=True,
+        blank=True,
+        help_text="U PPL(A) konec platnosti kvalifikace SEP/TMG, u ULL platnost průkazu.",
+    )
+
+    class Meta:
+        verbose_name = "kvalifikace"
+        verbose_name_plural = "kvalifikace"
+        constraints = [
+            models.UniqueConstraint(fields=["licence", "druh"], name="kvalifikace_jednou"),
+        ]
+
+    def __str__(self):
+        return self.get_druh_display()
+
+    def clean(self):
+        if self.licence_id and self.druh not in KVALIFIKACE_LICENCE[self.licence.typ]:
+            raise ValidationError(
+                f"Kvalifikace {self.get_druh_display()} k licenci "
+                f"{self.licence.get_typ_display()} nepatří."
+            )
+
+
+class TridaMedicalu(models.TextChoices):
+    T1 = "1", "Třída 1"
+    T2 = "2", "Třída 2"
+    LAPL = "lapl", "LAPL"
+
+
+class Medical(models.Model):
+    """Osvědčení zdravotní způsobilosti."""
+
+    osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="medicaly")
+    trida = models.CharField("třída", max_length=4, choices=TridaMedicalu.choices)
+    platnost_do = models.DateField("platnost do")
+
+    class Meta:
+        verbose_name = "medical"
+        verbose_name_plural = "medicaly"
+        ordering = ["osoba", "trida"]
+        constraints = [
+            models.UniqueConstraint(fields=["osoba", "trida"], name="medical_jednou"),
+        ]
+
+    def __str__(self):
+        return f"{self.osoba} – {self.get_trida_display()} do {self.platnost_do:%d.%m.%Y}"
