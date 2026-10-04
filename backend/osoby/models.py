@@ -68,6 +68,11 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
     role_ucetni = models.BooleanField(
         "účetní", default=False, help_text="Opravuje lety, uzavírá měsíc, exportuje."
     )
+    role_spravce = models.BooleanField(
+        "správce licencí a letadel",
+        default=False,
+        help_text="Vidí a upravuje licence a medical všech pilotů a termíny letadel.",
+    )
     externi = models.BooleanField(
         "externí",
         default=False,
@@ -146,6 +151,7 @@ class TypLicence(models.TextChoices):
     LAPL_A = "lapl_a", "LAPL(A)"
     SPL = "spl", "SPL"
     ULL = "ull", "Pilot ULL (LAA ČR)"
+    RADIO = "radio", "Radiotelefonista (ČTÚ)"
 
 
 class DruhKvalifikace(models.TextChoices):
@@ -156,6 +162,8 @@ class DruhKvalifikace(models.TextChoices):
     SAMOSTART = "samostart", "Samostart"
     GUMA = "guma", "Guma (bungee)"
     ULL = "ull", "ULL"
+    OFL = "ofl", "Omezený (OFL)"
+    VFL = "vfl", "Všeobecný (VFL)"
 
 
 # Které kvalifikace (třídy, způsoby vzletu) patří ke kterému typu licence.
@@ -170,6 +178,7 @@ KVALIFIKACE_LICENCE = {
         DruhKvalifikace.TMG,
     ],
     TypLicence.ULL: [DruhKvalifikace.ULL],
+    TypLicence.RADIO: [DruhKvalifikace.OFL, DruhKvalifikace.VFL],
 }
 
 
@@ -203,7 +212,10 @@ class Kvalifikace(models.Model):
         "platnost do",
         null=True,
         blank=True,
-        help_text="U PPL(A) konec platnosti kvalifikace SEP/TMG, u ULL platnost průkazu.",
+        help_text=(
+            "U PPL(A) konec platnosti kvalifikace SEP/TMG, u ULL a radiofonního průkazu "
+            "platnost průkazu."
+        ),
     )
 
     class Meta:
@@ -230,8 +242,18 @@ class TridaMedicalu(models.TextChoices):
     LAPL = "lapl", "LAPL"
 
 
+# Které třídy medicalu stačí ke které licenci (radiofonní průkaz medical nepotřebuje).
+MEDICAL_LICENCE = {
+    TypLicence.PPL_A: [TridaMedicalu.T1, TridaMedicalu.T2],
+    TypLicence.LAPL_A: [TridaMedicalu.T1, TridaMedicalu.T2, TridaMedicalu.LAPL],
+    TypLicence.SPL: [TridaMedicalu.T1, TridaMedicalu.T2, TridaMedicalu.LAPL],
+    TypLicence.ULL: [TridaMedicalu.T1, TridaMedicalu.T2, TridaMedicalu.LAPL],
+}
+
+
 class Medical(models.Model):
-    """Osvědčení zdravotní způsobilosti."""
+    """Platnost medicalu pro jednu třídu. Jedno osvědčení může mít platnost pro víc tříd
+    (např. třída 2 a LAPL s jiným datem) – pak jsou to dva záznamy."""
 
     osoba = models.ForeignKey(Osoba, on_delete=models.CASCADE, related_name="medicaly")
     trida = models.CharField("třída", max_length=4, choices=TridaMedicalu.choices)
@@ -247,3 +269,8 @@ class Medical(models.Model):
 
     def __str__(self):
         return f"{self.osoba} – {self.get_trida_display()} do {self.platnost_do:%d.%m.%Y}"
+
+
+def smi_spravovat_licence(osoba) -> bool:
+    """Licence a medical všech pilotů a termíny letadel: správce a admin."""
+    return osoba.is_staff or osoba.role_spravce

@@ -80,7 +80,7 @@ def test_prihlaseni_a_odhlaseni(klient, pilot):
     assert odpoved.status_code == 200
     data = odpoved.json()
     assert data["prihlasen"] and data["jmeno"] == "Adam"
-    assert data["role"] == {"admin": False, "casomeric": False, "ucetni": False}
+    assert data["role"] == {"admin": False, "casomeric": False, "ucetni": False, "spravce": False}
 
     assert post(klient, "/api/ucet/odhlasit", {}).status_code == 200
     assert klient.get("/api/ucet/ja").json()["prihlasen"] is False

@@ -413,6 +413,22 @@ a nápovědu.
 - Počítá se jen z letů v LKKL Log. Uvažuje se o importu starších letů z Flight Office,
   se kterým by výpočet byl úplnější.
 
+**Etapa 13:**
+- Přibyl **radiofonní průkaz** (ČTÚ, OFL/VFL, platnost; varuje se 2 měsíce předem).
+- Medical má **platnost pro každou třídu zvlášť** a posuzuje se podle licence.
+- Nová role **správce licencí a letadel** (zaškrtávátko u osoby, sloupec v Excelu
+  s číselníky). Obrazovka *Piloti a letadla* je pro správce a admina:
+  - **Piloti:** stav každého pilota (v pořádku / brzy vyprší / neplatné) se seznamem
+    problémů. Detail ukáže všechny kontroly a vede k úpravě jeho licencí a medicalu.
+    Žák bez licence není chyba.
+  - **Letadla:**
+    - celkový nálet a starty, tedy stav z provozního deníku k datu plus lety z evidence;
+    - **termíny** do data nebo do celkového náletu (ARC, prohlídky, pojištění…)
+      s barevným stavem: 30 dní, resp. 10 h předem oranžově.
+
+    Technika jako zvláštní roli ani složitější plánování údržby zatím neděláme.
+- Upozornění na blížící se termíny zatím jen v tomto přehledu (ne e-mailem).
+
 ---
 
 ## 5. Databáze
@@ -570,6 +586,10 @@ Opravy v uzavřeném dni nebo měsíci se označí a objeví v přehledu „Změ
 
 Číst a vyhledávat smí všichni přihlášení. Exportovat smí účetní a admin.
 
+**Správce licencí a letadel** (od etapy 13) do provozu letů nezasahuje (jako pilot). Navíc
+vidí a upravuje licence a medical všech pilotů a stav deníku a termíny letadel (obrazovka
+*Piloti a letadla*). Medical (třídu a platnost) vidí jen sám pilot, správce a admin.
+
 ### 6.2 Hlavní operace (REST API)
 
 Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požadavky a dostává data ve formátu JSON. **Každé oprávnění kontroluje server**, frontend jen skrývá tlačítka.
@@ -726,6 +746,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 10 ✔ | **Upozornění na neukončené lety:** let přes maximální dobu, neukončen po soumraku, den, který kvůli neukončenému letu nejde uzavřít. Kromě e-mailu i **push notifikace** na telefon (Web Push – upozornění z webové aplikace i se zavřeným prohlížečem; na iPhonu jen po přidání aplikace na plochu) | – |
 | 11 | **Můj nálet** | – |
 | 12 | **Licence, medical a rozlétanost:** správa pilotem i adminem, přehled v Můj nálet, varování při zakládání letu, přepínač hlídání | – |
+| 13 | **Správce licencí a letadel:** přehled pilotů a letadel, termíny letadel, radiofonní průkaz, medical po třídách | – |
 | později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), platnosti techniky, export pro Flight Office a import starších letů z Flight Office, manuál a nápověda, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 
 Etapy 0–5 jsou minimum, se kterým lze jít do zkušebního provozu.

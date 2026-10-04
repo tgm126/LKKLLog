@@ -12,6 +12,39 @@ const BARVA: Record<Kontrola['stav'], string> = {
 }
 const ZNAK: Record<Kontrola['stav'], string> = { ok: '✓', pozor: '!', chyba: '✗', info: 'i' }
 
+/** Seznam kontrol licencí, medicalu a rozlétanosti s barevným stavem. */
+export function SeznamKontrol({ kontroly }: { kontroly: Kontrola[] }) {
+  return (
+    <>
+      {kontroly.map((k, i) => (
+        <Card
+          key={i}
+          withBorder
+          padding="xs"
+          style={{ borderLeft: `4px solid var(--mantine-color-${BARVA[k.stav]}-6)` }}
+        >
+          <Group justify="space-between" wrap="nowrap" align="flex-start">
+            <Text fz="sm" fw={600}>
+              <Text span c={BARVA[k.stav]} fw={800}>
+                {ZNAK[k.stav]}
+              </Text>{' '}
+              {k.nazev.startsWith(k.oblast) ? k.nazev : `${k.oblast} · ${k.nazev}`}
+            </Text>
+            <Text fz="sm" ta="right">
+              {k.text}
+            </Text>
+          </Group>
+          {k.podrobnosti.map((p) => (
+            <Text key={p} fz="xs" c="dimmed">
+              {p}
+            </Text>
+          ))}
+        </Card>
+      ))}
+    </>
+  )
+}
+
 /** Přehled licencí, medicalu a rozlétanosti pilota (Můj nálet). */
 export function Rozletanost() {
   const dotaz = useQuery({ queryKey: ['rozletanost'], queryFn: nactiRozletanost })
@@ -42,31 +75,7 @@ export function Rozletanost() {
           Hlídání je v Nastavení provozu vypnuté – tento přehled teď vidí jen admin.
         </Alert>
       )}
-      {d.kontroly.map((k, i) => (
-        <Card
-          key={i}
-          withBorder
-          padding="xs"
-          style={{ borderLeft: `4px solid var(--mantine-color-${BARVA[k.stav]}-6)` }}
-        >
-          <Group justify="space-between" wrap="nowrap" align="flex-start">
-            <Text fz="sm" fw={600}>
-              <Text span c={BARVA[k.stav]} fw={800}>
-                {ZNAK[k.stav]}
-              </Text>{' '}
-              {k.nazev.startsWith(k.oblast) ? k.nazev : `${k.oblast} · ${k.nazev}`}
-            </Text>
-            <Text fz="sm" ta="right">
-              {k.text}
-            </Text>
-          </Group>
-          {k.podrobnosti.map((p) => (
-            <Text key={p} fz="xs" c="dimmed">
-              {p}
-            </Text>
-          ))}
-        </Card>
-      ))}
+      <SeznamKontrol kontroly={d.kontroly} />
       <Text fz="xs" c="dimmed">
         Počítá se jen z letů zapsaných v LKKL Log – lety jinde aplikace nezná. Je to pomůcka, za
         rozlétanost odpovídá pilot.

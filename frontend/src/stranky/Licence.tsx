@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -17,31 +18,35 @@ import {
 import { notifications } from '@mantine/notifications'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 
 import {
   type KvalifikaceData,
   type Licence as LicenceData,
   type LicenceStav,
-  type Medical,
   nactiLicence,
   smazatLicenci,
-  smazatMedical,
   ulozitLicenci,
-  ulozitMedical,
+  ulozitMedicalTridy,
 } from '../api/licence'
-
-const KLIC = ['licence']
 
 const datum = (iso: string | null) =>
   iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString('cs-CZ', { timeZone: 'UTC' }) : null
 
-function useUlozeni<T>(fn: (data: T) => Promise<LicenceStav>, zprava: string, hotovo: () => void) {
+/** Uložení vrací nový stav licencí; obnoví se i přehledy, které z nich počítají. */
+function useUlozeni<T>(
+  osoba: number | null,
+  fn: (data: T) => Promise<LicenceStav>,
+  zprava: string,
+  hotovo: () => void,
+) {
   const klient = useQueryClient()
   return useMutation({
     mutationFn: fn,
     onSuccess: (stav) => {
-      klient.setQueryData(KLIC, stav)
+      klient.setQueryData(['licence', osoba], stav)
       void klient.invalidateQueries({ queryKey: ['rozletanost'] })
+      void klient.invalidateQueries({ queryKey: ['sprava'] })
       notifications.show({ message: zprava, color: 'green' })
       hotovo()
     },
@@ -51,10 +56,12 @@ function useUlozeni<T>(fn: (data: T) => Promise<LicenceStav>, zprava: string, ho
 
 function LicenceDialog({
   stav,
+  osoba,
   licence,
   onZavrit,
 }: {
   stav: LicenceStav
+  osoba: number | null
   licence: LicenceData | null
   onZavrit: () => void
 }) {
@@ -62,8 +69,13 @@ function LicenceDialog({
   const [cislo, setCislo] = useState(licence?.cislo ?? '')
   const [poznamka, setPoznamka] = useState(licence?.poznamka ?? '')
   const [kvalifikace, setKvalifikace] = useState<KvalifikaceData[]>(licence?.kvalifikace ?? [])
-  const ulozeni = useUlozeni(ulozitLicenci, 'Licence uložena.', onZavrit)
-  const smazani = useUlozeni(smazatLicenci, 'Licence smazána.', onZavrit)
+  const ulozeni = useUlozeni(
+    osoba,
+    (data: Omit<LicenceData, 'id'> & { id?: number }) => ulozitLicenci(data, osoba),
+    'Licence uložena.',
+    onZavrit,
+  )
+  const smazani = useUlozeni(osoba, (id: number) => smazatLicenci(id, osoba), 'Licence smazána.', onZavrit)
   const moznosti = typ ? stav.kvalifikace[typ] : []
   const zapnuta = (druh: string) => kvalifikace.find((k) => k.druh === druh)
 
@@ -73,6 +85,9 @@ function LicenceDialog({
     )
   const nastavDatum = (druh: string, platnost_do: string) =>
     setKvalifikace(kvalifikace.map((k) => (k.druh === druh ? { ...k, platnost_do: platnost_do || null } : k)))
+
+  const nadpisKvalifikaci =
+    typ === 'spl' ? 'Způsoby vzletu a TMG' : typ === 'ull' || typ === 'radio' ? 'Druh a platnost' : 'Třídy'
 
   return (
     <Modal opened onClose={onZavrit} title={licence ? 'Upravit licenci' : 'Přidat licenci'} centered>
@@ -91,7 +106,7 @@ function LicenceDialog({
         {moznosti.length > 0 && (
           <Stack gap="xs">
             <Text fz="sm" fw={500}>
-              {typ === 'spl' ? 'Způsoby vzletu a TMG' : typ === 'ull' ? 'Platnost průkazu' : 'Třídy'}
+              {nadpisKvalifikaci}
             </Text>
             {moznosti.map((m) => {
               const k = zapnuta(m.hodnota)
@@ -115,8 +130,8 @@ function LicenceDialog({
               )
             })}
             <Text fz="xs" c="dimmed">
-              Datum vyplňte u PPL(A) (konec platnosti SEP/TMG) a u ULL (platnost průkazu). U LAPL(A) a
-              SPL se platnost nehlídá datem, ale náletem.
+              Datum vyplňte u PPL(A) (konec platnosti SEP/TMG), u ULL a radiofonního průkazu (platnost
+              průkazu). U LAPL(A) a SPL se platnost hlídá náletem.
             </Text>
           </Stack>
         )}
@@ -142,56 +157,49 @@ function LicenceDialog({
   )
 }
 
-function MedicalDialog({
-  stav,
-  medical,
-  onZavrit,
-}: {
-  stav: LicenceStav
-  medical: Medical | null
-  onZavrit: () => void
-}) {
-  const [trida, setTrida] = useState<string | null>(medical?.trida ?? '2')
-  const [platnost, setPlatnost] = useState(medical?.platnost_do ?? '')
-  const ulozeni = useUlozeni(ulozitMedical, 'Medical uložen.', onZavrit)
-  const smazani = useUlozeni(smazatMedical, 'Medical smazán.', onZavrit)
+/** Medical jako jedno osvědčení: pro každou třídu vlastní datum platnosti (nebo nic). */
+function MedicalDialog({ stav, osoba, onZavrit }: { stav: LicenceStav; osoba: number | null; onZavrit: () => void }) {
+  const [tridy, setTridy] = useState<Record<string, string>>(() =>
+    Object.fromEntries(stav.tridy.map((t) => [t.hodnota, stav.medicaly.find((m) => m.trida === t.hodnota)?.platnost_do ?? ''])),
+  )
+  const ulozeni = useUlozeni(
+    osoba,
+    (data: Record<string, string>) =>
+      ulozitMedicalTridy(Object.fromEntries(Object.entries(data).map(([t, d]) => [t, d || null])), osoba),
+    'Medical uložen.',
+    onZavrit,
+  )
   return (
-    <Modal opened onClose={onZavrit} title={medical ? 'Upravit medical' : 'Přidat medical'} centered>
+    <Modal opened onClose={onZavrit} title="Medical" centered>
       <Stack>
-        <Select
-          label="Třída"
-          data={stav.tridy.map((t) => ({ value: t.hodnota, label: t.nazev }))}
-          value={trida}
-          onChange={setTrida}
-          allowDeselect={false}
-        />
-        <TextInput type="date" label="Platí do" value={platnost} onChange={(e) => setPlatnost(e.currentTarget.value)} />
-        <Group justify="space-between">
-          {medical ? (
-            <Button variant="subtle" color="red" loading={smazani.isPending} onClick={() => smazani.mutate(medical.id)}>
-              Smazat
-            </Button>
-          ) : (
-            <span />
-          )}
-          <Button
-            disabled={!trida || !platnost}
-            loading={ulozeni.isPending}
-            onClick={() => ulozeni.mutate({ id: medical?.id, trida: trida!, platnost_do: platnost })}
-          >
-            Uložit
-          </Button>
-        </Group>
+        <Text fz="sm" c="dimmed">
+          Vyplňte platnost u tříd, které osvědčení obsahuje (např. třída 2 i LAPL mají jiné datum). Prázdné
+          pole = třídu nemáte.
+        </Text>
+        {stav.tridy.map((t) => (
+          <TextInput
+            key={t.hodnota}
+            type="date"
+            label={`${t.nazev} – platí do`}
+            value={tridy[t.hodnota]}
+            onChange={(e) => setTridy({ ...tridy, [t.hodnota]: e.currentTarget.value })}
+          />
+        ))}
+        <Button loading={ulozeni.isPending} onClick={() => ulozeni.mutate(tridy)}>
+          Uložit
+        </Button>
       </Stack>
     </Modal>
   )
 }
 
-/** Moje licence a medical – pilot je spravuje sám (admin všechny v administraci). */
+/** Licence a medical: pilot spravuje své, správce a admin kohokoli (?osoba=ID). */
 export function Licence() {
-  const stav = useQuery({ queryKey: KLIC, queryFn: nactiLicence })
+  const [parametry] = useSearchParams()
+  const osoba = parametry.get('osoba') ? Number(parametry.get('osoba')) : null
+  const stav = useQuery({ queryKey: ['licence', osoba], queryFn: () => nactiLicence(osoba) })
   const [licence, setLicence] = useState<LicenceData | null | undefined>(undefined)
-  const [medical, setMedical] = useState<Medical | null | undefined>(undefined)
+  const [medical, setMedical] = useState(false)
   const s = stav.data
   const nazev = (seznam: { hodnota: string; nazev: string }[], h: string) =>
     seznam.find((v) => v.hodnota === h)?.nazev ?? h
@@ -200,11 +208,16 @@ export function Licence() {
     <Container size="sm" pb="xl">
       <Stack gap="md">
         <div>
-          <Title order={2}>Licence a medical</Title>
+          <Title order={2}>Licence a medical{osoba && s ? ` – ${s.jmeno}` : ''}</Title>
           <Text c="dimmed" fz="sm">
             Podle těchto údajů aplikace hlídá platnost a rozlétanost (Můj nálet) a varuje při zakládání
             letu.
           </Text>
+          {osoba && (
+            <Anchor component={Link} to="/sprava" fz="sm">
+              ← Piloti a letadla
+            </Anchor>
+          )}
         </div>
         {stav.isPending && <Loader />}
         {stav.isError && <Alert color="red">{stav.error.message}</Alert>}
@@ -245,28 +258,30 @@ export function Licence() {
 
             <Group justify="space-between" mt="md">
               <Title order={4}>Medical</Title>
-              <Button size="xs" variant="light" onClick={() => setMedical(null)}>
-                + Přidat medical
+              <Button size="xs" variant="light" onClick={() => setMedical(true)}>
+                {s.medicaly.length ? 'Upravit medical' : '+ Zadat medical'}
               </Button>
             </Group>
-            {s.medicaly.length === 0 && <Text c="dimmed">Zatím žádný medical.</Text>}
-            {s.medicaly.map((m) => (
-              <Card key={m.id} withBorder padding="sm" onClick={() => setMedical(m)} style={{ cursor: 'pointer' }}>
-                <Group justify="space-between">
-                  <Text fw={700}>{nazev(s.tridy, m.trida)}</Text>
-                  <Text fz="sm">platí do {datum(m.platnost_do)}</Text>
+            {s.medicaly.length === 0 ? (
+              <Text c="dimmed">Zatím nezadaný.</Text>
+            ) : (
+              <Card withBorder padding="sm" onClick={() => setMedical(true)} style={{ cursor: 'pointer' }}>
+                <Group gap={6}>
+                  {s.medicaly.map((m) => (
+                    <Badge key={m.id} variant="light">
+                      {nazev(s.tridy, m.trida)} do {datum(m.platnost_do)}
+                    </Badge>
+                  ))}
                 </Group>
               </Card>
-            ))}
+            )}
           </>
         )}
       </Stack>
       {s && licence !== undefined && (
-        <LicenceDialog stav={s} licence={licence} onZavrit={() => setLicence(undefined)} />
+        <LicenceDialog stav={s} osoba={osoba} licence={licence} onZavrit={() => setLicence(undefined)} />
       )}
-      {s && medical !== undefined && (
-        <MedicalDialog stav={s} medical={medical} onZavrit={() => setMedical(undefined)} />
-      )}
+      {s && medical && <MedicalDialog stav={s} osoba={osoba} onZavrit={() => setMedical(false)} />}
     </Container>
   )
 }

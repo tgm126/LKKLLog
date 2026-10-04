@@ -153,6 +153,9 @@ def test_varovani_pri_zakladani_letu(jako, svet):
     medical(svet.pilot)
     licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES + timedelta(days=300)))
     varovani = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
+    assert "Test Pilot: nemá zadaný radiofonní průkaz." in varovani
+    licence(svet.pilot, TypLicence.RADIO, (DruhKvalifikace.OFL, DNES + timedelta(days=3000)))
+    varovani = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
     assert len(varovani) == 1 and "nesmí vozit cestující" in varovani[0]
     # Bez cestujících je všechno v pořádku.
     bez_hostu = post(klient, "/api/kontrola-posadky", {**let, "pocet_hostu": 0}).json()
@@ -196,3 +199,37 @@ def test_sprava_vlastnich_licenci(jako, svet):
     ).json()
     assert stav["medicaly"][0]["platnost_do"] == "2029-01-31"
     assert post(klient, f"/api/ucet/medical/{med['id']}/smazat").json()["medicaly"] == []
+
+
+def test_medical_podle_tridy_pro_licenci(svet):
+    """PPL(A) potřebuje třídu 2, SPL stačí LAPL – jedno osvědčení, dvě platnosti."""
+    licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES + timedelta(days=300)))
+    licence(svet.pilot, TypLicence.SPL, (DruhKvalifikace.NAVIJAK, None))
+    Medical.objects.create(
+        osoba=svet.pilot, trida=TridaMedicalu.T2, platnost_do=DNES - timedelta(days=5)
+    )
+    Medical.objects.create(
+        osoba=svet.pilot, trida=TridaMedicalu.LAPL, platnost_do=DNES + timedelta(days=200)
+    )
+    k = podle_nazvu(svet.pilot)
+    assert k["Medical pro PPL(A)"].stav == CHYBA
+    assert k["Medical pro SPL"].stav == OK
+
+    nastaveni = Nastaveni.aktualni()
+    nastaveni.hlidat_licence = True
+    nastaveni.save()
+    from lety.rozletanost import varovani_pilota
+    from osoby.models import Kategorie
+
+    motor = varovani_pilota(svet.pilot, Kategorie.MOTOR, False)
+    kluzak = varovani_pilota(svet.pilot, Kategorie.KLUZAK, False, "navijak")
+    assert any("Medical pro PPL(A)" in v for v in motor)
+    assert not any("Medical" in v for v in kluzak)
+
+
+def test_radiofonni_prukaz(svet):
+    assert podle_nazvu(svet.pilot)["Radiofonní průkaz"].text == "Není zadaný."
+    licence(svet.pilot, TypLicence.RADIO, (DruhKvalifikace.OFL, DNES + timedelta(days=45)))
+    k = podle_nazvu(svet.pilot)["Omezený (OFL)"]
+    assert k.stav == POZOR  # žádost se podává měsíc předem – varuje se 2 měsíce dopředu
+    assert "ČTÚ" in k.podrobnosti[0]

@@ -30,7 +30,7 @@ def test_pilot_zada_licenci_a_vidi_rozletanost(mobil, svet):
 
     mobil.get_by_role("link", name="Můj nálet").click()
     expect(mobil.get_by_role("heading", name="Licence a rozlétanost")).to_be_visible()
-    expect(mobil.get_by_text("Medical není zadaný.")).to_be_visible()
+    expect(mobil.get_by_text("Není zadaný.").first).to_be_visible()
     expect(mobil.get_by_text("Platí do 31. 5. 2027.")).to_be_visible()
     if cesta := os.environ.get("SNIMEK_ROZLETANOSTI"):
         mobil.screenshot(path=cesta, full_page=True)

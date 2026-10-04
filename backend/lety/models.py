@@ -84,6 +84,19 @@ class Letadlo(models.Model):
     vlecne = models.BooleanField("vlečné", default=False, help_text="Může vlekat kluzáky.")
     aktivni = models.BooleanField("aktivní", default=True)
     poradi = models.PositiveSmallIntegerField("pořadí", default=100)
+    # Stav z provozního deníku letadla; lety po tomto dni se přičítají z evidence.
+    nalet_pocatek_min = models.PositiveIntegerField(
+        "nálet z deníku [min]", default=0, help_text="Celkový nálet letadla k datu níže."
+    )
+    starty_pocatek = models.PositiveIntegerField(
+        "starty z deníku", default=0, help_text="Celkový počet startů k datu níže."
+    )
+    stav_k = models.DateField(
+        "stav deníku ke dni",
+        null=True,
+        blank=True,
+        help_text="Prázdné = počítá se jen z evidence LKKL Log.",
+    )
 
     class Meta:
         verbose_name = "letadlo"
@@ -477,3 +490,30 @@ class Upozorneni(models.Model):
 
     def __str__(self):
         return f"{self.let} – {self.get_druh_display()}"
+
+
+class TerminLetadla(models.Model):
+    """Termín u letadla: do data, nebo do celkového náletu (např. ARC, 100h prohlídka)."""
+
+    letadlo = models.ForeignKey(Letadlo, on_delete=models.CASCADE, related_name="terminy")
+    nazev = models.CharField("název", max_length=80, help_text="např. ARC, 100h prohlídka")
+    datum = models.DateField("do data", null=True, blank=True)
+    pri_naletu_h = models.PositiveIntegerField(
+        "při celkovém náletu [h]", null=True, blank=True, help_text="Celkový nálet letadla."
+    )
+    poznamka = models.CharField("poznámka", max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "termín letadla"
+        verbose_name_plural = "termíny letadel"
+        ordering = ["letadlo", "datum", "pri_naletu_h"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(datum__isnull=False) | Q(pri_naletu_h__isnull=False),
+                name="termin_ma_datum_nebo_nalet",
+                violation_error_message="Zadejte datum nebo nálet.",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.letadlo} – {self.nazev}"

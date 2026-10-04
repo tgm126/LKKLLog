@@ -34,6 +34,7 @@ export function Zahlavi() {
                 <Badge variant="light">pilot</Badge>
                 {ja.role?.casomeric && <Badge variant="light">časoměřič / věž</Badge>}
                 {ja.role?.ucetni && <Badge variant="light">účetní</Badge>}
+                {ja.role?.spravce && <Badge variant="light">správce licencí a letadel</Badge>}
                 {ja.role?.admin && <Badge variant="light" color="red">admin</Badge>}
               </Group>
               {ja.role?.admin && !ja.zastupce && (

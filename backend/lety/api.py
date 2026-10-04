@@ -7,10 +7,10 @@ from django.utils import timezone
 from ninja import Router, Schema
 from ninja.security import django_auth
 
-from osoby.models import Kategorie, Opravneni, Osoba
+from osoby.models import Kategorie, Licence, Opravneni, Osoba, TypLicence, smi_spravovat_licence
 from provoz.models import Nastaveni
 
-from . import nalet, obdobi, rozletanost, sluzby, uzaverky, vypis
+from . import audit, letadla, nalet, obdobi, rozletanost, sluzby, uzaverky, vypis
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -23,6 +23,7 @@ from .models import (
     Osnova,
     Posadka,
     StavLetu,
+    TerminLetadla,
     Ucel,
     Uloha,
     Uzaverka,
@@ -936,3 +937,156 @@ def kontrola_letu(request, data: KontrolaLetuIn):
         if vlecne:
             varovani += rozletanost.varovani_pilota(vlekar, vlecne.kategorie, False)
     return {"varovani": varovani}
+
+
+# --- přehled pilotů a letadel pro správce (etapa 13) ----------------------------------------
+
+
+def _jen_spravce(request):
+    if not smi_spravovat_licence(request.user):
+        raise sluzby.ChybaLetu("Přehled je pro správce licencí a letadel a admina.", status=403)
+
+
+class PilotOut(Schema):
+    id: int
+    jmeno: str
+    licence: list[str]
+    stav: str
+    problemy: list[str]
+
+
+@router.get("/sprava/piloti", response=list[PilotOut], summary="Přehled pilotů (správce)")
+def sprava_piloti(request):
+    """Piloti = aktivní členové s licencí nebo oprávněním (bez externích a testovacích)."""
+    _jen_spravce(request)
+    typy = dict(TypLicence.choices)
+    osoby = (
+        Osoba.objects.filter(is_active=True, externi=False, testovaci=False)
+        .filter(Q(licence__isnull=False) | Q(opravneni__isnull=False))
+        .distinct()
+        .order_by("prijmeni", "jmeno")
+    )
+    poradi = [rozletanost.OK, rozletanost.INFO, rozletanost.POZOR, rozletanost.CHYBA]
+    vysledek = []
+    for o in osoby:
+        kontroly = rozletanost.kontroly(o)
+        vysledek.append(
+            {
+                "id": o.pk,
+                "jmeno": o.get_full_name(),
+                "licence": [typy[lic.typ] for lic in Licence.objects.filter(osoba=o)],
+                "stav": max((k.stav for k in kontroly), key=poradi.index),
+                "problemy": [
+                    f"{k.nazev}: {k.text}"
+                    for k in kontroly
+                    if k.stav in (rozletanost.POZOR, rozletanost.CHYBA)
+                ],
+            }
+        )
+    return vysledek
+
+
+@router.get("/sprava/piloti/{osoba_id}", response=RozletanostOut, summary="Rozlétanost pilota")
+def sprava_pilot(request, osoba_id: int):
+    _jen_spravce(request)
+    osoba = Osoba.objects.filter(pk=osoba_id).first()
+    if osoba is None:
+        raise sluzby.ChybaLetu("Osoba neexistuje.", status=404)
+    return {"hlidani": True, "zobrazit": True, "kontroly": rozletanost.kontroly(osoba)}
+
+
+class TerminOut(Schema):
+    id: int
+    nazev: str
+    datum: date | None
+    pri_naletu_h: int | None
+    poznamka: str
+    stav: str
+    text: str
+
+
+class LetadloSpravaOut(Schema):
+    id: int
+    imatrikulace: str
+    typ: str
+    kategorie: str
+    nalet_min: int
+    starty: int
+    nalet_pocatek_min: int
+    starty_pocatek: int
+    stav_k: date | None
+    terminy: list[TerminOut]
+
+
+@router.get("/sprava/letadla", response=list[LetadloSpravaOut], summary="Letadla a termíny")
+def sprava_letadla(request):
+    _jen_spravce(request)
+    return letadla.prehled()
+
+
+class StavDenikuIn(Schema):
+    nalet_pocatek_min: int
+    starty_pocatek: int
+    stav_k: date | None = None
+
+
+@router.post("/sprava/letadla/{letadlo_id}/denik", response=list[LetadloSpravaOut])
+def sprava_denik(request, letadlo_id: int, data: StavDenikuIn):
+    """Stav z provozního deníku letadla; lety po tomto dni se přičítají z evidence."""
+    _jen_spravce(request)
+    if data.nalet_pocatek_min < 0 or data.starty_pocatek < 0:
+        raise sluzby.ChybaLetu("Hodnoty nemohou být záporné.")
+    letadlo = Letadlo.objects.filter(pk=letadlo_id).first()
+    if letadlo is None:
+        raise sluzby.ChybaLetu("Letadlo neexistuje.", status=404)
+    letadlo.nalet_pocatek_min = data.nalet_pocatek_min
+    letadlo.starty_pocatek = data.starty_pocatek
+    letadlo.stav_k = data.stav_k
+    letadlo.save(update_fields=["nalet_pocatek_min", "starty_pocatek", "stav_k"])
+    audit_zmena(request, "denik_letadla", "letadlo", letadlo.pk, data.dict())
+    return letadla.prehled()
+
+
+class TerminIn(Schema):
+    id: int | None = None
+    letadlo_id: int
+    nazev: str
+    datum: date | None = None
+    pri_naletu_h: int | None = None
+    poznamka: str = ""
+
+
+@router.post("/sprava/terminy", response=list[LetadloSpravaOut], summary="Uložit termín")
+def sprava_termin(request, data: TerminIn):
+    _jen_spravce(request)
+    if not data.nazev.strip():
+        raise sluzby.ChybaLetu("Zadejte název termínu.")
+    if data.datum is None and data.pri_naletu_h is None:
+        raise sluzby.ChybaLetu("Zadejte datum nebo celkový nálet, při kterém termín nastane.")
+    if data.pri_naletu_h is not None and data.pri_naletu_h < 0:
+        raise sluzby.ChybaLetu("Nálet nemůže být záporný.")
+    termin = TerminLetadla.objects.filter(pk=data.id).first() if data.id else TerminLetadla()
+    if termin is None:
+        raise sluzby.ChybaLetu("Termín neexistuje.", status=404)
+    termin.letadlo_id = data.letadlo_id
+    termin.nazev = data.nazev.strip()[:80]
+    termin.datum = data.datum
+    termin.pri_naletu_h = data.pri_naletu_h
+    termin.poznamka = data.poznamka.strip()[:200]
+    termin.save()
+    audit_zmena(request, "termin_letadla", "letadlo", data.letadlo_id, data.dict())
+    return letadla.prehled()
+
+
+@router.post("/sprava/terminy/{termin_id}/smazat", response=list[LetadloSpravaOut])
+def sprava_termin_smazat(request, termin_id: int):
+    _jen_spravce(request)
+    termin = TerminLetadla.objects.filter(pk=termin_id).first()
+    if termin:
+        termin.delete()
+        audit_zmena(request, "termin_smazan", "letadlo", termin.letadlo_id, {"nazev": termin.nazev})
+    return letadla.prehled()
+
+
+def audit_zmena(request, akce: str, objekt: str, objekt_id: int, zmeny: dict):
+    audit.zapsat(request.user, akce, objekt, objekt_id, zmeny={k: str(v) for k, v in zmeny.items()})

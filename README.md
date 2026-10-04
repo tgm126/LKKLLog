@@ -22,6 +22,7 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 | 10 | Upozornění na neukončené lety e-mailem a push notifikacemi | hotovo |
 | 11 | Můj nálet: osobní součty hodin a startů, seznam a Excel vlastních letů | hotovo |
 | 12 | Licence, medical a rozlétanost: správa, přehled, varování při zakládání letu | hotovo |
+| 13 | Správce licencí a letadel: přehled pilotů a letadel, termíny letadel, radiofonní průkaz | hotovo |
 
 ## Struktura
 

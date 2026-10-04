@@ -69,7 +69,18 @@ class OsobaAdmin(UserAdmin):
     search_fields = ["prijmeni", "jmeno", "email", "telefon"]
     fieldsets = [
         (None, {"fields": ["jmeno", "prijmeni", "email", "telefon", "password"]}),
-        ("Role", {"fields": ["role_casomeric", "role_ucetni", "is_staff", "is_superuser"]}),
+        (
+            "Role",
+            {
+                "fields": [
+                    "role_casomeric",
+                    "role_ucetni",
+                    "role_spravce",
+                    "is_staff",
+                    "is_superuser",
+                ]
+            },
+        ),
         (
             "Stav",
             {

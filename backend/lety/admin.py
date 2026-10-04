@@ -9,6 +9,7 @@ from .models import (
     Letiste,
     Osnova,
     Posadka,
+    TerminLetadla,
     Ucel,
     Uloha,
     Upozorneni,
@@ -16,8 +17,14 @@ from .models import (
 )
 
 
+class TerminLetadlaInline(admin.TabularInline):
+    model = TerminLetadla
+    extra = 0
+
+
 @admin.register(Letadlo)
 class LetadloAdmin(admin.ModelAdmin):
+    inlines = [TerminLetadlaInline]
     list_display = [
         "imatrikulace",
         "typ",

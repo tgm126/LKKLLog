@@ -6,7 +6,7 @@ export type Ja = {
   jmeno: string
   prijmeni: string
   email: string | null
-  role: { admin: boolean; casomeric: boolean; ucetni: boolean } | null
+  role: { admin: boolean; casomeric: boolean; ucetni: boolean; spravce: boolean } | null
   zastupce: { id: number; jmeno: string } | null
   testovaci_provoz: boolean
 }

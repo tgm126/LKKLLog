@@ -33,6 +33,7 @@ LISTY: dict[str, list[tuple[str, bool, list[str] | None]]] = {
         ("Aktivní", False, ANO_NE),
         ("Testovací", False, ANO_NE),
         ("Mobil", False, None),
+        ("Správce licencí a letadel", False, ANO_NE),
     ],
     "Oprávnění": [
         ("Jméno", True, None),
@@ -263,6 +264,7 @@ def _osoba(r) -> bool:
         "is_active": _ano_ne(r[7], True),
         "testovaci": _ano_ne(_bunka(r, 8), False),
         "telefon": _telefon(_bunka(r, 9)),
+        "role_spravce": _ano_ne(_bunka(r, 10), False),
     }
     osoba = None
     if email:
