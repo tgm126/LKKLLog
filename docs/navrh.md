@@ -296,6 +296,7 @@ Změna hesla, odhlášení.
 | role | admin / časoměřič-věž / účetní. Jedna osoba může mít víc rolí, každý přihlášený je zároveň „pilot“. Časoměřič a služba na věži mají stejná práva, proto mají jednu společnou roli. |
 | aktivni | neaktivní osoba se nenabízí ve výběrech, ale zůstává ve starých letech |
 | externi | externí osoba (examinátor): jen jméno, žádný e-mail, přihlášení ani notifikace |
+| testovaci | účet jen pro zkoušení aplikace; úklid před spuštěním ho smaže (kap. 9.1) |
 
 **`opravneni`**: co kdo smí létat (zatím jen pro řazení ve výběrech)
 | sloupec | význam |
@@ -595,7 +596,7 @@ Co aplikace k tomu potřebuje:
 - **Testovací účty** pro jednotlivé role. Správce může použít Gmail adresy s přídavkem (`jmeno+pilot@gmail.com`), které se doručí do jeho schránky.
 - **„Přihlásit se jako…“** pro admina: zobrazí aplikaci očima zvoleného uživatele. Nahoře je výrazný pruh s návratem a každé přepnutí se zapíše do auditního logu.
 - **Označení „TESTOVACÍ PROVOZ“** v záhlaví (přepínač v nastavení), dokud aplikace neběží ostře.
-- **Úklid před spuštěním:** jeden příkaz smaže testovací lety, posádky, uzávěrky a auditní log (jinak chráněný proti mazání) a ponechá číselníky. Testovací lety se nepřenášejí.
+- **Úklid před spuštěním:** jeden příkaz smaže testovací lety, posádky, uzávěrky, auditní log (jinak chráněný proti mazání) a **testovací osoby** (příznak „Testovací“) a ponechá číselníky. Testovací lety se nepřenášejí.
 - Jedna instance aplikace, samostatné testovací prostředí zatím ne.
 
 ---

@@ -31,6 +31,7 @@ LISTY: dict[str, list[tuple[str, bool, list[str] | None]]] = {
         ("Admin", False, ANO_NE),
         ("Externí", False, ANO_NE),
         ("Aktivní", False, ANO_NE),
+        ("Testovací", False, ANO_NE),
     ],
     "Oprávnění": [
         ("Jméno", True, None),
@@ -73,6 +74,7 @@ NAVOD = [
     "• Každý list = jeden číselník. Řádek 1 je záhlaví, data pište od řádku 2.",
     "• Tučné sloupce jsou povinné. Kde je šipka, vybírejte z nabídky.",
     "• ano/ne: prázdné = výchozí hodnota (Aktivní = ano, ostatní = ne).",
+    "• Testovací = ano: účet jen pro zkoušení, před spuštěním pro celý klub se smaže.",
     "• Oprávnění: osoba se dohledá podle jména a příjmení z listu Osoby.",
     "  Každé oprávnění na samostatném řádku (např. kluzák–instruktor, motorové–pilot).",
     "• Úlohy: Účely a Kategorie mohou mít více hodnot oddělených čárkou,",
@@ -133,6 +135,11 @@ class Vysledek:
     def pricti(self, list_: str, novy: bool) -> None:
         cil = self.zalozeno if novy else self.aktualizovano
         cil[list_] = cil.get(list_, 0) + 1
+
+
+def _bunka(radek, index):
+    """Hodnota sloupce, nebo None u starších šablon, které sloupec ještě nemají."""
+    return radek[index] if index < len(radek) else None
 
 
 def _text(v) -> str:
@@ -231,6 +238,7 @@ def _osoba(r) -> bool:
         "is_staff": _ano_ne(r[5], False),
         "externi": _ano_ne(r[6], False),
         "is_active": _ano_ne(r[7], True),
+        "testovaci": _ano_ne(_bunka(r, 8), False),
     }
     osoba = None
     if email:

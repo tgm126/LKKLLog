@@ -62,6 +62,11 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
         default=False,
         help_text="Osoba mimo klub (např. examinátor): jen jméno, bez přihlášení a notifikací.",
     )
+    testovaci = models.BooleanField(
+        "testovací",
+        default=False,
+        help_text="Účet jen pro zkoušení aplikace. Před spuštěním pro celý klub se smaže.",
+    )
 
     is_active = models.BooleanField(
         "aktivní",

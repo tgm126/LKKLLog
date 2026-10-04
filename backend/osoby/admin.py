@@ -24,14 +24,22 @@ class OsobaAdmin(UserAdmin):
         "role_ucetni",
         "is_staff",
         "externi",
+        "testovaci",
         "is_active",
     ]
-    list_filter = ["is_active", "externi", "role_casomeric", "role_ucetni", "is_staff"]
+    list_filter = [
+        "is_active",
+        "testovaci",
+        "externi",
+        "role_casomeric",
+        "role_ucetni",
+        "is_staff",
+    ]
     search_fields = ["prijmeni", "jmeno", "email"]
     fieldsets = [
         (None, {"fields": ["jmeno", "prijmeni", "email", "password"]}),
         ("Role", {"fields": ["role_casomeric", "role_ucetni", "is_staff", "is_superuser"]}),
-        ("Stav", {"fields": ["is_active", "externi", "last_login", "vytvoreno"]}),
+        ("Stav", {"fields": ["is_active", "testovaci", "externi", "last_login", "vytvoreno"]}),
     ]
     readonly_fields = ["last_login", "vytvoreno"]
     add_fieldsets = [
