@@ -381,6 +381,20 @@ Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, zá
 ### 4.11 Profil
 Změna hesla, odhlášení.
 
+### 4.15 Letadla a karta letadla (etapa 14)
+Menu *Letadla* (admin, správce):
+- **Seznam letadel** je hustá tabulka: imatrikulace a typ, kategorie, celkový nálet,
+  starty a stav termínů (vyjmenované jen ty, které brzy vyprší nebo propadly). Neaktivní
+  letadla jen s přepínačem „i neaktivní“.
+- **Karta letadla** má dva sloupce:
+  - **údaje:** imatrikulace, **typ z číselníku** (kategorie se odvodí z typu), počet míst,
+    maximální doba letu, pořadí v nabídkách, aktivní / vlečné / soukromé;
+  - **provozní deník:** celkový nálet a starty k datu (zadává se při spuštění ostrého
+    provozu); pod tím aktuální součet s lety z evidence;
+  - **termíny:** druh z číselníku, datum nebo celkový nálet [h], poznámka a vypočtený stav.
+
+  Ukládá se celá karta najednou (termíny se nahradí).
+
 ### 4.14 Osoby a karta osoby (etapa 14)
 Menu *Osoby* (admin, správce):
 - **Seznam osob** je hustá tabulka: jméno, průkazy (i „žák PPL(A)“), role a stav dokladů
@@ -474,10 +488,10 @@ a nápovědu.
   - **Piloti** (včetně testovacích osob s označením): stav každého pilota (v pořádku / brzy vyprší / neplatné) se seznamem
     problémů. Detail ukáže všechny kontroly a vede k úpravě jeho licencí a medicalu.
     Žák bez licence není chyba.
-  - **Letadla:**
+  - **Letadla** (od etapy 14 karta letadla, kap. 4.15):
     - celkový nálet a starty, tedy stav z provozního deníku k datu plus lety z evidence;
-    - **termíny** do data nebo do celkového náletu (ARC, prohlídky, pojištění…)
-      s barevným stavem: 30 dní, resp. 10 h předem oranžově.
+    - **termíny** do data nebo do celkového náletu (druh z číselníku: ARC, prohlídky,
+      pojištění…) s barevným stavem: 30 dní, resp. 10 h předem oranžově.
 
     Technika jako zvláštní roli ani složitější plánování údržby zatím neděláme.
 - Upozornění na blížící se termíny zatím jen v tomto přehledu (ne e-mailem).
@@ -822,6 +836,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 11 | **Můj nálet** | – |
 | 12 | **Licence, medical a rozlétanost:** správa pilotem i adminem, přehled v Můj nálet, varování při zakládání letu, přepínač hlídání | – |
 | 13 | **Správce licencí a letadel:** přehled pilotů a letadel, termíny letadel, radiofonní průkaz, medical po třídách | – |
+| 14 | **Revize datového modelu:** číselníky s vlastním menu, karta osoby (průkazy, kvalifikace, výcvik, přeškolení na typy, provozní oprávnění) a karta letadla (typ z číselníku, deník, termíny); nabídky posádky jen s vhodnými lidmi | – |
 | později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), platnosti techniky, export pro Flight Office a import starších letů z Flight Office, manuál a nápověda, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 
 Etapy 0–5 jsou minimum, se kterým lze jít do zkušebního provozu.

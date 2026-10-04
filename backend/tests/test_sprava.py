@@ -136,36 +136,79 @@ def test_nabidky_v_pruvodci_podle_dokladu(jako, svet):
     assert osoby[svet.zak.pk]["zak"] == ["kluzak", "tmg"]
 
 
-def test_letadla_nalet_z_deniku_a_terminy(jako, svet, spravce):
+def druh_terminu(nazev):
+    from ciselniky.models import DruhTerminu
+
+    return DruhTerminu.objects.get(nazev=nazev).pk
+
+
+def karta_letadla(letadlo, **zmeny):
+    return {
+        "imatrikulace": letadlo.imatrikulace,
+        "typ_letadla_id": typ_letadla(letadlo).pk,
+        "pocet_mist": letadlo.pocet_mist,
+        "vlecne": letadlo.vlecne,
+        **zmeny,
+    }
+
+
+def test_karta_letadla_nalet_z_deniku_a_terminy(jako, svet, spravce):
     vcera = datetime.combine(DNES - timedelta(days=1), time(10), tzinfo=UTC)
     let_v(svet, vcera - timedelta(days=10), minut=50)  # před stavem deníku – nepočítá se
     let_v(svet, vcera, minut=40)
     klient = jako(spravce)
-    denik = {
-        "nalet_pocatek_min": 1199 * 60,
-        "starty_pocatek": 3000,
-        "stav_k": str(DNES - timedelta(days=5)),
-    }
-    letadla = post(klient, f"/api/sprava/letadla/{svet.motor.pk}/denik", denik).json()
-    [motor] = [let for let in letadla if let["id"] == svet.motor.pk]
+    url = f"/api/sprava/letadla/{svet.motor.pk}"
+    data = karta_letadla(
+        svet.motor,
+        nalet_pocatek_min=1199 * 60,
+        starty_pocatek=3000,
+        stav_k=str(DNES - timedelta(days=5)),
+        terminy=[
+            {"druh_id": druh_terminu("100h prohlídka"), "pri_naletu_h": 1200},
+            {"druh_id": druh_terminu("ARC"), "datum": str(DNES - timedelta(days=1))},
+        ],
+    )
+    motor = post(klient, url, data).json()
     assert motor["nalet_min"] == 1199 * 60 + 40 and motor["starty"] == 3001
+    terminy = {t["nazev"]: t for t in motor["terminy"]}
+    assert terminy["100h prohlídka"]["stav"] == "pozor"
+    assert terminy["100h prohlídka"]["text"] == 'při 1200 h – zbývá 20"'
+    assert terminy["ARC"]["stav"] == "chyba"
 
-    termin = {"letadlo_id": svet.motor.pk, "nazev": "100h prohlídka", "pri_naletu_h": 1200}
-    letadla = post(klient, "/api/sprava/terminy", termin).json()
-    [motor] = [let for let in letadla if let["id"] == svet.motor.pk]
-    assert motor["terminy"][0]["stav"] == "pozor"
-    assert motor["terminy"][0]["text"] == 'při 1200 h – zbývá 20"'
+    # Termín bez data i náletu ani neznámý typ neprojdou.
+    bez = {**data, "terminy": [{"druh_id": druh_terminu("ARC")}]}
+    assert post(klient, url, bez).status_code == 400
+    assert post(klient, url, {**data, "typ_letadla_id": 999999}).status_code == 400
 
-    arc = {"letadlo_id": svet.motor.pk, "nazev": "ARC", "datum": str(DNES - timedelta(days=1))}
-    letadla = post(klient, "/api/sprava/terminy", arc).json()
-    [motor] = [let for let in letadla if let["id"] == svet.motor.pk]
-    assert {t["nazev"]: t["stav"] for t in motor["terminy"]}["ARC"] == "chyba"
-
-    assert post(klient, "/api/sprava/terminy", {**arc, "datum": None}).status_code == 400
-    assert jako(svet.pilot).get("/api/sprava/letadla").status_code == 403
-    termin_id = TerminLetadla.objects.get(nazev="ARC").pk
-    post(jako(spravce), f"/api/sprava/terminy/{termin_id}/smazat")
+    # Uložení karty nahradí termíny; typ z číselníku určuje typ a kategorii.
+    motor = post(klient, url, {**data, "terminy": data["terminy"][:1]}).json()
+    assert [t["nazev"] for t in motor["terminy"]] == ["100h prohlídka"]
     assert TerminLetadla.objects.count() == 1
+    assert motor["typ"] == svet.motor.typ and motor["kategorie"] == svet.motor.kategorie
+    # Pilot letadla nespravuje (až na konci – klient je sdílený).
+    assert jako(svet.pilot).get("/api/sprava/letadla").status_code == 403
+    assert post(jako(svet.pilot), url, data).status_code == 403
+
+
+def test_nove_letadlo_a_volby(jako, svet, spravce):
+    from ciselniky.models import TypLetadla
+
+    klient = jako(spravce)
+    volby = klient.get("/api/sprava/letadla/volby").json()
+    assert "ARC" in {d["nazev"] for d in volby["druhy_terminu"]}
+    typ = TypLetadla.objects.create(nazev="Dynamic", kategorie="ul")
+    nove = post(
+        klient, "/api/sprava/letadla", {"imatrikulace": " ok-u123 ", "typ_letadla_id": typ.pk}
+    ).json()
+    assert nove["imatrikulace"] == "OK-U123" and nove["kategorie"] == "ul"
+    assert nove["chybi_denik"]
+    znovu = {"imatrikulace": "OK-U123", "typ_letadla_id": typ.pk}
+    assert post(klient, "/api/sprava/letadla", znovu).status_code == 400
+    # Neaktivní letadla jen na vyžádání.
+    post(klient, f"/api/sprava/letadla/{nove['id']}", {**znovu, "aktivni": False})
+    assert nove["id"] not in {x["id"] for x in klient.get("/api/sprava/letadla").json()}
+    vse = klient.get("/api/sprava/letadla?vse=true").json()
+    assert nove["id"] in {x["id"] for x in vse}
 
 
 def test_testovaci_doklady(svet):

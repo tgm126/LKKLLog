@@ -6,7 +6,7 @@ U letadel se počítá skutečná doba letu (i „start bez doby“ se počítá
 
 from datetime import UTC, date
 
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, F, Prefetch, Q, Sum
 from django.utils import timezone
 
 from .models import Letadlo, StavLetu, TerminLetadla
@@ -60,54 +60,74 @@ def stav_terminu(termin: TerminLetadla, nalet: int, dnes: date) -> tuple[str, st
     return max(stavy, key=poradi.index), ", ".join(popisy)
 
 
-def prehled(dnes: date | None = None) -> list[dict]:
-    dnes = dnes or timezone.now().astimezone(UTC).date()
-    vysledek = []
-    letadla = (
-        s_naletem()
-        .filter(aktivni=True)
-        .prefetch_related("terminy")
-        .order_by("poradi", "imatrikulace")
-    )
-    for letadlo in letadla:
-        nalet = nalet_min(letadlo)
-        terminy = []
-        for t in letadlo.terminy.all():
-            stav, text = stav_terminu(t, nalet, dnes)
-            terminy.append(
-                {
-                    "id": t.pk,
-                    "nazev": t.nazev,
-                    "datum": t.datum,
-                    "pri_naletu_h": t.pri_naletu_h,
-                    "poznamka": t.poznamka,
-                    "stav": stav,
-                    "text": text,
-                }
-            )
-        vysledek.append(
+def karta(letadlo, dnes: date) -> dict:
+    """Údaje letadla, nálet a starty a termíny se stavem (letadlo z s_naletem())."""
+    nalet = nalet_min(letadlo)
+    terminy = []
+    for t in letadlo.terminy.all():
+        stav, text = stav_terminu(t, nalet, dnes)
+        terminy.append(
             {
-                "id": letadlo.pk,
-                "imatrikulace": letadlo.imatrikulace,
-                "typ": letadlo.typ,
-                "kategorie": letadlo.kategorie,
-                "nalet_min": nalet,
-                "starty": starty(letadlo),
-                "nalet_pocatek_min": letadlo.nalet_pocatek_min,
-                "starty_pocatek": letadlo.starty_pocatek,
-                "stav_k": letadlo.stav_k,
-                # Bez stavu provozního deníku nesedí celkový nálet ani termíny podle náletu.
-                "chybi_denik": letadlo.stav_k is None,
-                "terminy": terminy,
+                "id": t.pk,
+                "druh_id": t.druh_id,
+                "nazev": t.nazev,
+                "datum": t.datum,
+                "pri_naletu_h": t.pri_naletu_h,
+                "poznamka": t.poznamka,
+                "stav": stav,
+                "text": text,
             }
         )
-    return vysledek
+    return {
+        "id": letadlo.pk,
+        "imatrikulace": letadlo.imatrikulace,
+        "typ_letadla_id": letadlo.typ_letadla_id,
+        "typ": letadlo.typ,
+        "kategorie": letadlo.kategorie,
+        "pocet_mist": letadlo.pocet_mist,
+        "max_doba_min": letadlo.max_doba_min,
+        "vlecne": letadlo.vlecne,
+        "soukrome": letadlo.soukrome,
+        "aktivni": letadlo.aktivni,
+        "poradi": letadlo.poradi,
+        "nalet_min": nalet,
+        "starty": starty(letadlo),
+        "nalet_pocatek_min": letadlo.nalet_pocatek_min,
+        "starty_pocatek": letadlo.starty_pocatek,
+        "stav_k": letadlo.stav_k,
+        # Bez stavu provozního deníku nesedí celkový nálet ani termíny podle náletu.
+        "chybi_denik": letadlo.stav_k is None,
+        "terminy": terminy,
+    }
+
+
+def _letadla():
+    terminy = TerminLetadla.objects.select_related("druh")
+    return (
+        s_naletem()
+        .select_related("typ_letadla")
+        .prefetch_related(Prefetch("terminy", queryset=terminy))
+        .order_by("poradi", "imatrikulace")
+    )
+
+
+def prehled(dnes: date | None = None, vse: bool = False) -> list[dict]:
+    """Letadla s termíny; bez `vse` jen aktivní."""
+    dnes = dnes or timezone.now().astimezone(UTC).date()
+    letadla = _letadla() if vse else _letadla().filter(aktivni=True)
+    return [karta(letadlo, dnes) for letadlo in letadla]
+
+
+def jedno(letadlo_id: int, dnes: date | None = None) -> dict | None:
+    dnes = dnes or timezone.now().astimezone(UTC).date()
+    letadlo = _letadla().filter(pk=letadlo_id).first()
+    return karta(letadlo, dnes) if letadlo else None
 
 
 def varovani_letadla(letadlo_id: int, dnes: date | None = None) -> list[str]:
     """Prošlé termíny letadla (datum nebo nálet) – pro varování při zakládání letu."""
     dnes = dnes or timezone.now().astimezone(UTC).date()
-    letadlo = s_naletem().filter(pk=letadlo_id).prefetch_related("terminy").first()
+    letadlo = _letadla().filter(pk=letadlo_id).first()
     if letadlo is None:
         return []
     nalet = nalet_min(letadlo)

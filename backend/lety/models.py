@@ -513,7 +513,9 @@ class TerminLetadla(models.Model):
     """Termín u letadla: do data, nebo do celkového náletu (např. ARC, 100h prohlídka)."""
 
     letadlo = models.ForeignKey(Letadlo, on_delete=models.CASCADE, related_name="terminy")
-    nazev = models.CharField("název", max_length=80, help_text="např. ARC, 100h prohlídka")
+    druh = models.ForeignKey(
+        "ciselniky.DruhTerminu", on_delete=models.PROTECT, related_name="+", verbose_name="druh"
+    )
     datum = models.DateField("do data", null=True, blank=True)
     pri_naletu_h = models.PositiveIntegerField(
         "při celkovém náletu [h]", null=True, blank=True, help_text="Celkový nálet letadla."
@@ -534,3 +536,7 @@ class TerminLetadla(models.Model):
 
     def __str__(self):
         return f"{self.letadlo} – {self.nazev}"
+
+    @property
+    def nazev(self) -> str:
+        return self.druh.nazev

@@ -15,6 +15,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
+from ciselniky.models import DruhTerminu
 from lety.letadla import nalet_min, s_naletem
 from lety.models import Letadlo, TerminLetadla
 from osoby.models import Kategorie
@@ -51,7 +52,7 @@ class Command(BaseCommand):
             def termin(nazev, datum=None, pri_naletu_h=None, letadlo=letadlo):
                 TerminLetadla.objects.create(
                     letadlo=letadlo,
-                    nazev=nazev,
+                    druh=DruhTerminu.objects.get_or_create(nazev=nazev)[0],
                     datum=datum,
                     pri_naletu_h=pri_naletu_h,
                     poznamka=POZNAMKA,

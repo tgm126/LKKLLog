@@ -4,6 +4,7 @@ from ninja import NinjaAPI, Schema
 
 from ciselniky.api import router as ciselniky_router
 from lety.api import router as lety_router
+from lety.karta_letadla import router as letadla_router
 from lety.sluzby import ChybaLetu
 from osoby.api import router as ucty_router
 from osoby.karta import router as osoby_router
@@ -12,6 +13,7 @@ api = NinjaAPI(title="LKKL Log API", version="1", docs_url="/docs" if settings.D
 api.add_router("/ucet", ucty_router)
 api.add_router("/sprava/ciselniky", ciselniky_router)
 api.add_router("/sprava/osoby", osoby_router)
+api.add_router("/sprava/letadla", letadla_router)
 api.add_router("/", lety_router)
 
 

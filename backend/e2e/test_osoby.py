@@ -3,7 +3,7 @@ import re
 
 from playwright.sync_api import expect
 
-from ciselniky.models import ProvozniOpravneni
+from ciselniky.models import ProvozniOpravneni, TypLetadla
 from lety.models import TerminLetadla
 from osoby.models import KvalifikaceOsoby, Osoba
 from provoz.models import Nastaveni
@@ -82,14 +82,20 @@ def test_pilot_vidi_rozletanost_ale_ne_spravu(mobil, svet):
     expect(mobil.get_by_text("Údaje zadává admin")).to_be_visible()
 
 
-def test_letadla_termin(mobil, svet):
+def test_karta_letadla_termin(mobil, svet):
+    typ = TypLetadla.objects.create(nazev="Cessna 172", kategorie="motor")
+    svet.cessna.typ_letadla = typ
+    svet.cessna.save()
     prihlasit(mobil, svet, "admin@example.com")
     mobil.get_by_role("link", name="Letadla").click()
     expect(mobil.get_by_role("heading", name="Letadla")).to_be_visible()
-    mobil.get_by_role("button", name="+ Termín").first.click()
-    dialog = mobil.get_by_role("dialog")
-    dialog.get_by_label("Název").fill("ARC")
-    dialog.get_by_label("Do data").fill("2027-03-31")
-    dialog.get_by_role("button", name="Uložit").click()
+    mobil.get_by_role("cell", name=re.compile("^OK-TCS")).click()
+    expect(mobil.get_by_role("heading", name="OK-TCS Cessna 172")).to_be_visible()
+    vybrat(mobil, "Přidat termín", "ARC")
+    mobil.get_by_label("ARC do data").fill("2027-03-31")
+    mobil.get_by_label("Starty").fill("1500")
+    mobil.get_by_role("button", name="Uložit").first.click()
     expect(mobil.get_by_text("do 31. 3. 2027", exact=False)).to_be_visible()
     assert TerminLetadla.objects.get().nazev == "ARC"
+    svet.cessna.refresh_from_db()
+    assert svet.cessna.starty_pocatek == 1500

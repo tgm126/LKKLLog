@@ -10,6 +10,7 @@ import { NastavitHeslo } from './stranky/NastavitHeslo'
 import { Ciselniky } from './stranky/Ciselniky'
 import { Displej } from './stranky/Displej'
 import { KartaOsoby } from './stranky/KartaOsoby'
+import { KartaLetadla } from './stranky/KartaLetadla'
 import { Letadla } from './stranky/Letadla'
 import { MujNalet } from './stranky/MujNalet'
 import { Prihlaseni } from './stranky/Prihlaseni'
@@ -44,6 +45,7 @@ function Obsah() {
       <Route path="/osoby" element={ja?.prihlasen ? <Osoby /> : <Prihlaseni />} />
       <Route path="/osoby/:id" element={ja?.prihlasen ? <KartaOsoby /> : <Prihlaseni />} />
       <Route path="/letadla" element={ja?.prihlasen ? <Letadla /> : <Prihlaseni />} />
+      <Route path="/letadla/:id" element={ja?.prihlasen ? <KartaLetadla /> : <Prihlaseni />} />
       <Route path="/sprava" element={<Navigate to="/letadla" replace />} />
       <Route path="/ciselniky" element={ja?.prihlasen ? <Ciselniky /> : <Prihlaseni />} />
       <Route path="*" element={ja?.prihlasen ? <PrehledDne /> : <Prihlaseni />} />

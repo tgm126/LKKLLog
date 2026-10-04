@@ -227,9 +227,11 @@ def test_moduly_zpusobilost_a_rozletanost_zvlast(jako, svet):
 
 
 def test_varovani_na_prosly_termin_letadla(jako, svet):
+    from ciselniky.models import DruhTerminu
     from lety.models import TerminLetadla
 
-    TerminLetadla.objects.create(letadlo=svet.motor, nazev="ARC", datum=DNES - timedelta(days=2))
+    arc = DruhTerminu.objects.get(nazev="ARC")
+    TerminLetadla.objects.create(letadlo=svet.motor, druh=arc, datum=DNES - timedelta(days=2))
     let = {"letadlo_id": svet.motor.pk, "posadka": [{"osoba_id": svet.pilot.pk, "funkce": "pic"}]}
     klient = jako(svet.casomeric)
     assert post(klient, "/api/kontrola-posadky", let).json() == {"varovani": []}
