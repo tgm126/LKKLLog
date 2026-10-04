@@ -37,6 +37,7 @@ def svet(db):
     s.instruktor = osoba("Instruktor")
     s.cizi_pilot = osoba("Cizí")
     s.casomeric = osoba("Časoměřič", role_casomeric=True)
+    s.ucetni = osoba("Účetní", role_ucetni=True)
     s.externi = osoba("Externí", externi=True)
     osnova = Osnova.objects.create(kategorie=Kategorie.MOTOR, nazev="Základní výcvik")
     s.uloha = Uloha.objects.create(osnova=osnova, kod="M2", nazev="Okruhy", ucely=[Ucel.VYCVIK])
@@ -287,3 +288,17 @@ def test_prehled_dne(jako, svet):
     assert data["konec_soumraku"] > data["zapad_slunce"]
     vcera = (timezone.now() - timedelta(days=1)).date().isoformat()
     assert jako(svet.pilot).get(f"/api/prehled?den={vcera}").json()["lety"] == []
+
+
+def test_ucetni_neridi_provoz_ale_ovlada_sve_lety(jako, svet):
+    cizi = _ve_vzduchu(svet)
+    klient = jako(svet.ucetni)
+    assert post(klient, f"/api/lety/{cizi.pk}/pristani").status_code == 403
+
+    vlastni = normalni(
+        svet,
+        letadlo_id=svet.dvoumistne.pk,
+        posadka=[{"osoba_id": svet.ucetni.pk, "funkce": "pic"}],
+    )
+    let = post(klient, "/api/lety", vlastni).json()
+    assert let["muze_ovladat"] is True

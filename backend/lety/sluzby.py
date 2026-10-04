@@ -41,9 +41,13 @@ class ChybaLetu(Exception):
 # --- kdo smí co --------------------------------------------------------------
 
 
-def vidi_vse(osoba: Osoba) -> bool:
-    """Časoměřič/věž, účetní a admin pracují s lety všech."""
-    return osoba.is_staff or osoba.role_casomeric or osoba.role_ucetni
+def ridi_provoz(osoba: Osoba) -> bool:
+    """Časoměřič/věž a admin řídí provoz – ovládají lety všech.
+
+    Účetní do běžícího provozu nezasahuje (jako pilot ovládá jen své lety); jeho práva
+    navíc se týkají až oprav ukončených letů po uzávěrce (etapa oprav a uzávěrek).
+    """
+    return osoba.is_staff or osoba.role_casomeric
 
 
 def je_vlastnik(osoba: Osoba, let: Let) -> bool:
@@ -58,7 +62,7 @@ def je_vlastnik(osoba: Osoba, let: Let) -> bool:
 
 
 def muze_ovladat(osoba: Osoba, let: Let) -> bool:
-    return vidi_vse(osoba) or je_vlastnik(osoba, let)
+    return ridi_provoz(osoba) or je_vlastnik(osoba, let)
 
 
 def over_pravo(osoba: Osoba, let: Let) -> None:

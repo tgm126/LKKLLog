@@ -439,7 +439,7 @@ Slovy: let je vždy **na jednom letadle** (z něj plyne kategorie), má **jeden 
 |---|---|---|---|
 | **Pilot** | zakládá, startuje a ukončuje lety, opravuje a ruší **vlastní** | jen čte (opravu nahlásí časoměřiči nebo účetní) | jen čte |
 | **Časoměřič / věž** | totéž pro **všechny** lety, uzavírá den | opravuje všechny lety | jen čte |
-| **Účetní** | opravuje všechny lety | opravuje všechny lety, uzavírá měsíc | opravuje všechny lety, přepočítává souhrny |
+| **Účetní** | jen jako pilot: vlastní lety (do provozu nezasahuje) | opravuje ukončené lety všech, uzavírá měsíc | opravuje ukončené lety všech, přepočítává souhrny |
 | **Admin** | vše | vše | vše |
 
 Opravy v uzavřeném dni nebo měsíci se označí a objeví v přehledu „Změny po uzávěrce“ (kap. 4.7).
