@@ -252,6 +252,23 @@ class Let(models.Model):
         help_text="Jen u letů do 1 minuty.",
     )
     pocet_tg = models.PositiveSmallIntegerField("touch-and-go", default=0)
+    casy_tg = ArrayField(
+        models.DateTimeField(),
+        default=list,
+        blank=True,
+        verbose_name="časy touch-and-go (UTC)",
+        help_text="Zapisuje časoměřič tlačítkem T&G během letu; dopsané lety časy nemají.",
+    )
+    # Evidovaný údaj je počet přistání: víc než 1 znamená, že let měl touch-and-go.
+    pocet_pristani = models.GeneratedField(
+        expression=models.Case(
+            models.When(cas_pristani__isnull=True, then=models.Value(0)),
+            default=F("pocet_tg") + 1,
+        ),
+        output_field=models.IntegerField(),
+        db_persist=True,
+        verbose_name="přistání",
+    )
     pocet_hostu = models.PositiveSmallIntegerField(
         "hosté", default=0, help_text="Osoby mimo klub (jen počet)."
     )
@@ -303,6 +320,11 @@ class Let(models.Model):
                 | Q(plati_aeroklub=False, platce__isnull=False),
                 name="prave_jeden_platce",
                 violation_error_message="Let platí buď jedna osoba, nebo aeroklub.",
+            ),
+            models.CheckConstraint(
+                condition=Q(pocet_tg__gte=Func(F("casy_tg"), function="cardinality")),
+                name="casy_tg_do_poctu",
+                violation_error_message="Časů touch-and-go nemůže být víc než jejich počet.",
             ),
             models.CheckConstraint(
                 condition=Q(stav=StavLetu.ZRUSEN) | Q(duvod_zruseni=""),
@@ -404,8 +426,11 @@ class Uzaverka(models.Model):
     uzavrel = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="+",
         verbose_name="uzavřel",
+        help_text="Prázdné = uzavřeno automaticky po soumraku.",
     )
     kdy = models.DateTimeField(auto_now_add=True)
     souhrn = models.JSONField(default=dict)

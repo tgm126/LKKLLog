@@ -81,10 +81,11 @@
 
 1. Časoměřič nebo věž (případně pilot, když nikdo jiný není) otevře **Přehled dne**.
 2. Ťukne **+ Nový let** → vybere letadlo → typ letu → posádku → úlohu → **Vzlet**. Je to zhruba 5 ťuknutí a nic se nepíše.
-3. Let se objeví ve skupině **Ve vzduchu** s běžícím časem, a to na všech zařízeních do ~10 sekund.
-4. Při přistání stačí ťuknout na **Přistál** a případně upravit počet touch-and-go tlačítky +/−.
-5. Zapomenutý start nebo stop se opraví a důvod opravy se vybere z nabídky. Každá změna se zapíše do historie.
-6. Večer časoměřič nebo věž den **uzavře**. Účetní na konci měsíce zkontroluje lety, opraví chyby, uzavře měsíc a vyexportuje data.
+3. Let se objeví ve skupině **Ve vzduchu** s běžícím časem se sekundami (např. `0:07:45`), a to na všech zařízeních do ~10 sekund.
+4. Motorová letadla, TMG a UL mají vedle **Přistál** tlačítko **T&G**: každé ťuknutí zapíše touch-and-go s časem (dvě ťuknutí do 30 s se berou jako jedno, omyl vrátí tlačítko Zpět). Kluzáky T&G nemají.
+5. Při přistání stačí ťuknout na **Přistál**; počet touch-and-go je předvyplněný z letu a jde upravit tlačítky +/−.
+6. Zapomenutý start nebo stop se opraví a důvod opravy se vybere z nabídky. Každá změna se zapíše do historie.
+7. Večer časoměřič nebo věž den **uzavře** (nebo se po soumraku uzavře sám, když nic neletí). Účetní na konci měsíce zkontroluje lety, opraví chyby, uzavře měsíc a vyexportuje data.
 
 ### Zásady, na kterých návrh stojí
 
@@ -232,7 +233,7 @@ E-mail, heslo, „Zapamatovat“, „Zapomenuté heslo“.
 └───────────────────────────────┘
 ```
 
-- Tři skupiny: **Ve vzduchu** (běžící čas, velké tlačítko PŘISTÁL), **Připravené** (založené předem, čekají na vzlet), **Ukončené dnes** (zrušené lety jsou přeškrtnuté).
+- Tři skupiny: **Ve vzduchu** (běžící čas se sekundami, tlačítka T&G a PŘISTÁL), **Připravené** (založené předem, čekají na vzlet), **Ukončené dnes** (zrušené lety jsou přeškrtnuté).
 - Zvýraznění: let je ve vzduchu déle, než je **maximální doba letu letadla**, nebo let po **konci občanského soumraku** stále není ukončený.
 - Vlek se zobrazí jako dvojice (kluzák + vlečné) a jedno tlačítko VZLET spustí obě letadla.
 - Na počítači je vedle karet i tabulka.
@@ -275,7 +276,7 @@ výběr sloupců a formát pro Flight Office zatím nejsou.
 
 ### 4.7 Uzávěrky (souhrny)
 Uzávěrka **není zámek**, ale **oficiální souhrn** uložený k danému okamžiku:
-- **podle letadla a účelu:** počet letů, minuty, touch-and-go. **Vlek a ostatní lety téhož letadla jsou vždy zvlášť** (jedno letadlo může v jeden den vlekat i létat normálně);
+- **podle letadla a účelu:** počet letů, minuty, počet přistání. **Vlek a ostatní lety téhož letadla jsou vždy zvlášť** (jedno letadlo může v jeden den vlekat i létat normálně);
 - **starty:** naviják, vlek, autostart, vlastní;
 - **podle osoby:** lety a minuty v roli PIC, žák, přezkoušený;
 - **celkem za den nebo měsíc.**
@@ -306,6 +307,11 @@ Uzávěrka **není zámek**, ale **oficiální souhrn** uložený k danému okam
   zůstanou v historii.
 - Limit „čas nejvýš měsíc zpátky“ neplatí pro účetní a admina, aby mohli opravovat
   i v uzavřeném měsíci.
+- **Automatická denní uzávěrka:** cron serveru každých 15 minut uzavře den, kdy se létalo,
+  jakmile uplyne nastavená doba po konci občanského soumraku (výchozí 60 min) a nic neletí
+  ani není připravené. Neukončený let den neuzavře. Den, který už někdy uzavřený byl
+  (i znovu otevřený adminem), nechává lidem. Zapínání a odklad jsou v *Nastavení provozu*.
+  Uzávěrka pak má jako autora „automaticky“.
 
 ### 4.8 Můj nálet (neoficiální)
 Součty hodin a startů za období podle kategorie a účelu (PIC, žák, přezkoušený). Seznam vlastních letů.
@@ -393,7 +399,8 @@ Při zakládání letu je kategorie daná letadlem. Výběr úlohy nabídne osno
 | misto_vzletu_id, misto_pristani_id | → letiste (mezipřistání jsou samostatné lety) |
 | cas_vzletu, cas_pristani | UTC na sekundy. Přistání je prázdné, dokud je letadlo ve vzduchu. |
 | doba_min | **vypočítá ji databáze** se zaokrouhlením, nikdo ji nezadává |
-| pocet_tg | počet touch-and-go |
+| pocet_tg, casy_tg | počet touch-and-go a jejich časy (časy jen u T&G zapsaných během letu) |
+| pocet_pristani | vypočítá databáze: 1 + T&G u přistálého letu, jinak 0. Ve výpisech a souhrnech se eviduje počet přistání (víc než 1 = let měl touch-and-go). |
 | pocet_hostu | osoby mimo klub (jen počet) |
 | platce_id | → osoba, která let platí (kap. 3.4). Prázdné, pokud platí Aeroklub. |
 | plati_aeroklub | ano/ne |

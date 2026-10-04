@@ -13,11 +13,15 @@ export function doba(minuty: number | null | undefined): string {
   return hodiny > 0 ? `${hodiny}°${celkem % 60}"` : `${celkem}"`
 }
 
-/** Běžící čas od vzletu: letecký zápis hodin a minut + sekundy zvlášť. */
-export function bezi(odIso: string, ted: Date): { cas: string; sekundy: string } {
+/** Běžící čas od vzletu se sekundami, např. 0:07:45 nebo 1:04:32. */
+export function bezi(odIso: string, ted: Date): string {
   const s = Math.max(0, Math.floor((ted.getTime() - new Date(odIso).getTime()) / 1000))
-  return { cas: doba(Math.floor(s / 60)), sekundy: String(s % 60).padStart(2, '0') }
+  const dve = (n: number) => String(n).padStart(2, '0')
+  return `${Math.floor(s / 3600)}:${dve(Math.floor(s / 60) % 60)}:${dve(s % 60)}`
 }
+
+/** Touch-and-go dělají motorová letadla, TMG a UL; kluzák ne (stejně jako na serveru). */
+export const muzeTg = (kategorie: string | undefined) => !!kategorie && kategorie !== 'kluzak'
 
 export const minutOd = (odIso: string, ted: Date) =>
   (ted.getTime() - new Date(odIso).getTime()) / 60000

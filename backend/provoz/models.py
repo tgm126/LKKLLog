@@ -33,6 +33,20 @@ class Nastaveni(models.Model):
         help_text="V záhlaví aplikace se zobrazí pruh „TESTOVACÍ PROVOZ“.",
     )
 
+    automaticka_uzaverka = models.BooleanField(
+        "automatická denní uzávěrka",
+        default=True,
+        help_text=(
+            "Den se uzavře sám, když po soumraku nic neletí ani není připravené. "
+            "Piloti pak už do dne nic nedopíší – zapíše to časoměřič nebo účetní."
+        ),
+    )
+    uzaverka_po_soumraku_min = models.PositiveSmallIntegerField(
+        "automatická uzávěrka po konci soumraku [min]",
+        default=60,
+        help_text="Kolik minut po konci občanského soumraku se den uzavře.",
+    )
+
     class Meta:
         verbose_name = "nastavení"
         verbose_name_plural = "nastavení"

@@ -22,7 +22,7 @@ import { KATEGORIE_LETU } from '../nazvy'
 import { jmeno, KROKY, nabidka, SLOT_VLEKAR, SLOTY, UCELY } from '../posadka'
 import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { oznamitSeZpet } from '../zpet'
-import { naMinuty } from '../cas'
+import { muzeTg, naMinuty } from '../cas'
 import { CasVolba } from './CasVolba'
 import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
@@ -173,7 +173,7 @@ export function NovyLet({
         data.cas_vzletu = casVzletu.toISOString()
         data.cas_pristani = casPristani.toISOString()
         data.misto_pristani_id = mistoPristani ? Number(mistoPristani) : null
-        data.pocet_tg = tg
+        data.pocet_tg = muzeTg(letadlo?.kategorie) ? tg : 0
         if (kratkyDopsany) data.kratky_let = kratky
       }
       return zalozitLet(data)
@@ -503,7 +503,14 @@ export function NovyLet({
                 onChange={setMistoPristani}
                 allowDeselect={false}
               />
-              <Pocitadlo popis="Touch-and-go" hodnota={tg} onZmena={setTg} />
+              {muzeTg(letadlo?.kategorie) && (
+                <Pocitadlo
+                  popis="Touch-and-go"
+                  popisek={`Přistání celkem: ${tg + 1}`}
+                  hodnota={tg}
+                  onZmena={setTg}
+                />
+              )}
               {veVleku && (
                 <CasVolba
                   popis={`Přistání vlečné ${vlecna?.imatrikulace ?? ''} (UTC)`}

@@ -16,7 +16,7 @@ export function SouhrnUzaverky({ souhrn: s, uplny = false }: { souhrn: Souhrn; u
       <SimpleGrid cols={{ base: 3, sm: 4 }} spacing="xs">
         <Dlazdice nazev="Lety" hodnota={s.celkem.lety} />
         <Dlazdice nazev="Doba" hodnota={doba(s.celkem.minuty)} />
-        <Dlazdice nazev="T&G" hodnota={s.celkem.tg} />
+        <Dlazdice nazev="Přistání" hodnota={s.celkem.pristani ?? '–'} />
         <Dlazdice nazev="Vleky" hodnota={s.celkem.vlek} />
       </SimpleGrid>
       <Group gap="md">

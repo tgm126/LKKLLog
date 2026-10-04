@@ -1,7 +1,7 @@
 import { ActionIcon, Badge, Button, Card, Group, Menu, Stack, Text } from '@mantine/core'
 
 import type { Let } from '../api/lety'
-import { bezi, doba, hhmm } from '../cas'
+import { bezi, doba, hhmm, hhmmss, muzeTg } from '../cas'
 import { KATEGORIE_LETU, useNazvy } from '../nazvy'
 import { useCiselniky } from '../useLety'
 import { varovani } from '../varovani'
@@ -11,6 +11,7 @@ export function KartaLetu({
   ted,
   konecSoumraku,
   onVzlet,
+  onTg,
   onPristani,
   onZrusit,
   onDetail,
@@ -22,6 +23,7 @@ export function KartaLetu({
   ted: Date
   konecSoumraku: string
   onVzlet: () => void
+  onTg: () => void
   onPristani: () => void
   onZrusit: () => void
   onDetail: () => void
@@ -64,11 +66,7 @@ export function KartaLetu({
           <Group gap={4} wrap="nowrap" align="flex-start">
             {bezici && (
               <Text ff="monospace" fw={700} fz="xl" c={pozor ? 'red' : undefined}>
-                {bezici.cas}
-                <Text span fz="xs" fw={400} c="dimmed">
-                  {' '}
-                  {bezici.sekundy}s
-                </Text>
+                {bezici}
               </Text>
             )}
             {let_.stav === 'ukoncen' && (
@@ -115,7 +113,16 @@ export function KartaLetu({
               {let_.cas_pristani && ` → ${let_.misto_pristani} ${hhmm(let_.cas_pristani)}`}
             </Badge>
           )}
-          {let_.pocet_tg > 0 && <Badge variant="light">T&G {let_.pocet_tg}</Badge>}
+          {let_.stav === 've_vzduchu' && let_.pocet_tg > 0 && (
+            <Badge variant="light">
+              T&G {let_.pocet_tg}
+              {let_.casy_tg.length > 0 &&
+                ` · naposledy ${hhmmss(let_.casy_tg[let_.casy_tg.length - 1])}`}
+            </Badge>
+          )}
+          {let_.pocet_pristani > 1 && (
+            <Badge variant="light">přistání {let_.pocet_pristani}</Badge>
+          )}
           {let_.dodatecne && (
             <Badge variant="light" color="grape">
               zapsáno dodatečně
@@ -144,9 +151,16 @@ export function KartaLetu({
           // Tlačítko nesmí otevírat detail (klik na kartu).
           <div onClick={(e) => e.stopPropagation()}>
             {let_.stav === 've_vzduchu' ? (
-              <Button size="lg" color="green" fullWidth onClick={onPristani}>
-                PŘISTÁL
-              </Button>
+              <Group grow gap="xs">
+                {muzeTg(let_.kategorie) && (
+                  <Button size="lg" variant="light" loading={pracuje} onClick={onTg}>
+                    T&G
+                  </Button>
+                )}
+                <Button size="lg" color="green" onClick={onPristani}>
+                  PŘISTÁL
+                </Button>
+              </Group>
             ) : (
               <Button size="lg" fullWidth loading={pracuje} onClick={onVzlet}>
                 VZLET

@@ -192,7 +192,7 @@ export function Vypis() {
             <SimpleGrid cols={{ base: 2, sm: 5 }} spacing="xs">
               <Dlazdice nazev="Lety" hodnota={s.celkem.lety} />
               <Dlazdice nazev="Doba" hodnota={doba(s.celkem.minuty)} />
-              <Dlazdice nazev="T&G" hodnota={s.celkem.tg} />
+              <Dlazdice nazev="Přistání" hodnota={s.celkem.pristani ?? '–'} />
               <Dlazdice nazev="Starty navijákem" hodnota={s.celkem.navijak} />
               <Dlazdice nazev="Vleky" hodnota={s.celkem.vlek} />
             </SimpleGrid>

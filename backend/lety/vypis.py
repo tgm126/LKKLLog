@@ -88,11 +88,12 @@ def souhrn(seznam: list[Let]) -> dict:
     ucel = dict(Ucel.choices)
 
     def nove():
-        return {"lety": 0, "minuty": 0, "tg": 0, "navijak": 0, "vlek": 0}
+        return {"lety": 0, "minuty": 0, "pristani": 0, "tg": 0, "navijak": 0, "vlek": 0}
 
     def pricti(radek, let):
         radek["lety"] += 1
         radek["minuty"] += let.doba_uctovana_min or 0
+        radek["pristani"] += let.pocet_pristani
         radek["tg"] += let.pocet_tg
         radek["navijak"] += let.zpusob_vzletu == ZpusobVzletu.NAVIJAK
         radek["vlek"] += let.ucel == Ucel.VLEK
@@ -147,7 +148,8 @@ SLOUPCE = [
     "Přistání UTC",
     "Doba [min]",
     "Doba",
-    "T&G",
+    "Přistání",
+    "Časy T&G (UTC)",
     "Krátký let",
     "Vlek",
     "Soukromé",
@@ -202,7 +204,8 @@ def radky(seznam: list[Let]) -> list[list]:
                 cas(let.cas_pristani),
                 let.doba_uctovana_min,
                 letecky(let.doba_uctovana_min),
-                let.pocet_tg or "",
+                let.pocet_pristani or "",
+                ", ".join(cas(c) for c in let.casy_tg),
                 kratky.get(let.kratky_let, ""),
                 vlek,
                 "ano" if let.soukrome else "",
@@ -252,10 +255,11 @@ def excel(seznam: list[Let], filtr: Filtr, nazvy: dict, kdo: str) -> bytes:
     lety_ws = _list(wb, "Lety", SLOUPCE, radky(seznam))
     for bunka in lety_ws["A"][1:]:
         bunka.number_format = "DD.MM.YYYY"
-    hlavicka = ["Lety", "Minuty", "Doba", "T&G", "Starty navijákem", "Vleky"]
+    hlavicka = ["Lety", "Minuty", "Doba", "Přistání", "Starty navijákem", "Vleky"]
 
     def hodnoty(r):
-        return [r["lety"], r["minuty"], letecky(r["minuty"]), r["tg"], r["navijak"], r["vlek"]]
+        doba = letecky(r["minuty"])
+        return [r["lety"], r["minuty"], doba, r["pristani"], r["navijak"], r["vlek"]]
 
     _list(
         wb,

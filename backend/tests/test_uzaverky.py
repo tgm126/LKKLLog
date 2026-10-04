@@ -69,7 +69,14 @@ def test_den_nejde_uzavrit_dokud_neco_leti(jako, svet, den):
     assert odpoved.json()["verze"] == 1
 
     u = Uzaverka.objects.get()
-    assert u.souhrn["celkem"] == {"lety": 2, "minuty": 90, "tg": 2, "navijak": 0, "vlek": 0}
+    assert u.souhrn["celkem"] == {
+        "lety": 2,
+        "minuty": 90,
+        "pristani": 4,
+        "tg": 2,
+        "navijak": 0,
+        "vlek": 0,
+    }
     assert u.souhrn["starty"]["vlastni"] == 2
     assert u.souhrn["podle_osob"][0]["minuty"] == 90
     assert AuditLog.objects.filter(akce="uzaverka", objekt_id=u.pk).exists()
@@ -253,3 +260,35 @@ def test_akce_znovu_otevrit_v_administraci(client, svet, den):
     u.refresh_from_db()
     assert u.znovu_otevreno is not None
     assert AuditLog.objects.filter(akce="otevreni").count() == 1
+
+
+def test_automaticka_uzaverka_po_soumraku(svet, den):
+    from lety.slunce import slunce
+    from provoz.models import Nastaveni
+
+    let_v(svet, v(den, 9))
+    soumrak = slunce(den)["soumrak"]
+    assert uzaverky.uzavrit_automaticky(soumrak + timedelta(minutes=30)) == []
+    [u] = uzaverky.uzavrit_automaticky(soumrak + timedelta(minutes=61))
+    assert u.obdobi == den and u.uzavrel is None
+    assert uzaverky.info(u)["uzavrel"] == "automaticky"
+    assert AuditLog.objects.get(akce="uzaverka").zmeny["automaticky"] is True
+
+    # Znovu otevřený den nechává lidem.
+    uzaverky.znovu_otevrit("den", den, svet.casomeric)
+    assert uzaverky.uzavrit_automaticky() == []
+
+    # Vypnutá v nastavení provozu nedělá nic.
+    druhy = den - timedelta(days=1)
+    let_v(svet, v(druhy, 9))
+    nastaveni = Nastaveni.aktualni()
+    nastaveni.automaticka_uzaverka = False
+    nastaveni.save()
+    assert uzaverky.uzavrit_automaticky() == []
+
+
+def test_automaticka_uzaverka_ceka_na_neukonceny_let(svet, den):
+    let_v(svet, v(den, 9))
+    let_v(svet, v(den, 11), letadlo=svet.dvoumistne, stav=StavLetu.VE_VZDUCHU)
+    assert uzaverky.uzavrit_automaticky() == []
+    assert not Uzaverka.objects.exists()

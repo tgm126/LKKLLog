@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { ApiChyba } from '../api/klient'
 import { type Let, pristat, zrusitLet } from '../api/lety'
+import { hhmmss, muzeTg } from '../cas'
 import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { oznamitSeZpet } from '../zpet'
 import { Pocitadlo } from './Pocitadlo'
@@ -15,12 +16,14 @@ export function PristaniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit:
   const klient = useQueryClient()
   const domovske = c?.letiste.find((l) => l.domovske)
   const [misto, setMisto] = useState<string | null>(null)
-  const [tg, setTg] = useState(0)
+  // Dokud se počet neupraví, platí T&G zapsané během letu.
+  const [upravenyTg, setTg] = useState<number | null>(null)
+  const tg = upravenyTg ?? let_?.pocet_tg ?? 0
   const [kratky, setKratky] = useState(false)
 
   const zavrit = () => {
     setMisto(null)
-    setTg(0)
+    setTg(null)
     setKratky(false)
     onZavrit()
   }
@@ -88,7 +91,18 @@ export function PristaniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit:
             onChange={setMisto}
             allowDeselect={false}
           />
-          <Pocitadlo popis="Touch-and-go" hodnota={tg} onZmena={setTg} />
+          {let_ && muzeTg(let_.kategorie) && (
+            <Pocitadlo
+              popis="Touch-and-go"
+              popisek={
+                let_.casy_tg.length > 0
+                  ? `Zapsáno během letu: ${let_.casy_tg.map(hhmmss).join(', ')}`
+                  : `Přistání celkem: ${tg + 1}`
+              }
+              hodnota={tg}
+              onZmena={setTg}
+            />
+          )}
           <Text fz="sm" c="dimmed">
             Čas přistání se zapíše podle hodin serveru v okamžiku potvrzení.
           </Text>

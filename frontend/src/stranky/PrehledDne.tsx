@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { type Let, vzlet } from '../api/lety'
+import { type Let, touchAndGo, vzlet } from '../api/lety'
 import { datumCesky, doba, hhmm } from '../cas'
 import { DetailLetu } from '../komponenty/DetailLetu'
 import { DetailUzaverky } from '../komponenty/DetailUzaverky'
@@ -40,6 +40,13 @@ export function PrehledDne() {
     onSettled: () => klient.invalidateQueries({ predicate: jeLetovyDotaz }),
   })
 
+  const tg = useMutation({
+    mutationFn: (l: Let) => touchAndGo(l.id),
+    onSuccess: (l) => oznamitSeZpet(l, `${l.imatrikulace}: touch-and-go (${l.pocet_tg}).`, klient),
+    onError: (e) => notifications.show({ message: e.message, color: 'red' }),
+    onSettled: () => klient.invalidateQueries({ predicate: jeLetovyDotaz }),
+  })
+
   if (isPending) {
     return (
       <Container py="xl">
@@ -71,8 +78,12 @@ export function PrehledDne() {
       let_={l}
       ted={ted}
       konecSoumraku={prehled.konec_soumraku}
-      pracuje={start.isPending && start.variables?.id === l.id}
+      pracuje={
+        (start.isPending && start.variables?.id === l.id) ||
+        (tg.isPending && tg.variables?.id === l.id)
+      }
       onVzlet={() => start.mutate(l)}
+      onTg={() => tg.mutate(l)}
       onPristani={() => setPristani(l)}
       onZrusit={() => setZruseni(l)}
       onDetail={() => setDetailId(l.id)}

@@ -8,7 +8,7 @@ vytvoří novou verzi souhrnu, staré zůstávají v historii.
 import io
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -16,15 +16,17 @@ from django.utils import timezone
 from openpyxl import Workbook
 
 from osoby.models import Osoba
+from provoz.models import Nastaveni
 
 from . import audit, vypis
 from .models import AuditLog, FunkcePosadky, Let, StavLetu, Ucel, Uzaverka, ZpusobVzletu
 from .obdobi import MESIC, Uzavreno, dalsi_mesic, den_letu, rozsah, zacatek_mesice
+from .slunce import slunce
 from .sluzby import ChybaLetu
 
 Typ = Uzaverka.Typ
 FUNKCE_NALETU = (FunkcePosadky.PIC, FunkcePosadky.ZAK, FunkcePosadky.PREZKOUSENY)
-SOUCTY = ("lety", "minuty", "tg", "navijak", "vlek")
+SOUCTY = ("lety", "minuty", "pristani", "tg", "navijak", "vlek")
 
 
 # --- kdo smí uzavírat -------------------------------------------------------------
@@ -132,7 +134,7 @@ def info(u: Uzaverka | None) -> dict | None:
         "obdobi": u.obdobi,
         "verze": u.verze,
         "kdy": u.kdy,
-        "uzavrel": u.uzavrel.get_full_name(),
+        "uzavrel": u.uzavrel.get_full_name() if u.uzavrel else "automaticky",
         "platna": u.znovu_otevreno is None,
     }
 
@@ -220,6 +222,10 @@ def uzavrit(typ: str, obdobi: date, kdo: Osoba) -> Uzaverka:
             status=409,
             kod="neuzavrene_dny",
         )
+    return _ulozit(p, kdo)
+
+
+def _ulozit(p: Priprava, kdo: Osoba | None) -> Uzaverka:
     try:
         with transaction.atomic():
             u = Uzaverka.objects.create(
@@ -233,14 +239,49 @@ def uzavrit(typ: str, obdobi: date, kdo: Osoba) -> Uzaverka:
         raise ChybaLetu(
             "Uzávěrku tohoto období právě uložil někdo jiný.", status=409, kod="zmeneno"
         ) from e
-    audit.zapsat(
-        kdo,
-        "uzaverka",
-        "uzaverka",
-        u.pk,
-        zmeny={"typ": u.typ, "obdobi": u.obdobi.isoformat(), "verze": u.verze},
-    )
+    zmeny = {"typ": u.typ, "obdobi": u.obdobi.isoformat(), "verze": u.verze}
+    if kdo is None:
+        zmeny["automaticky"] = True
+    audit.zapsat(kdo, "uzaverka", "uzaverka", u.pk, zmeny=zmeny)
     return u
+
+
+AUTOMATICKY_ZPET = timedelta(days=31)
+
+
+def uzavrit_automaticky(ted: datetime | None = None) -> list[Uzaverka]:
+    """Uzavře dny, kdy se létalo, když už po soumraku nic neletí ani není připravené.
+
+    Spouští ho cron každých 15 minut. Den, který už někdy uzavřený byl (i když ho admin
+    znovu otevřel), nechává lidem. Neukončený let den neuzavře – počká se na opravu.
+    """
+    nastaveni = Nastaveni.aktualni()
+    if not nastaveni.automaticka_uzaverka:
+        return []
+    ted = ted or timezone.now()
+    dnes = ted.astimezone(UTC).date()
+    zacatek, konec = rozsah(dnes - AUTOMATICKY_ZPET, dnes)
+    dny = {
+        den_letu(let)
+        for let in Let.objects.filter(cas_vzletu__gte=zacatek, cas_vzletu__lt=konec)
+        .exclude(stav=StavLetu.ZRUSEN)
+        .only("cas_vzletu")
+    }
+    uz_byly = set(
+        Uzaverka.objects.filter(typ=Typ.DEN, obdobi__in=dny).values_list("obdobi", flat=True)
+    )
+    uzavreno = Uzavreno.nacti()
+    odklad = timedelta(minutes=nastaveni.uzaverka_po_soumraku_min)
+    vysledek = []
+    for den in sorted(dny - uz_byly):
+        if ted < slunce(den)["soumrak"] + odklad or uzavreno.stav(den) == MESIC:
+            continue
+        if _neukoncene(den, den, dnes):
+            continue
+        p = Priprava(Typ.DEN, den, den, den, lety_obdobi(den, den))
+        with transaction.atomic():
+            vysledek.append(_ulozit(p, None))
+    return vysledek
 
 
 @transaction.atomic
@@ -321,6 +362,7 @@ def stav_dne(den: date, kdo: Osoba) -> dict:
 NAZVY_ZMEN = {
     "zalozeni": "Založení",
     "vzlet": "Vzlet",
+    "tg": "Touch-and-go",
     "pristani": "Přistání",
     "zruseni": "Zrušení",
     "oprava": "Oprava",
@@ -407,7 +449,7 @@ def excel(u: Uzaverka) -> bytes:
             ["Uzávěrka", f"{u.get_typ_display()} {obdobi}"],
             ["Verze", u.verze],
             ["Uzavřeno (UTC)", u.kdy.astimezone(UTC).strftime("%d.%m.%Y %H:%M")],
-            ["Uzavřel", u.uzavrel.get_full_name()],
+            ["Uzavřel", u.uzavrel.get_full_name() if u.uzavrel else "automaticky po soumraku"],
             ["Platná", "ne – znovu otevřeno" if u.znovu_otevreno else "ano"],
             ["Počítají se", "ukončené lety klubových letadel"],
             [
@@ -417,11 +459,11 @@ def excel(u: Uzaverka) -> bytes:
             ["Zrušené lety", s["zruseno"]],
         ],
     )
-    hlavicka = ["Lety", "Minuty", "Doba", "T&G", "Starty navijákem", "Vleky"]
+    hlavicka = ["Lety", "Minuty", "Doba", "Přistání", "Starty navijákem", "Vleky"]
 
     def hodnoty(r):
         doba = vypis.letecky(r["minuty"])
-        return [r["lety"], r["minuty"], doba, r["tg"], r["navijak"], r["vlek"]]
+        return [r["lety"], r["minuty"], doba, r.get("pristani", ""), r["navijak"], r["vlek"]]
 
     vypis._list(
         wb,

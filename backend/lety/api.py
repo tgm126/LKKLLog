@@ -181,6 +181,8 @@ class LetOut(Schema):
     doba_min: int | None
     doba_uctovana_min: int | None
     pocet_tg: int
+    casy_tg: list[datetime]
+    pocet_pristani: int
     kratky_let: str
     duvod_zruseni: str
     zalozil: str
@@ -228,6 +230,8 @@ def _let_out(let: Let, osoba: Osoba, uzavreno: Uzavreno | None = None) -> dict:
         "doba_min": let.doba_min,
         "doba_uctovana_min": let.doba_uctovana_min,
         "pocet_tg": let.pocet_tg,
+        "casy_tg": let.casy_tg,
+        "pocet_pristani": let.pocet_pristani,
         "kratky_let": let.kratky_let,
         "duvod_zruseni": let.duvod_zruseni,
         "zalozil": let.zalozil.get_full_name(),
@@ -380,6 +384,11 @@ def vzlet(request, let_id: int, data: CasIn):
     return _znovu(sluzby.vzlet(let_id, request.user, data.cas), request.user)
 
 
+@router.post("/lety/{let_id}/tg", response=LetOut, summary="Touch-and-go během letu")
+def touch_and_go(request, let_id: int):
+    return _znovu(sluzby.touch_and_go(let_id, request.user), request.user)
+
+
 class PristaniIn(Schema):
     cas: datetime | None = None
     misto_pristani_id: int | None = None
@@ -441,6 +450,7 @@ class ZaznamOut(Schema):
 NAZVY_AKCI = {
     "zalozeni": "Založení",
     "vzlet": "Vzlet",
+    "tg": "Touch-and-go",
     "pristani": "Přistání",
     "zruseni": "Zrušení",
     "oprava": "Oprava",

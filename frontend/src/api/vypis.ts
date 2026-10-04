@@ -17,6 +17,8 @@ export type FiltrVypisu = {
 export type RadekSouhrnu = {
   lety: number
   minuty: number
+  /** Chybí u uzávěrek uložených před zavedením počtu přistání. */
+  pristani?: number
   tg: number
   navijak: number
   vlek: number

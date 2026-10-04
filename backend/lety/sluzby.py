@@ -28,6 +28,25 @@ from .models import (
 )
 
 KRATKY_LET = timedelta(seconds=60)
+TG_NEJDRIV = timedelta(seconds=30)  # dvojí ťuknutí na T&G se nezapíše dvakrát
+
+
+def muze_tg(letadlo: Letadlo) -> bool:
+    """Touch-and-go dělají motorová letadla, TMG a UL; kluzák ne."""
+    return letadlo.kategorie != Kategorie.KLUZAK
+
+
+def _over_tg(pocet: int, letadlo: Letadlo) -> None:
+    if pocet < 0:
+        raise ChybaLetu("Počet touch-and-go nemůže být záporný.")
+    if pocet and not muze_tg(letadlo):
+        raise ChybaLetu("Kluzák touch-and-go nedělá.")
+
+
+def _nastav_tg(let: Let, pocet: int) -> None:
+    """Počet T&G; při snížení se zahodí poslední zapsané časy."""
+    let.pocet_tg = pocet
+    let.casy_tg = list(let.casy_tg or [])[:pocet]
 
 
 class ChybaLetu(Exception):
@@ -402,6 +421,7 @@ def zalozit(data: NovyLet, kdo: Osoba) -> Let:
             raise ChybaLetu("Přistání nemůže být dřív než vzlet.")
         let.stav = StavLetu.UKONCEN
         let.misto_pristani = _letiste(data.misto_pristani_id)
+        _over_tg(data.pocet_tg, letadlo)
         let.pocet_tg = data.pocet_tg
         let.kratky_let = _kratky_let(let, data.kratky_let)
     else:
@@ -567,14 +587,13 @@ def pristani(
             kod="uz_zapsano",
             let_id=let.pk,
         )
-    if pocet_tg < 0:
-        raise ChybaLetu("Počet touch-and-go nemůže být záporný.")
+    _over_tg(pocet_tg, let.letadlo)
     let.cas_pristani = _over_cas(cas or timezone.now(), "Přistání")
     if let.cas_pristani < let.cas_vzletu:
         raise ChybaLetu("Přistání nemůže být dřív než vzlet.")
     let.kratky_let = _kratky_let(let, kratky_let)
     let.misto_pristani = _letiste(misto_pristani_id)
-    let.pocet_tg = pocet_tg
+    _nastav_tg(let, pocet_tg)
     let.stav = StavLetu.UKONCEN
     let.verze += 1
     _uloz(let)
@@ -614,6 +633,34 @@ def zrusit(let_id: int, kdo: Osoba, duvod: str, poznamka: str = "") -> Let:
         zmeny={"stav": [puvodni, let.stav]},
         duvod=duvod,
         poznamka=poznamka,
+    )
+    return let
+
+
+@transaction.atomic
+def touch_and_go(let_id: int, kdo: Osoba) -> Let:
+    """Časoměřič / věž zapíše během letu touch-and-go (čas podle hodin serveru)."""
+    let = _zamknout(let_id)
+    _oznac(let, over_pravo(kdo, let))
+    if let.stav != StavLetu.VE_VZDUCHU:
+        raise ChybaLetu("Touch-and-go jde zapsat jen u letu ve vzduchu.", status=409)
+    if not muze_tg(let.letadlo):
+        raise ChybaLetu("Kluzák touch-and-go nedělá.")
+    ted = timezone.now().replace(microsecond=0)
+    posledni = max([let.cas_vzletu, *let.casy_tg])
+    if ted - posledni < TG_NEJDRIV:
+        raise ChybaLetu(
+            f"Touch-and-go už je zapsané v {posledni:%H:%M:%S} UTC.",
+            status=409,
+            kod="uz_zapsano",
+            let_id=let.pk,
+        )
+    let.casy_tg = [*let.casy_tg, ted]
+    let.pocet_tg += 1
+    let.verze += 1
+    _uloz(let)
+    audit.zapsat(
+        kdo, "tg", "let", let.pk, zmeny={"cas_tg": ted.isoformat(), "pocet_tg": let.pocet_tg}
     )
     return let
 
@@ -722,7 +769,8 @@ def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
             if let.cas_pristani < let.cas_vzletu:
                 raise ChybaLetu("Přistání nemůže být dřív než vzlet.")
             let.misto_pristani = _letiste(data.misto_pristani_id)
-            let.pocet_tg = data.pocet_tg
+            _over_tg(data.pocet_tg, letadlo)
+            _nastav_tg(let, data.pocet_tg)
             let.kratky_let = _kratky_let(let, data.kratky_let)
         elif data.cas_pristani:
             raise ChybaLetu("Let je ještě ve vzduchu – přistání zapište tlačítkem PŘISTÁL.")
@@ -753,7 +801,7 @@ ZPET_DO = timedelta(minutes=2)
 
 @transaction.atomic
 def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
-    """Vrátí poslední akci (založení, vzlet, přistání), kterou kdo právě udělal.
+    """Vrátí poslední akci (založení, vzlet, T&G, přistání), kterou kdo právě udělal.
 
     Tlačítko je vidět 10 s; server dovolí 2 minuty kvůli pomalému připojení.
     """
@@ -764,7 +812,7 @@ def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
     if (
         posledni is None
         or posledni.kdo_id != kdo.pk
-        or posledni.akce not in ("zalozeni", "vzlet", "pristani")
+        or posledni.akce not in ("zalozeni", "vzlet", "pristani", "tg")
         or timezone.now() - posledni.kdy > ZPET_DO
         or let.verze != verze
     ):
@@ -786,11 +834,12 @@ def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
 
 def _vratit(let: Let, akce: str, kdo: Osoba) -> None:
     pred = _popis(let)
-    if akce == "pristani":
+    if akce == "tg":
+        _nastav_tg(let, let.pocet_tg - 1)
+    elif akce == "pristani":
         let.stav = StavLetu.VE_VZDUCHU
         let.cas_pristani = None
         let.misto_pristani = None
-        let.pocet_tg = 0
         let.kratky_let = ""
     elif akce == "vzlet":
         let.stav = StavLetu.PRIPRAVEN

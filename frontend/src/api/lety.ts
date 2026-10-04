@@ -75,6 +75,10 @@ export type Let = {
   doba_min: number | null
   doba_uctovana_min: number | null
   pocet_tg: number
+  /** Časy touch-and-go zapsané během letu (dopsané lety je nemají). */
+  casy_tg: string[]
+  /** Počet přistání (1 + T&G); u letu ve vzduchu 0. */
+  pocet_pristani: number
   kratky_let: string
   duvod_zruseni: string
   zalozil: string
@@ -126,6 +130,7 @@ export const nactiCiselniky = () => api<Ciselniky>('/ciselniky')
 export const nactiPrehled = () => api<Prehled>('/prehled')
 export const zalozitLet = (data: NovyLet) => api<Let>('/lety', data)
 export const vzlet = (id: number, cas?: string | null) => api<Let>(`/lety/${id}/vzlet`, { cas })
+export const touchAndGo = (id: number) => api<Let>(`/lety/${id}/tg`, {})
 export const pristat = (id: number, data: Pristani) => api<Let>(`/lety/${id}/pristani`, data)
 export const zrusitLet = (id: number, duvod: string) =>
   api<Let>(`/lety/${id}/zrusit`, { duvod })

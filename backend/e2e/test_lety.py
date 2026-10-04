@@ -48,6 +48,20 @@ def test_zpet_po_omylem_zapsanem_pristani(mobil, svet):
     expect(mobil.get_by_text("Ve vzduchu (1)")).to_be_visible()
 
 
+def test_touch_and_go_behem_letu(mobil, svet):
+    let_pilota(svet)
+    prihlasit(mobil, svet, "casomeric@example.com")
+    mobil.get_by_role("button", name="T&G").click()
+    expect(mobil.get_by_text("T&G 1 · naposledy")).to_be_visible()
+
+    mobil.get_by_role("button", name="PŘISTÁL").click()
+    expect(mobil.get_by_role("dialog").get_by_text("Zapsáno během letu")).to_be_visible()
+    mobil.get_by_role("button", name="Potvrdit přistání").click()
+    expect(mobil.get_by_text("Ukončené (1)")).to_be_visible()
+    expect(mobil.get_by_text("přistání 2")).to_be_visible()
+    assert Let.objects.get().pocet_pristani == 2
+
+
 def test_oprava_s_duvodem_a_historie(mobil, svet):
     let_pilota(svet, stav=StavLetu.UKONCEN, minut=60)
     prihlasit(mobil, svet, "casomeric@example.com")
@@ -58,7 +72,7 @@ def test_oprava_s_duvodem_a_historie(mobil, svet):
     expect(mobil.get_by_role("button", name="Uložit opravu")).to_be_disabled()
     vybrat(mobil, "Důvod opravy", "Zapomenutý stop")
     mobil.get_by_role("button", name="Uložit opravu").click()
-    expect(mobil.get_by_text("T&G 2")).to_be_visible()
+    expect(mobil.get_by_text("přistání 3")).to_be_visible()
 
     mobil.get_by_text("OK-TCS", exact=True).click()
     dialog = mobil.get_by_role("dialog")

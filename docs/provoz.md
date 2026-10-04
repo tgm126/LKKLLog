@@ -80,6 +80,7 @@ serveru v `/usr/local/lib/lkkllog/udrzba.sh`. Při úspěchu nic nehlásí, chyb
 | denně 3:17 | `prihlaseni` – smaže prošlá přihlášení (`clearsessions`) |
 | neděle 3:27 | `docker-uklid` – mezipaměť sestavení Dockeru zmenší na 1 GB |
 | pondělí 3:37 | `export` – `pg_dump` do `/var/backups/lkkllog` (posledních 52), kopie e-mailem administrátorům |
+| každých 15 min | `uzaverka` – automatická denní uzávěrka po soumraku (viz návrh kap. 4.7) |
 
 Instalace / aktualizace (z počítače správce):
 

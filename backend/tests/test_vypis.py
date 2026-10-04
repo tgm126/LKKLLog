@@ -95,6 +95,7 @@ def test_souhrny(jako, svet, data):
     assert s["celkem"] == {
         "lety": 5,
         "minuty": 60 + 20 + 8 + 40 + 0,
+        "pristani": 4 + 1 + 1 + 1 + 1,  # první let: 3× T&G + přistání
         "tg": 3,
         "navijak": 1,
         "vlek": 1,
@@ -143,7 +144,7 @@ def test_export_jen_ucetni_a_admin(jako, svet, data):
     lety = list(wb["Lety"].iter_rows(values_only=True))
     assert lety[0][0] == "Datum" and len(lety) == 1 + 5
     prvni = dict(zip(lety[0], lety[1], strict=True))
-    assert prvni["Doba"] == '1°0"' and prvni["T&G"] == 3 and prvni["Platí"] == "Test Pilot"
+    assert prvni["Doba"] == '1°0"' and prvni["Přistání"] == 4 and prvni["Platí"] == "Test Pilot"
     parametry = dict(wb["Parametry"].iter_rows(min_row=2, values_only=True))
     assert parametry["Soukromá letadla"] == "bez"
     assert parametry["Vytvořil"] == "Test Účetní"

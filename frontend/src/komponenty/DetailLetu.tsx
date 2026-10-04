@@ -22,6 +22,13 @@ const datumCas = (iso: string | null) =>
     ? `${new Date(iso).toLocaleDateString('cs-CZ', { timeZone: 'UTC' })} ${hhmmss(iso)} UTC`
     : '–'
 
+/** Počet přistání a touch-and-go s časy, např. „3 (T&G 2×: 10:05:12, 10:12:40)“. */
+function pristani(l: Let): string {
+  if (l.pocet_tg === 0) return String(l.pocet_pristani)
+  const casy = l.casy_tg.length > 0 ? `: ${l.casy_tg.map(hhmmss).join(', ')}` : ''
+  return `${l.pocet_pristani || '–'} (T&G ${l.pocet_tg}×${casy})`
+}
+
 /** Detail letu se všemi údaji a historií změn (kdo, kdy, co a proč). */
 export function DetailLetu({
   let_,
@@ -74,7 +81,9 @@ export function DetailLetu({
               }
             />
             <Radek nazev="Doba" hodnota={doba(let_.doba_uctovana_min)} />
-            {let_.pocet_tg > 0 && <Radek nazev="Touch-and-go" hodnota={let_.pocet_tg} />}
+            {(let_.pocet_pristani > 0 || let_.pocet_tg > 0) && (
+              <Radek nazev="Přistání" hodnota={pristani(let_)} />
+            )}
             <Radek nazev="Založil" hodnota={let_.zalozil} />
             {let_.stav === 'zrusen' && (
               <Radek nazev="Zrušen" hodnota={<Badge color="gray">{n.duvod(let_.duvod_zruseni)}</Badge>} />

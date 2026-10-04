@@ -40,8 +40,8 @@ export function DetailUzaverky({
           {d.rozdil && (
             <Alert color="orange" title={`Změny po uzávěrce (${d.lety.length})`}>
               Oproti uloženému souhrnu: lety {sZnamenkem(d.rozdil.celkem.lety)}, doba{' '}
-              {sZnamenkem(d.rozdil.celkem.minuty, (m) => doba(m))}, T&G{' '}
-              {sZnamenkem(d.rozdil.celkem.tg)}, vleky {sZnamenkem(d.rozdil.celkem.vlek)}
+              {sZnamenkem(d.rozdil.celkem.minuty, (m) => doba(m))}, přistání{' '}
+              {sZnamenkem(d.rozdil.celkem.pristani ?? 0)}, vleky {sZnamenkem(d.rozdil.celkem.vlek)}
               {Object.entries(d.rozdil.starty)
                 .filter(([, x]) => x !== 0)
                 .map(([z, x]) => `, starty ${n.zpusob(z).toLowerCase()} ${sZnamenkem(x)}`)

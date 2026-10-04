@@ -17,6 +17,7 @@ import { useState } from 'react'
 
 import { ApiChyba } from '../api/klient'
 import { type Let, type Oprava, opravitLet } from '../api/lety'
+import { muzeTg } from '../cas'
 import { jmeno, nabidka, SLOTY, UCELY } from '../posadka'
 import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { CasVolba } from './CasVolba'
@@ -122,7 +123,7 @@ export function OpravaLetu({
         cas_vzletu: maVzlet ? casVzletu.toISOString() : null,
         cas_pristani: ukonceny ? casPristani.toISOString() : null,
         misto_pristani_id: ukonceny && mistoPristani ? Number(mistoPristani) : null,
-        pocet_tg: ukonceny ? tg : 0,
+        pocet_tg: ukonceny && muzeTg(letadlo?.kategorie) ? tg : 0,
         kratky_let: kratkyLet ? kratky : '',
         verze: let_.verze,
         duvod: duvod ?? '',
@@ -293,7 +294,14 @@ export function OpravaLetu({
               onChange={setMistoPristani}
               allowDeselect={false}
             />
-            <Pocitadlo popis="Touch-and-go" hodnota={tg} onZmena={setTg} />
+            {muzeTg(letadlo.kategorie) && (
+              <Pocitadlo
+                popis="Touch-and-go"
+                popisek={`Přistání celkem: ${tg + 1}`}
+                hodnota={tg}
+                onZmena={setTg}
+              />
+            )}
             {kratkyLet && casPristani >= casVzletu && (
               <SegmentedControl
                 value={kratky}

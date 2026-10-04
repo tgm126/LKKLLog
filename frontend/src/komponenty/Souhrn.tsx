@@ -27,13 +27,13 @@ export function TabulkaSouhrnu({
   radky: { klic: string; bunky: string[]; hodnoty: RadekSouhrnu }[]
   celkem: RadekSouhrnu
 }) {
-  const cisla = (r: RadekSouhrnu) => [r.lety, doba(r.minuty), r.tg, r.navijak, r.vlek]
+  const cisla = (r: RadekSouhrnu) => [r.lety, doba(r.minuty), r.pristani ?? '–', r.navijak, r.vlek]
   return (
     <Table.ScrollContainer minWidth={520}>
       <Table striped withTableBorder fz="sm">
         <Table.Thead>
           <Table.Tr>
-            {[...nadpis, 'Lety', 'Doba', 'T&G', 'Naviják', 'Vleky'].map((n) => (
+            {[...nadpis, 'Lety', 'Doba', 'Přistání', 'Naviják', 'Vleky'].map((n) => (
               <Table.Th key={n}>{n}</Table.Th>
             ))}
           </Table.Tr>

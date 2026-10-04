@@ -4,6 +4,7 @@
 #   udrzba.sh prihlaseni    smaže prošlá přihlášení (denně)
 #   udrzba.sh docker-uklid  zmenší mezipaměť sestavení Dockeru na 1 GB (týdně)
 #   udrzba.sh export        export databáze, uchová 52 posledních, pošle e-mailem (týdně)
+#   udrzba.sh uzaverka      automatická denní uzávěrka po soumraku (každých 15 minut)
 set -euo pipefail
 
 KONTEJNER=vpsc-app-lkkl-cz-lkkllog
@@ -28,8 +29,11 @@ export)
     docker exec -i "$KONTEJNER" python /srv/lkkllog/manage.py odeslat_zalohu \
         --nazev "$(basename "$soubor")" < "$soubor" >/dev/null
     ;;
+uzaverka)
+    docker exec "$KONTEJNER" python /srv/lkkllog/manage.py automaticka_uzaverka
+    ;;
 *)
-    echo "Použití: $0 prihlaseni|docker-uklid|export" >&2
+    echo "Použití: $0 prihlaseni|docker-uklid|export|uzaverka" >&2
     exit 2
     ;;
 esac
