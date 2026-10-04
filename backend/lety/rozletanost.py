@@ -34,7 +34,7 @@ from .vypis import letecky
 
 OK, POZOR, CHYBA, INFO = "ok", "pozor", "chyba", "info"
 ZPUSOBILOST, ROZLETANOST = "zpusobilost", "rozletanost"  # moduly hlídání
-JAZYK = "Jazyková způsobilost"
+JAZYK = "Angličtina"
 BRZY = timedelta(days=30)  # varovat, když něco brzy vyprší
 DNY_CESTUJICI = 90
 MESICE_ZPET = 37  # nejdelší okno: prodloužení PPL (12 měsíců před koncem platnosti 24 měsíců)
@@ -283,27 +283,23 @@ def _radio(licence: Licence, dnes: date) -> list[Kontrola]:
     return vysledek
 
 
-def _jazyk(licence: Licence, dnes: date) -> list[Kontrola]:
-    """Jazyková způsobilost (FCL.055): úroveň 4 platí 4 roky, 5 šest let, 6 trvale."""
-    kvalifikace = list(licence.kvalifikace.all())
-    if not kvalifikace:
-        return [Kontrola(JAZYK, JAZYK, POZOR, "Chybí jazyk a úroveň.")]
+def _anglictina(licence: Licence, dnes: date) -> list[Kontrola]:
+    """Angličtina ICAO (FCL.055): jen informace (např. pro službu RADIO v angličtině).
+
+    Provoz aeroklubu ji nevyžaduje, takže se nehlídá ani nevaruje. Úroveň 4 platí 4 roky,
+    5 šest let, 6 trvale.
+    """
     vysledek = []
-    for kv in kvalifikace:
-        nazev = kv.get_druh_display()
-        if kv.druh.endswith("_6"):
-            vysledek.append(Kontrola(JAZYK, nazev, OK, "Platí trvale."))
+    for kv in licence.kvalifikace.all():
+        if kv.druh == DruhKvalifikace.EN_6:
+            text = "Platí trvale."
         elif kv.platnost_do is None:
-            vysledek.append(Kontrola(JAZYK, nazev, POZOR, "Chybí datum platnosti."))
+            text = "Bez data platnosti."
+        elif kv.platnost_do < dnes:
+            text = f"Neplatí od {datum(kv.platnost_do + timedelta(1))}."
         else:
-            # Přezkoušení je potřeba domluvit včas – varujeme 3 měsíce předem.
-            stav = _stav_data(kv.platnost_do, dnes, brzy=timedelta(days=90))
-            text = (
-                f"Neplatí od {datum(kv.platnost_do + timedelta(1))}."
-                if stav == CHYBA
-                else f"Platí do {datum(kv.platnost_do)}."
-            )
-            vysledek.append(Kontrola(JAZYK, nazev, stav, text, kv.platnost_do))
+            text = f"Platí do {datum(kv.platnost_do)}."
+        vysledek.append(Kontrola(JAZYK, f"{JAZYK} {kv.get_druh_display()}", INFO, text))
     return vysledek
 
 
@@ -466,9 +462,7 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
     else:
         vysledek.append(Kontrola("Radiofonní průkaz", "Radiofonní průkaz", POZOR, "Není zadaný."))
     if jazyk:
-        vysledek += _jazyk(jazyk[0], dnes)
-    else:
-        vysledek.append(Kontrola(JAZYK, JAZYK, POZOR, "Není zadaná."))
+        vysledek += _anglictina(jazyk[0], dnes)
     if not licence:
         if Opravneni.objects.filter(osoba=osoba).exclude(uroven=Uroven.ZAK).exists() or not (
             Opravneni.objects.filter(osoba=osoba).exists()
@@ -545,14 +539,7 @@ def varovani_pilota(
     kryji = {t for t, d in povoleno if ((t, d) in druhy if d else t in typy)}
     vysledek = []
     vse = [k for k in kontroly(osoba) if k.modul in moduly]
-    # Jazyková způsobilost stačí v jednom jazyce (angličtina, nebo čeština v ČR).
-    jazyky = [k for k in vse if k.oblast == JAZYK]
-    neplatne = ("Není zadaná.", "Chybí jazyk a úroveň.")
-    if jazyky and all(k.stav == CHYBA or k.text in neplatne for k in jazyky):
-        vysledek.append(f"{jmeno}: nemá platnou jazykovou způsobilost.")
     for k in vse:
-        if k.oblast == JAZYK:
-            continue
         if k.oblast == "Radiofonní průkaz" and k.text == "Není zadaný.":
             vysledek.append(f"{jmeno}: nemá zadaný radiofonní průkaz.")
             continue

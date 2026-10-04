@@ -1,4 +1,4 @@
-"""Testovací licence, medical, radiofonní průkazy a jazyková způsobilost.
+"""Testovací licence, medical, radiofonní průkazy a angličtina ICAO.
 
 Jen pro osoby s příznakem „Testovací“ (úklid před spuštěním je smaže i s licencemi).
 Data jsou pestrá, aby šlo vyzkoušet všechny stavy: v pořádku, brzy vyprší, prošlé,
@@ -100,11 +100,7 @@ class Command(BaseCommand):
 
             if i % 4 != 0:  # každý čtvrtý bez radiofonního průkazu
                 licence(TypLicence.RADIO, (D.OFL, za(40) if i % 7 == 2 else za(2500)))
-            if i % 3 == 0:
-                licence(TypLicence.JAZYK, (D.CS_6, None))
-            elif i % 3 == 1:
-                licence(TypLicence.JAZYK, (D.EN_4, za(700)), (D.CS_6, None))
-            else:
-                licence(TypLicence.JAZYK, (D.EN_4, za(-30)))  # prošlá a nic jiného
+            if i % 4 == 1:  # angličtinu ICAO má jen pár lidí
+                licence(TypLicence.JAZYK, (D.EN_4, za(700)) if i % 8 == 1 else (D.EN_6, None))
             hotovo += 1
         self.stdout.write(f"Testovací licence a medical doplněny {hotovo} osobám.")

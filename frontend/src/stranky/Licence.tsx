@@ -90,7 +90,7 @@ function LicenceDialog({
     typ === 'spl'
       ? 'Způsoby vzletu a TMG'
       : typ === 'jazyk'
-        ? 'Jazyk a úroveň (u každého jazyka jen jedna)'
+        ? 'Úroveň (jen jedna)'
         : typ === 'ull' || typ === 'radio'
           ? 'Druh a platnost'
           : 'Třídy'
@@ -136,9 +136,8 @@ function LicenceDialog({
               )
             })}
             <Text fz="xs" c="dimmed">
-              Datum vyplňte u PPL(A) (konec platnosti SEP/TMG), u ULL, radiofonního průkazu a jazykové
-              způsobilosti (úroveň 6 platí trvale, datum nevyplňujte). U LAPL(A) a SPL se platnost hlídá
-              náletem.
+              Datum vyplňte u PPL(A) (konec platnosti SEP/TMG), u ULL a radiofonního průkazu. U LAPL(A) a
+              SPL se platnost hlídá náletem. Angličtina ICAO je jen informace (úroveň 6 platí trvale).
             </Text>
           </Stack>
         )}

@@ -36,10 +36,10 @@ proběhl.
 
 | Co | Podmínka | Zdroj |
 |---|---|---|
-| Průkaz radiotelefonisty letecké pohyblivé služby, omezený (OFL) nebo všeobecný (VFL) | platí **10 let** od vydání, pak se prodlužuje **o 5 let** | vyhláška č. 157/2005 Sb. |
+| Radiofonní průkaz (úředně „průkaz radiotelefonisty letecké pohyblivé služby“), omezený (OFL) nebo všeobecný (VFL) | platí **10 let** od vydání, pak se prodlužuje **o 5 let** | vyhláška č. 157/2005 Sb. |
 | Prodloužení | písemná žádost na ČTÚ **aspoň měsíc před koncem platnosti**, poplatek, doklad o praxi. Po propadnutí lze do 1 roku požádat o nový průkaz. | vyhláška č. 157/2005 Sb. |
 
-## Jazyková způsobilost – EASA FCL.055
+## Angličtina ICAO – EASA FCL.055 (jen informace)
 
 | Úroveň | Platnost |
 |---|---|
@@ -47,15 +47,15 @@ proběhl.
 | 5 (rozšířená) | 6 let |
 | 6 (expertní) | trvale |
 
-Piloti, kteří používají radiotelefonii, potřebují jazykovou způsobilost v angličtině nebo
-v jazyce, který se ke spojení používá (v ČR i čeština). Aplikace při zakládání letu varuje,
-jen když nemá platnou úroveň v žádném jazyce. Na blížící se konec platnosti upozorňuje
-3 měsíce předem.
+Provoz aeroklubu probíhá česky. Licence na češtinu neexistuje a angličtina ICAO pro
+provoz klubu roli nehraje. Má ji jen pár lidí; hodí se třeba pro poskytování služby RADIO
+v angličtině. Aplikace ji proto **jen eviduje**: nevaruje na ni a nepočítá ji mezi
+problémy.
 
 ## Žák pilot
 
 - Před **prvním sólem** musí mít žák **platný medical** (Part-MED, MED.A.030) a **radiofonní
-  průkaz** (požadavek klubu; k obsluze letadlové radiostanice je potřeba průkaz ČTÚ).
+  průkaz** (vydává ČTÚ, omezený OFL nebo všeobecný VFL).
 - Pilotní licenci ani rozlétanost žák ještě nemá. U letu *Výcvik sólo* aplikace kontroluje
   jen medical a radiofonní průkaz.
 
@@ -100,7 +100,7 @@ jen když nemá platnou úroveň v žádném jazyce. Na blížící se konec pla
 - CAA-ZLP-049 Způsobilost pilotů kluzáků (starší národní úprava pro GPL, nahrazená SPL podle Part-SFCL; postup pro SPL je CAA-ZLP-161): https://www.caa.cz/wp-content/uploads/2019/07/049-GPL.pdf
 - EASA GM k prodloužení rozlétanosti (na webu ÚCL): https://www.caa.gov.cz/wp-content/uploads/2020/05/EASA-GM_Recency_extension_rev.2.pdf
 
-### EASA – jazyková způsobilost
+### EASA – angličtina ICAO
 - FCL.055 (Part-FCL, Easy Access Rules): https://easa.europa.eu/cs/downloads/116578/en
 
 ### ČTÚ (radiofonní průkaz)

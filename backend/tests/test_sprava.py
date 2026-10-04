@@ -102,7 +102,7 @@ def test_testovaci_licence(svet):
 
     call_command("testovaci_licence")
     typy = set(Licence.objects.filter(osoba=pilot).values_list("typ", flat=True))
-    assert {"spl", "jazyk"} <= typy and typy & {"ppl_a", "lapl_a"}
+    assert "spl" in typy and typy & {"ppl_a", "lapl_a"}
     # Žák: bez pilotní licence, ale s medicalem a radiofonním průkazem (kvůli sólu).
     assert list(Licence.objects.filter(osoba=zak).values_list("typ", flat=True)) == ["radio"]
     assert zak.medicaly.exists()

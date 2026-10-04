@@ -408,8 +408,7 @@ a nápovědu.
 
   Varování nic neblokuje.
 - V *Nastavení provozu* jsou **tři přepínače modulů** (zapíná admin, až budou data kompletní; varování nic neblokují):
-  - *Hlídat způsobilost pilotů*: licence, kvalifikace, medical, radiofonní průkaz,
-    jazyková způsobilost;
+  - *Hlídat způsobilost pilotů*: licence, kvalifikace, medical, radiofonní průkaz;
   - *Hlídat rozlétanost pilotů*: nálet a starty za období, cestující (90 dní);
   - *Hlídat způsobilost letadel*: varování při zakládání letu, když má letadlo prošlý
     termín.
@@ -431,8 +430,8 @@ a nápovědu.
 
 **Etapa 13:**
 - Přibyl **radiofonní průkaz** (ČTÚ, OFL/VFL, platnost; varuje se 2 měsíce předem).
-- **Jazyková způsobilost** (FCL.055): angličtina nebo čeština, úroveň 4 (4 roky), 5 (6 let),
-  6 (trvale); varuje se 3 měsíce předem a při letu stačí platná v jednom jazyce.
+- **Angličtina ICAO** (FCL.055, úroveň 4/5/6) se jen eviduje. Provoz klubu je česky
+  (licence na češtinu neexistuje), takže se nehlídá ani nevaruje.
 - Medical má **platnost pro každou třídu zvlášť** a posuzuje se podle licence.
 - Nová role **správce licencí a letadel** (zaškrtávátko u osoby, sloupec v Excelu
   s číselníky). Obrazovka *Piloti a letadla* je pro správce a admina:
@@ -796,7 +795,7 @@ Co aplikace k tomu potřebuje:
    *Stav deníku ke dni*). Bez toho nesedí celkový nálet ani termíny podle náletu.
    Přehled letadel na chybějící stav upozorní.
 3. Termíny letadel (ARC, prohlídky, pojištění…).
-4. Licence, medical, radiofonní průkaz a jazyková způsobilost pilotů. Zadají si je piloti
+4. Licence, medical a radiofonní průkaz pilotů (případně angličtina ICAO). Zadají si je piloti
    sami, nebo správce licencí. Kontrola v přehledu *Piloti a letadla*.
 5. Až jsou data kompletní, zapnout v *Nastavení provozu* moduly **Hlídat způsobilost
    pilotů**, **Hlídat rozlétanost pilotů** a **Hlídat způsobilost letadel**. Každý jde

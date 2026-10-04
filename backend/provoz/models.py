@@ -49,7 +49,7 @@ class Nastaveni(models.Model):
         "hlídat způsobilost pilotů",
         default=False,
         help_text=(
-            "Licence, kvalifikace, medical, radiofonní průkaz a jazyková způsobilost: "
+            "Licence, kvalifikace, medical a radiofonní průkaz: "
             "varování při zakládání letu a přehled v Můj nálet."
         ),
     )
