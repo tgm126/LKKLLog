@@ -1,10 +1,14 @@
-# Testy při každé změně; po sloučení do main se otestovaná verze nasadí do VPS Centra.
+# Běžný commit: rychlé testy (backend, frontend).
+# Nasazení: značka verze (git tag v0.6.0) nebo ruční spuštění (Actions → CI → Run workflow)
+# → navíc klikací testy, sestavení image a nasazení do VPS Centra.
 name: CI
 
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -57,6 +61,7 @@ jobs:
 
   e2e:
     # Klikací testy v prohlížeči (Playwright) proti zkušební kopii aplikace.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -107,6 +112,7 @@ jobs:
 
   image:
     # Kontrola, že se Docker image sestaví (na serveru ho sestavuje VPS Centrum).
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     steps:
@@ -122,7 +128,7 @@ jobs:
   deploy:
     # Otestovaná verze z main se pošle do git repozitáře ve VPS Centru,
     # které aplikaci samo sestaví a restartuje (migrace proběhnou při startu).
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     needs: [image, e2e]
     runs-on: ubuntu-latest
     concurrency:
@@ -141,5 +147,12 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # Číslo verze do patičky aplikace (soubor VERZE jen v nasazeném kódu, ne na GitHubu).
+          verze=$(git describe --tags --always)
+          echo "$verze" > backend/VERZE
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -f backend/VERZE
+          git commit -q -m "Nasazení $verze"
           # VPS Centrum je jen cíl nasazení – vždy přebírá přesně stav z GitHubu.
           git push --force             f84a5@one12.vas-server.cz:/git/f84a5/lkkllog-lkkl.cz.git HEAD:refs/heads/main

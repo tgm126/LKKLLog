@@ -6,9 +6,12 @@ Aplikace běží na `https://lety.lkkl.cz` jako **Docker aplikace ve VPS Centru*
 ## Jak to funguje
 
 ```
-push do main na GitHubu
-  └► GitHub Actions: testy backendu a frontendu, zkušební sestavení Docker image
-     └► git push do repozitáře ve VPS Centru (f84a5@one12…/lkkllog-lkkl.cz.git)
+běžný commit do main  → GitHub Actions: rychlé testy backendu a frontendu (nic se nenasazuje)
+
+značka verze (git tag v0.6.0) nebo ruční spuštění (Actions → CI → Run workflow)
+  └► GitHub Actions: testy, klikací testy v prohlížeči, zkušební sestavení Docker image
+     └► git push do repozitáře ve VPS Centru (f84a5@one12…/lkkllog-lkkl.cz.git),
+        navíc soubor backend/VERZE s číslem verze (zobrazí se v patičce aplikace)
         └► VPS Centrum: rozbalí kód do /www/hosting/lkkl.cz/.apps/lkkllog,
            sestaví image z Dockerfile a restartuje kontejner
            └► při startu kontejneru proběhnou migrace (DJANGO_MIGRATE_ON_START=1)
@@ -89,9 +92,9 @@ Obnova z exportu: `pg_restore --clean --if-exists -d lkkllog lkkllog-RRRR-MM-DD.
 
 ## Hlídání dostupnosti
 
-GitHub Actions (`.github/workflows/dostupnost.yml`) se jednou za hodinu zeptá
+GitHub Actions (`.github/workflows/dostupnost.yml`) se každé 2 hodiny přes den (7–21 h letního času, 6–20 h zimního; nikdy mezi 23 a 6 h) zeptá
 `https://lety.lkkl.cz/api/health`. Když aplikace neodpoví, běh selže a GitHub pošle e-mail.
-Častější kontrola by v soukromém repozitáři spotřebovávala bezplatné minuty GitHub Actions.
+Častější kontrola by v soukromém repozitáři zbytečně spotřebovávala bezplatné minuty GitHub Actions.
 
 ## Zálohy a obnova
 

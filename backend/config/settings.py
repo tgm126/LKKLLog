@@ -40,7 +40,13 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
-APP_VERSION = os.environ.get("APP_VERSION", "dev")
+# Číslo verze: soubor VERZE vytváří nasazení z GitHub Actions, jinak „dev“.
+_soubor_verze = BASE_DIR / "VERZE"
+APP_VERSION = (
+    _soubor_verze.read_text(encoding="utf-8").strip()
+    if _soubor_verze.exists()
+    else os.environ.get("APP_VERSION", "dev")
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",

@@ -26,3 +26,5 @@
 - Klikací testy v prohlížeči (Playwright): `backend/e2e`, spuštění `uv run pytest e2e`
   (frontend musí být sestavený). Běží v CI a nasazení čeká, až projdou. Před čekáním na
   prvek po přechodu stránky vždy ověřit nadpis nové stránky (jinak hrozí souběh).
+- Nasazení na server jen značkou verze: `git tag v0.<etapa>.<oprava>` + `git push origin <tag>`
+  (nebo ruční spuštění workflow CI). Běžné commity do main se nenasazují.
