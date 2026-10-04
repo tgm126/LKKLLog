@@ -316,7 +316,7 @@ Změna hesla, odhlášení.
 | pocet_mist | 1–4 |
 | max_doba_min | maximální doba letu s plnými nádržemi. U kluzáků prázdné. |
 | soukrome | ano/ne. Soukromá letadla se neexportují pro účetnictví. |
-| vlecne | ano/ne, zda může vlekat |
+| vlecne | ano/ne, zda může vlekat (kluzák nikdy, hlídá databáze) |
 | aktivni, poradi | zobrazení ve výběru |
 
 **`letiste`**: ICAO kód (např. LKKL, může být prázdný), název, příznak domovské. Zvláštní položka „Mimo letiště (terén)“.

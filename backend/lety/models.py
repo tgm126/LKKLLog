@@ -81,6 +81,14 @@ class Letadlo(models.Model):
             models.CheckConstraint(
                 condition=Q(pocet_mist__gte=1, pocet_mist__lte=4), name="letadlo_pocet_mist"
             ),
+            models.CheckConstraint(
+                condition=~Q(kategorie=Kategorie.KLUZAK)
+                | Q(vlecne=False, max_doba_min__isnull=True),
+                name="kluzak_bez_vleku_a_nadrzi",
+                violation_error_message=(
+                    "Kluzák nemůže být vlečný ani mít maximální dobu letu (nemá nádrže)."
+                ),
+            ),
         ]
 
     def __str__(self):

@@ -103,3 +103,16 @@ def test_externi_osoba_nema_email(db):
 def test_osoba_bez_emailu_se_neprihlasi(db):
     osoba = Osoba.objects.create_user(None, jmeno="Eva", prijmeni="Malá")
     assert not osoba.has_usable_password()
+
+
+def test_kluzak_nemuze_byt_vlecny(db):
+    from django.core.exceptions import ValidationError
+
+    from lety.models import Letadlo
+    from osoby.models import Kategorie
+
+    kluzak = Letadlo(imatrikulace="OK-1234", typ="L-23", kategorie=Kategorie.KLUZAK, vlecne=True)
+    with pytest.raises(ValidationError, match="Kluzák nemůže být vlečný"):
+        kluzak.full_clean()
+    kluzak.vlecne = False
+    kluzak.full_clean()
