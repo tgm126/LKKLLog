@@ -55,3 +55,13 @@ Logy, restart a proměnné prostředí jsou i v detailu aplikace ve VPS Centru.
 SSH je na serveru povolené jen z vybraných zemí (GeoIP). Kvůli nasazování z GitHub
 Actions je povolené i USA. fail2ban banuje IP adresy po několika rychlých spojeních
 za sebou (např. `ssh-keyscan`); odblokování: VPS Centrum → Zabezpečení → fail2ban.
+
+## E-mail
+
+- Aplikace odesílá přes schránku `info@lkkl.cz` na tomto serveru (SMTP `one12.vas-server.cz:465`).
+  Přístup je v Env proměnných aplikace: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`,
+  `EMAIL_HOST_PASSWORD`, k tomu `APP_URL=https://lety.lkkl.cz` pro odkazy v e-mailech.
+- Heslo schránky jen z písmen a číslic (zvláštní znaky v proměnných prostředí dělaly potíže).
+- Co se smí odeslat, řídí **Administrace → Nastavení provozu → režim odesílání e-mailů**.
+- Vnitřní síť Dockeru `172.17.0.0/16` je ve fail2ban mezi ignorovanými adresami. Bez toho
+  stačí pár neúspěšných přihlášení k poště a fail2ban zablokuje samotnou aplikaci.

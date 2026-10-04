@@ -11,7 +11,7 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 |---|---|---|
 | 0 | Kostra, Docker, CI, nasazení na server | hotovo |
 | 1 | Datový model, administrace, import číselníků | hotovo |
-| 2 | Přihlášení a role | – |
+| 2 | Přihlášení, role, pozvánky, nastavení provozu | hotovo |
 | 3 | Přehled dne, nový let, vzlet, přistání | – |
 
 ## Struktura
