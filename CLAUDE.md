@@ -12,7 +12,7 @@
   jen deaktivují.
 - Oprávnění vždy kontrolovat na serveru, ne jen ve frontendu.
 - Na Windows v `DATABASE_URL` používat `127.0.0.1`, ne `localhost`.
-- Před commitem: `uv run ruff check . && uv run ruff format --check . && uv run pytest`
+- Před commitem: `uv run ruff check . && uv run ruff format --check . && uv run python manage.py makemigrations --check --dry-run && uv run pytest`
   (v `backend/`) a `npm run lint && npm run build` (ve `frontend/`).
 - Server: aplikace běží jako Docker aplikace ve VPS Centru (jeden kontejner z `Dockerfile`,
   databáze PostgreSQL serveru přes `DB_*` proměnné a unixový socket, migrace při startu
