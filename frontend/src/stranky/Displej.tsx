@@ -18,6 +18,8 @@ const PISMO = {
   male: 'clamp(0.95rem, 1.15vw, 1.35rem)',
 }
 
+const pocetLetu = (n: number) => `${n} ${n === 1 ? 'let' : n >= 2 && n <= 4 ? 'lety' : 'letů'}`
+
 const posadka = (l: DisplejLet) =>
   l.posadka
     .map((p) => {
@@ -211,7 +213,7 @@ export function Displej() {
                 {[
                   ['Lety', s.lety],
                   ['Doba', doba(s.minuty)],
-                  ['Přistání', s.pristani ?? '–'],
+                  ['Přistání vč. T&G', s.pristani ?? '–'],
                 ].map(([nazev, hodnota]) => (
                   <Stack key={nazev} gap={0}>
                     <Text c="dimmed" style={{ fontSize: PISMO.male }}>
@@ -229,7 +231,7 @@ export function Displej() {
                     <b>{r.imatrikulace}</b> {r.ucel === 'Vlek' ? '(vlek)' : ''}
                   </Text>
                   <Text style={{ fontSize: PISMO.male }}>
-                    {r.lety}× · {doba(r.minuty)}
+                    {pocetLetu(r.lety)} · {r.pristani ?? '–'} přist. · {doba(r.minuty)}
                   </Text>
                 </Group>
               ))}
@@ -245,6 +247,7 @@ export function Displej() {
                     </Text>
                     <Text ff="monospace" style={{ fontSize: PISMO.male, whiteSpace: 'nowrap' }}>
                       {hhmm(l.cas_vzletu)}–{hhmm(l.cas_pristani)} · {doba(l.doba_uctovana_min)}
+                      {l.pocet_pristani > 1 && ` · ${l.pocet_pristani} přist.`}
                     </Text>
                   </Group>
                 ))}
