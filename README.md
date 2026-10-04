@@ -19,6 +19,7 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 | 7 | Výpis letů za období se souhrny, export do Excelu a CSV | hotovo |
 | 8 | Denní a měsíční uzávěrky, změny po uzávěrce, přepočet, práva podle uzávěrky | hotovo |
 | 9 | Velký displej (TV) bez přihlášení přes tajný odkaz | hotovo |
+| 10 | Upozornění na neukončené lety e-mailem a push notifikacemi | hotovo |
 
 ## Struktura
 

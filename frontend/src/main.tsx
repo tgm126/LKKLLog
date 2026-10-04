@@ -7,7 +7,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
+import { registrovatServiceWorker } from './api/push'
 import App from './App.tsx'
+
+// Service worker zobrazuje push upozornění (na displeji není potřeba).
+if (!location.pathname.startsWith('/displej/')) registrovatServiceWorker()
 
 const theme = createTheme({
   primaryColor: 'blue',

@@ -462,6 +462,7 @@ NAZVY_AKCI = {
     "zruseni": "Zrušení",
     "oprava": "Oprava",
     "zpet": "Vráceno tlačítkem Zpět",
+    "upozorneni": "Odesláno upozornění",
 }
 
 

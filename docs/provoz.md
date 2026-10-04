@@ -81,6 +81,7 @@ serveru v `/usr/local/lib/lkkllog/udrzba.sh`. Při úspěchu nic nehlásí, chyb
 | neděle 3:27 | `docker-uklid` – mezipaměť sestavení Dockeru zmenší na 1 GB |
 | pondělí 3:37 | `export` – `pg_dump` do `/var/backups/lkkllog` (posledních 52), kopie e-mailem administrátorům |
 | denně 5:00 | `uzaverka` – automatická uzávěrka předchozích dnů (viz návrh kap. 4.7) |
+| každých 5 min, 6–22 h | `upozorneni` – upozornění na neukončené lety e-mailem a push (viz návrh kap. 4.9a) |
 
 Instalace / aktualizace (z počítače správce):
 

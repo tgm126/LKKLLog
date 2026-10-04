@@ -451,3 +451,29 @@ class Uzaverka(models.Model):
 
     def __str__(self):
         return f"{self.get_typ_display()} {self.obdobi} v{self.verze}"
+
+
+class Upozorneni(models.Model):
+    """Odeslané upozornění na neukončený let – každý druh jen jednou za let."""
+
+    class Druh(models.TextChoices):
+        MAX_DOBA = "max_doba", "Déle než maximální doba letu"
+        SOUMRAK = "soumrak", "Ve vzduchu po konci soumraku"
+        NEUKONCENY = "neukonceny", "Neukončený let z minulého dne"
+
+    let = models.ForeignKey(Let, on_delete=models.CASCADE, related_name="upozorneni")
+    druh = models.CharField(max_length=12, choices=Druh.choices)
+    kdy = models.DateTimeField(auto_now_add=True)
+    prijemci = models.JSONField(
+        "příjemci", default=dict, help_text="Kolik e-mailů a push upozornění odešlo komu."
+    )
+
+    class Meta:
+        verbose_name = "upozornění"
+        verbose_name_plural = "upozornění"
+        constraints = [
+            models.UniqueConstraint(fields=["let", "druh"], name="upozorneni_jednou"),
+        ]
+
+    def __str__(self):
+        return f"{self.let} – {self.get_druh_display()}"

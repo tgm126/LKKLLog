@@ -5,6 +5,7 @@
 #   udrzba.sh docker-uklid  zmenší mezipaměť sestavení Dockeru na 1 GB (týdně)
 #   udrzba.sh export        export databáze, uchová 52 posledních, pošle e-mailem (týdně)
 #   udrzba.sh uzaverka      automatická uzávěrka předchozích dnů (denně v 5:00)
+#   udrzba.sh upozorneni    upozornění na neukončené lety (každých 5 minut přes den)
 set -euo pipefail
 
 KONTEJNER=vpsc-app-lkkl-cz-lkkllog
@@ -32,8 +33,11 @@ export)
 uzaverka)
     docker exec "$KONTEJNER" python /srv/lkkllog/manage.py automaticka_uzaverka
     ;;
+upozorneni)
+    docker exec "$KONTEJNER" python /srv/lkkllog/manage.py upozorneni
+    ;;
 *)
-    echo "Použití: $0 prihlaseni|docker-uklid|export|uzaverka" >&2
+    echo "Použití: $0 prihlaseni|docker-uklid|export|uzaverka|upozorneni" >&2
     exit 2
     ;;
 esac

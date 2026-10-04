@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.utils.html import format_html
 
-from .models import Nastaveni
+from .models import Nastaveni, PushOdber
 
 
 class NastaveniForm(forms.ModelForm):
@@ -61,3 +61,15 @@ class NastaveniAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         # Jediný záznam – seznam rovnou přeskočíme na jeho úpravu.
         return redirect("admin:provoz_nastaveni_change", Nastaveni.aktualni().pk)
+
+
+@admin.register(PushOdber)
+class PushOdberAdmin(admin.ModelAdmin):
+    list_display = ["osoba", "zarizeni", "vytvoreno"]
+    list_select_related = ["osoba"]
+    search_fields = ["osoba__prijmeni", "osoba__jmeno"]
+    fields = ["osoba", "zarizeni", "vytvoreno"]
+    readonly_fields = fields
+
+    def has_add_permission(self, request):
+        return False

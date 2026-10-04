@@ -365,6 +365,7 @@ NAZVY_ZMEN = {
     "zruseni": "Zrušení",
     "oprava": "Oprava",
     "zpet": "Vráceno tlačítkem Zpět",
+    "upozorneni": "Odesláno upozornění",
 }
 
 

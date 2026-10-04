@@ -213,6 +213,8 @@ STORAGES = {
 }
 # Soubory frontendu (JS, CSS, ikony) servíruje WhiteNoise přímo z kořene webu.
 WHITENOISE_ROOT = FRONTEND_DIST if FRONTEND_DIST.exists() else None
+# Manifest aplikace (instalace na plochu) musí mít správný typ, jinak ho prohlížeč odmítne.
+WHITENOISE_MIMETYPES = {".webmanifest": "application/manifest+json"}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

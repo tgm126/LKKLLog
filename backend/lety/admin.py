@@ -2,7 +2,18 @@ from django import forms
 from django.contrib import admin, messages
 
 from . import uzaverky
-from .models import AuditLog, Let, Letadlo, Letiste, Osnova, Posadka, Ucel, Uloha, Uzaverka
+from .models import (
+    AuditLog,
+    Let,
+    Letadlo,
+    Letiste,
+    Osnova,
+    Posadka,
+    Ucel,
+    Uloha,
+    Upozorneni,
+    Uzaverka,
+)
 
 
 @admin.register(Letadlo)
@@ -135,4 +146,17 @@ class UzaverkaAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(Upozorneni)
+class UpozorneniAdmin(admin.ModelAdmin):
+    list_display = ["kdy", "let", "druh", "prijemci"]
+    list_filter = ["druh"]
+    list_select_related = ["let__letadlo"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
         return False

@@ -37,7 +37,7 @@ def test_displej_bez_prihlaseni(page, svet):
     expect(page.get_by_text("Konec soumraku")).to_be_visible()
     # U letadla je vidět počet letů i přistání (T&G se počítají do přistání).
     expect(page.get_by_text("Přistání vč. T&G")).to_be_visible()
-    expect(page.get_by_text('1 let · 3 přist. · 30"')).to_be_visible()
+    expect(page.get_by_text('1 let · 3 přist. · doba 30"')).to_be_visible()
     # Displej nemá ovládání ani přihlašovací formulář.
     expect(page.get_by_role("button")).to_have_count(0)
 

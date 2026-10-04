@@ -9,7 +9,8 @@ from ninja.errors import HttpError
 from ninja.security import django_auth
 from ninja.utils import check_csrf
 
-from provoz.models import Nastaveni
+from provoz import push
+from provoz.models import Nastaveni, PushOdber
 
 from . import ucty
 from .models import Osoba
@@ -161,3 +162,71 @@ def vratit_se(request):
     if ucty.vratit_se(request) is None:
         raise HttpError(400, "Nejste přihlášen jako jiná osoba.")
     return _ja(request)
+
+
+# --- upozornění na zařízení (Web Push) -------------------------------------------------
+
+
+class PushStavOut(Schema):
+    klic: str
+    zarizeni: int
+
+
+class PushKlice(Schema):
+    p256dh: str
+    auth: str
+
+
+class PushIn(Schema):
+    endpoint: str
+    keys: PushKlice
+    zarizeni: str = ""
+
+
+class EndpointIn(Schema):
+    endpoint: str
+
+
+class PocetOut(Schema):
+    pocet: int
+
+
+@router.get("/push", response=PushStavOut, auth=django_auth, summary="Klíč a počet zařízení")
+def push_stav(request):
+    return {"klic": push.verejny_klic(), "zarizeni": request.user.push_odbery.count()}
+
+
+@router.post("/push", response=PushStavOut, auth=django_auth, summary="Zapnout upozornění")
+def push_zapnout(request, data: PushIn):
+    if request.session.get(ucty.SESSION_ZASTUPCE):
+        raise HttpError(400, "Při „Přihlásit se jako“ upozornění nezapínejte – patří té osobě.")
+    if not data.endpoint.startswith("https://"):
+        raise HttpError(400, "Neplatná adresa push služby.")
+    # Zařízení, které dřív patřilo jinému uživateli, teď patří přihlášenému.
+    PushOdber.objects.update_or_create(
+        endpoint=data.endpoint,
+        defaults={
+            "osoba": request.user,
+            "p256dh": data.keys.p256dh,
+            "auth": data.keys.auth,
+            "zarizeni": data.zarizeni[:200],
+        },
+    )
+    return push_stav(request)
+
+
+@router.post("/push/vypnout", response=PushStavOut, auth=django_auth, summary="Vypnout")
+def push_vypnout(request, data: EndpointIn):
+    PushOdber.objects.filter(osoba=request.user, endpoint=data.endpoint).delete()
+    return push_stav(request)
+
+
+@router.post("/push/zkouska", response=PocetOut, auth=django_auth, summary="Zkušební upozornění")
+def push_zkouska(request):
+    pocet = push.poslat(
+        request.user,
+        "LKKL Log – zkouška",
+        "Upozornění na tomto zařízení fungují.",
+        znacka="zkouska",
+    )
+    return {"pocet": pocet}

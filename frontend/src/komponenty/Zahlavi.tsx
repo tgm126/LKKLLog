@@ -1,14 +1,17 @@
 import { Anchor, Badge, Button, Group, Menu, Text, Title } from '@mantine/core'
 import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
 
 import { odhlasit } from '../api/ucet'
 import { useJa, useNastavJa } from '../useJa'
 import { HodinyUtc } from './HodinyUtc'
+import { UpozorneniDialog } from './UpozorneniDialog'
 
 export function Zahlavi() {
   const { data: ja } = useJa()
   const nastavJa = useNastavJa()
   const odhlaseni = useMutation({ mutationFn: odhlasit, onSuccess: nastavJa })
+  const [upozorneni, setUpozorneni] = useState(false)
 
   return (
     <Group justify="space-between" px="md" py="sm" wrap="nowrap">
@@ -37,10 +40,14 @@ export function Zahlavi() {
                   Administrace
                 </Menu.Item>
               )}
+              {!ja.zastupce && (
+                <Menu.Item onClick={() => setUpozorneni(true)}>Upozornění na telefon…</Menu.Item>
+              )}
               <Menu.Item onClick={() => odhlaseni.mutate()}>Odhlásit se</Menu.Item>
             </Menu.Dropdown>
           </Menu>
         )}
+        {upozorneni && <UpozorneniDialog onZavrit={() => setUpozorneni(false)} />}
       </Group>
     </Group>
   )

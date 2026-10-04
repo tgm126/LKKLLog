@@ -88,3 +88,23 @@ class Nastaveni(models.Model):
             vzory = [r.strip().lower() for r in self.povolene_adresy.splitlines() if r.strip()]
             return any(fnmatch(adresa, vzor) for vzor in vzory)
         return False
+
+
+class PushOdber(models.Model):
+    """Zařízení (prohlížeč), na které osoba chce dostávat upozornění (Web Push)."""
+
+    osoba = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="push_odbery"
+    )
+    endpoint = models.URLField("adresa push služby", max_length=1000, unique=True)
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    zarizeni = models.CharField("zařízení", max_length=200, blank=True)
+    vytvoreno = models.DateTimeField("zapnuto", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "zařízení pro upozornění"
+        verbose_name_plural = "zařízení pro upozornění"
+
+    def __str__(self):
+        return f"{self.osoba} – {self.zarizeni or 'zařízení'}"

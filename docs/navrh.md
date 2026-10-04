@@ -336,6 +336,30 @@ Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, zá
 - Na displej nejdou plátci, telefony ani žádné ovládání. Názvy posílá server, protože
   displej nemá přístup k číselníkům.
 
+### 4.9a Upozornění na neukončené lety
+
+**Stav po etapě 10:**
+- **Kdy přijde upozornění:**
+  - let je ve vzduchu déle než maximální doba letadla;
+  - let je ve vzduchu ještě po konci občanského soumraku;
+  - let zůstal neukončený z minulého dne (ve vzduchu nebo připravený), takže den nejde
+    uzavřít.
+- Každý druh upozornění odejde k letu nejvýš jednou a zapíše se do historie letu
+  („Odesláno upozornění“). Přehled všech je v administraci (*Upozornění*).
+- **Kdo ho dostane:** kdo let založil, a PIC, žák či přezkoušený. Externí osoby nic
+  nedostávají.
+- **Jak:** e-mailem (podle režimu odesílání v *Nastavení provozu*) a push upozorněním na
+  zařízení, kde si ho člověk zapnul (menu se jménem → *Upozornění na telefon…*).
+  - Push funguje i se zavřeným prohlížečem.
+  - Na iPhonu jen v aplikaci přidané na plochu (Safari → Sdílet → Přidat na plochu).
+  - V dialogu jde poslat zkušební upozornění.
+- **Kontrola:** cron serveru každých 5 minut, jen 6–22 h českého času (v noci nikoho
+  nebudíme). Zapomenuté lety starší než 31 dní se nehlídají.
+- **Klíč pro podepisování push zpráv (VAPID)** se odvozuje z `DJANGO_SECRET_KEY`. Jeho
+  změna zneplatní zapnutá zařízení a lidé si upozornění zapnou znovu.
+- Aplikace má manifest a ikony, takže jde přidat na plochu telefonu jako samostatná
+  aplikace. Offline režim to ale není.
+
 ### 4.10 Administrace (admin)
 - Osoby a jejich oprávnění, letadla, letiště, úlohy, nastavení, auditní log s filtrováním, znovuotevření uzávěrky.
 - V první verzi poslouží **vestavěná Django administrace**, kterou dostaneme zdarma. Hezčí vlastní obrazovky přijdou později, pokud budou potřeba.
@@ -653,7 +677,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 7 | **Výpis a export** (Excel/CSV, bez soukromých letadel) | Účetní dostává data. |
 | 8 | **Denní a měsíční uzávěrky** (souhrny), přehled „Změny po uzávěrce“, přepočet | Účetní má oficiální souhrny a vidí pozdější opravy. |
 | 9 | **Velký displej**, zvýraznění podle maximální doby letu a soumraku | TV na věži. |
-| 10 | **Upozornění na neukončené lety:** let přes maximální dobu, neukončen po soumraku, den, který kvůli neukončenému letu nejde uzavřít. Kromě e-mailu i **push notifikace** na telefon (Web Push – upozornění z webové aplikace i se zavřeným prohlížečem; na iPhonu jen po přidání aplikace na plochu) | – |
+| 10 ✔ | **Upozornění na neukončené lety:** let přes maximální dobu, neukončen po soumraku, den, který kvůli neukončenému letu nejde uzavřít. Kromě e-mailu i **push notifikace** na telefon (Web Push – upozornění z webové aplikace i se zavřeným prohlížečem; na iPhonu jen po přidání aplikace na plochu) | – |
 | 11 | **Můj nálet** | – |
 | později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), licence a platnosti spravované samotnými piloty, platnosti techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 

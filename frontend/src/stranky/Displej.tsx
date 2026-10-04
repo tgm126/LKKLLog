@@ -231,7 +231,7 @@ export function Displej() {
                     <b>{r.imatrikulace}</b> {r.ucel === 'Vlek' ? '(vlek)' : ''}
                   </Text>
                   <Text style={{ fontSize: PISMO.male }}>
-                    {pocetLetu(r.lety)} · {r.pristani ?? '–'} přist. · {doba(r.minuty)}
+                    {pocetLetu(r.lety)} · {r.pristani ?? '–'} přist. · doba {doba(r.minuty)}
                   </Text>
                 </Group>
               ))}
