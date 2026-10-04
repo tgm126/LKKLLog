@@ -57,7 +57,13 @@ const KROKY = ['Letadlo', 'Účel', 'Posádka', 'Úloha', 'Vzlet']
 const jmeno = (o: OsobaVyber) => `${o.prijmeni} ${o.jmeno}`
 
 /** Nabídka osob: nahoře ti s odpovídajícím oprávněním, pak ostatní. */
-function nabidka(osoby: OsobaVyber[], kategorie: string, slot: Slot, externiSmi: boolean) {
+function nabidka(
+  osoby: OsobaVyber[],
+  kategorie: string,
+  slot: Slot,
+  externiSmi: boolean,
+  veVzduchu: Set<number>,
+) {
   const uroven = (o: OsobaVyber) =>
     Math.max(-1, ...o.opravneni.filter((op) => op.kategorie === kategorie).map((op) => UROVEN[op.uroven]))
   const vhodne = osoby.filter((o) => externiSmi || !o.externi)
@@ -66,7 +72,11 @@ function nabidka(osoby: OsobaVyber[], kategorie: string, slot: Slot, externiSmi:
     .sort((a, b) => uroven(b) - uroven(a) || jmeno(a).localeCompare(jmeno(b), 'cs'))
   const ostatni = vhodne.filter((o) => !doporuceni.includes(o))
   const polozky = (seznam: OsobaVyber[]) =>
-    seznam.map((o) => ({ value: String(o.id), label: jmeno(o) + (o.externi ? ' (externí)' : '') }))
+    seznam.map((o) => ({
+      value: String(o.id),
+      label:
+        jmeno(o) + (o.externi ? ' (externí)' : '') + (veVzduchu.has(o.id) ? ' – ✈ ve vzduchu' : ''),
+    }))
   return [
     { group: 'Doporučení', items: polozky(doporuceni) },
     { group: 'Ostatní', items: polozky(ostatni) },
@@ -125,6 +135,13 @@ export function NovyLet({
     setTg(0)
     onZavrit()
   }
+
+  // Kdo právě letí (dozor na zemi se nepočítá) – server mu druhý vzlet nedovolí.
+  const veVzduchu = new Set(
+    lety
+      .filter((l) => l.stav === 've_vzduchu')
+      .flatMap((l) => l.posadka.filter((p) => p.funkce !== 'dozor').map((p) => p.osoba_id)),
+  )
 
   const stavLetadla = (id: number) =>
     lety.find((l) => l.letadlo_id === id && (l.stav === 've_vzduchu' || l.stav === 'pripraven'))
@@ -309,7 +326,7 @@ export function NovyLet({
             label={sloty.pic.popis}
             size="md"
             searchable={hledani}
-            data={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni')}
+            data={nabidka(c.osoby, letadlo.kategorie, sloty.pic, ucel === 'prezkouseni', veVzduchu)}
             value={pic}
             onChange={(v) => {
               setPic(v)
@@ -327,6 +344,7 @@ export function NovyLet({
                 letadlo.kategorie,
                 sloty.druhy,
                 false,
+                veVzduchu,
               )}
               value={druhy}
               onChange={(v) => {

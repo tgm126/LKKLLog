@@ -424,7 +424,8 @@ erDiagram
 Slovy: let je vždy **na jednom letadle** (z něj plyne kategorie), má **jeden účel a úlohu**, **jedno místo vzletu a přistání** a **posádku**, jejíž složení určuje účel. Kluzák ve vleku ukazuje na let svého vlečného letadla.
 
 ### 5.3 Pojistky přímo v databázi
-- Jedno letadlo nemůže mít dva lety ve vzduchu současně. Jeden člověk nemůže být současně na dvou letech, které se časově překrývají. PostgreSQL to umí hlídat tzv. **exclusion constraint** (pravidlo, které zakáže překrývající se časové intervaly).
+- Jedno letadlo nemůže mít dva lety ve vzduchu současně. PostgreSQL to hlídá tzv. **exclusion constraint** (pravidlo, které zakáže překrývající se časové intervaly).
+- Jeden člověk nemůže být současně na dvou letech, které se časově překrývají (dozor na zemi se nepočítá). Hlídá to aplikace při vzletu a dopsání letu; řádky osob se při tom zamykají, aby dva současné vzlety prošly postupně. Připravit let pro někoho, kdo ještě letí, jde.
 - Přistání nemůže být dřív než vzlet.
 
 ---

@@ -302,3 +302,63 @@ def test_ucetni_neridi_provoz_ale_ovlada_sve_lety(jako, svet):
     )
     let = post(klient, "/api/lety", vlastni).json()
     assert let["muze_ovladat"] is True
+
+
+# --- jedna osoba nemůže letět dvakrát zároveň ---------------------------------------
+
+
+def test_pilot_ve_vzduchu_nemuze_vzletnout_znovu(jako, svet):
+    _ve_vzduchu(svet)  # Pilot letí na OK-TCS
+    data = normalni(svet, letadlo_id=svet.dvoumistne.pk)
+    odpoved = post(jako(svet.casomeric), "/api/lety", data)
+    assert odpoved.status_code == 409
+    assert odpoved.json()["kod"] == "osoba_obsazena"
+    assert "Test Pilot je právě ve vzduchu na OK-TCS" in odpoved.json()["detail"]
+
+
+def test_pripravit_jde_vzlet_ne(jako, svet):
+    _ve_vzduchu(svet)
+    klient = jako(svet.casomeric)
+    data = normalni(svet, letadlo_id=svet.dvoumistne.pk, akce="pripravit")
+    let = post(klient, "/api/lety", data).json()
+    assert let["stav"] == StavLetu.PRIPRAVEN
+    odpoved = post(klient, f"/api/lety/{let['id']}/vzlet")
+    assert odpoved.status_code == 409 and odpoved.json()["kod"] == "osoba_obsazena"
+
+
+def test_dopsany_let_se_nesmi_kryt(jako, svet):
+    ted = timezone.now().replace(microsecond=0)
+    klient = jako(svet.pilot)
+    prvni = normalni(
+        svet,
+        akce="dopsat",
+        cas_vzletu=(ted - timedelta(hours=3)).isoformat(),
+        cas_pristani=(ted - timedelta(hours=2)).isoformat(),
+    )
+    assert post(klient, "/api/lety", prvni).status_code == 200
+    kryje = normalni(
+        svet,
+        letadlo_id=svet.dvoumistne.pk,
+        akce="dopsat",
+        cas_vzletu=(ted - timedelta(hours=2, minutes=30)).isoformat(),
+        cas_pristani=(ted - timedelta(hours=1)).isoformat(),
+    )
+    assert post(klient, "/api/lety", kryje).status_code == 409
+    navazuje = dict(kryje, cas_vzletu=(ted - timedelta(hours=2)).isoformat())
+    assert post(klient, "/api/lety", navazuje).status_code == 200
+
+
+def test_dozor_na_zemi_se_nepocita(jako, svet):
+    # Instruktor dozoruje sólo žáka a zároveň sám letí s jiným pilotem.
+    solo = normalni(
+        svet,
+        letadlo_id=svet.dvoumistne.pk,
+        ucel=Ucel.VYCVIK_SOLO,
+        posadka=[
+            {"osoba_id": svet.zak.pk, "funkce": "pic"},
+            {"osoba_id": svet.instruktor.pk, "funkce": "dozor"},
+        ],
+    )
+    assert post(jako(svet.casomeric), "/api/lety", solo).status_code == 200
+    vlastni = normalni(svet, posadka=[{"osoba_id": svet.instruktor.pk, "funkce": "pic"}])
+    assert post(jako(svet.casomeric), "/api/lety", vlastni).status_code == 200

@@ -18,6 +18,7 @@ from .models import (
     Let,
     Letadlo,
     Letiste,
+    Posadka,
     StavLetu,
     Ucel,
     Uloha,
@@ -220,6 +221,41 @@ def _over_cas(cas: datetime, nazev: str) -> datetime:
     return cas.replace(microsecond=0)
 
 
+def _over_volne_osoby(osoby_ids, od: datetime, do: datetime | None, vyjma: int | None) -> None:
+    """Jedna osoba nemůže letět dvěma lety zároveň (dozor na zemi se nepočítá).
+
+    Řádky osob se zamknou, takže dva současné vzlety téže osoby projdou postupně.
+    """
+    ids = list(osoby_ids)
+    list(Osoba.objects.select_for_update().filter(pk__in=ids).values_list("pk", flat=True))
+    obsazeno = (
+        Posadka.objects.select_related("osoba", "let__letadlo")
+        .filter(osoba_id__in=ids, let__cas_vzletu__isnull=False)
+        .exclude(funkce=FunkcePosadky.DOZOR)
+        .exclude(let__stav=StavLetu.ZRUSEN)
+        .exclude(let_id=vyjma)
+        .filter(Q(let__cas_pristani__isnull=True) | Q(let__cas_pristani__gt=od))
+    )
+    if do is not None:
+        obsazeno = obsazeno.filter(let__cas_vzletu__lt=do)
+    clen = obsazeno.order_by("let__cas_vzletu").first()
+    if clen is None:
+        return
+    jiny = clen.let
+    kdy = "je právě ve vzduchu" if jiny.cas_pristani is None else "v tu dobu letí"
+    raise ChybaLetu(
+        f"{clen.osoba.get_full_name()} {kdy} na {jiny.letadlo.imatrikulace} "
+        f"(vzlet {jiny.cas_vzletu:%H:%M} UTC).",
+        status=409,
+        kod="osoba_obsazena",
+        let_id=jiny.pk,
+    )
+
+
+def _letici(posadka) -> list[int]:
+    return [c.osoba_id for c in posadka if c.funkce != FunkcePosadky.DOZOR]
+
+
 def _uloz(let: Let) -> None:
     """Uloží let; pojistku „letadlo bez překryvu“ převede na srozumitelnou zprávu."""
     try:
@@ -288,6 +324,8 @@ def zalozit(data: NovyLet, kdo: Osoba) -> Let:
     else:
         raise ChybaLetu("Neznámá akce.")
 
+    if let.cas_vzletu:
+        _over_volne_osoby(_letici(data.posadka), let.cas_vzletu, let.cas_pristani, None)
     _uloz(let)
     let.posadka.bulk_create(
         [let.posadka.model(let=let, osoba_id=c.osoba_id, funkce=c.funkce) for c in data.posadka]
@@ -349,6 +387,7 @@ def vzlet(let_id: int, kdo: Osoba, cas: datetime | None = None) -> Let:
             let_id=let.pk,
         )
     let.cas_vzletu = _over_cas(cas or timezone.now(), "Vzlet")
+    _over_volne_osoby(_letici(let.posadka.all()), let.cas_vzletu, None, let.pk)
     let.stav = StavLetu.VE_VZDUCHU
     let.verze += 1
     _uloz(let)
