@@ -264,9 +264,16 @@ function Letadla() {
               <Text fz="sm">
                 Nálet {doba(l.nalet_min)} · {l.starty} startů
               </Text>
-              <Text fz="xs" c="dimmed">
-                {l.stav_k ? `Stav deníku k ${datum(l.stav_k)} + lety z evidence` : 'Jen lety z evidence'}
-              </Text>
+              {l.chybi_denik ? (
+                <Text fz="xs" c="orange">
+                  Chybí stav provozního deníku – zadejte ho při spuštění ostrého provozu, jinak nálet
+                  a termíny podle náletu nesedí.
+                </Text>
+              ) : (
+                <Text fz="xs" c="dimmed">
+                  Stav deníku k {datum(l.stav_k)} + lety z evidence
+                </Text>
+              )}
             </div>
             <Stack gap={4}>
               <Button size="xs" variant="light" onClick={() => setTermin({ letadlo: l, termin: null })}>

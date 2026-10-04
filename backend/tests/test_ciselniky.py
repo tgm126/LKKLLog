@@ -65,6 +65,32 @@ def test_nacteni_ciselniku(vyplnena_sablona):
     assert Uloha.objects.get(kod="POZ").osnova.kategorie == Kategorie.MOTOR
 
 
+def test_stav_deniku_letadel(tmp_path):
+    from datetime import date
+
+    cesta = tmp_path / "ciselniky.xlsx"
+    vytvor_sablonu(cesta)
+    wb = load_workbook(cesta)
+    radek = ["OK-ABC", "Z-226", "Motorové", 2, None, None, None, None, 1]
+    wb["Letadla"].append([*radek, "1234:30", 5021, "1.11.2026"])
+    wb["Letadla"].append(["OK-DEF", "Cessna", "Motorové", 4, None, None, None, None, 2, "98,5"])
+    wb.save(cesta)
+    nacti(cesta)
+    abc = Letadlo.objects.get(imatrikulace="OK-ABC")
+    assert (abc.nalet_pocatek_min, abc.starty_pocatek) == (1234 * 60 + 30, 5021)
+    assert abc.stav_k == date(2026, 11, 1)
+    assert Letadlo.objects.get(imatrikulace="OK-DEF").nalet_pocatek_min == 98 * 60 + 30
+
+    # Opakované načtení s prázdnými buňkami stav deníku nepřepíše.
+    wb = load_workbook(cesta)
+    wb["Letadla"].delete_rows(2, 2)
+    wb["Letadla"].append(radek)
+    wb.save(cesta)
+    nacti(cesta)
+    abc.refresh_from_db()
+    assert abc.starty_pocatek == 5021
+
+
 def test_opakovane_nacteni_jen_aktualizuje(vyplnena_sablona):
     nacti(vyplnena_sablona)
     vysledek = nacti(vyplnena_sablona)

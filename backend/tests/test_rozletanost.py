@@ -156,6 +156,9 @@ def test_varovani_pri_zakladani_letu(jako, svet):
     assert "Test Pilot: nemá zadaný radiofonní průkaz." in varovani
     licence(svet.pilot, TypLicence.RADIO, (DruhKvalifikace.OFL, DNES + timedelta(days=3000)))
     varovani = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
+    assert "Test Pilot: nemá platnou jazykovou způsobilost." in varovani
+    licence(svet.pilot, TypLicence.JAZYK, (DruhKvalifikace.CS_6, None))
+    varovani = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
     assert len(varovani) == 1 and "nesmí vozit cestující" in varovani[0]
     # Bez cestujících je všechno v pořádku.
     bez_hostu = post(klient, "/api/kontrola-posadky", {**let, "pocet_hostu": 0}).json()
@@ -233,3 +236,34 @@ def test_radiofonni_prukaz(svet):
     k = podle_nazvu(svet.pilot)["Omezený (OFL)"]
     assert k.stav == POZOR  # žádost se podává měsíc předem – varuje se 2 měsíce dopředu
     assert "ČTÚ" in k.podrobnosti[0]
+
+
+def test_jazykova_zpusobilost(jako, svet):
+    licence(
+        svet.pilot,
+        TypLicence.JAZYK,
+        (DruhKvalifikace.EN_4, DNES + timedelta(days=60)),
+        (DruhKvalifikace.CS_6, None),
+    )
+    k = podle_nazvu(svet.pilot)
+    assert k["Angličtina – úroveň 4"].stav == POZOR  # 3 měsíce předem
+    assert k["Čeština – úroveň 6"].text == "Platí trvale."
+
+    # Prošlá angličtina nevadí, když platí čeština.
+    Licence.objects.all().delete()
+    licence(
+        svet.pilot,
+        TypLicence.JAZYK,
+        (DruhKvalifikace.EN_4, DNES - timedelta(days=1)),
+        (DruhKvalifikace.CS_6, None),
+    )
+    from lety.rozletanost import varovani_pilota
+    from osoby.models import Kategorie
+
+    licence(svet.pilot, TypLicence.PPL_A, (DruhKvalifikace.SEP, DNES + timedelta(days=300)))
+    assert not any("jazyk" in v for v in varovani_pilota(svet.pilot, Kategorie.MOTOR, False))
+
+    # Dvě úrovně téhož jazyka nejdou.
+    data = {"typ": "jazyk", "kvalifikace": [{"druh": "en_4"}, {"druh": "en_5"}]}
+    Licence.objects.all().delete()
+    assert post(jako(svet.pilot), "/api/ucet/licence", data).status_code == 400

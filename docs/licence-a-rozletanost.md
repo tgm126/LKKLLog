@@ -39,6 +39,19 @@ proběhl.
 | Průkaz radiotelefonisty letecké pohyblivé služby, omezený (OFL) nebo všeobecný (VFL) | platí **10 let** od vydání, pak se prodlužuje **o 5 let** | vyhláška č. 157/2005 Sb. |
 | Prodloužení | písemná žádost na ČTÚ **aspoň měsíc před koncem platnosti**, poplatek, doklad o praxi. Po propadnutí lze do 1 roku požádat o nový průkaz. | vyhláška č. 157/2005 Sb. |
 
+## Jazyková způsobilost – EASA FCL.055
+
+| Úroveň | Platnost |
+|---|---|
+| 4 (operační) | 4 roky od přezkoušení |
+| 5 (rozšířená) | 6 let |
+| 6 (expertní) | trvale |
+
+Piloti, kteří používají radiotelefonii, potřebují jazykovou způsobilost v angličtině nebo
+v jazyce, který se ke spojení používá (v ČR i čeština). Aplikace při zakládání letu varuje,
+jen když nemá platnou úroveň v žádném jazyce. Na blížící se konec platnosti upozorňuje
+3 měsíce předem.
+
 ## Medical (Part-MED)
 
 - Jedno osvědčení může mít **pro různé třídy různou platnost**, např. třída 2 a LAPL.
@@ -78,6 +91,9 @@ proběhl.
 - Seminář SPL (ÚCL, 17. 2. 2024): https://caa.cz/wp-content/uploads/2024/02/4-Prezentace-OZLP.pdf
 - CAA-ZLP-049 Způsobilost pilotů kluzáků (starší národní úprava pro GPL, nahrazená SPL podle Part-SFCL; postup pro SPL je CAA-ZLP-161): https://www.caa.cz/wp-content/uploads/2019/07/049-GPL.pdf
 - EASA GM k prodloužení rozlétanosti (na webu ÚCL): https://www.caa.gov.cz/wp-content/uploads/2020/05/EASA-GM_Recency_extension_rev.2.pdf
+
+### EASA – jazyková způsobilost
+- FCL.055 (Part-FCL, Easy Access Rules): https://easa.europa.eu/cs/downloads/116578/en
 
 ### ČTÚ (radiofonní průkaz)
 - Vyhláška č. 157/2005 Sb. (druhy průkazů odborné způsobilosti a doba jejich platnosti): https://epravo.cz/top/zakony/sbirka-zakonu/vyhlaska-ze-dne-19-dubna-2005-o-nalezitostech-prihlasky-ke-zkousce-k-prokazani-odborne-zpusobilosti-k-obsluze-vysilacich-radiovych-zarizeni-o-rozsahu-znalosti-potrebnych-pro-jednotlive-druhy-odborne-zpusobilosti-o-zpusobu-provadeni-zkousek-o-druzich-prukazu-odborne-zpusobilosti-a-dobe-jejich-platnosti-14599.html

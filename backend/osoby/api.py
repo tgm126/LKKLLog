@@ -358,6 +358,9 @@ def ulozit_licenci(request, data: LicenceIn, osoba: int | None = None):
     druhy = [k.druh for k in data.kvalifikace]
     if any(d not in povolene for d in druhy) or len(set(druhy)) != len(druhy):
         raise HttpError(400, "Kvalifikace k tomuto typu licence nepatří.")
+    jazyky = [d.split("_")[0] for d in druhy if data.typ == TypLicence.JAZYK]
+    if len(set(jazyky)) != len(jazyky):
+        raise HttpError(400, "U každého jazyka zadejte jen jednu úroveň.")
     try:
         with transaction.atomic():
             if data.id:

@@ -84,6 +84,8 @@ export type LetadloSprava = {
   nalet_pocatek_min: number
   starty_pocatek: number
   stav_k: string | null
+  /** Bez stavu provozního deníku nesedí celkový nálet ani termíny podle náletu. */
+  chybi_denik: boolean
   terminy: Termin[]
 }
 

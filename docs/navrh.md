@@ -415,6 +415,8 @@ a nápovědu.
 
 **Etapa 13:**
 - Přibyl **radiofonní průkaz** (ČTÚ, OFL/VFL, platnost; varuje se 2 měsíce předem).
+- **Jazyková způsobilost** (FCL.055): angličtina nebo čeština, úroveň 4 (4 roky), 5 (6 let),
+  6 (trvale); varuje se 3 měsíce předem a při letu stačí platná v jednom jazyce.
 - Medical má **platnost pro každou třídu zvlášť** a posuzuje se podle licence.
 - Nová role **správce licencí a letadel** (zaškrtávátko u osoby, sloupec v Excelu
   s číselníky). Obrazovka *Piloti a letadla* je pro správce a admina:
@@ -768,6 +770,20 @@ Co aplikace k tomu potřebuje:
 - **Označení „TESTOVACÍ PROVOZ“** v záhlaví (přepínač v nastavení), dokud aplikace neběží ostře.
 - **Úklid před spuštěním:** jeden příkaz smaže testovací lety, posádky, uzávěrky, auditní log (jinak chráněný proti mazání) a **testovací osoby** (příznak „Testovací“) a ponechá číselníky. Testovací lety se nepřenášejí.
 - Jedna instance aplikace, samostatné testovací prostředí zatím ne.
+
+**Postup při spuštění ostrého provozu (fáze 3):**
+1. Úklid před spuštěním: smazat testovací lety, uzávěrky, upozornění a testovací osoby.
+2. **Stav provozních deníků letadel:** celkový nálet a starty každého letadla ke dni
+   spuštění. Zadává se v *Piloti a letadla → Letadla → Stav deníku*, nebo hromadně
+   v Excelu s číselníky (list Letadla, sloupce *Nálet z deníku [h:mm]*, *Starty z deníku*,
+   *Stav deníku ke dni*). Bez toho nesedí celkový nálet ani termíny podle náletu.
+   Přehled letadel na chybějící stav upozorní.
+3. Termíny letadel (ARC, prohlídky, pojištění…).
+4. Licence, medical, radiofonní průkaz a jazyková způsobilost pilotů. Zadají si je piloti
+   sami, nebo správce licencí. Kontrola v přehledu *Piloti a letadla*.
+5. Až jsou data kompletní, zapnout v *Nastavení provozu* **Hlídat licence, medical
+   a rozlétanost**.
+6. Vypnout pruh „TESTOVACÍ PROVOZ“, přepnout režim e-mailů na *všem* a rozeslat pozvánky.
 
 ---
 

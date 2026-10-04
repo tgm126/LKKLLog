@@ -96,6 +96,8 @@ def prehled(dnes: date | None = None) -> list[dict]:
                 "nalet_pocatek_min": letadlo.nalet_pocatek_min,
                 "starty_pocatek": letadlo.starty_pocatek,
                 "stav_k": letadlo.stav_k,
+                # Bez stavu provozního deníku nesedí celkový nálet ani termíny podle náletu.
+                "chybi_denik": letadlo.stav_k is None,
                 "terminy": terminy,
             }
         )

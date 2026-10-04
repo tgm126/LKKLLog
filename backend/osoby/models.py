@@ -152,6 +152,7 @@ class TypLicence(models.TextChoices):
     SPL = "spl", "SPL"
     ULL = "ull", "Pilot ULL (LAA ČR)"
     RADIO = "radio", "Radiotelefonista (ČTÚ)"
+    JAZYK = "jazyk", "Jazyková způsobilost"
 
 
 class DruhKvalifikace(models.TextChoices):
@@ -164,6 +165,12 @@ class DruhKvalifikace(models.TextChoices):
     ULL = "ull", "ULL"
     OFL = "ofl", "Omezený (OFL)"
     VFL = "vfl", "Všeobecný (VFL)"
+    EN_4 = "en_4", "Angličtina – úroveň 4"
+    EN_5 = "en_5", "Angličtina – úroveň 5"
+    EN_6 = "en_6", "Angličtina – úroveň 6"
+    CS_4 = "cs_4", "Čeština – úroveň 4"
+    CS_5 = "cs_5", "Čeština – úroveň 5"
+    CS_6 = "cs_6", "Čeština – úroveň 6"
 
 
 # Které kvalifikace (třídy, způsoby vzletu) patří ke kterému typu licence.
@@ -179,6 +186,15 @@ KVALIFIKACE_LICENCE = {
     ],
     TypLicence.ULL: [DruhKvalifikace.ULL],
     TypLicence.RADIO: [DruhKvalifikace.OFL, DruhKvalifikace.VFL],
+    # Jazyková způsobilost (FCL.055): úroveň 4 platí 4 roky, 5 šest let, 6 trvale.
+    TypLicence.JAZYK: [
+        DruhKvalifikace.EN_4,
+        DruhKvalifikace.EN_5,
+        DruhKvalifikace.EN_6,
+        DruhKvalifikace.CS_4,
+        DruhKvalifikace.CS_5,
+        DruhKvalifikace.CS_6,
+    ],
 }
 
 

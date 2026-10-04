@@ -1015,6 +1015,7 @@ class LetadloSpravaOut(Schema):
     nalet_pocatek_min: int
     starty_pocatek: int
     stav_k: date | None
+    chybi_denik: bool
     terminy: list[TerminOut]
 
 

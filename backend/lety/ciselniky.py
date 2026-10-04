@@ -52,6 +52,9 @@ LISTY: dict[str, list[tuple[str, bool, list[str] | None]]] = {
         ("Soukromé", False, ANO_NE),
         ("Aktivní", False, ANO_NE),
         ("Pořadí", False, None),
+        ("Nálet z deníku [h:mm]", False, None),
+        ("Starty z deníku", False, None),
+        ("Stav deníku ke dni", False, None),
     ],
     "Letiště": [
         ("ICAO", False, None),
@@ -202,6 +205,17 @@ def _cislo(v, vychozi: int | None = None) -> int | None:
     return int(float(v))
 
 
+def _nalet(v) -> int | None:
+    """Nálet v minutách z „1234:30“, „1234°30"“ nebo hodin číslem (1234,5)."""
+    t = _text(v).replace("°", ":").replace('"', "").replace(",", ".").strip()
+    if not t:
+        return None
+    if ":" in t:
+        hodiny, minuty = t.split(":", 1)
+        return int(hodiny) * 60 + int(minuty or 0)
+    return round(float(t) * 60)
+
+
 def _datum(v) -> date | None:
     if isinstance(v, datetime):
         return v.date()
@@ -319,6 +333,13 @@ def _letadlo(r) -> bool:
     letadlo.soukrome = _ano_ne(r[6], False)
     letadlo.aktivni = _ano_ne(r[7], True)
     letadlo.poradi = _cislo(r[8], 100)
+    # Stav provozního deníku: prázdné buňky stávající hodnoty nepřepisují.
+    if (nalet := _nalet(_bunka(r, 9))) is not None:
+        letadlo.nalet_pocatek_min = nalet
+    if (starty := _cislo(_bunka(r, 10))) is not None:
+        letadlo.starty_pocatek = starty
+    if (stav_k := _datum(_bunka(r, 11))) is not None:
+        letadlo.stav_k = stav_k
     letadlo.full_clean()
     letadlo.save()
     return novy

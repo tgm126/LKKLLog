@@ -33,6 +33,7 @@ from .obdobi import rozsah
 from .vypis import letecky
 
 OK, POZOR, CHYBA, INFO = "ok", "pozor", "chyba", "info"
+JAZYK = "Jazyková způsobilost"
 BRZY = timedelta(days=30)  # varovat, když něco brzy vyprší
 DNY_CESTUJICI = 90
 MESICE_ZPET = 37  # nejdelší okno: prodloužení PPL (12 měsíců před koncem platnosti 24 měsíců)
@@ -278,6 +279,30 @@ def _radio(licence: Licence, dnes: date) -> list[Kontrola]:
     return vysledek
 
 
+def _jazyk(licence: Licence, dnes: date) -> list[Kontrola]:
+    """Jazyková způsobilost (FCL.055): úroveň 4 platí 4 roky, 5 šest let, 6 trvale."""
+    kvalifikace = list(licence.kvalifikace.all())
+    if not kvalifikace:
+        return [Kontrola(JAZYK, JAZYK, POZOR, "Chybí jazyk a úroveň.")]
+    vysledek = []
+    for kv in kvalifikace:
+        nazev = kv.get_druh_display()
+        if kv.druh.endswith("_6"):
+            vysledek.append(Kontrola(JAZYK, nazev, OK, "Platí trvale."))
+        elif kv.platnost_do is None:
+            vysledek.append(Kontrola(JAZYK, nazev, POZOR, "Chybí datum platnosti."))
+        else:
+            # Přezkoušení je potřeba domluvit včas – varujeme 3 měsíce předem.
+            stav = _stav_data(kv.platnost_do, dnes, brzy=timedelta(days=90))
+            text = (
+                f"Neplatí od {datum(kv.platnost_do + timedelta(1))}."
+                if stav == CHYBA
+                else f"Platí do {datum(kv.platnost_do)}."
+            )
+            vysledek.append(Kontrola(JAZYK, nazev, stav, text, kv.platnost_do))
+    return vysledek
+
+
 def _ppl(licence: Licence, lety: list[Zaznam], dnes: date) -> list[Kontrola]:
     kontroly = []
     for kv in licence.kvalifikace.all():
@@ -430,11 +455,16 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
     licence = list(Licence.objects.filter(osoba=osoba).prefetch_related("kvalifikace"))
     vysledek = _medicaly(osoba, licence, dnes)
     radio = [lic for lic in licence if lic.typ == TypLicence.RADIO]
-    licence = [lic for lic in licence if lic.typ != TypLicence.RADIO]
+    jazyk = [lic for lic in licence if lic.typ == TypLicence.JAZYK]
+    licence = [lic for lic in licence if lic.typ not in (TypLicence.RADIO, TypLicence.JAZYK)]
     if radio:
         vysledek += _radio(radio[0], dnes)
     else:
         vysledek.append(Kontrola("Radiofonní průkaz", "Radiofonní průkaz", POZOR, "Není zadaný."))
+    if jazyk:
+        vysledek += _jazyk(jazyk[0], dnes)
+    else:
+        vysledek.append(Kontrola(JAZYK, JAZYK, POZOR, "Není zadaná."))
     if not licence:
         if Opravneni.objects.filter(osoba=osoba).exclude(uroven=Uroven.ZAK).exists() or not (
             Opravneni.objects.filter(osoba=osoba).exists()
@@ -500,7 +530,14 @@ def varovani_pilota(
     # Licence, které let v této kategorii pokrývají – podle nich se posuzuje medical.
     kryji = {t for t, d in povoleno if ((t, d) in druhy if d else t in typy)}
     vysledek = []
-    for k in kontroly(osoba):
+    vse = kontroly(osoba)
+    # Jazyková způsobilost stačí v jednom jazyce (angličtina, nebo čeština v ČR).
+    jazyky = [k for k in vse if k.oblast == JAZYK]
+    if all(k.stav == CHYBA or k.text in ("Není zadaná.", "Chybí jazyk a úroveň.") for k in jazyky):
+        vysledek.append(f"{jmeno}: nemá platnou jazykovou způsobilost.")
+    for k in vse:
+        if k.oblast == JAZYK:
+            continue
         if k.oblast == "Radiofonní průkaz" and k.text == "Není zadaný.":
             vysledek.append(f"{jmeno}: nemá zadaný radiofonní průkaz.")
             continue

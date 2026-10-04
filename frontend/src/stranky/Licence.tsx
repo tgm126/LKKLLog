@@ -87,7 +87,13 @@ function LicenceDialog({
     setKvalifikace(kvalifikace.map((k) => (k.druh === druh ? { ...k, platnost_do: platnost_do || null } : k)))
 
   const nadpisKvalifikaci =
-    typ === 'spl' ? 'Způsoby vzletu a TMG' : typ === 'ull' || typ === 'radio' ? 'Druh a platnost' : 'Třídy'
+    typ === 'spl'
+      ? 'Způsoby vzletu a TMG'
+      : typ === 'jazyk'
+        ? 'Jazyk a úroveň (u každého jazyka jen jedna)'
+        : typ === 'ull' || typ === 'radio'
+          ? 'Druh a platnost'
+          : 'Třídy'
 
   return (
     <Modal opened onClose={onZavrit} title={licence ? 'Upravit licenci' : 'Přidat licenci'} centered>
@@ -130,8 +136,9 @@ function LicenceDialog({
               )
             })}
             <Text fz="xs" c="dimmed">
-              Datum vyplňte u PPL(A) (konec platnosti SEP/TMG), u ULL a radiofonního průkazu (platnost
-              průkazu). U LAPL(A) a SPL se platnost hlídá náletem.
+              Datum vyplňte u PPL(A) (konec platnosti SEP/TMG), u ULL, radiofonního průkazu a jazykové
+              způsobilosti (úroveň 6 platí trvale, datum nevyplňujte). U LAPL(A) a SPL se platnost hlídá
+              náletem.
             </Text>
           </Stack>
         )}
