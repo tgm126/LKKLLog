@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "osoby",
     "lety",
+    "provoz",
 ]
 
 MIDDLEWARE = [
@@ -155,11 +156,40 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Adresa aplikace pro odkazy v e-mailech (pozvánka, zapomenuté heslo).
+APP_URL = os.environ.get("APP_URL", "http://localhost:5173").rstrip("/")
+
+# Odkaz pro nastavení hesla (pozvánka i zapomenuté heslo) platí 7 dní.
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
+
 # Přihlášení vydrží na zařízení ~6 měsíců (pilot nic nevyplňuje při startu).
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 180
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+
+# E-mail: bez nastaveného SMTP serveru se e-maily jen vypisují do logu.
+# Co se smí odeslat, navíc hlídá režim v nastavení aplikace (provoz.Nastaveni).
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "LKKL Log <info@lkkl.cz>")
+_email_port = int(os.environ.get("EMAIL_PORT", "465"))
+MAILERS = {
+    "default": (
+        {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": os.environ["EMAIL_HOST"],
+                "port": _email_port,
+                "username": os.environ.get("EMAIL_HOST_USER", ""),
+                "password": os.environ.get("EMAIL_HOST_PASSWORD", ""),
+                "use_ssl": _email_port == 465,
+                "use_tls": _email_port == 587,
+                "timeout": 15,
+            },
+        }
+        if os.environ.get("EMAIL_HOST")
+        else {"BACKEND": "django.core.mail.backends.console.EmailBackend"}
+    )
+}
 
 LANGUAGE_CODE = "cs"
 # Vše se ukládá a počítá v UTC (letecký standard).

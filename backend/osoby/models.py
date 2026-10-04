@@ -85,6 +85,7 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
     )
     is_staff = models.BooleanField("admin", default=False, help_text="Přístup do administrace.")
     vytvoreno = models.DateTimeField("vytvořeno", auto_now_add=True)
+    pozvanka_odeslana = models.DateTimeField("pozvánka odeslána", null=True, blank=True)
 
     objects = OsobaManager()
 

@@ -1,6 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
+from django.shortcuts import redirect
 
+from . import ucty
 from .forms import OsobaChangeForm, OsobaCreationForm
 from .models import Opravneni, Osoba
 
@@ -26,6 +28,7 @@ class OsobaAdmin(UserAdmin):
         "externi",
         "testovaci",
         "is_active",
+        "pozvanka_odeslana",
     ]
     list_filter = [
         "is_active",
@@ -39,9 +42,22 @@ class OsobaAdmin(UserAdmin):
     fieldsets = [
         (None, {"fields": ["jmeno", "prijmeni", "email", "telefon", "password"]}),
         ("Role", {"fields": ["role_casomeric", "role_ucetni", "is_staff", "is_superuser"]}),
-        ("Stav", {"fields": ["is_active", "testovaci", "externi", "last_login", "vytvoreno"]}),
+        (
+            "Stav",
+            {
+                "fields": [
+                    "is_active",
+                    "testovaci",
+                    "externi",
+                    "last_login",
+                    "pozvanka_odeslana",
+                    "vytvoreno",
+                ]
+            },
+        ),
     ]
-    readonly_fields = ["last_login", "vytvoreno"]
+    readonly_fields = ["last_login", "pozvanka_odeslana", "vytvoreno"]
+    actions = ["poslat_pozvanky", "prihlasit_jako"]
     add_fieldsets = [
         (
             None,
@@ -59,3 +75,28 @@ class OsobaAdmin(UserAdmin):
         ),
     ]
     filter_horizontal = []
+
+    @admin.action(description="Poslat pozvánku vybraným osobám")
+    def poslat_pozvanky(self, request, queryset):
+        odeslano = sum(ucty.poslat_pozvanku(osoba, kdo=request.user) for osoba in queryset)
+        preskoceno = queryset.count() - odeslano
+        self.message_user(request, f"Pozvánky odeslány: {odeslano}.", messages.SUCCESS)
+        if preskoceno:
+            self.message_user(
+                request,
+                f"Neodesláno: {preskoceno} (bez e-mailu, externí, neaktivní, "
+                "nebo to nedovolí režim odesílání v Nastavení provozu).",
+                messages.WARNING,
+            )
+
+    @admin.action(description="Přihlásit se jako vybraná osoba")
+    def prihlasit_jako(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Vyberte právě jednu osobu.", messages.ERROR)
+            return None
+        cil = queryset.get()
+        if not cil.is_active:
+            self.message_user(request, "Neaktivní osoba se nemůže přihlásit.", messages.ERROR)
+            return None
+        ucty.prihlasit_jako(request, cil)
+        return redirect("/")
