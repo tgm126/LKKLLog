@@ -5,11 +5,14 @@ import { useState } from 'react'
 
 import { type Let, vzlet } from '../api/lety'
 import { datumCesky, doba, hhmm } from '../cas'
+import { DetailLetu } from '../komponenty/DetailLetu'
 import { KartaLetu } from '../komponenty/KartaLetu'
 import { NovyLet } from '../komponenty/NovyLet'
+import { OpravaLetu } from '../komponenty/OpravaLetu'
 import { PristaniDialog } from '../komponenty/PristaniDialog'
 import { ZruseniDialog } from '../komponenty/ZruseniDialog'
 import { PREHLED_KLIC, useCiselniky, usePrehled, useServerovyCas } from '../useLety'
+import { oznamitSeZpet } from '../zpet'
 
 export function PrehledDne() {
   const { data: prehled, isPending, isError, error } = usePrehled()
@@ -19,10 +22,12 @@ export function PrehledDne() {
   const [novy, setNovy] = useState(false)
   const [pristani, setPristani] = useState<Let | null>(null)
   const [zruseni, setZruseni] = useState<Let | null>(null)
+  const [detailId, setDetailId] = useState<number | null>(null)
+  const [opravaId, setOpravaId] = useState<number | null>(null)
 
   const start = useMutation({
     mutationFn: (l: Let) => vzlet(l.id),
-    onSuccess: (l) => notifications.show({ message: `${l.imatrikulace} vzlétl.`, color: 'green' }),
+    onSuccess: (l) => oznamitSeZpet(l, `${l.imatrikulace} vzlétl.`, klient),
     onError: (e) => notifications.show({ message: e.message, color: 'red' }),
     onSettled: () => klient.invalidateQueries({ queryKey: PREHLED_KLIC }),
   })
@@ -47,6 +52,10 @@ export function PrehledDne() {
   const ukoncene = prehled.lety.filter((l) => l.stav === 'ukoncen' || l.stav === 'zrusen')
   const nalet = ukoncene.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0)
 
+  // Detail a oprava berou vždy aktuální verzi letu z přehledu (obnovuje se každých 10 s).
+  const detail = prehled.lety.find((l) => l.id === detailId)
+  const oprava = prehled.lety.find((l) => l.id === opravaId)
+
   const karta = (l: Let) => (
     <KartaLetu
       key={l.id}
@@ -57,6 +66,8 @@ export function PrehledDne() {
       onVzlet={() => start.mutate(l)}
       onPristani={() => setPristani(l)}
       onZrusit={() => setZruseni(l)}
+      onDetail={() => setDetailId(l.id)}
+      onOpravit={() => setOpravaId(l.id)}
     />
   )
 
@@ -109,6 +120,27 @@ export function PrehledDne() {
       <NovyLet otevreno={novy} onZavrit={() => setNovy(false)} lety={prehled.lety} ted={ted} />
       <PristaniDialog let_={pristani} onZavrit={() => setPristani(null)} />
       <ZruseniDialog let_={zruseni} onZavrit={() => setZruseni(null)} />
+      <DetailLetu
+        let_={detail ?? null}
+        onZavrit={() => setDetailId(null)}
+        onOpravit={() => {
+          setOpravaId(detailId)
+          setDetailId(null)
+        }}
+        onZrusit={() => {
+          setZruseni(detail ?? null)
+          setDetailId(null)
+        }}
+      />
+      {oprava && (
+        <OpravaLetu
+          key={`${oprava.id}-${oprava.verze}`}
+          let_={oprava}
+          lety={prehled.lety}
+          ted={ted}
+          onZavrit={() => setOpravaId(null)}
+        />
+      )}
     </Container>
   )
 }

@@ -12,6 +12,8 @@ from osoby.models import Kategorie, Osoba
 
 from . import audit
 from .models import (
+    AuditLog,
+    DuvodOpravy,
     DuvodZruseni,
     FunkcePosadky,
     KratkyLet,
@@ -361,12 +363,10 @@ def _zamknout(let_id: int) -> Let:
     return let
 
 
-def _kdo_naposledy(let: Let, akce: str) -> str:
-    from .models import AuditLog
-
+def _kdo_naposledy(let: Let, *akce: str) -> str:
     zaznam = (
         AuditLog.objects.select_related("kdo")
-        .filter(objekt="let", objekt_id=let.pk, akce=akce)
+        .filter(objekt="let", objekt_id=let.pk, akce__in=akce)
         .order_by("-kdy")
         .first()
     )
@@ -381,7 +381,8 @@ def vzlet(let_id: int, kdo: Osoba, cas: datetime | None = None) -> Let:
         raise ChybaLetu("Let je zrušený.", status=409)
     if let.stav != StavLetu.PRIPRAVEN:
         raise ChybaLetu(
-            f"Vzlet už je zapsaný v {let.cas_vzletu:%H:%M:%S} UTC{_kdo_naposledy(let, 'vzlet')}.",
+            f"Vzlet už je zapsaný v {let.cas_vzletu:%H:%M:%S} UTC"
+            f"{_kdo_naposledy(let, 'vzlet', 'zalozeni', 'oprava')}.",
             status=409,
             kod="uz_zapsano",
             let_id=let.pk,
@@ -422,7 +423,8 @@ def pristani(
     if let.stav != StavLetu.VE_VZDUCHU:
         konec = f" v {let.cas_pristani:%H:%M:%S} UTC" if let.cas_pristani else ""
         raise ChybaLetu(
-            f"Přistání už je zapsané{konec}{_kdo_naposledy(let, 'pristani')}.",
+            f"Přistání už je zapsané{konec}"
+            f"{_kdo_naposledy(let, 'pristani', 'zalozeni', 'oprava')}.",
             status=409,
             kod="uz_zapsano",
             let_id=let.pk,
@@ -475,4 +477,164 @@ def zrusit(let_id: int, kdo: Osoba, duvod: str, poznamka: str = "") -> Let:
         duvod=duvod,
         poznamka=poznamka,
     )
+    return let
+
+
+# --- opravy -------------------------------------------------------------------------
+
+
+@dataclass
+class Oprava(NovyLet):
+    verze: int = 0
+    duvod: str = ""
+    poznamka: str = ""
+
+
+def _popis(let: Let) -> dict[str, str]:
+    """Čitelný stav letu pro historii změn (jména místo čísel)."""
+    cas = lambda d: f"{d:%d.%m.%Y %H:%M:%S}" if d else "–"  # noqa: E731
+    funkce = dict(FunkcePosadky.choices)
+    return {
+        "letadlo": let.letadlo.imatrikulace,
+        "účel": dict(Ucel.choices)[let.ucel],
+        "úloha": str(let.uloha) if let.uloha else "–",
+        "způsob vzletu": dict(ZpusobVzletu.choices)[let.zpusob_vzletu],
+        "posádka": ", ".join(
+            f"{p.osoba.get_full_name()} ({funkce[p.funkce]})"
+            for p in let.posadka.select_related("osoba").order_by("id")
+        ),
+        "hosté": str(let.pocet_hostu),
+        "plátce": "Aeroklub" if let.plati_aeroklub else let.platce.get_full_name(),
+        "místo vzletu": str(let.misto_vzletu),
+        "vzlet": cas(let.cas_vzletu),
+        "místo přistání": str(let.misto_pristani) if let.misto_pristani else "–",
+        "přistání": cas(let.cas_pristani),
+        "touch-and-go": str(let.pocet_tg),
+        "krátký let": dict(KratkyLet.choices).get(let.kratky_let, "–"),
+    }
+
+
+def _rozdil(pred: dict, po: dict) -> dict[str, list[str]]:
+    return {k: [pred[k], po[k]] for k in po if pred.get(k) != po[k]}
+
+
+@transaction.atomic
+def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
+    let = _zamknout(let_id)
+    over_pravo(kdo, let)
+    if let.stav == StavLetu.ZRUSEN:
+        raise ChybaLetu("Zrušený let nejde opravit.", status=409)
+    if data.verze != let.verze:
+        raise ChybaLetu(
+            f"Let mezitím změnil někdo jiný{_kdo_naposledy(let, 'oprava', 'vzlet', 'pristani')}."
+            " Zkontrolujte aktuální údaje a opravte znovu.",
+            status=409,
+            kod="zmeneno",
+            let_id=let.pk,
+        )
+    if data.duvod not in DuvodOpravy.values:
+        raise ChybaLetu("Vyberte důvod opravy.")
+
+    letadlo = (
+        let.letadlo
+        if data.letadlo_id == let.letadlo_id
+        else Letadlo.objects.filter(pk=data.letadlo_id, aktivni=True).first()
+    )
+    if letadlo is None:
+        raise ChybaLetu("Letadlo neexistuje nebo není aktivní.")
+    if data.pocet_hostu < 0 or data.pocet_tg < 0:
+        raise ChybaLetu("Počty nemohou být záporné.")
+    _over_posadku(data, letadlo)
+    _over_platce(data)
+    uloha = _over_ulohu(data, letadlo)
+    _over_zpusob_vzletu(data, letadlo)
+
+    pred = _popis(let)
+    let.letadlo = letadlo
+    let.soukrome = letadlo.soukrome
+    let.ucel = data.ucel
+    let.uloha = uloha
+    let.zpusob_vzletu = data.zpusob_vzletu
+    let.misto_vzletu = _letiste(data.misto_vzletu_id)
+    let.pocet_hostu = data.pocet_hostu
+    let.platce_id = data.platce_id
+    let.plati_aeroklub = data.plati_aeroklub
+
+    if let.stav == StavLetu.PRIPRAVEN:
+        if data.cas_vzletu or data.cas_pristani:
+            raise ChybaLetu("U připraveného letu se čas nezadává – použijte VZLET.")
+    else:
+        if not data.cas_vzletu:
+            raise ChybaLetu("Zadejte čas vzletu.")
+        let.cas_vzletu = _over_cas(data.cas_vzletu, "Vzlet")
+        if let.stav == StavLetu.UKONCEN:
+            if not data.cas_pristani:
+                raise ChybaLetu("Zadejte čas přistání.")
+            let.cas_pristani = _over_cas(data.cas_pristani, "Přistání")
+            if let.cas_pristani < let.cas_vzletu:
+                raise ChybaLetu("Přistání nemůže být dřív než vzlet.")
+            let.misto_pristani = _letiste(data.misto_pristani_id)
+            let.pocet_tg = data.pocet_tg
+            let.kratky_let = _kratky_let(let, data.kratky_let)
+        elif data.cas_pristani:
+            raise ChybaLetu("Let je ještě ve vzduchu – přistání zapište tlačítkem PŘISTÁL.")
+        _over_volne_osoby(_letici(data.posadka), let.cas_vzletu, let.cas_pristani, let.pk)
+
+    let.verze += 1
+    _uloz(let)
+    let.posadka.all().delete()
+    let.posadka.bulk_create(
+        [let.posadka.model(let=let, osoba_id=c.osoba_id, funkce=c.funkce) for c in data.posadka]
+    )
+    zmeny = _rozdil(pred, _popis(let))
+    if not zmeny:
+        raise ChybaLetu("Nic se nezměnilo.")
+    audit.zapsat(
+        kdo, "oprava", "let", let.pk, zmeny=zmeny, duvod=data.duvod, poznamka=data.poznamka
+    )
+    return let
+
+
+# --- tlačítko Zpět ------------------------------------------------------------------
+
+ZPET_DO = timedelta(minutes=2)
+
+
+@transaction.atomic
+def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
+    """Vrátí poslední akci (založení, vzlet, přistání), kterou kdo právě udělal.
+
+    Tlačítko je vidět 10 s; server dovolí 2 minuty kvůli pomalému připojení.
+    """
+    let = _zamknout(let_id)
+    posledni = (
+        AuditLog.objects.filter(objekt="let", objekt_id=let.pk).order_by("-kdy", "-id").first()
+    )
+    if (
+        posledni is None
+        or posledni.kdo_id != kdo.pk
+        or posledni.akce not in ("zalozeni", "vzlet", "pristani")
+        or timezone.now() - posledni.kdy > ZPET_DO
+        or let.verze != verze
+    ):
+        raise ChybaLetu("Akci už nejde vrátit – použijte opravu letu.", status=409, kod="nelze")
+
+    pred = _popis(let)
+    if posledni.akce == "pristani":
+        let.stav = StavLetu.VE_VZDUCHU
+        let.cas_pristani = None
+        let.misto_pristani = None
+        let.pocet_tg = 0
+        let.kratky_let = ""
+    elif posledni.akce == "vzlet":
+        let.stav = StavLetu.PRIPRAVEN
+        let.cas_vzletu = None
+    else:  # založení omylem
+        let.stav = StavLetu.ZRUSEN
+        let.duvod_zruseni = DuvodZruseni.OMYL
+    let.verze += 1
+    _uloz(let)
+    zmeny = _rozdil(pred, _popis(let))
+    zmeny["vráceno"] = [posledni.akce, ""]
+    audit.zapsat(kdo, "zpet", "let", let.pk, zmeny=zmeny)
     return let

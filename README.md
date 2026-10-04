@@ -13,7 +13,8 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 | 1 | Datový model, administrace, import číselníků | hotovo |
 | 2 | Přihlášení, role, pozvánky, nastavení provozu | hotovo |
 | 3 | Přehled dne, nový let, vzlet, přistání, dodatečný zápis, zrušení | hotovo |
-| 4 | Zálohy: měsíční export e-mailem, ověřená obnova, postup při problému | hotovo |
+| 4 | Zálohy: týdenní export e-mailem, ověřená obnova, postup při problému | hotovo |
+| 5 | Opravy letů s důvodem, historie změn, tlačítko Zpět | hotovo |
 
 ## Struktura
 

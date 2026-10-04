@@ -40,6 +40,18 @@ class DuvodZruseni(models.TextChoices):
     JINE = "jine", "Jiné"
 
 
+class DuvodOpravy(models.TextChoices):
+    """Proč se let opravuje – povinná volba, zapisuje se do auditního logu."""
+
+    ZAPOMENUTY_START = "zapomenuty_start", "Zapomenutý start"
+    ZAPOMENUTY_STOP = "zapomenuty_stop", "Zapomenutý stop"
+    CHYBNY_CAS = "chybny_cas", "Chybný čas"
+    CHYBNE_LETADLO = "chybne_letadlo", "Chybné letadlo"
+    CHYBNA_OSOBA = "chybna_osoba", "Chybná osoba"
+    CHYBNY_UCEL = "chybny_ucel", "Chybný účel nebo úloha"
+    JINE = "jine", "Jiné"
+
+
 class KratkyLet(models.TextChoices):
     """Volba u letu do 1 minuty (kap. 3.5 návrhu)."""
 

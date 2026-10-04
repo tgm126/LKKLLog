@@ -9,6 +9,8 @@ from osoby.models import Kategorie, Opravneni, Osoba
 
 from . import sluzby
 from .models import (
+    AuditLog,
+    DuvodOpravy,
     DuvodZruseni,
     FunkcePosadky,
     KratkyLet,
@@ -95,6 +97,7 @@ class CiselnikyOut(Schema):
     funkce: list[Volba]
     zpusoby_vzletu: list[Volba]
     duvody_zruseni: list[Volba]
+    duvody_opravy: list[Volba]
     kratke_lety: list[Volba]
 
 
@@ -135,6 +138,7 @@ def ciselniky(request):
         "funkce": _volby(FunkcePosadky.choices),
         "zpusoby_vzletu": _volby(ZpusobVzletu.choices),
         "duvody_zruseni": _volby(DuvodZruseni.choices),
+        "duvody_opravy": _volby(DuvodOpravy.choices),
         "kratke_lety": _volby(KratkyLet.choices),
     }
 
@@ -158,13 +162,17 @@ class LetOut(Schema):
     max_doba_min: int | None
     ucel: str
     uloha: str | None
+    uloha_id: int | None
     zpusob_vzletu: str
     posadka: list[ClenOut]
     pocet_hostu: int
     platce: str | None
+    platce_id: int | None
     plati_aeroklub: bool
     misto_vzletu: str
+    misto_vzletu_id: int
     misto_pristani: str | None
+    misto_pristani_id: int | None
     cas_vzletu: datetime | None
     cas_pristani: datetime | None
     doba_min: int | None
@@ -195,6 +203,7 @@ def _let_out(let: Let, osoba: Osoba) -> dict:
         "max_doba_min": let.letadlo.max_doba_min,
         "ucel": let.ucel,
         "uloha": str(let.uloha) if let.uloha else None,
+        "uloha_id": let.uloha_id,
         "zpusob_vzletu": let.zpusob_vzletu,
         "posadka": [
             {"osoba_id": p.osoba_id, "jmeno": p.osoba.get_full_name(), "funkce": p.funkce}
@@ -202,9 +211,12 @@ def _let_out(let: Let, osoba: Osoba) -> dict:
         ],
         "pocet_hostu": let.pocet_hostu,
         "platce": let.platce.get_full_name() if let.platce else None,
+        "platce_id": let.platce_id,
         "plati_aeroklub": let.plati_aeroklub,
         "misto_vzletu": _misto(let.misto_vzletu),
+        "misto_vzletu_id": let.misto_vzletu_id,
         "misto_pristani": _misto(let.misto_pristani),
+        "misto_pristani_id": let.misto_pristani_id,
         "cas_vzletu": let.cas_vzletu,
         "cas_pristani": let.cas_pristani,
         "doba_min": let.doba_min,
@@ -333,3 +345,67 @@ class ZruseniIn(Schema):
 @router.post("/lety/{let_id}/zrusit", response=LetOut, summary="Zrušit let (s důvodem)")
 def zrusit(request, let_id: int, data: ZruseniIn):
     return _znovu(sluzby.zrusit(let_id, request.user, data.duvod, data.poznamka), request.user)
+
+
+class OpravaIn(NovyLetIn):
+    verze: int
+    duvod: str
+    poznamka: str = ""
+
+
+@router.post("/lety/{let_id}/oprava", response=LetOut, summary="Opravit let (s důvodem)")
+def opravit(request, let_id: int, data: OpravaIn):
+    vstup = data.dict()
+    vstup.pop("akce", None)
+    vstup["posadka"] = [sluzby.ClenPosadky(**c) for c in vstup["posadka"]]
+    let = sluzby.opravit(let_id, sluzby.Oprava(**vstup), request.user)
+    return _znovu(let, request.user)
+
+
+class VerzeIn(Schema):
+    verze: int
+
+
+@router.post("/lety/{let_id}/zpet", response=LetOut, summary="Vrátit poslední akci (Zpět)")
+def zpet(request, let_id: int, data: VerzeIn):
+    return _znovu(sluzby.zpet(let_id, request.user, data.verze), request.user)
+
+
+class ZaznamOut(Schema):
+    kdy: datetime
+    kdo: str
+    akce: str
+    zmeny: dict
+    duvod: str
+    poznamka: str
+
+
+NAZVY_AKCI = {
+    "zalozeni": "Založení",
+    "vzlet": "Vzlet",
+    "pristani": "Přistání",
+    "zruseni": "Zrušení",
+    "oprava": "Oprava",
+    "zpet": "Vráceno tlačítkem Zpět",
+}
+
+
+@router.get("/lety/{let_id}/historie", response=list[ZaznamOut], summary="Historie změn letu")
+def historie(request, let_id: int):
+    duvody = dict(DuvodOpravy.choices) | dict(DuvodZruseni.choices)
+    zaznamy = (
+        AuditLog.objects.select_related("kdo")
+        .filter(objekt="let", objekt_id=let_id)
+        .order_by("kdy", "id")
+    )
+    return [
+        {
+            "kdy": z.kdy,
+            "kdo": z.kdo.get_full_name() if z.kdo else "systém",
+            "akce": NAZVY_AKCI.get(z.akce, z.akce),
+            "zmeny": z.zmeny,
+            "duvod": duvody.get(z.duvod, z.duvod),
+            "poznamka": z.poznamka,
+        }
+        for z in zaznamy
+    ]

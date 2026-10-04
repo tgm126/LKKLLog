@@ -3,68 +3,11 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from lety.models import AuditLog, Let, Letadlo, Letiste, Osnova, StavLetu, Ucel, Uloha
-from osoby.models import Kategorie, Osoba
+from lety.models import AuditLog, StavLetu, Ucel
+
+from .pomocne import normalni, post, ve_vzduchu
 
 pytestmark = pytest.mark.django_db
-
-
-def osoba(prijmeni, **kw):
-    return Osoba.objects.create_user(None, jmeno="Test", prijmeni=prijmeni, **kw)
-
-
-@pytest.fixture
-def svet(db):
-    """Malý testovací aeroklub."""
-    s = type("Svet", (), {})()
-    s.lkkl = Letiste.objects.create(icao="LKKL", nazev="Kladno", domovske=True)
-    s.teren = Letiste.objects.create(nazev="Mimo letiště", teren=True)
-    s.motor = Letadlo.objects.create(
-        imatrikulace="OK-TCS",
-        typ="Cessna",
-        kategorie=Kategorie.MOTOR,
-        pocet_mist=4,
-        max_doba_min=300,
-    )
-    s.dvoumistne = Letadlo.objects.create(
-        imatrikulace="OK-TVA", typ="Z-226", kategorie=Kategorie.MOTOR, pocet_mist=2
-    )
-    s.kluzak = Letadlo.objects.create(
-        imatrikulace="OK-T101", typ="L-13", kategorie=Kategorie.KLUZAK, pocet_mist=2
-    )
-    s.pilot = osoba("Pilot")
-    s.zak = osoba("Žák")
-    s.instruktor = osoba("Instruktor")
-    s.cizi_pilot = osoba("Cizí")
-    s.casomeric = osoba("Časoměřič", role_casomeric=True)
-    s.ucetni = osoba("Účetní", role_ucetni=True)
-    s.externi = osoba("Externí", externi=True)
-    osnova = Osnova.objects.create(kategorie=Kategorie.MOTOR, nazev="Základní výcvik")
-    s.uloha = Uloha.objects.create(osnova=osnova, kod="M2", nazev="Okruhy", ucely=[Ucel.VYCVIK])
-    return s
-
-
-@pytest.fixture
-def jako(client):
-    def prihlasit(o):
-        client.force_login(o)
-        return client
-
-    return prihlasit
-
-
-def post(klient, url, data=None):
-    return klient.post(url, data or {}, content_type="application/json")
-
-
-def normalni(svet, **kw):
-    data = {
-        "letadlo_id": svet.motor.pk,
-        "ucel": Ucel.NORMALNI,
-        "posadka": [{"osoba_id": svet.pilot.pk, "funkce": "pic"}],
-    }
-    data.update(kw)
-    return data
 
 
 # --- přístup a číselníky ---------------------------------------------------------
@@ -206,22 +149,8 @@ def test_pripraveny_let_a_dvojity_vzlet(jako, svet):
     assert "Test Pilot" in druhy.json()["detail"]
 
 
-def _ve_vzduchu(svet, minut=20):
-    let = Let.objects.create(
-        letadlo=svet.motor,
-        ucel=Ucel.NORMALNI,
-        misto_vzletu=svet.lkkl,
-        platce=svet.pilot,
-        zalozil=svet.pilot,
-        stav=StavLetu.VE_VZDUCHU,
-        cas_vzletu=timezone.now().replace(microsecond=0) - timedelta(minutes=minut),
-    )
-    let.posadka.create(osoba=svet.pilot, funkce="pic")
-    return let
-
-
 def test_pristani_a_dvojity_stisk(jako, svet):
-    let = _ve_vzduchu(svet)
+    let = ve_vzduchu(svet)
     odpoved = post(jako(svet.casomeric), f"/api/lety/{let.pk}/pristani", {"pocet_tg": 3})
     assert odpoved.status_code == 200
     data = odpoved.json()
@@ -235,14 +164,14 @@ def test_pristani_a_dvojity_stisk(jako, svet):
 
 
 def test_cizi_pilot_neovlada_cizi_let(jako, svet):
-    let = _ve_vzduchu(svet)
+    let = ve_vzduchu(svet)
     assert post(jako(svet.cizi_pilot), f"/api/lety/{let.pk}/pristani").status_code == 403
     prehled = jako(svet.cizi_pilot).get("/api/prehled").json()
     assert prehled["lety"][0]["muze_ovladat"] is False
 
 
 def test_kratky_let_vyzaduje_volbu(jako, svet):
-    let = _ve_vzduchu(svet, minut=0)
+    let = ve_vzduchu(svet, minut=0)
     klient = jako(svet.pilot)
     odpoved = post(klient, f"/api/lety/{let.pk}/pristani")
     assert odpoved.status_code == 409 and odpoved.json()["kod"] == "kratky_let"
@@ -282,7 +211,7 @@ def test_zruseni(jako, svet):
 
 
 def test_prehled_dne(jako, svet):
-    _ve_vzduchu(svet)
+    ve_vzduchu(svet)
     data = jako(svet.pilot).get("/api/prehled").json()
     assert len(data["lety"]) == 1
     assert data["konec_soumraku"] > data["zapad_slunce"]
@@ -291,7 +220,7 @@ def test_prehled_dne(jako, svet):
 
 
 def test_ucetni_neridi_provoz_ale_ovlada_sve_lety(jako, svet):
-    cizi = _ve_vzduchu(svet)
+    cizi = ve_vzduchu(svet)
     klient = jako(svet.ucetni)
     assert post(klient, f"/api/lety/{cizi.pk}/pristani").status_code == 403
 
@@ -308,7 +237,7 @@ def test_ucetni_neridi_provoz_ale_ovlada_sve_lety(jako, svet):
 
 
 def test_pilot_ve_vzduchu_nemuze_vzletnout_znovu(jako, svet):
-    _ve_vzduchu(svet)  # Pilot letí na OK-TCS
+    ve_vzduchu(svet)  # Pilot letí na OK-TCS
     data = normalni(svet, letadlo_id=svet.dvoumistne.pk)
     odpoved = post(jako(svet.casomeric), "/api/lety", data)
     assert odpoved.status_code == 409
@@ -317,7 +246,7 @@ def test_pilot_ve_vzduchu_nemuze_vzletnout_znovu(jako, svet):
 
 
 def test_pripravit_jde_vzlet_ne(jako, svet):
-    _ve_vzduchu(svet)
+    ve_vzduchu(svet)
     klient = jako(svet.casomeric)
     data = normalni(svet, letadlo_id=svet.dvoumistne.pk, akce="pripravit")
     let = post(klient, "/api/lety", data).json()

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { ApiChyba } from '../api/klient'
 import { type Let, pristat, zrusitLet } from '../api/lety'
 import { PREHLED_KLIC, useCiselniky } from '../useLety'
+import { oznamitSeZpet } from '../zpet'
 import { Pocitadlo } from './Pocitadlo'
 
 /** Potvrzení přistání: místo, počet touch-and-go a u letu do 1 minuty volba, jak ho brát. */
@@ -23,8 +24,9 @@ export function PristaniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit:
     setKratky(false)
     onZavrit()
   }
-  const hotovo = (zprava: string) => {
-    notifications.show({ message: zprava, color: 'green' })
+  const hotovo = (zprava: string, l?: Let) => {
+    if (l) oznamitSeZpet(l, zprava, klient)
+    else notifications.show({ message: zprava, color: 'green' })
     void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
     zavrit()
   }
@@ -44,7 +46,7 @@ export function PristaniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit:
         pocet_tg: tg,
         kratky_let: kratkyLet,
       }),
-    onSuccess: (l) => hotovo(`${l.imatrikulace} přistál.`),
+    onSuccess: (l) => hotovo(`${l.imatrikulace} přistál.`, l),
     onError: chyba,
   })
   const nepocitat = useMutation({

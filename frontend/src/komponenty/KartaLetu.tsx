@@ -13,6 +13,8 @@ export function KartaLetu({
   onVzlet,
   onPristani,
   onZrusit,
+  onDetail,
+  onOpravit,
   pracuje,
 }: {
   let_: Let
@@ -21,6 +23,8 @@ export function KartaLetu({
   onVzlet: () => void
   onPristani: () => void
   onZrusit: () => void
+  onDetail: () => void
+  onOpravit: () => void
   pracuje: boolean
 }) {
   const { data: c } = useCiselniky()
@@ -31,7 +35,12 @@ export function KartaLetu({
     .join(', ')
 
   return (
-    <Card withBorder padding="sm" style={pozor ? { borderColor: 'var(--mantine-color-red-6)' } : undefined}>
+    <Card
+      withBorder
+      padding="sm"
+      onClick={onDetail}
+      style={{ cursor: 'pointer', ...(pozor ? { borderColor: 'var(--mantine-color-red-6)' } : {}) }}
+    >
       <Stack gap={6}>
         <Group justify="space-between" wrap="nowrap" align="flex-start">
           <div>
@@ -89,24 +98,34 @@ export function KartaLetu({
             {pozor}
           </Text>
         )}
-        {let_.muze_ovladat && (let_.stav === 've_vzduchu' || let_.stav === 'pripraven') && (
-          <Group gap="xs" wrap="nowrap">
-            {let_.stav === 've_vzduchu' ? (
+        {let_.muze_ovladat && let_.stav !== 'zrusen' && (
+          // Tlačítka nesmí otevírat detail (klik na kartu).
+          <Group gap="xs" wrap="nowrap" onClick={(e) => e.stopPropagation()}>
+            {let_.stav === 've_vzduchu' && (
               <Button size="lg" color="green" style={{ flex: 1 }} onClick={onPristani}>
                 PŘISTÁL
               </Button>
-            ) : (
+            )}
+            {let_.stav === 'pripraven' && (
               <Button size="lg" style={{ flex: 1 }} loading={pracuje} onClick={onVzlet}>
                 VZLET
               </Button>
             )}
+            {let_.stav === 'ukoncen' && <div style={{ flex: 1 }} />}
             <Menu position="bottom-end">
               <Menu.Target>
-                <Button size="lg" variant="default" px="sm" aria-label="Další akce">
+                <Button
+                  size={let_.stav === 'ukoncen' ? 'xs' : 'lg'}
+                  variant="default"
+                  px="sm"
+                  aria-label="Další akce"
+                >
                   ⋯
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
+                <Menu.Item onClick={onDetail}>Detail a historie</Menu.Item>
+                <Menu.Item onClick={onOpravit}>Opravit…</Menu.Item>
                 <Menu.Item color="red" onClick={onZrusit}>
                   Zrušit let…
                 </Menu.Item>

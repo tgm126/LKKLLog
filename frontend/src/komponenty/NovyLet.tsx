@@ -17,71 +17,14 @@ import { notifications } from '@mantine/notifications'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
-import { type Let, type NovyLet as NovyLetData, type OsobaVyber, zalozitLet } from '../api/lety'
+import { type Let, type NovyLet as NovyLetData, zalozitLet } from '../api/lety'
 import { KATEGORIE_LETU } from '../nazvy'
+import { jmeno, KROKY, nabidka, SLOTY, UCELY } from '../posadka'
 import { PREHLED_KLIC, useCiselniky } from '../useLety'
+import { oznamitSeZpet } from '../zpet'
 import { naMinuty } from '../cas'
 import { CasVolba } from './CasVolba'
 import { Pocitadlo } from './Pocitadlo'
-
-const UROVEN: Record<string, number> = { zak: 0, pilot: 1, instruktor: 2, examinator: 3 }
-
-type Slot = { funkce: string; popis: string; min: number; max: number }
-
-/** Políčka posádky podle účelu letu (kap. 3.1 návrhu). */
-const SLOTY: Record<string, { pic: Slot; druhy: Slot | null }> = {
-  normalni: { pic: { funkce: 'pic', popis: 'PIC', min: 1, max: 3 }, druhy: null },
-  vycvik: {
-    pic: { funkce: 'pic', popis: 'Instruktor (PIC)', min: 2, max: 3 },
-    druhy: { funkce: 'zak', popis: 'Žák', min: 0, max: 0 },
-  },
-  vycvik_solo: {
-    pic: { funkce: 'pic', popis: 'Žák (PIC)', min: 0, max: 0 },
-    druhy: { funkce: 'dozor', popis: 'Dozorující instruktor (na zemi)', min: 2, max: 3 },
-  },
-  prezkouseni: {
-    pic: { funkce: 'pic', popis: 'Examinátor / instruktor (PIC)', min: 2, max: 3 },
-    druhy: { funkce: 'prezkouseny', popis: 'Přezkoušený pilot', min: 0, max: 3 },
-  },
-}
-
-const UCELY = [
-  { hodnota: 'normalni', nazev: 'Normální' },
-  { hodnota: 'vycvik', nazev: 'Výcvik' },
-  { hodnota: 'vycvik_solo', nazev: 'Výcvik sólo' },
-  { hodnota: 'prezkouseni', nazev: 'Přezkoušení' },
-]
-
-const KROKY = ['Letadlo', 'Účel', 'Posádka', 'Úloha', 'Vzlet']
-
-const jmeno = (o: OsobaVyber) => `${o.prijmeni} ${o.jmeno}`
-
-/** Nabídka osob: nahoře ti s odpovídajícím oprávněním, pak ostatní. */
-function nabidka(
-  osoby: OsobaVyber[],
-  kategorie: string,
-  slot: Slot,
-  externiSmi: boolean,
-  veVzduchu: Set<number>,
-) {
-  const uroven = (o: OsobaVyber) =>
-    Math.max(-1, ...o.opravneni.filter((op) => op.kategorie === kategorie).map((op) => UROVEN[op.uroven]))
-  const vhodne = osoby.filter((o) => externiSmi || !o.externi)
-  const doporuceni = vhodne
-    .filter((o) => uroven(o) >= slot.min && uroven(o) <= slot.max)
-    .sort((a, b) => uroven(b) - uroven(a) || jmeno(a).localeCompare(jmeno(b), 'cs'))
-  const ostatni = vhodne.filter((o) => !doporuceni.includes(o))
-  const polozky = (seznam: OsobaVyber[]) =>
-    seznam.map((o) => ({
-      value: String(o.id),
-      label:
-        jmeno(o) + (o.externi ? ' (externí)' : '') + (veVzduchu.has(o.id) ? ' – ✈ ve vzduchu' : ''),
-    }))
-  return [
-    { group: 'Doporučení', items: polozky(doporuceni) },
-    { group: 'Ostatní', items: polozky(ostatni) },
-  ].filter((g) => g.items.length > 0)
-}
 
 export function NovyLet({
   otevreno,
@@ -201,7 +144,7 @@ export function NovyLet({
     },
     onSuccess: (l, akce) => {
       const co = { pripravit: 'připraven', vzlet: 've vzduchu', dopsat: 'zapsán' }[akce]
-      notifications.show({ message: `Let ${l.imatrikulace} ${co}.`, color: 'green' })
+      oznamitSeZpet(l, `Let ${l.imatrikulace} ${co}.`, klient)
       void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
       zavrit()
     },

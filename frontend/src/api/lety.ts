@@ -42,6 +42,7 @@ export type Ciselniky = {
   funkce: Volba[]
   zpusoby_vzletu: Volba[]
   duvody_zruseni: Volba[]
+  duvody_opravy: Volba[]
   kratke_lety: Volba[]
 }
 
@@ -57,13 +58,17 @@ export type Let = {
   max_doba_min: number | null
   ucel: string
   uloha: string | null
+  uloha_id: number | null
   zpusob_vzletu: string
   posadka: Clen[]
   pocet_hostu: number
   platce: string | null
+  platce_id: number | null
   plati_aeroklub: boolean
   misto_vzletu: string
+  misto_vzletu_id: number
   misto_pristani: string | null
+  misto_pristani_id: number | null
   cas_vzletu: string | null
   cas_pristani: string | null
   doba_min: number | null
@@ -117,3 +122,22 @@ export const vzlet = (id: number, cas?: string | null) => api<Let>(`/lety/${id}/
 export const pristat = (id: number, data: Pristani) => api<Let>(`/lety/${id}/pristani`, data)
 export const zrusitLet = (id: number, duvod: string) =>
   api<Let>(`/lety/${id}/zrusit`, { duvod })
+
+export type Oprava = Omit<NovyLet, 'akce'> & {
+  verze: number
+  duvod: string
+  poznamka: string
+}
+
+export type Zaznam = {
+  kdy: string
+  kdo: string
+  akce: string
+  zmeny: Record<string, unknown>
+  duvod: string
+  poznamka: string
+}
+
+export const opravitLet = (id: number, data: Oprava) => api<Let>(`/lety/${id}/oprava`, data)
+export const vratitZpet = (id: number, verze: number) => api<Let>(`/lety/${id}/zpet`, { verze })
+export const nactiHistorii = (id: number) => api<Zaznam[]>(`/lety/${id}/historie`)
