@@ -76,7 +76,7 @@ serveru v `/usr/local/lib/lkkllog/udrzba.sh`. Při úspěchu nic nehlásí, chyb
 |---|---|
 | denně 3:17 | `prihlaseni` – smaže prošlá přihlášení (`clearsessions`) |
 | neděle 3:27 | `docker-uklid` – mezipaměť sestavení Dockeru zmenší na 1 GB |
-| 1. v měsíci 3:37 | `export` – `pg_dump` do `/var/backups/lkkllog` (posledních 24), kopie e-mailem administrátorům |
+| pondělí 3:37 | `export` – `pg_dump` do `/var/backups/lkkllog` (posledních 52), kopie e-mailem administrátorům |
 
 Instalace / aktualizace (z počítače správce):
 
@@ -100,7 +100,13 @@ GitHub Actions (`.github/workflows/dostupnost.yml`) se jednou za hodinu zeptá
 | Záloha | Kde | Jak dlouho |
 |---|---|---|
 | Zálohy hostingu (databáze `lkkllog`) | VPS Centrum → Zálohování, úložiště **„Lokální disk“** serveru; zda je hosting kopíruje i mimo server, je potřeba ověřit | denní 7 dní, týdenní 30 dní |
-| Měsíční export databáze (`pg_dump`) | `/var/backups/lkkllog` na serveru + e-mail administrátorům | 24 měsíců na serveru, v e-mailu trvale |
+| Týdenní export databáze (`pg_dump`) | `/var/backups/lkkllog` na serveru + e-mail administrátorům (Gmail = kopie mimo server) | 52 týdnů na serveru, v e-mailu trvale |
+
+Zálohy hostingu (zjištěno 4. 10. 2026): plánovač VPS Centra zálohuje každou databázi
+denně ve 4:00 času serveru; v neděli jako *weekly*, ostatní dny *daily*. Ukládá je jako
+ZIP do `/root/backup/domains/<doména>/databases/<databáze>/` na **stejném disku**.
+Denní drží zhruba týden, týdenní 30 dní – k dispozici je tedy každý den posledního týdne
+a každá neděle posledního měsíce. Mimo server je jen náš týdenní export v e-mailu.
 
 Kód zálohovat netřeba (je na GitHubu), Docker image se z kódu sestaví znovu.
 Tajné údaje v Env proměnných aplikace nejsou nenahraditelné: nový `DJANGO_SECRET_KEY`
@@ -108,7 +114,7 @@ jen odhlásí všechny uživatele a zneplatní rozeslané odkazy na nastavení h
 heslo ke schránce jde ve VPS Centru nastavit znovu.
 
 **Zkouška obnovy** (doporučeno jednou za čtvrtletí, z počítače správce, běžící
-`compose.dev.yaml`): `bash scripts/zkouska-obnovy.sh` – stáhne poslední export, obnoví ho
+`compose.dev.yaml`): `bash scripts/zkouska-obnovy.sh` – stáhne poslední týdenní export, obnoví ho
 do zkušební databáze, ověří data a databázi smaže. První zkouška 4. 10. 2026: v pořádku.
 
 **Postup při problému** (vždy nejdřív zastavit aplikaci ve VPS Centru, ať se mezitím nic nezapisuje):
@@ -117,7 +123,7 @@ do zkušební databáze, ověří data a databázi smaže. První zkouška 4. 10
    `lkkllog` k vybranému dni. Pozor, přepíše celou databázi – změny od zálohy se ztratí.
    Když jde jen o pár záznamů, je lepší obnovit zálohu do jiné databáze a záznamy
    přenést ručně.
-2. *Starší data:* z měsíčního exportu na serveru (jako `postgres`):
+2. *Starší data:* z týdenního exportu na serveru nebo z e-mailu (jako `postgres`):
    `pg_restore --clean --if-exists -d lkkllog /var/backups/lkkllog/lkkllog-RRRR-MM-DD.dump`
 3. *Ztráta celého serveru:* nový server s Dockerem → ve VPS Centru PostgreSQL databáze
    `lkkllog` → `pg_restore` posledního exportu (nebo zálohy hostingu) → Docker aplikace

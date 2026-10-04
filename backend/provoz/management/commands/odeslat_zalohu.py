@@ -8,7 +8,7 @@ from osoby.models import Osoba
 
 TEXT = """Dobrý den,
 
-v příloze je měsíční export databáze aplikace LKKL Log ({nazev}, {velikost} kB).
+v příloze je týdenní export databáze aplikace LKKL Log ({nazev}, {velikost} kB).
 Zálohy hostingu sahají jen 30 dní zpět, tento export je dlouhodobá kopie mimo server.
 
 Soubor uložte na bezpečné místo – obsahuje osobní údaje členů (jména, e-maily,
@@ -38,7 +38,7 @@ class Command(BaseCommand):
         if not adresy:
             raise CommandError("Není žádný aktivní administrátor s e-mailem.")
         zprava = EmailMessage(
-            subject=f"LKKL Log – měsíční záloha databáze ({nazev})",
+            subject=f"LKKL Log – týdenní záloha databáze ({nazev})",
             body=TEXT.format(nazev=nazev, velikost=round(len(data) / 1024)),
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=adresy,

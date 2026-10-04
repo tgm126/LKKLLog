@@ -3,7 +3,7 @@
 # Při úspěchu nic nevypisuje; cokoli na výstupu pošle cron e-mailem adminovi.
 #   udrzba.sh prihlaseni    smaže prošlá přihlášení (denně)
 #   udrzba.sh docker-uklid  zmenší mezipaměť sestavení Dockeru na 1 GB (týdně)
-#   udrzba.sh export        export databáze, uchová 24 posledních, pošle e-mailem (měsíčně)
+#   udrzba.sh export        export databáze, uchová 52 posledních, pošle e-mailem (týdně)
 set -euo pipefail
 
 KONTEJNER=vpsc-app-lkkl-cz-lkkllog
@@ -24,7 +24,7 @@ export)
         lkkllog > "$soubor.tmp"
     mv "$soubor.tmp" "$soubor"
     chmod 600 "$soubor"
-    ls -1t "$ZALOHY"/lkkllog-*.dump | tail -n +25 | xargs -r rm --
+    ls -1t "$ZALOHY"/lkkllog-*.dump | tail -n +53 | xargs -r rm --
     docker exec -i "$KONTEJNER" python /srv/lkkllog/manage.py odeslat_zalohu \
         --nazev "$(basename "$soubor")" < "$soubor" >/dev/null
     ;;
