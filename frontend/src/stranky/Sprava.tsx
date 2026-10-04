@@ -96,7 +96,14 @@ function Piloti() {
           style={{ cursor: 'pointer', borderLeft: `4px solid var(--mantine-color-${BARVA[p.stav]}-6)` }}
         >
           <Group justify="space-between" wrap="nowrap">
-            <Text fw={700}>{p.jmeno}</Text>
+            <Group gap={6}>
+              <Text fw={700}>{p.jmeno}</Text>
+              {p.testovaci && (
+                <Badge color="yellow" variant="light" size="xs">
+                  testovací
+                </Badge>
+              )}
+            </Group>
             <Badge color={BARVA[p.stav]} variant="light">
               {TEXT_STAVU[p.stav]}
             </Badge>

@@ -983,6 +983,7 @@ def _jen_spravce(request):
 class PilotOut(Schema):
     id: int
     jmeno: str
+    testovaci: bool
     licence: list[str]
     stav: str
     problemy: list[str]
@@ -990,11 +991,14 @@ class PilotOut(Schema):
 
 @router.get("/sprava/piloti", response=list[PilotOut], summary="Přehled pilotů (správce)")
 def sprava_piloti(request):
-    """Piloti = aktivní členové s licencí nebo oprávněním (bez externích a testovacích)."""
+    """Piloti = aktivní členové s licencí nebo oprávněním (bez externích).
+
+    Testovací osoby se ukazují taky (s označením) – před spuštěním se smažou.
+    """
     _jen_spravce(request)
     typy = dict(TypLicence.choices)
     osoby = (
-        Osoba.objects.filter(is_active=True, externi=False, testovaci=False)
+        Osoba.objects.filter(is_active=True, externi=False)
         .filter(Q(licence__isnull=False) | Q(opravneni__isnull=False))
         .distinct()
         .order_by("prijmeni", "jmeno")
@@ -1007,6 +1011,7 @@ def sprava_piloti(request):
             {
                 "id": o.pk,
                 "jmeno": o.get_full_name(),
+                "testovaci": o.testovaci,
                 "licence": [typy[lic.typ] for lic in Licence.objects.filter(osoba=o)],
                 "stav": max((k.stav for k in kontroly), key=poradi.index),
                 "problemy": [

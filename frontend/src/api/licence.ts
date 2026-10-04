@@ -69,7 +69,14 @@ export const kontrolaPosadky = (data: KontrolaPosadky) =>
 
 // --- přehled pro správce licencí a letadel ---
 
-export type Pilot = { id: number; jmeno: string; licence: string[]; stav: Kontrola['stav']; problemy: string[] }
+export type Pilot = {
+  id: number
+  jmeno: string
+  testovaci: boolean
+  licence: string[]
+  stav: Kontrola['stav']
+  problemy: string[]
+}
 
 export type Termin = {
   id: number

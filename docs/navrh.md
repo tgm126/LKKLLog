@@ -435,7 +435,7 @@ a nápovědu.
 - Medical má **platnost pro každou třídu zvlášť** a posuzuje se podle licence.
 - Nová role **správce licencí a letadel** (zaškrtávátko u osoby, sloupec v Excelu
   s číselníky). Obrazovka *Piloti a letadla* je pro správce a admina:
-  - **Piloti:** stav každého pilota (v pořádku / brzy vyprší / neplatné) se seznamem
+  - **Piloti** (včetně testovacích osob s označením): stav každého pilota (v pořádku / brzy vyprší / neplatné) se seznamem
     problémů. Detail ukáže všechny kontroly a vede k úpravě jeho licencí a medicalu.
     Žák bez licence není chyba.
   - **Letadla:**

@@ -23,7 +23,7 @@ def test_prehled_pilotu_jen_pro_spravce(jako, svet, spravce):
     assert jako(svet.pilot).get("/api/sprava/piloti").status_code == 403
     piloti = jako(spravce).get("/api/sprava/piloti").json()
     [pilot] = [p for p in piloti if p["id"] == svet.pilot.pk]
-    assert pilot["stav"] == "chyba"
+    assert pilot["stav"] == "chyba" and not pilot["testovaci"]
     assert "Medical: Není zadaný." in pilot["problemy"]
     detail = jako(spravce).get(f"/api/sprava/piloti/{svet.pilot.pk}").json()
     assert detail["kontroly"][0]["nazev"] == "Medical"
@@ -130,3 +130,10 @@ def test_testovaci_letadla(jako, svet, spravce):
     assert TerminLetadla.objects.count() == pocet
     call_command("testovaci_letadla", prepsat=True)
     assert TerminLetadla.objects.count() == pocet
+
+
+def test_prehled_ukazuje_i_testovaci_osoby(jako, spravce):
+    testovaci = osoba("Testovací", testovaci=True)
+    Opravneni.objects.create(osoba=testovaci, kategorie="kluzak", uroven="pilot")
+    piloti = jako(spravce).get("/api/sprava/piloti").json()
+    assert [p["testovaci"] for p in piloti if p["id"] == testovaci.pk] == [True]
