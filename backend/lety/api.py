@@ -1,13 +1,14 @@
 from datetime import UTC, date, datetime, time, timedelta
 
 from django.db.models import Prefetch, Q
+from django.http import HttpResponse
 from django.utils import timezone
 from ninja import Router, Schema
 from ninja.security import django_auth
 
 from osoby.models import Kategorie, Opravneni, Osoba
 
-from . import sluzby
+from . import sluzby, vypis
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -442,3 +443,142 @@ def historie(request, let_id: int):
         }
         for z in zaznamy
     ]
+
+
+# --- výpis a export (etapa 7) -----------------------------------------------------------
+
+
+class VypisOut(Schema):
+    od: date
+    do: date
+    lety: list[LetOut]
+    souhrn: dict
+    smi_exportovat: bool
+
+
+def _filtr(
+    od: date | None,
+    do: date | None,
+    letadlo: int | None,
+    osoba: int | None,
+    platce: int | None,
+    kategorie: str | None,
+    ucel: str | None,
+    zpusob: str | None,
+    soukrome: bool,
+    zrusene: bool,
+) -> vypis.Filtr:
+    dnes = timezone.now().date()
+    od = od or dnes.replace(day=1)
+    return vypis.Filtr(
+        od=od,
+        do=do or dnes,
+        letadlo_id=letadlo,
+        osoba_id=osoba,
+        platce_id=platce,
+        kategorie=kategorie or None,
+        ucel=ucel or None,
+        zpusob_vzletu=zpusob or None,
+        vcetne_soukromych=soukrome,
+        vcetne_zrusenych=zrusene,
+    )
+
+
+def _nacti(request, **parametry) -> tuple[vypis.Filtr, list[Let]]:
+    filtr = _filtr(**parametry)
+    try:
+        return filtr, vypis.lety(filtr, _lety().select_related("vlecny_let__letadlo"))
+    except vypis.ChybaVypisu as e:
+        raise sluzby.ChybaLetu(str(e)) from e
+
+
+@router.get("/vypis", response=VypisOut, summary="Výpis letů za období se souhrny")
+def vypis_letu(
+    request,
+    od: date | None = None,
+    do: date | None = None,
+    letadlo: int | None = None,
+    osoba: int | None = None,
+    platce: int | None = None,
+    kategorie: str | None = None,
+    ucel: str | None = None,
+    zpusob: str | None = None,
+    soukrome: bool = False,
+    zrusene: bool = False,
+):
+    filtr, seznam = _nacti(
+        request,
+        od=od,
+        do=do,
+        letadlo=letadlo,
+        osoba=osoba,
+        platce=platce,
+        kategorie=kategorie,
+        ucel=ucel,
+        zpusob=zpusob,
+        soukrome=soukrome,
+        zrusene=zrusene,
+    )
+    return {
+        "od": filtr.od,
+        "do": filtr.do,
+        "lety": [_let_out(let, request.user) for let in seznam],
+        "souhrn": vypis.souhrn(seznam),
+        "smi_exportovat": vypis.smi_exportovat(request.user),
+    }
+
+
+def _nazvy(filtr: vypis.Filtr) -> dict:
+    letadlo = Letadlo.objects.filter(pk=filtr.letadlo_id).first() if filtr.letadlo_id else None
+    osoba = Osoba.objects.filter(pk=filtr.osoba_id).first() if filtr.osoba_id else None
+    platce = Osoba.objects.filter(pk=filtr.platce_id).first() if filtr.platce_id else None
+    return {
+        "letadlo": letadlo.imatrikulace if letadlo else None,
+        "osoba": osoba.get_full_name() if osoba else None,
+        "platce": "Aeroklub"
+        if filtr.platce_id == 0
+        else (platce.get_full_name() if platce else None),
+    }
+
+
+@router.get("/vypis/export.{format}", summary="Export výpisu do Excelu nebo CSV")
+def export(
+    request,
+    format: str,
+    od: date | None = None,
+    do: date | None = None,
+    letadlo: int | None = None,
+    osoba: int | None = None,
+    platce: int | None = None,
+    kategorie: str | None = None,
+    ucel: str | None = None,
+    zpusob: str | None = None,
+    soukrome: bool = False,
+    zrusene: bool = False,
+):
+    if not vypis.smi_exportovat(request.user):
+        raise sluzby.ChybaLetu("Export smí stahovat účetní a admin.", status=403)
+    if format not in ("xlsx", "csv"):
+        raise sluzby.ChybaLetu("Neznámý formát exportu.", status=404)
+    filtr, seznam = _nacti(
+        request,
+        od=od,
+        do=do,
+        letadlo=letadlo,
+        osoba=osoba,
+        platce=platce,
+        kategorie=kategorie,
+        ucel=ucel,
+        zpusob=zpusob,
+        soukrome=soukrome,
+        zrusene=zrusene,
+    )
+    nazev = f"lkkllog-vypis-{filtr.od:%Y-%m-%d}-{filtr.do:%Y-%m-%d}.{format}"
+    if format == "xlsx":
+        obsah = vypis.excel(seznam, filtr, _nazvy(filtr), request.user.get_full_name())
+        typ = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    else:
+        obsah, typ = vypis.csv_data(seznam), "text/csv; charset=utf-8"
+    odpoved = HttpResponse(obsah, content_type=typ)
+    odpoved["Content-Disposition"] = f'attachment; filename="{nazev}"'
+    return odpoved

@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import type { QueryClient } from '@tanstack/react-query'
 
 import { type Let, vratitZpet } from './api/lety'
-import { PREHLED_KLIC } from './useLety'
+import { jeLetovyDotaz } from './useLety'
 
 /** Potvrzení akce s tlačítkem „Zpět“ na 10 sekund (pro omylem zmáčknuté tlačítko). */
 export function oznamitSeZpet(let_: Let, zprava: string, klient: QueryClient) {
@@ -16,7 +16,7 @@ export function oznamitSeZpet(let_: Let, zprava: string, klient: QueryClient) {
     } catch (e) {
       notifications.show({ message: (e as Error).message, color: 'red' })
     }
-    void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+    void klient.invalidateQueries({ predicate: jeLetovyDotaz })
   }
   notifications.show({
     id,

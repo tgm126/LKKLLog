@@ -18,7 +18,7 @@ import { useState } from 'react'
 import { ApiChyba } from '../api/klient'
 import { type Let, type Oprava, opravitLet } from '../api/lety'
 import { jmeno, nabidka, SLOTY, UCELY } from '../posadka'
-import { PREHLED_KLIC, useCiselniky } from '../useLety'
+import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { CasVolba } from './CasVolba'
 import { DalsiClenove } from './DalsiClenove'
 import { Pocitadlo } from './Pocitadlo'
@@ -132,13 +132,13 @@ export function OpravaLetu({
     },
     onSuccess: (l) => {
       notifications.show({ message: `Let ${l.imatrikulace} opraven.`, color: 'green' })
-      void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+      void klient.invalidateQueries({ predicate: jeLetovyDotaz })
       onZavrit()
     },
     onError: (e) => {
       notifications.show({ message: e.message, color: 'red', autoClose: 8000 })
       if (e instanceof ApiChyba && e.kod === 'zmeneno') {
-        void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+        void klient.invalidateQueries({ predicate: jeLetovyDotaz })
         onZavrit()
       }
     },

@@ -16,6 +16,7 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 | 4 | Zálohy: týdenní export e-mailem, ověřená obnova, postup při problému | hotovo |
 | 5 | Opravy letů s důvodem, historie změn, tlačítko Zpět | hotovo |
 | 6 | Vlek (dvojice kluzák + vlečná), další let odsud (mezipřistání) | hotovo |
+| 7 | Výpis letů za období se souhrny, export do Excelu a CSV | hotovo |
 
 ## Struktura
 

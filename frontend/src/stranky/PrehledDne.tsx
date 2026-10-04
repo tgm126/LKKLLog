@@ -12,7 +12,7 @@ import { OpravaLetu } from '../komponenty/OpravaLetu'
 import { PristaniDialog } from '../komponenty/PristaniDialog'
 import { SkupinaVleku } from '../komponenty/SkupinaVleku'
 import { ZruseniDialog } from '../komponenty/ZruseniDialog'
-import { PREHLED_KLIC, useCiselniky, usePrehled, useServerovyCas } from '../useLety'
+import { jeLetovyDotaz, useCiselniky, usePrehled, useServerovyCas } from '../useLety'
 import { seskupitVleky } from '../vleky'
 import { oznamitSeZpet } from '../zpet'
 
@@ -33,7 +33,7 @@ export function PrehledDne() {
     onSuccess: (l) =>
       oznamitSeZpet(l, `${l.imatrikulace}${l.vlek ? ` + ${l.vlek}` : ''} vzlétl.`, klient),
     onError: (e) => notifications.show({ message: e.message, color: 'red' }),
-    onSettled: () => klient.invalidateQueries({ queryKey: PREHLED_KLIC }),
+    onSettled: () => klient.invalidateQueries({ predicate: jeLetovyDotaz }),
   })
 
   if (isPending) {

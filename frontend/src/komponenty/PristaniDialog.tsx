@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { ApiChyba } from '../api/klient'
 import { type Let, pristat, zrusitLet } from '../api/lety'
-import { PREHLED_KLIC, useCiselniky } from '../useLety'
+import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { oznamitSeZpet } from '../zpet'
 import { Pocitadlo } from './Pocitadlo'
 
@@ -27,7 +27,7 @@ export function PristaniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit:
   const hotovo = (zprava: string, l?: Let) => {
     if (l) oznamitSeZpet(l, zprava, klient)
     else notifications.show({ message: zprava, color: 'green' })
-    void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+    void klient.invalidateQueries({ predicate: jeLetovyDotaz })
     zavrit()
   }
   const chyba = (e: Error) => {
@@ -36,7 +36,7 @@ export function PristaniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit:
       return
     }
     notifications.show({ message: e.message, color: 'red' })
-    void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+    void klient.invalidateQueries({ predicate: jeLetovyDotaz })
     zavrit()
   }
   const ulozit = useMutation({

@@ -30,3 +30,7 @@ export function useServerovyCas(serverTed: string | undefined) {
   useInterval(() => setTed(new Date(Date.now() + posun.current)), 1000, { autoInvoke: true })
   return ted
 }
+
+/** Po změně letu se obnoví přehled dne i výpis. */
+export const jeLetovyDotaz = (dotaz: { queryKey: readonly unknown[] }) =>
+  dotaz.queryKey[0] === PREHLED_KLIC[0] || dotaz.queryKey[0] === 'vypis'

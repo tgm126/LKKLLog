@@ -268,6 +268,11 @@ Ještě 10 s je vidět tlačítko **Zpět** pro případ, že šlo o omyl.
 
   Uložená nastavení se pamatují jako „šablony exportu“. Formát pro Flight Office doplníme později.
 
+**Stav po etapě 7:** výpis vidí všichni přihlášení (obrazovka „Výpis“), Excel a CSV stahuje
+účetní a admin. Excel má listy *Lety*, *Podle letadel* (vlek zvlášť), *Podle plátců* a
+*Parametry* (filtry, kdo a kdy). Počítají se jen ukončené lety. Uložené šablony exportu,
+výběr sloupců a formát pro Flight Office zatím nejsou.
+
 ### 4.7 Uzávěrky (souhrny)
 Uzávěrka **není zámek**, ale **oficiální souhrn** uložený k danému okamžiku:
 - **podle letadla a účelu:** počet letů, minuty, touch-and-go. **Vlek a ostatní lety téhož letadla jsou vždy zvlášť** (jedno letadlo může v jeden den vlekat i létat normálně);

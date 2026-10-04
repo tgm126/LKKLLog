@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { type Let, zrusitLet } from '../api/lety'
-import { PREHLED_KLIC, useCiselniky } from '../useLety'
+import { jeLetovyDotaz, useCiselniky } from '../useLety'
 
 /** Zrušení letu – důvod se vybírá z nabídky, let se nesmaže. */
 export function ZruseniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit: () => void }) {
@@ -14,7 +14,7 @@ export function ZruseniDialog({ let_, onZavrit }: { let_: Let | null; onZavrit: 
     onSuccess: (l) => notifications.show({ message: `Let ${l.imatrikulace} zrušen.` }),
     onError: (e) => notifications.show({ message: e.message, color: 'red' }),
     onSettled: () => {
-      void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+      void klient.invalidateQueries({ predicate: jeLetovyDotaz })
       onZavrit()
     },
   })

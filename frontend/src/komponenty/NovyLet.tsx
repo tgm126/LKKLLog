@@ -20,7 +20,7 @@ import { useMemo, useState } from 'react'
 import { type Let, type NovyLet as NovyLetData, zalozitLet } from '../api/lety'
 import { KATEGORIE_LETU } from '../nazvy'
 import { jmeno, KROKY, nabidka, SLOT_VLEKAR, SLOTY, UCELY } from '../posadka'
-import { PREHLED_KLIC, useCiselniky } from '../useLety'
+import { jeLetovyDotaz, useCiselniky } from '../useLety'
 import { oznamitSeZpet } from '../zpet'
 import { naMinuty } from '../cas'
 import { CasVolba } from './CasVolba'
@@ -182,7 +182,7 @@ export function NovyLet({
       const co = { pripravit: 'připraven', vzlet: 've vzduchu', dopsat: 'zapsán' }[akce]
       const vlek = l.vlek ? ` (${l.vlek})` : ''
       oznamitSeZpet(l, `Let ${l.imatrikulace}${vlek} ${co}.`, klient)
-      void klient.invalidateQueries({ queryKey: PREHLED_KLIC })
+      void klient.invalidateQueries({ predicate: jeLetovyDotaz })
       zavrit()
     },
     onError: (e) => notifications.show({ message: e.message, color: 'red', autoClose: 8000 }),
