@@ -1,3 +1,4 @@
+import secrets
 from datetime import UTC, date, datetime, time, timedelta
 
 from django.db.models import Prefetch, Q
@@ -7,8 +8,9 @@ from ninja import Router, Schema
 from ninja.security import django_auth
 
 from osoby.models import Kategorie, Opravneni, Osoba
+from provoz.models import Nastaveni
 
-from . import sluzby, uzaverky, vypis
+from . import obdobi, sluzby, uzaverky, vypis
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -200,7 +202,8 @@ def _misto(letiste: Letiste | None) -> str | None:
     return letiste.icao or letiste.nazev
 
 
-def _let_out(let: Let, osoba: Osoba, uzavreno: Uzavreno | None = None) -> dict:
+def _let_out(let: Let, osoba: Osoba | None, uzavreno: Uzavreno | None = None) -> dict:
+    """Let pro frontend; bez osoby (displej) nikdo nic neovládá."""
     return {
         "id": let.pk,
         "stav": let.stav,
@@ -237,7 +240,7 @@ def _let_out(let: Let, osoba: Osoba, uzavreno: Uzavreno | None = None) -> dict:
         "zalozil": let.zalozil.get_full_name(),
         "dodatecne": bool(let.cas_pristani and let.zalozeno > let.cas_pristani),
         "verze": let.verze,
-        "muze_ovladat": sluzby.muze_ovladat(osoba, let, uzavreno),
+        "muze_ovladat": osoba is not None and sluzby.muze_ovladat(osoba, let, uzavreno),
         "opraveno_po_uzaverce": let.opraveno_po_uzaverce,
         **_dvojice(let),
     }
@@ -291,6 +294,15 @@ class StavDneOut(Schema):
     smi_uzavrit: bool
 
 
+def _lety_dne(den: date, ted: datetime) -> list[Let]:
+    zacatek = datetime.combine(den, time.min, tzinfo=UTC)
+    podminka = Q(cas_vzletu__gte=zacatek, cas_vzletu__lt=zacatek + timedelta(days=1))
+    if den == ted.date():
+        # Dnes ukazujeme i všechno, co ještě neskončilo (připravené a ve vzduchu).
+        podminka |= Q(stav__in=[StavLetu.PRIPRAVEN, StavLetu.VE_VZDUCHU])
+    return list(_lety().filter(podminka).order_by("cas_vzletu", "id"))
+
+
 class PrehledOut(Schema):
     den: date
     ted: datetime
@@ -304,12 +316,7 @@ class PrehledOut(Schema):
 def prehled(request, den: date | None = None):
     ted = timezone.now()
     den = den or ted.date()
-    zacatek = datetime.combine(den, time.min, tzinfo=UTC)
-    podminka = Q(cas_vzletu__gte=zacatek, cas_vzletu__lt=zacatek + timedelta(days=1))
-    if den == ted.date():
-        # Dnes ukazujeme i všechno, co ještě neskončilo (připravené a ve vzduchu).
-        podminka |= Q(stav__in=[StavLetu.PRIPRAVEN, StavLetu.VE_VZDUCHU])
-    lety = _lety().filter(podminka).order_by("cas_vzletu", "id")
+    lety = _lety_dne(den, ted)
     udaje = slunce(den)
     uzavreno = Uzavreno.nacti()
     return {
@@ -737,3 +744,82 @@ def export_uzaverky(request, uzaverka_id: int):
     nazev = f"lkkllog-uzaverka-{obdobi}-v{u.verze}.xlsx"
     odpoved["Content-Disposition"] = f'attachment; filename="{nazev}"'
     return odpoved
+
+
+# --- velký displej (etapa 9) --------------------------------------------------------------
+
+
+class DisplejClenOut(Schema):
+    jmeno: str
+    funkce: str
+    funkce_nazev: str
+
+
+class DisplejLetOut(Schema):
+    """Jen to, co patří na veřejnou obrazovku (žádné telefony, plátci ani ovládání).
+
+    Názvy účelu a funkcí posílá server, displej nemá přístup k číselníkům.
+    """
+
+    id: int
+    stav: str
+    imatrikulace: str
+    typ: str
+    kategorie: str
+    max_doba_min: int | None
+    ucel: str
+    ucel_nazev: str
+    zpusob_vzletu: str
+    zpusob_nazev: str
+    posadka: list[DisplejClenOut]
+    pocet_hostu: int
+    misto_vzletu: str
+    misto_pristani: str | None
+    cas_vzletu: datetime | None
+    cas_pristani: datetime | None
+    doba_uctovana_min: int | None
+    pocet_tg: int
+    casy_tg: list[datetime]
+    pocet_pristani: int
+    duvod_zruseni: str
+    vlek_id: int | None
+    vlek: str | None
+
+
+class DisplejOut(Schema):
+    den: date
+    ted: datetime
+    zapad_slunce: datetime
+    konec_soumraku: datetime
+    lety: list[DisplejLetOut]
+    souhrn: dict
+
+
+@router.get("/displej", response=DisplejOut, auth=None, summary="Data pro velký displej")
+def displej(request, klic: str = ""):
+    """Bez přihlášení, jen s tajným klíčem z Nastavení provozu (lze kdykoli zneplatnit)."""
+    platny = Nastaveni.aktualni().displej_klic
+    if not (klic and platny and secrets.compare_digest(klic, platny)):
+        raise sluzby.ChybaLetu("Odkaz na displej neplatí.", status=404, kod="displej")
+    ted = timezone.now()
+    den = ted.date()
+    lety = _lety_dne(den, ted)
+    udaje = slunce(den)
+    return {
+        "den": den,
+        "ted": ted,
+        "zapad_slunce": udaje["zapad"],
+        "konec_soumraku": udaje["soumrak"],
+        "lety": [_let_displej(let) for let in lety],
+        "souhrn": vypis.souhrn([let for let in lety if obdobi.den_letu(let) == den]),
+    }
+
+
+def _let_displej(let: Let) -> dict:
+    data = _let_out(let, None)
+    funkce = dict(FunkcePosadky.choices)
+    data["ucel_nazev"] = dict(Ucel.choices)[let.ucel]
+    data["zpusob_nazev"] = dict(ZpusobVzletu.choices)[let.zpusob_vzletu]
+    for clen in data["posadka"]:
+        clen["funkce_nazev"] = funkce[clen["funkce"]]
+    return data

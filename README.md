@@ -18,6 +18,7 @@ Návrh aplikace (co a proč): [docs/navrh.md](docs/navrh.md) · Provoz na server
 | 6 | Vlek (dvojice kluzák + vlečná), další let odsud (mezipřistání) | hotovo |
 | 7 | Výpis letů za období se souhrny, export do Excelu a CSV | hotovo |
 | 8 | Denní a měsíční uzávěrky, změny po uzávěrce, přepočet, práva podle uzávěrky | hotovo |
+| 9 | Velký displej (TV) bez přihlášení přes tajný odkaz | hotovo |
 
 ## Struktura
 

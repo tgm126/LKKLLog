@@ -7,6 +7,7 @@ import { Navigace } from './komponenty/Navigace'
 import { Pruhy } from './komponenty/Pruhy'
 import { Paticka, Zahlavi } from './komponenty/Zahlavi'
 import { NastavitHeslo } from './stranky/NastavitHeslo'
+import { Displej } from './stranky/Displej'
 import { Prihlaseni } from './stranky/Prihlaseni'
 import { PrehledDne } from './stranky/PrehledDne'
 import { Uzaverky } from './stranky/Uzaverky'
@@ -40,14 +41,27 @@ function Obsah() {
   )
 }
 
-export default function App() {
+/** Běžná aplikace: pruhy, záhlaví, navigace a patička kolem obsahu. */
+function Aplikace() {
   const { data: health } = useQuery({ queryKey: ['health'], queryFn: nactiHealth })
   return (
-    <BrowserRouter>
+    <>
       <Pruhy />
       <Zahlavi />
       <Obsah />
       <Paticka verze={health?.verze} />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Velký displej běží bez přihlášení a bez záhlaví aplikace. */}
+        <Route path="/displej/:klic" element={<Displej />} />
+        <Route path="*" element={<Aplikace />} />
+      </Routes>
     </BrowserRouter>
   )
 }

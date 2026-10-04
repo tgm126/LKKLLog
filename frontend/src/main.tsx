@@ -27,7 +27,12 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="auto">
+    <MantineProvider
+      theme={theme}
+      defaultColorScheme="auto"
+      // Velký displej je vždy tmavý (TV ve tmavé místnosti, menší oslnění).
+      forceColorScheme={location.pathname.startsWith('/displej/') ? 'dark' : undefined}
+    >
       <Notifications position="top-center" />
       <QueryClientProvider client={queryClient}>
         <App />

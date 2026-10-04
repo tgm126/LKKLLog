@@ -319,6 +319,23 @@ Součty hodin a startů za období podle kategorie a účelu (PIC, žák, přezk
 ### 4.9 Velký displej (TV na věži nebo v klubovně)
 Jen ke čtení, velké písmo a tmavé pozadí. Ukazuje probíhající lety, západ slunce a soumrak a dnešní souhrn. Obnovuje se sám a otevírá se tajným odkazem bez přihlašování (odkaz lze kdykoli zneplatnit).
 
+**Stav po etapě 9:**
+- Odkaz má tvar `https://lety.lkkl.cz/displej/<klíč>`. Admin ho najde v administraci
+  v *Nastavení provozu → Velký displej*. Tam se dá vytvořit nový odkaz (starý přestane
+  platit) nebo displej vypnout.
+- Klíč obsahuje jen znaky 0–9 a a–f, takže v něm nevznikne slovo, které nginx VPS Centra
+  blokuje.
+- Displej ukazuje:
+  - hodiny UTC se sekundami, západ slunce a konec soumraku;
+  - lety ve vzduchu s běžícím časem, posádkou, T&G a vlekem; červeně, když jsou přes
+    maximální dobu nebo po soumraku;
+  - připravené lety;
+  - dnešní souhrn (lety, doba, přistání, podle letadel) a posledních 8 přistání.
+- Obnovuje se každých 10 s. Při výpadku spojení ukáže „bez spojení se serverem“ a drží
+  poslední data. Kde to prohlížeč umí, nedovolí obrazovce usnout.
+- Na displej nejdou plátci, telefony ani žádné ovládání. Názvy posílá server, protože
+  displej nemá přístup k číselníkům.
+
 ### 4.10 Administrace (admin)
 - Osoby a jejich oprávnění, letadla, letiště, úlohy, nastavení, auditní log s filtrováním, znovuotevření uzávěrky.
 - V první verzi poslouží **vestavěná Django administrace**, kterou dostaneme zdarma. Hezčí vlastní obrazovky přijdou později, pokud budou potřeba.
@@ -505,7 +522,7 @@ Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požada
 | Uzavřít den / měsíc (znovu = přepočet, nová verze) | `POST /api/uzaverky` |
 | Dny měsíce a stav uzávěrek / souhrn před uzavřením | `GET /api/uzaverky?mesic=…`, `GET /api/uzaverky/nahled?typ=…&obdobi=…` |
 | Verze uzávěrky a změny po ní / Excel souhrnu | `GET /api/uzaverky/detail?typ=…&obdobi=…`, `GET /api/uzaverky/{id}/export.xlsx` |
-| Data pro displej | `GET /api/displej?token=…` |
+| Data pro displej (bez přihlášení, tajný klíč) | `GET /api/displej?klic=…` |
 | Kontrola stavu (pro nasazování) | `GET /api/health` |
 | Správa číselníků | Django administrace |
 
@@ -636,7 +653,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 7 | **Výpis a export** (Excel/CSV, bez soukromých letadel) | Účetní dostává data. |
 | 8 | **Denní a měsíční uzávěrky** (souhrny), přehled „Změny po uzávěrce“, přepočet | Účetní má oficiální souhrny a vidí pozdější opravy. |
 | 9 | **Velký displej**, zvýraznění podle maximální doby letu a soumraku | TV na věži. |
-| 10 | **E-mailová upozornění:** let přes maximální dobu, neukončen po soumraku | – |
+| 10 | **Upozornění na neukončené lety:** let přes maximální dobu, neukončen po soumraku, den, který kvůli neukončenému letu nejde uzavřít. Kromě e-mailu i **push notifikace** na telefon (Web Push – upozornění z webové aplikace i se zavřeným prohlížečem; na iPhonu jen po přidání aplikace na plochu) | – |
 | 11 | **Můj nálet** | – |
 | později | Porovnání s logbookem OGN (kontrola souladu), výcvik vlekařů (instruktor v obou letadlech), licence a platnosti spravované samotnými piloty, platnosti techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 

@@ -1,5 +1,7 @@
+import secrets
 from fnmatch import fnmatch
 
+from django.conf import settings
 from django.db import models
 
 
@@ -42,6 +44,13 @@ class Nastaveni(models.Model):
         ),
     )
 
+    displej_klic = models.CharField(
+        "klíč velkého displeje",
+        max_length=64,
+        blank=True,
+        help_text="Tajná část odkazu na displej bez přihlášení. Prázdné = displej vypnutý.",
+    )
+
     class Meta:
         verbose_name = "nastavení"
         verbose_name_plural = "nastavení"
@@ -57,6 +66,19 @@ class Nastaveni(models.Model):
     def aktualni(cls) -> Nastaveni:
         nastaveni, _ = cls.objects.get_or_create(pk=1)
         return nastaveni
+
+    def novy_klic_displeje(self) -> str:
+        """Nový odkaz na displej; starý tím přestane platit.
+
+        Jen šestnáctkové znaky – v náhodném textu tak nemůže vzniknout slovo, které
+        nginx VPS Centra v adresách blokuje (log, bin, tmp…).
+        """
+        self.displej_klic = secrets.token_hex(16)
+        return self.displej_klic
+
+    @property
+    def odkaz_displeje(self) -> str:
+        return f"{settings.APP_URL}/displej/{self.displej_klic}" if self.displej_klic else ""
 
     def smi_odeslat(self, adresa: str) -> bool:
         if self.email_rezim == EmailRezim.VSE:
