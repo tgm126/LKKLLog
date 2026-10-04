@@ -25,7 +25,7 @@ export function oznamitSeZpet(let_: Let, zprava: string, klient: QueryClient) {
     message: (
       <Group justify="space-between" wrap="nowrap">
         <Text fz="sm">{zprava}</Text>
-        <Button size="xs" variant="light" onClick={vratit}>
+        <Button size="xs" variant="light" onClick={vratit} style={{ flexShrink: 0 }}>
           Zpět
         </Button>
       </Group>

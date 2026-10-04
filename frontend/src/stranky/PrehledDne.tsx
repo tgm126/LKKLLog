@@ -10,8 +10,10 @@ import { KartaLetu } from '../komponenty/KartaLetu'
 import { NovyLet } from '../komponenty/NovyLet'
 import { OpravaLetu } from '../komponenty/OpravaLetu'
 import { PristaniDialog } from '../komponenty/PristaniDialog'
+import { SkupinaVleku } from '../komponenty/SkupinaVleku'
 import { ZruseniDialog } from '../komponenty/ZruseniDialog'
 import { PREHLED_KLIC, useCiselniky, usePrehled, useServerovyCas } from '../useLety'
+import { seskupitVleky } from '../vleky'
 import { oznamitSeZpet } from '../zpet'
 
 export function PrehledDne() {
@@ -77,6 +79,17 @@ export function PrehledDne() {
     />
   )
 
+  // Dvojice vleku (kluzák + vlečná) ve společném výrazném rámečku.
+  const polozka = (p: Let | [Let, Let]) =>
+    Array.isArray(p) ? (
+      <SkupinaVleku key={`vlek-${p[0].id}`} kluzak={p[0]} vlecna={p[1]}>
+        {karta(p[0])}
+        {karta(p[1])}
+      </SkupinaVleku>
+    ) : (
+      karta(p)
+    )
+
   return (
     <Container size="sm" pb={100}>
       <Stack gap="lg">
@@ -93,13 +106,13 @@ export function PrehledDne() {
         <Stack gap="xs">
           <Title order={4}>Ve vzduchu ({veVzduchu.length})</Title>
           {veVzduchu.length === 0 && <Text c="dimmed">Nikdo nelétá.</Text>}
-          {veVzduchu.map(karta)}
+          {seskupitVleky(veVzduchu).map(polozka)}
         </Stack>
 
         {pripravene.length > 0 && (
           <Stack gap="xs">
             <Title order={4}>Připravené ({pripravene.length})</Title>
-            {pripravene.map(karta)}
+            {seskupitVleky(pripravene).map(polozka)}
           </Stack>
         )}
 
