@@ -99,7 +99,7 @@ GitHub Actions (`.github/workflows/dostupnost.yml`) se jednou za hodinu zeptá
 
 | Záloha | Kde | Jak dlouho |
 |---|---|---|
-| Zálohy hostingu (celý server včetně databáze `lkkllog`) | Váš Hosting, mimo server; VPS Centrum → Zálohování | denní 7 dní, týdenní 30 dní |
+| Zálohy hostingu (databáze `lkkllog`) | VPS Centrum → Zálohování, úložiště **„Lokální disk“** serveru; zda je hosting kopíruje i mimo server, je potřeba ověřit | denní 7 dní, týdenní 30 dní |
 | Měsíční export databáze (`pg_dump`) | `/var/backups/lkkllog` na serveru + e-mail administrátorům | 24 měsíců na serveru, v e-mailu trvale |
 
 Kód zálohovat netřeba (je na GitHubu), Docker image se z kódu sestaví znovu.
