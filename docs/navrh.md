@@ -298,7 +298,7 @@ Změna hesla, odhlášení.
 | externi | externí osoba (examinátor): jen jméno, žádný e-mail, přihlášení ani notifikace |
 | testovaci | účet jen pro zkoušení aplikace; úklid před spuštěním ho smaže (kap. 9.1) |
 
-**`opravneni`**: co kdo smí létat (zatím jen pro řazení ve výběrech)
+**`opravneni`**: co kdo smí létat. Zatím **jen určuje, kde a v jakém pořadí se osoba nabízí ve výběrech** (nic neblokuje). Úrovně platí „nahoru“: examinátor je zároveň instruktor a pilot, instruktor zároveň pilot. Později: licence a platnosti si **spravuje každý pilot sám** ve svém profilu (otevřené: smí si sám měnit i úroveň, např. žák → pilot, nebo to potvrzuje instruktor/admin?).
 | sloupec | význam |
 |---|---|
 | osoba_id | → osoba |
@@ -577,7 +577,7 @@ Každá etapa končí něčím, co jde vyzkoušet.
 | 9 | **Velký displej**, zvýraznění podle maximální doby letu a soumraku | TV na věži. |
 | 10 | **E-mailová upozornění:** let přes maximální dobu, neukončen po soumraku | – |
 | 11 | **Můj nálet** | – |
-| později | Výcvik vlekařů (instruktor v obou letadlech), platnosti licencí a techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
+| později | Výcvik vlekařů (instruktor v obou letadlech), licence a platnosti spravované samotnými piloty, platnosti techniky, push notifikace, export pro Flight Office, ceny a sazby (samostatná analýza), offline režim, passkeys, testovací prostředí | – |
 
 Etapy 0–5 jsou minimum, se kterým lze jít do zkušebního provozu.
 
