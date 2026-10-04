@@ -65,3 +65,30 @@ za sebou (např. `ssh-keyscan`); odblokování: VPS Centrum → Zabezpečení �
 - Co se smí odeslat, řídí **Administrace → Nastavení provozu → režim odesílání e-mailů**.
 - Vnitřní síť Dockeru `172.17.0.0/16` je ve fail2ban mezi ignorovanými adresami. Bez toho
   stačí pár neúspěšných přihlášení k poště a fail2ban zablokuje samotnou aplikaci.
+
+## Údržba (cron)
+
+Systémový cron serveru (`/etc/cron.d/lkkllog`), protože cron ve VPS Centru běží pod
+uživatelem domény bez práv k Dockeru. Skript je v repozitáři `server/udrzba.sh`, na
+serveru v `/usr/local/lib/lkkllog/udrzba.sh`. Při úspěchu nic nehlásí, chyby chodí e-mailem.
+
+| Kdy (čas serveru) | Úloha |
+|---|---|
+| denně 3:17 | `prihlaseni` – smaže prošlá přihlášení (`clearsessions`) |
+| neděle 3:27 | `docker-uklid` – mezipaměť sestavení Dockeru zmenší na 1 GB |
+| 1. v měsíci 3:37 | `export` – `pg_dump` do `/var/backups/lkkllog` (posledních 24), kopie e-mailem administrátorům |
+
+Instalace / aktualizace (z počítače správce):
+
+```bash
+tar -C server -cf - udrzba.sh cron.lkkllog | ssh one12 'cd /tmp && tar -xf - && install -D -m 755 udrzba.sh /usr/local/lib/lkkllog/udrzba.sh && install -m 644 cron.lkkllog /etc/cron.d/lkkllog && rm udrzba.sh cron.lkkllog'
+```
+
+Obnova z exportu: `pg_restore --clean --if-exists -d lkkllog lkkllog-RRRR-MM-DD.dump`
+(jako uživatel `postgres`). Export neobsahuje přihlášení (sessions), ostatní data ano.
+
+## Hlídání dostupnosti
+
+GitHub Actions (`.github/workflows/dostupnost.yml`) se jednou za hodinu zeptá
+`https://lety.lkkl.cz/api/health`. Když aplikace neodpoví, běh selže a GitHub pošle e-mail.
+Častější kontrola by v soukromém repozitáři spotřebovávala bezplatné minuty GitHub Actions.

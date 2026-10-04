@@ -1,0 +1,9 @@
+# Údržba aplikace LKKL Log – instaluje se jako /etc/cron.d/lkkllog (viz docs/provoz.md).
+# Časy jsou podle hodin serveru (Europe/Prague). Výstup = chyba → e-mail adminovi.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=tomas.mandlik@gmail.com
+
+17 3 * * *  root  /usr/local/lib/lkkllog/udrzba.sh prihlaseni
+27 3 * * 0  root  /usr/local/lib/lkkllog/udrzba.sh docker-uklid
+37 3 1 * *  root  /usr/local/lib/lkkllog/udrzba.sh export

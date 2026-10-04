@@ -1,0 +1,20 @@
+# Hlídání dostupnosti zvenku: jednou za hodinu se zeptá aplikace, jestli běží.
+# Když neodpoví, běh selže a GitHub pošle e-mail (stejně jako u neúspěšného CI).
+name: Dostupnost
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: https://lety.lkkl.cz/api/health
+        run: |
+          odpoved=$(curl --fail --silent --show-error --retry 3 --retry-delay 20 \
+            --max-time 20 https://lety.lkkl.cz/api/health)
+          echo "$odpoved"
+          echo "$odpoved" | grep -q '"status": *"ok"'
