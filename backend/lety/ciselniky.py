@@ -32,6 +32,7 @@ LISTY: dict[str, list[tuple[str, bool, list[str] | None]]] = {
         ("Externí", False, ANO_NE),
         ("Aktivní", False, ANO_NE),
         ("Testovací", False, ANO_NE),
+        ("Mobil", False, None),
     ],
     "Oprávnění": [
         ("Jméno", True, None),
@@ -75,6 +76,7 @@ NAVOD = [
     "• Tučné sloupce jsou povinné. Kde je šipka, vybírejte z nabídky.",
     "• ano/ne: prázdné = výchozí hodnota (Aktivní = ano, ostatní = ne).",
     "• Testovací = ano: účet jen pro zkoušení, před spuštěním pro celý klub se smaže.",
+    "• Mobil: libovolně s mezerami, bez předvolby se doplní +420 (např. 731 123 456).",
     "• Oprávnění: osoba se dohledá podle jména a příjmení z listu Osoby.",
     "  Každé oprávnění na samostatném řádku (např. kluzák–instruktor, motorové–pilot).",
     "• Úlohy: Účely a Kategorie mohou mít více hodnot oddělených čárkou,",
@@ -173,6 +175,18 @@ def _volby(v, choices) -> list[str]:
     return list(dict.fromkeys(hodnoty))
 
 
+def _telefon(v) -> str:
+    """Telefon do mezinárodního tvaru: „731 123 456“ → „+420731123456“."""
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)  # Excel ukládá číslo bez úvodní nuly a jako desetinné
+    t = "".join(znak for znak in _text(v) if znak.isdigit() or znak == "+")
+    if t.startswith("00"):
+        t = "+" + t[2:]
+    if t and not t.startswith("+") and len(t) == 9:
+        t = "+420" + t
+    return t
+
+
 def _cislo(v, vychozi: int | None = None) -> int | None:
     if _text(v) == "":
         return vychozi
@@ -239,6 +253,7 @@ def _osoba(r) -> bool:
         "externi": _ano_ne(r[6], False),
         "is_active": _ano_ne(r[7], True),
         "testovaci": _ano_ne(_bunka(r, 8), False),
+        "telefon": _telefon(_bunka(r, 9)),
     }
     osoba = None
     if email:

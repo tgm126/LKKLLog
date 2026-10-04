@@ -13,7 +13,9 @@ def vyplnena_sablona(tmp_path):
     cesta = tmp_path / "ciselniky.xlsx"
     vytvor_sablonu(cesta)
     wb = load_workbook(cesta)
-    wb["Osoby"].append(["Jan", "Novák", "Novak@Example.com", "ano", None, None, None, None, None])
+    wb["Osoby"].append(
+        ["Jan", "Novák", "Novak@Example.com", "ano", None, None, None, None, None, "731 123 456"]
+    )
     wb["Osoby"].append(["Karel", "Cizí", None, None, None, None, "ano", None, None])
     wb["Osoby"].append(
         ["Test", "Pilot", "tomas+pilot@example.com", None, None, None, None, None, "ano"]
@@ -46,6 +48,7 @@ def test_nacteni_ciselniku(vyplnena_sablona):
     assert Osoba.objects.get(prijmeni="Cizí").externi
     assert Osoba.objects.get(prijmeni="Pilot").testovaci
     assert not novak.testovaci
+    assert novak.telefon == "+420731123456"
     assert Opravneni.objects.get(osoba=novak).uroven == Uroven.INSTRUKTOR
     assert Letadlo.objects.get(imatrikulace="OK-0815").kategorie == Kategorie.KLUZAK
     assert Letadlo.objects.get(imatrikulace="OK-ABC").vlecne

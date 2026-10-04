@@ -35,9 +35,9 @@ class OsobaAdmin(UserAdmin):
         "role_ucetni",
         "is_staff",
     ]
-    search_fields = ["prijmeni", "jmeno", "email"]
+    search_fields = ["prijmeni", "jmeno", "email", "telefon"]
     fieldsets = [
-        (None, {"fields": ["jmeno", "prijmeni", "email", "password"]}),
+        (None, {"fields": ["jmeno", "prijmeni", "email", "telefon", "password"]}),
         ("Role", {"fields": ["role_casomeric", "role_ucetni", "is_staff", "is_superuser"]}),
         ("Stav", {"fields": ["is_active", "testovaci", "externi", "last_login", "vytvoreno"]}),
     ]

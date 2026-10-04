@@ -292,6 +292,7 @@ Změna hesla, odhlášení.
 | id | – |
 | jmeno, prijmeni | – |
 | email | unikátní. Kdo ho nemá, nemůže se přihlásit, ale může být v posádce. |
+| telefon | mobil v mezinárodním tvaru (+420…), kontakt např. pro účetní; kdo ho uvidí – otevřená otázka |
 | heslo (hash) | heslo uložené jen jako jednosměrný otisk, nikdy čitelně |
 | role | admin / časoměřič-věž / účetní. Jedna osoba může mít víc rolí, každý přihlášený je zároveň „pilot“. Časoměřič a služba na věži mají stejná práva, proto mají jednu společnou roli. |
 | aktivni | neaktivní osoba se nenabízí ve výběrech, ale zůstává ve starých letech |

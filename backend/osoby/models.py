@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
 
@@ -48,6 +49,15 @@ class Osoba(AbstractBaseUser, PermissionsMixin):
     jmeno = models.CharField("jméno", max_length=60)
     prijmeni = models.CharField("příjmení", max_length=60)
     email = models.EmailField("e-mail", unique=True, null=True, blank=True)
+    telefon = models.CharField(
+        "mobil",
+        max_length=16,
+        blank=True,
+        validators=[
+            RegexValidator(r"^\+\d{9,15}$", "Telefon v mezinárodním tvaru, např. +420731123456.")
+        ],
+        help_text="Mezinárodní tvar, např. +420731123456.",
+    )
 
     role_casomeric = models.BooleanField(
         "časoměřič / věž",
