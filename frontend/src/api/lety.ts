@@ -1,4 +1,5 @@
 import { api } from './klient'
+import type { StavDne } from './uzaverky'
 
 export type Volba = { hodnota: string; nazev: string }
 
@@ -80,6 +81,7 @@ export type Let = {
   dodatecne: boolean
   verze: number
   muze_ovladat: boolean
+  opraveno_po_uzaverce: boolean
   /** Druhý let z dvojice vleku, např. „vlek OK-TZL (Gustav Vlekař)“. */
   vlek_id: number | null
   vlek: string | null
@@ -91,6 +93,7 @@ export type Prehled = {
   zapad_slunce: string
   konec_soumraku: string
   lety: Let[]
+  uzaverka: StavDne
 }
 
 export type NovyLet = {

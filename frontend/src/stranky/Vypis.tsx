@@ -1,7 +1,6 @@
 import {
   Alert,
   Button,
-  Card,
   Collapse,
   Container,
   Group,
@@ -21,9 +20,10 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import type { Let } from '../api/lety'
-import { type FiltrVypisu, nactiVypis, odkazExportu, type RadekSouhrnu } from '../api/vypis'
+import { type FiltrVypisu, nactiVypis, odkazExportu } from '../api/vypis'
 import { doba, hhmm } from '../cas'
 import { DetailLetu } from '../komponenty/DetailLetu'
+import { Dlazdice, TabulkaSouhrnu } from '../komponenty/Souhrn'
 import { OpravaLetu } from '../komponenty/OpravaLetu'
 import { ZruseniDialog } from '../komponenty/ZruseniDialog'
 import { KATEGORIE_LETU, useNazvy } from '../nazvy'
@@ -41,59 +41,6 @@ function obdobi(volba: string, vlastni: { od: string; do: string }) {
     return { od: iso(new Date(Date.UTC(konec.getUTCFullYear(), konec.getUTCMonth(), 1))), do: iso(konec) }
   }
   return vlastni
-}
-
-function Dlazdice({ nazev, hodnota }: { nazev: string; hodnota: string | number }) {
-  return (
-    <Card withBorder padding="xs">
-      <Text fz="xs" c="dimmed">
-        {nazev}
-      </Text>
-      <Text fw={700} fz="xl">
-        {hodnota}
-      </Text>
-    </Card>
-  )
-}
-
-function TabulkaSouhrnu({
-  nadpis,
-  radky,
-  celkem,
-}: {
-  nadpis: string[]
-  radky: { klic: string; bunky: string[]; hodnoty: RadekSouhrnu }[]
-  celkem: RadekSouhrnu
-}) {
-  const cisla = (r: RadekSouhrnu) => [r.lety, doba(r.minuty), r.tg, r.navijak, r.vlek]
-  return (
-    <Table.ScrollContainer minWidth={520}>
-      <Table striped withTableBorder fz="sm">
-        <Table.Thead>
-          <Table.Tr>
-            {[...nadpis, 'Lety', 'Doba', 'T&G', 'Naviják', 'Vleky'].map((n) => (
-              <Table.Th key={n}>{n}</Table.Th>
-            ))}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {radky.map((r) => (
-            <Table.Tr key={r.klic}>
-              {[...r.bunky, ...cisla(r.hodnoty)].map((b, i) => (
-                <Table.Td key={i}>{b}</Table.Td>
-              ))}
-            </Table.Tr>
-          ))}
-          <Table.Tr fw={700}>
-            <Table.Td colSpan={nadpis.length}>Celkem</Table.Td>
-            {cisla(celkem).map((b, i) => (
-              <Table.Td key={i}>{b}</Table.Td>
-            ))}
-          </Table.Tr>
-        </Table.Tbody>
-      </Table>
-    </Table.ScrollContainer>
-  )
 }
 
 export function Vypis() {

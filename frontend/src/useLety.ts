@@ -31,6 +31,6 @@ export function useServerovyCas(serverTed: string | undefined) {
   return ted
 }
 
-/** Po změně letu se obnoví přehled dne i výpis. */
+/** Po změně letu (nebo uzávěrce) se obnoví přehled dne, výpis i uzávěrky. */
 export const jeLetovyDotaz = (dotaz: { queryKey: readonly unknown[] }) =>
-  dotaz.queryKey[0] === PREHLED_KLIC[0] || dotaz.queryKey[0] === 'vypis'
+  [PREHLED_KLIC[0], 'vypis', 'uzaverky'].includes(dotaz.queryKey[0] as string)

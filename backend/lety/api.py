@@ -8,7 +8,7 @@ from ninja.security import django_auth
 
 from osoby.models import Kategorie, Opravneni, Osoba
 
-from . import sluzby, vypis
+from . import sluzby, uzaverky, vypis
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -23,8 +23,10 @@ from .models import (
     StavLetu,
     Ucel,
     Uloha,
+    Uzaverka,
     ZpusobVzletu,
 )
+from .obdobi import Uzavreno
 from .slunce import slunce
 
 router = Router(tags=["lety"], auth=django_auth)
@@ -185,6 +187,7 @@ class LetOut(Schema):
     dodatecne: bool
     verze: int
     muze_ovladat: bool
+    opraveno_po_uzaverce: bool
     vlek_id: int | None
     vlek: str | None
 
@@ -195,7 +198,7 @@ def _misto(letiste: Letiste | None) -> str | None:
     return letiste.icao or letiste.nazev
 
 
-def _let_out(let: Let, osoba: Osoba) -> dict:
+def _let_out(let: Let, osoba: Osoba, uzavreno: Uzavreno | None = None) -> dict:
     return {
         "id": let.pk,
         "stav": let.stav,
@@ -230,7 +233,8 @@ def _let_out(let: Let, osoba: Osoba) -> dict:
         "zalozil": let.zalozil.get_full_name(),
         "dodatecne": bool(let.cas_pristani and let.zalozeno > let.cas_pristani),
         "verze": let.verze,
-        "muze_ovladat": sluzby.muze_ovladat(osoba, let),
+        "muze_ovladat": sluzby.muze_ovladat(osoba, let, uzavreno),
+        "opraveno_po_uzaverce": let.opraveno_po_uzaverce,
         **_dvojice(let),
     }
 
@@ -266,12 +270,30 @@ def _lety():
     )
 
 
+class UzaverkaOut(Schema):
+    id: int
+    typ: str
+    obdobi: date
+    verze: int
+    kdy: datetime
+    uzavrel: str
+    platna: bool
+
+
+class StavDneOut(Schema):
+    uzaverka: UzaverkaOut | None
+    mesic_uzavren: bool
+    zmeny: int
+    smi_uzavrit: bool
+
+
 class PrehledOut(Schema):
     den: date
     ted: datetime
     zapad_slunce: datetime
     konec_soumraku: datetime
     lety: list[LetOut]
+    uzaverka: StavDneOut
 
 
 @router.get("/prehled", response=PrehledOut, summary="Přehled dne (UTC)")
@@ -285,12 +307,14 @@ def prehled(request, den: date | None = None):
         podminka |= Q(stav__in=[StavLetu.PRIPRAVEN, StavLetu.VE_VZDUCHU])
     lety = _lety().filter(podminka).order_by("cas_vzletu", "id")
     udaje = slunce(den)
+    uzavreno = Uzavreno.nacti()
     return {
         "den": den,
         "ted": ted,
         "zapad_slunce": udaje["zapad"],
         "konec_soumraku": udaje["soumrak"],
-        "lety": [_let_out(let, request.user) for let in lety],
+        "lety": [_let_out(let, request.user, uzavreno) for let in lety],
+        "uzaverka": uzaverky.stav_dne(den, request.user),
     }
 
 
@@ -519,10 +543,11 @@ def vypis_letu(
         soukrome=soukrome,
         zrusene=zrusene,
     )
+    uzavreno = Uzavreno.nacti()
     return {
         "od": filtr.od,
         "do": filtr.do,
-        "lety": [_let_out(let, request.user) for let in seznam],
+        "lety": [_let_out(let, request.user, uzavreno) for let in seznam],
         "souhrn": vypis.souhrn(seznam),
         "smi_exportovat": vypis.smi_exportovat(request.user),
     }
@@ -580,5 +605,125 @@ def export(
     else:
         obsah, typ = vypis.csv_data(seznam), "text/csv; charset=utf-8"
     odpoved = HttpResponse(obsah, content_type=typ)
+    odpoved["Content-Disposition"] = f'attachment; filename="{nazev}"'
+    return odpoved
+
+
+# --- uzávěrky (etapa 8) -------------------------------------------------------------------
+
+
+class DenMesiceOut(Schema):
+    den: date
+    lety: int
+    minuty: int
+    neukonceno: int
+    uzaverka: UzaverkaOut | None
+    zmeny: int
+    smi_uzavrit: bool
+
+
+class MesicOut(Schema):
+    mesic: date
+    dny: list[DenMesiceOut]
+    uzaverka: UzaverkaOut | None
+    zmeny: int
+    skoncil: bool
+    smi_uzavrit: bool
+
+
+@router.get("/uzaverky", response=MesicOut, summary="Dny měsíce a stav jejich uzávěrek")
+def prehled_uzaverek(request, mesic: date | None = None):
+    return uzaverky.prehled_mesice(mesic or timezone.now().date(), request.user)
+
+
+class NahledOut(Schema):
+    typ: str
+    obdobi: date
+    souhrn: dict
+    lze: bool
+    zakaz: str | None
+    neukonceno: list[str]
+    neuzavrene_dny: list[date]
+    posledni: UzaverkaOut | None
+    dnes: bool
+
+
+@router.get("/uzaverky/nahled", response=NahledOut, summary="Souhrn před uzavřením")
+def nahled_uzaverky(request, typ: str, obdobi: date):
+    p = uzaverky.priprav(typ, obdobi, request.user)
+    return {
+        "typ": p.typ,
+        "obdobi": p.obdobi,
+        "souhrn": uzaverky.souhrn(p.seznam),
+        "lze": p.lze,
+        "zakaz": p.zakaz,
+        "neukonceno": p.neukonceno,
+        "neuzavrene_dny": p.neuzavrene_dny,
+        "posledni": uzaverky.info(p.posledni),
+        "dnes": p.typ == Uzaverka.Typ.DEN and p.obdobi == timezone.now().date(),
+    }
+
+
+class UzavritIn(Schema):
+    typ: str
+    obdobi: date
+
+
+@router.post("/uzaverky", response=UzaverkaOut, summary="Uzavřít den / měsíc (nebo přepočítat)")
+def uzavrit(request, data: UzavritIn):
+    return uzaverky.info(uzaverky.uzavrit(data.typ, data.obdobi, request.user))
+
+
+class ZaznamZmenyOut(Schema):
+    kdy: datetime
+    kdo: str
+    akce: str
+    zmeny: dict
+    duvod: str
+    poznamka: str
+
+
+class ZmenenyLetOut(Schema):
+    id: int
+    imatrikulace: str
+    cas_vzletu: datetime | None
+    cas_pristani: datetime | None
+    stav: str
+    doba_uctovana_min: int | None
+    zaznamy: list[ZaznamZmenyOut]
+
+
+class DetailUzaverkyOut(Schema):
+    typ: str
+    obdobi: date
+    verze: list[UzaverkaOut]
+    souhrn: dict | None
+    rozdil: dict | None
+    lety: list[ZmenenyLetOut]
+
+
+@router.get("/uzaverky/detail", response=DetailUzaverkyOut, summary="Verze a změny po uzávěrce")
+def detail_uzaverky(request, typ: str, obdobi: date):
+    vysledek = uzaverky.detail(typ, obdobi)
+    duvody = dict(DuvodOpravy.choices) | dict(DuvodZruseni.choices)
+    for let in vysledek["lety"]:
+        for z in let["zaznamy"]:
+            z["duvod"] = duvody.get(z["duvod"], z["duvod"])
+    return vysledek
+
+
+@router.get("/uzaverky/{uzaverka_id}/export.xlsx", summary="Souhrn uzávěrky do Excelu")
+def export_uzaverky(request, uzaverka_id: int):
+    if not vypis.smi_exportovat(request.user):
+        raise sluzby.ChybaLetu("Export smí stahovat účetní a admin.", status=403)
+    u = Uzaverka.objects.select_related("uzavrel").filter(pk=uzaverka_id).first()
+    if u is None:
+        raise sluzby.ChybaLetu("Uzávěrka neexistuje.", status=404)
+    obdobi = f"{u.obdobi:%Y-%m-%d}" if u.typ == Uzaverka.Typ.DEN else f"{u.obdobi:%Y-%m}"
+    odpoved = HttpResponse(
+        uzaverky.excel(u),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    nazev = f"lkkllog-uzaverka-{obdobi}-v{u.verze}.xlsx"
     odpoved["Content-Disposition"] = f'attachment; filename="{nazev}"'
     return odpoved

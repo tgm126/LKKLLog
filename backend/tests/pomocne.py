@@ -36,3 +36,22 @@ def ve_vzduchu(svet, minut=20):
     )
     let.posadka.create(osoba=svet.pilot, funkce="pic")
     return let
+
+
+def let_v(svet, vzlet, minut=30, letadlo=None, pilot=None, **kw):
+    """Ukončený let v daném čase (přímo v databázi, bez kontrol služby)."""
+    pilot = pilot or svet.pilot
+    kw.setdefault("stav", StavLetu.UKONCEN)
+    kw.setdefault("platce", pilot)
+    novy = Let.objects.create(
+        letadlo=letadlo or svet.motor,
+        ucel=kw.pop("ucel", Ucel.NORMALNI),
+        misto_vzletu=svet.lkkl,
+        misto_pristani=svet.lkkl if kw["stav"] == StavLetu.UKONCEN else None,
+        cas_vzletu=vzlet,
+        cas_pristani=vzlet + timedelta(minutes=minut) if kw["stav"] == StavLetu.UKONCEN else None,
+        zalozil=pilot,
+        **kw,
+    )
+    novy.posadka.create(osoba=pilot, funkce="pic")
+    return novy

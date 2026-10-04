@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from osoby.models import Kategorie, Osoba
 
-from . import audit
+from . import audit, obdobi
 from .models import (
     AuditLog,
     DuvodOpravy,
@@ -47,8 +47,8 @@ class ChybaLetu(Exception):
 def ridi_provoz(osoba: Osoba) -> bool:
     """Časoměřič/věž a admin řídí provoz – ovládají lety všech.
 
-    Účetní do běžícího provozu nezasahuje (jako pilot ovládá jen své lety); jeho práva
-    navíc se týkají až oprav ukončených letů po uzávěrce (etapa oprav a uzávěrek).
+    Účetní do běžícího provozu nezasahuje (jako pilot ovládá jen své lety); navíc smí
+    opravovat ukončené lety v uzavřeném dni nebo měsíci (kap. 6.1 návrhu).
     """
     return osoba.is_staff or osoba.role_casomeric
 
@@ -64,13 +64,53 @@ def je_vlastnik(osoba: Osoba, let: Let) -> bool:
     )
 
 
-def muze_ovladat(osoba: Osoba, let: Let) -> bool:
-    return ridi_provoz(osoba) or je_vlastnik(osoba, let)
+def smi_po_uzaverce(osoba: Osoba, stav_letu: str, stav_obdobi: str) -> bool:
+    """Kdo smí měnit let v uzavřeném dni nebo měsíci (tabulka v kap. 6.1 návrhu)."""
+    if osoba.is_staff:
+        return True
+    if osoba.role_ucetni and stav_letu == StavLetu.UKONCEN:
+        return True
+    return stav_obdobi == obdobi.DEN and osoba.role_casomeric
 
 
-def over_pravo(osoba: Osoba, let: Let) -> None:
-    if not muze_ovladat(osoba, let):
-        raise ChybaLetu("Tento let může ovládat jen jeho posádka nebo časoměřič.", status=403)
+def muze_ovladat(osoba: Osoba, let: Let, uzavreno: obdobi.Uzavreno | None = None) -> bool:
+    stav = (uzavreno or obdobi.Uzavreno.nacti()).stav(obdobi.den_letu(let))
+    if stav == obdobi.OTEVRENO:
+        return ridi_provoz(osoba) or je_vlastnik(osoba, let)
+    return smi_po_uzaverce(osoba, let.stav, stav)
+
+
+def _chyba_uzaverky(stav: str) -> ChybaLetu:
+    if stav == obdobi.MESIC:
+        text = "Měsíc je uzavřený – opravu zapíše účetní."
+    else:
+        text = "Den je uzavřený – opravu zapíše časoměřič nebo účetní."
+    return ChybaLetu(text, status=403, kod="uzavreno")
+
+
+def over_pravo(osoba: Osoba, let: Let, uzavreno: obdobi.Uzavreno | None = None) -> str:
+    """Ověří, že osoba smí let měnit, a vrátí stav jeho období (otevřeno / den / měsíc)."""
+    stav = (uzavreno or obdobi.Uzavreno.nacti()).stav(obdobi.den_letu(let))
+    if stav == obdobi.OTEVRENO:
+        if not (ridi_provoz(osoba) or je_vlastnik(osoba, let)):
+            raise ChybaLetu("Tento let může ovládat jen jeho posádka nebo časoměřič.", status=403)
+    elif not smi_po_uzaverce(osoba, let.stav, stav):
+        raise _chyba_uzaverky(stav)
+    return stav
+
+
+def _over_uzaverku(osoba: Osoba, let: Let, uzavreno: obdobi.Uzavreno) -> str:
+    """Jen kontrola uzávěrky (vlastnictví letu už bylo ověřené dřív)."""
+    stav = uzavreno.stav(obdobi.den_letu(let))
+    if stav != obdobi.OTEVRENO and not smi_po_uzaverce(osoba, let.stav, stav):
+        raise _chyba_uzaverky(stav)
+    return stav
+
+
+def _oznac(let: Let, stav: str) -> None:
+    """Změna v uzavřeném období – let se objeví v přehledu „Změny po uzávěrce“."""
+    if stav != obdobi.OTEVRENO:
+        let.opraveno_po_uzaverce = True
 
 
 # --- pravidla posádky ----------------------------------------------------------
@@ -217,13 +257,22 @@ def _letiste(letiste_id: int | None) -> Letiste:
     return letiste
 
 
-def _over_cas(cas: datetime, nazev: str) -> datetime:
+def _over_cas(cas: datetime, nazev: str, kdo: Osoba | None = None) -> datetime:
     ted = timezone.now()
     if cas > ted + timedelta(minutes=1):
         raise ChybaLetu(f"{nazev} nemůže být v budoucnosti.")
-    if cas < ted - timedelta(days=31):
+    # Pojistka proti překlepu v datu; účetní a admin opravují i starší (uzavřené) měsíce.
+    starsi_smi = kdo is not None and (kdo.is_staff or kdo.role_ucetni)
+    if cas < ted - timedelta(days=31) and not starsi_smi:
         raise ChybaLetu(f"{nazev} je víc než měsíc zpátky.")
     return cas.replace(microsecond=0)
+
+
+def _over_opraveny_cas(novy: datetime, stary: datetime | None, nazev: str, kdo: Osoba):
+    """Nezměněný čas se znovu nekontroluje (oprava jiného údaje u starého letu)."""
+    if stary is not None and _datum(novy) == stary:
+        return stary
+    return _over_cas(_datum(novy), nazev, kdo)
 
 
 def _over_volne_osoby(osoby_ids, od: datetime, do: datetime | None, vyjma: int | None) -> None:
@@ -347,8 +396,8 @@ def zalozit(data: NovyLet, kdo: Osoba) -> Let:
     elif data.akce == "dopsat":
         if not data.cas_vzletu or not data.cas_pristani:
             raise ChybaLetu("U dopsaného letu zadejte vzlet i přistání.")
-        let.cas_vzletu = _over_cas(data.cas_vzletu, "Vzlet")
-        let.cas_pristani = _over_cas(data.cas_pristani, "Přistání")
+        let.cas_vzletu = _over_cas(data.cas_vzletu, "Vzlet", kdo)
+        let.cas_pristani = _over_cas(data.cas_pristani, "Přistání", kdo)
         if let.cas_pristani < let.cas_vzletu:
             raise ChybaLetu("Přistání nemůže být dřív než vzlet.")
         let.stav = StavLetu.UKONCEN
@@ -358,6 +407,7 @@ def zalozit(data: NovyLet, kdo: Osoba) -> Let:
     else:
         raise ChybaLetu("Neznámá akce.")
 
+    _oznac(let, _over_uzaverku(kdo, let, obdobi.Uzavreno.nacti()))
     if let.cas_vzletu:
         _over_volne_osoby(_letici(data.posadka), let.cas_vzletu, let.cas_pristani, None)
     if vlek:
@@ -397,12 +447,13 @@ def _zalozit_vlek(kluzak: Let, data: NovyLet, vlek: tuple[Letadlo, Osoba], kdo: 
         zalozil=kdo,
         stav=kluzak.stav,
         cas_vzletu=kluzak.cas_vzletu,
+        opraveno_po_uzaverce=kluzak.opraveno_po_uzaverce,
     )
     if kluzak.stav == StavLetu.UKONCEN:  # dopsaný let – vlečná má vlastní přistání
         cas = data.vlek.get("cas_pristani")
         if not cas:
             raise ChybaLetu("U dopsaného vleku zadejte i přistání vlečného letadla.")
-        tah.cas_pristani = _over_cas(_datum(cas), "Přistání vlečné")
+        tah.cas_pristani = _over_cas(_datum(cas), "Přistání vlečné", kdo)
         if tah.cas_pristani < tah.cas_vzletu:
             raise ChybaLetu("Přistání vlečné nemůže být dřív než vzlet.")
         tah.misto_pristani = kluzak.misto_vzletu
@@ -452,7 +503,8 @@ def _kdo_naposledy(let: Let, *akce: str) -> str:
 @transaction.atomic
 def vzlet(let_id: int, kdo: Osoba, cas: datetime | None = None) -> Let:
     let = _zamknout(let_id)
-    over_pravo(kdo, let)
+    uzavreno = obdobi.Uzavreno.nacti()
+    over_pravo(kdo, let, uzavreno)
     if let.stav == StavLetu.ZRUSEN:
         raise ChybaLetu("Let je zrušený.", status=409)
     if let.stav != StavLetu.PRIPRAVEN:
@@ -473,6 +525,7 @@ def vzlet(let_id: int, kdo: Osoba, cas: datetime | None = None) -> Let:
         dvojice.append(druhy)
     for jeden in dvojice:
         jeden.cas_vzletu = cas_vzletu
+        _oznac(jeden, _over_uzaverku(kdo, jeden, uzavreno))  # vzlet do uzavřeného dne
         _over_volne_osoby(_letici(jeden.posadka.all()), cas_vzletu, None, jeden.pk)
         jeden.stav = StavLetu.VE_VZDUCHU
         jeden.verze += 1
@@ -502,7 +555,7 @@ def pristani(
     kratky_let: str = "",
 ) -> Let:
     let = _zamknout(let_id)
-    over_pravo(kdo, let)
+    _oznac(let, over_pravo(kdo, let))
     if let.stav == StavLetu.PRIPRAVEN:
         raise ChybaLetu("Let ještě nevzlétl.", status=409)
     if let.stav != StavLetu.VE_VZDUCHU:
@@ -543,7 +596,7 @@ def pristani(
 @transaction.atomic
 def zrusit(let_id: int, kdo: Osoba, duvod: str, poznamka: str = "") -> Let:
     let = _zamknout(let_id)
-    over_pravo(kdo, let)
+    _oznac(let, over_pravo(kdo, let))
     if let.stav == StavLetu.ZRUSEN:
         raise ChybaLetu("Let už je zrušený.", status=409, kod="uz_zapsano", let_id=let.pk)
     if duvod not in DuvodZruseni.values:
@@ -606,7 +659,8 @@ def _rozdil(pred: dict, po: dict) -> dict[str, list[str]]:
 @transaction.atomic
 def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
     let = _zamknout(let_id)
-    over_pravo(kdo, let)
+    uzavreno = obdobi.Uzavreno.nacti()
+    stav = over_pravo(kdo, let, uzavreno)
     if let.stav == StavLetu.ZRUSEN:
         raise ChybaLetu("Zrušený let nejde opravit.", status=409)
     if data.verze != let.verze:
@@ -658,11 +712,13 @@ def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
     else:
         if not data.cas_vzletu:
             raise ChybaLetu("Zadejte čas vzletu.")
-        let.cas_vzletu = _over_cas(data.cas_vzletu, "Vzlet")
+        let.cas_vzletu = _over_opraveny_cas(data.cas_vzletu, let.cas_vzletu, "Vzlet", kdo)
         if let.stav == StavLetu.UKONCEN:
             if not data.cas_pristani:
                 raise ChybaLetu("Zadejte čas přistání.")
-            let.cas_pristani = _over_cas(data.cas_pristani, "Přistání")
+            let.cas_pristani = _over_opraveny_cas(
+                data.cas_pristani, let.cas_pristani, "Přistání", kdo
+            )
             if let.cas_pristani < let.cas_vzletu:
                 raise ChybaLetu("Přistání nemůže být dřív než vzlet.")
             let.misto_pristani = _letiste(data.misto_pristani_id)
@@ -671,7 +727,10 @@ def opravit(let_id: int, data: Oprava, kdo: Osoba) -> Let:
         elif data.cas_pristani:
             raise ChybaLetu("Let je ještě ve vzduchu – přistání zapište tlačítkem PŘISTÁL.")
         _over_volne_osoby(_letici(data.posadka), let.cas_vzletu, let.cas_pristani, let.pk)
+        # Přesun do jiného dne: musí být dovolený i v novém období.
+        stav = obdobi.prisnejsi(stav, _over_uzaverku(kdo, let, uzavreno))
 
+    _oznac(let, stav)
     let.verze += 1
     _uloz(let)
     let.posadka.all().delete()
@@ -711,6 +770,7 @@ def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
     ):
         raise ChybaLetu("Akci už nejde vrátit – použijte opravu letu.", status=409, kod="nelze")
 
+    _oznac(let, over_pravo(kdo, let))
     _vratit(let, posledni.akce, kdo)
     # Založení a vzlet vleku se týkají obou letů dvojice.
     druhy = partner(let)
@@ -719,6 +779,7 @@ def zpet(let_id: int, kdo: Osoba, verze: int) -> Let:
         if (posledni.akce == "vzlet" and druhy.stav == StavLetu.VE_VZDUCHU) or (
             posledni.akce == "zalozeni" and druhy.stav != StavLetu.ZRUSEN
         ):
+            druhy.opraveno_po_uzaverce |= let.opraveno_po_uzaverce
             _vratit(druhy, posledni.akce, kdo)
     return let
 

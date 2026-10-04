@@ -9,6 +9,7 @@ import { Paticka, Zahlavi } from './komponenty/Zahlavi'
 import { NastavitHeslo } from './stranky/NastavitHeslo'
 import { Prihlaseni } from './stranky/Prihlaseni'
 import { PrehledDne } from './stranky/PrehledDne'
+import { Uzaverky } from './stranky/Uzaverky'
 import { Vypis } from './stranky/Vypis'
 import { ZapomenuteHeslo } from './stranky/ZapomenuteHeslo'
 import { useJa } from './useJa'
@@ -32,6 +33,7 @@ function Obsah() {
         element={ja?.prihlasen ? <Navigate to="/" replace /> : <ZapomenuteHeslo />}
       />
       <Route path="/vypis" element={ja?.prihlasen ? <Vypis /> : <Prihlaseni />} />
+      <Route path="/uzaverky" element={ja?.prihlasen ? <Uzaverky /> : <Prihlaseni />} />
       <Route path="*" element={ja?.prihlasen ? <PrehledDne /> : <Prihlaseni />} />
     </Routes>
     </>

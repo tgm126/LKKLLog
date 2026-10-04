@@ -38,7 +38,9 @@ if not SECRET_KEY:
     SECRET_KEY = "dev-only-insecure-key"
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+# Vite při vývoji přeposílá API s jiným Host než Origin – jeho adresy jsou důvěryhodné.
+_VITE = "http://localhost:5173,http://127.0.0.1:5173" if DEBUG else ""
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", _VITE)
 
 # Číslo verze: soubor VERZE vytváří nasazení z GitHub Actions, jinak „dev“.
 _soubor_verze = BASE_DIR / "VERZE"

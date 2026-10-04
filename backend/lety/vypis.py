@@ -153,6 +153,7 @@ SLOUPCE = [
     "Soukromé",
     "Stav",
     "Zapsáno dodatečně",
+    "Opraveno po uzávěrce",
     "ID letu",
 ]
 
@@ -207,6 +208,7 @@ def radky(seznam: list[Let]) -> list[list]:
                 "ano" if let.soukrome else "",
                 stav_text,
                 "ano" if let.cas_pristani and let.zalozeno > let.cas_pristani else "",
+                "ano" if let.opraveno_po_uzaverce else "",
                 let.pk,
             ]
         )

@@ -1,4 +1,4 @@
-import { Affix, Alert, Button, Container, Group, Loader, Stack, Text, Title } from '@mantine/core'
+import { Affix, Alert, Badge, Button, Container, Group, Loader, Stack, Text, Title } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -6,11 +6,13 @@ import { useState } from 'react'
 import { type Let, vzlet } from '../api/lety'
 import { datumCesky, doba, hhmm } from '../cas'
 import { DetailLetu } from '../komponenty/DetailLetu'
+import { DetailUzaverky } from '../komponenty/DetailUzaverky'
 import { KartaLetu } from '../komponenty/KartaLetu'
 import { NovyLet } from '../komponenty/NovyLet'
 import { OpravaLetu } from '../komponenty/OpravaLetu'
 import { PristaniDialog } from '../komponenty/PristaniDialog'
 import { SkupinaVleku } from '../komponenty/SkupinaVleku'
+import { UzavritDialog } from '../komponenty/UzavritDialog'
 import { ZruseniDialog } from '../komponenty/ZruseniDialog'
 import { jeLetovyDotaz, useCiselniky, usePrehled, useServerovyCas } from '../useLety'
 import { seskupitVleky } from '../vleky'
@@ -27,6 +29,8 @@ export function PrehledDne() {
   const [zruseni, setZruseni] = useState<Let | null>(null)
   const [detailId, setDetailId] = useState<number | null>(null)
   const [opravaId, setOpravaId] = useState<number | null>(null)
+  const [uzavrit, setUzavrit] = useState(false)
+  const [detailUzaverky, setDetailUzaverky] = useState(false)
 
   const start = useMutation({
     mutationFn: (l: Let) => vzlet(l.id),
@@ -55,6 +59,7 @@ export function PrehledDne() {
   const pripravene = prehled.lety.filter((l) => l.stav === 'pripraven')
   const ukoncene = prehled.lety.filter((l) => l.stav === 'ukoncen' || l.stav === 'zrusen')
   const nalet = ukoncene.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0)
+  const uz = prehled.uzaverka
 
   // Detail a oprava berou vždy aktuální verzi letu z přehledu (obnovuje se každých 10 s).
   const detail = prehled.lety.find((l) => l.id === detailId)
@@ -101,6 +106,35 @@ export function PrehledDne() {
             Západ slunce {hhmm(prehled.zapad_slunce)} · konec soumraku{' '}
             {hhmm(prehled.konec_soumraku)} UTC
           </Text>
+          {(uz.uzaverka || uz.smi_uzavrit || uz.mesic_uzavren) && (
+            <Group gap="xs" mt={6}>
+              {uz.uzaverka && (
+                <Badge
+                  color="green"
+                  variant="light"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setDetailUzaverky(true)}
+                >
+                  den uzavřen v{uz.uzaverka.verze} · {hhmm(uz.uzaverka.kdy)} · {uz.uzaverka.uzavrel}
+                </Badge>
+              )}
+              {uz.mesic_uzavren && (
+                <Badge color="green" variant="light">
+                  měsíc uzavřen
+                </Badge>
+              )}
+              {uz.zmeny > 0 && (
+                <Badge color="orange" style={{ cursor: 'pointer' }} onClick={() => setDetailUzaverky(true)}>
+                  změny po uzávěrce: {uz.zmeny}
+                </Badge>
+              )}
+              {uz.smi_uzavrit && (!uz.uzaverka || uz.zmeny > 0) && (
+                <Button size="compact-sm" variant="light" onClick={() => setUzavrit(true)}>
+                  {uz.uzaverka ? 'Přepočítat' : 'Uzavřít den'}
+                </Button>
+              )}
+            </Group>
+          )}
         </div>
 
         <Stack gap="xs">
@@ -150,6 +184,12 @@ export function PrehledDne() {
         />
       )}
       <PristaniDialog let_={pristani} onZavrit={() => setPristani(null)} />
+      {uzavrit && (
+        <UzavritDialog typ="den" obdobi={prehled.den} onZavrit={() => setUzavrit(false)} />
+      )}
+      {detailUzaverky && (
+        <DetailUzaverky typ="den" obdobi={prehled.den} onZavrit={() => setDetailUzaverky(false)} />
+      )}
       <ZruseniDialog let_={zruseni} onZavrit={() => setZruseni(null)} />
       <DetailLetu
         let_={detail ?? null}

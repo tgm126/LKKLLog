@@ -36,3 +36,17 @@ export function naMinuty(d: Date): Date {
   kopie.setUTCSeconds(0, 0)
   return kopie
 }
+
+/** Datum a čas v UTC, např. „3. 10. 2026 18:05 UTC“. */
+export const datumCasUtc = (iso: string) =>
+  `${new Date(iso).toLocaleDateString('cs-CZ', { timeZone: 'UTC' })} ${hhmm(iso)} UTC`
+
+/** Název dne („sobota 3. 10.“) nebo měsíce („říjen 2026“) pro uzávěrky. */
+export const nazevObdobi = (typ: 'den' | 'mesic', obdobi: string) =>
+  typ === 'den'
+    ? datumCesky(obdobi)
+    : new Date(`${obdobi}T12:00:00Z`).toLocaleDateString('cs-CZ', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })

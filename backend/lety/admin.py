@@ -1,6 +1,7 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 
+from . import uzaverky
 from .models import AuditLog, Let, Letadlo, Letiste, Osnova, Posadka, Ucel, Uloha, Uzaverka
 
 
@@ -117,11 +118,21 @@ class AuditLogAdmin(admin.ModelAdmin):
 
 @admin.register(Uzaverka)
 class UzaverkaAdmin(admin.ModelAdmin):
-    list_display = ["typ", "obdobi", "verze", "uzavrel", "kdy"]
-    list_filter = ["typ"]
+    list_display = ["typ", "obdobi", "verze", "uzavrel", "kdy", "znovu_otevreno"]
+    list_filter = ["typ", ("znovu_otevreno", admin.EmptyFieldListFilter)]
+    actions = ["znovu_otevrit"]
+
+    @admin.action(description="Znovu otevřít vybraná období (verze zůstanou v historii)")
+    def znovu_otevrit(self, request, queryset):
+        obdobi = set(queryset.values_list("typ", "obdobi"))
+        pocet = sum(bool(uzaverky.znovu_otevrit(t, o, request.user)) for t, o in obdobi)
+        self.message_user(request, f"Znovu otevřeno období: {pocet}.", messages.SUCCESS)
 
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False

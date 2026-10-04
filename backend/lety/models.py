@@ -409,6 +409,12 @@ class Uzaverka(models.Model):
     )
     kdy = models.DateTimeField(auto_now_add=True)
     souhrn = models.JSONField(default=dict)
+    znovu_otevreno = models.DateTimeField(
+        "znovu otevřeno",
+        null=True,
+        blank=True,
+        help_text="Admin uzávěrku zrušil; období je zase otevřené (verze zůstávají v historii).",
+    )
 
     class Meta:
         verbose_name = "uzávěrka"

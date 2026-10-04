@@ -121,6 +121,11 @@ export function KartaLetu({
               zapsáno dodatečně
             </Badge>
           )}
+          {let_.opraveno_po_uzaverce && (
+            <Badge variant="light" color="orange">
+              opraveno po uzávěrce
+            </Badge>
+          )}
           {let_.kratky_let === 'start_bez_doby' && (
             <Badge variant="light" color="orange">
               start bez doby

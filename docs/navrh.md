@@ -287,6 +287,26 @@ Uzávěrka **není zámek**, ale **oficiální souhrn** uložený k danému okam
   2. objeví se v přehledu **„Změny po uzávěrce“** (co se změnilo, o kolik minut a startů se liší součty, kdo a proč),
   3. uzávěrku lze **přepočítat**. Vznikne nová verze souhrnu a stará zůstane v historii, takže je vždy vidět, co bylo předáno účetnictví a co se změnilo potom.
 
+**Stav po etapě 8:**
+- Den uzavírá časoměřič, účetní nebo admin tlačítkem „Uzavřít den“ na přehledu dne nebo
+  na obrazovce *Uzávěrky*. Měsíc uzavírá účetní nebo admin, a to až po jeho skončení a po
+  uzavření všech dnů, ve kterých se létalo.
+- Obrazovka *Uzávěrky* (vidí ji časoměřič, účetní a admin) ukazuje dny měsíce se stavem
+  uzavření, měsíční uzávěrku a u každého období odznak „změny po uzávěrce“. Detail ukazuje:
+  - o kolik se liší součty,
+  - které lety se změnily, kdo, co a proč,
+  - všechny verze souhrnu.
+- Souhrn se počítá z ukončených letů klubových letadel. Soukromá letadla a zrušené lety jsou
+  v souhrnu jen pro informaci.
+- Uzávěrka si ukládá verzi každého letu v období, takže se pozná každá pozdější změna:
+  oprava, zrušení, dopsaný let i přesun do jiného dne.
+- Účetní stahuje souhrn uzávěrky do Excelu s listy *Uzávěrka*, *Podle letadel*, *Podle
+  plátců*, *Podle osob* a *Starty*.
+- Uzávěrku znovu otevírá admin akcí v administraci (*Uzávěrky → Znovu otevřít*). Verze
+  zůstanou v historii.
+- Limit „čas nejvýš měsíc zpátky“ neplatí pro účetní a admina, aby mohli opravovat
+  i v uzavřeném měsíci.
+
 ### 4.8 Můj nálet (neoficiální)
 Součty hodin a startů za období podle kategorie a účelu (PIC, žák, přezkoušený). Seznam vlastních letů.
 
@@ -475,7 +495,9 @@ Frontend volá **REST API**: adresy typu `/api/lety`, na které posílá požada
 | Historie letu | `GET /api/lety/{id}/historie` |
 | Výpis / export | `GET /api/vypis?…`, `GET /api/vypis/export.xlsx?…` |
 | Můj nálet | `GET /api/nalet/ja?od=…&do=…` |
-| Uzavřít den / měsíc | `POST /api/uzaverky` |
+| Uzavřít den / měsíc (znovu = přepočet, nová verze) | `POST /api/uzaverky` |
+| Dny měsíce a stav uzávěrek / souhrn před uzavřením | `GET /api/uzaverky?mesic=…`, `GET /api/uzaverky/nahled?typ=…&obdobi=…` |
+| Verze uzávěrky a změny po ní / Excel souhrnu | `GET /api/uzaverky/detail?typ=…&obdobi=…`, `GET /api/uzaverky/{id}/export.xlsx` |
 | Data pro displej | `GET /api/displej?token=…` |
 | Kontrola stavu (pro nasazování) | `GET /api/health` |
 | Správa číselníků | Django administrace |
