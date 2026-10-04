@@ -3,10 +3,15 @@
 
 export class ApiChyba extends Error {
   status: number
+  /** Strojový kód chyby z backendu (např. `kratky_let`, `uz_zapsano`). */
+  kod: string
+  letId: number | null
 
-  constructor(status: number, zprava: string) {
+  constructor(status: number, zprava: string, kod = '', letId: number | null = null) {
     super(zprava)
     this.status = status
+    this.kod = kod
+    this.letId = letId
   }
 }
 
@@ -31,7 +36,7 @@ export async function api<T>(cesta: string, data?: unknown): Promise<T> {
     const detail = telo?.detail
     const zprava =
       typeof detail === 'string' ? detail : `Server odpověděl chybou ${odpoved.status}.`
-    throw new ApiChyba(odpoved.status, zprava)
+    throw new ApiChyba(odpoved.status, zprava, telo?.kod ?? '', telo?.let_id ?? null)
   }
   return telo as T
 }

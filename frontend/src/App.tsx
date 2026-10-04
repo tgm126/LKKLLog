@@ -7,7 +7,7 @@ import { Pruhy } from './komponenty/Pruhy'
 import { Paticka, Zahlavi } from './komponenty/Zahlavi'
 import { NastavitHeslo } from './stranky/NastavitHeslo'
 import { Prihlaseni } from './stranky/Prihlaseni'
-import { Uvod } from './stranky/Uvod'
+import { PrehledDne } from './stranky/PrehledDne'
 import { ZapomenuteHeslo } from './stranky/ZapomenuteHeslo'
 import { useJa } from './useJa'
 
@@ -27,7 +27,7 @@ function Obsah() {
         path="/zapomenute-heslo"
         element={ja?.prihlasen ? <Navigate to="/" replace /> : <ZapomenuteHeslo />}
       />
-      <Route path="*" element={ja?.prihlasen ? <Uvod /> : <Prihlaseni />} />
+      <Route path="*" element={ja?.prihlasen ? <PrehledDne /> : <Prihlaseni />} />
     </Routes>
   )
 }
