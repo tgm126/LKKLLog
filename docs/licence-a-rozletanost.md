@@ -46,10 +46,26 @@ proběhl.
 - **Hlídání** (varování při zakládání letu a přehled rozlétanosti) zapíná admin v *Nastavení
   provozu*, až budou licence a medical zadané u všech pilotů. Varování nic neblokuje.
 
+## Kdo co vydává
+
+- **ÚCL (Úřad pro civilní letectví)** je český úřad pro průkazy podle předpisů EASA:
+  PPL(A), LAPL(A), SPL, medical. Jeho postupy (CAA-ZLP-…) popisují vydání,
+  prodlužování a obnovu kvalifikací v ČR.
+- **LAA ČR** vydává průkazy pilotů ULL a technické průkazy ultralehkých letadel.
+
 ## Zdroje
 
+### ÚCL (česky)
+- CAA-ZLP-163 Způsobilost pilotů letounů: https://www.caa.cz/wp-content/uploads/2019/07/CAA-ZLP-163-Zpu%CC%8Asobilost-pilotu%CC%8A-letounu%CC%8A.pdf
+- CAA-ZLP-165 Prodlužování a obnova kvalifikací pilotů letounů: https://www.caa.cz/wp-content/uploads/2022/11/CAA-ZLP-165-Prodluzovani-a-obnova-kvalifikaci-pilotu-letounu_rev-30.11..pdf
+- Žádost o průkaz LAPL(A) podle Part-FCL (formulář ZLP-F-163-22): https://www.caa.cz/wp-content/uploads/2020/11/ZLP-F-163-22-0-Zadost-o-Part-FCL-LAPLA.pdf
+- Seminář SPL (ÚCL, 17. 2. 2024): https://caa.cz/wp-content/uploads/2024/02/4-Prezentace-OZLP.pdf
+- CAA-ZLP-049 Způsobilost pilotů kluzáků (starší národní úprava pro GPL, nahrazená SPL podle Part-SFCL; postup pro SPL je CAA-ZLP-161): https://www.caa.cz/wp-content/uploads/2019/07/049-GPL.pdf
+- EASA GM k prodloužení rozlétanosti (na webu ÚCL): https://www.caa.gov.cz/wp-content/uploads/2020/05/EASA-GM_Recency_extension_rev.2.pdf
+
+### EASA a další
+
 - EASA Part-FCL (Easy Access Rules): https://easa.europa.eu/cs/downloads/116578/en
-- ÚCL – EASA GM k prodloužení rozlétanosti: https://www.caa.gov.cz/wp-content/uploads/2020/05/EASA-GM_Recency_extension_rev.2.pdf
 - LAPL – přehled: https://en.wikipedia.org/wiki/Light_aircraft_pilot_licence
 - UK CAA – LAPL(A): https://www.caa.co.uk/general-aviation/pilot-licences/aeroplanes/light-aircraft-pilot-licence-for-aeroplanes
 - Prodloužení SEP/TMG (FCL.740.A): https://ffac.ch/wp-content/uploads/2020/09/SEP-TMG-revalidation-EASA.pdf
@@ -59,5 +75,6 @@ proběhl.
 - BGA – Guidance for SPL holders: https://members.gliding.co.uk/wp-content/uploads/sites/3/2020/10/Guidance-for-SPL-holders.pdf
 - Aeroweb – pilot ULL: https://www.aeroweb.cz/pilotni-prukazy/ultralighty/pilot-ultralehkych-letounu-ull
 - LAA ČR – pilotní průkazy: https://www.laacr.cz/sluzby-pilotum/pilotni-prukazy/
+- LAA ČR – technické průkazy SLZ (platnost 2 roky, prototypy 1 rok): https://www.laacr.cz/sluzby-pilotum/technicke-prukazy/
 - LAA ČR – předpisy a formuláře (UL 1, UL 2, UL 3): https://www.laacr.cz/ultralehke-letouny/ul-predpisy-a-formulare/
 - LAA ČR – UL 1 Pravidla provozu SLZ (2026): https://www.laacr.cz/tml/files/2026/09/2026-09-02_UL-1.pdf
