@@ -927,6 +927,7 @@ def moje_rozletanost(request):
 
 class KontrolaLetuIn(Schema):
     letadlo_id: int
+    ucel: str = Ucel.NORMALNI
     posadka: list[ClenIn]
     pocet_hostu: int = 0
     zpusob_vzletu: str = ZpusobVzletu.VLASTNI
@@ -957,9 +958,13 @@ def kontrola_letu(request, data: KontrolaLetuIn):
         cestujici = data.pocet_hostu > 0 or any(
             c.funkce == FunkcePosadky.CLEN for c in data.posadka
         )
-        varovani += rozletanost.varovani_pilota(
-            osoba, letadlo.kategorie, cestujici, data.zpusob_vzletu, moduly
-        )
+        if data.ucel == Ucel.VYCVIK_SOLO:  # PIC je žák: licenci ani rozlétanost ještě nemá
+            if rozletanost.ZPUSOBILOST in moduly:
+                varovani += rozletanost.varovani_pred_solem(osoba)
+        else:
+            varovani += rozletanost.varovani_pilota(
+                osoba, letadlo.kategorie, cestujici, data.zpusob_vzletu, moduly
+            )
     if data.vlek and (vlekar := Osoba.objects.filter(pk=data.vlek.vlekar_id).first()):
         vlecne = Letadlo.objects.filter(pk=data.vlek.letadlo_id).first()
         if vlecne:

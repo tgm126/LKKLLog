@@ -103,9 +103,30 @@ def test_testovaci_licence(svet):
     call_command("testovaci_licence")
     typy = set(Licence.objects.filter(osoba=pilot).values_list("typ", flat=True))
     assert {"spl", "jazyk"} <= typy and typy & {"ppl_a", "lapl_a"}
-    assert not Licence.objects.filter(osoba=zak).exists() and zak.medicaly.exists()
+    # Žák: bez pilotní licence, ale s medicalem a radiofonním průkazem (kvůli sólu).
+    assert list(Licence.objects.filter(osoba=zak).values_list("typ", flat=True)) == ["radio"]
+    assert zak.medicaly.exists()
     assert not Licence.objects.filter(osoba=svet.pilot).exists()  # skutečné osoby ne
 
     pocet = Licence.objects.count()
     call_command("testovaci_licence")  # bez --prepsat nic nového
     assert Licence.objects.count() == pocet
+
+
+def test_testovaci_letadla(jako, svet, spravce):
+    from django.core.management import call_command
+
+    call_command("testovaci_letadla")
+    letadla = {let["imatrikulace"]: let for let in jako(spravce).get("/api/sprava/letadla").json()}
+    motor = letadla["OK-TCS"]
+    assert not motor["chybi_denik"] and motor["nalet_min"] > 0
+    assert {t["nazev"] for t in motor["terminy"]} >= {"ARC", "Pojištění", "100h prohlídka"}
+    assert {t["nazev"] for t in letadla["OK-T101"]["terminy"]} >= {"Roční prohlídka"}
+    stavy = {t["stav"] for let in letadla.values() for t in let["terminy"]}
+    assert stavy == {"ok", "pozor", "chyba"}  # pestrá data
+
+    pocet = TerminLetadla.objects.count()
+    call_command("testovaci_letadla")  # bez --prepsat nic nového
+    assert TerminLetadla.objects.count() == pocet
+    call_command("testovaci_letadla", prepsat=True)
+    assert TerminLetadla.objects.count() == pocet

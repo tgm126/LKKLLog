@@ -74,11 +74,13 @@ class Command(BaseCommand):
                 medical = {TridaMedicalu.T2: za(300 + 50 * i), TridaMedicalu.LAPL: za(900)}
             for trida, platnost in medical.items():
                 Medical.objects.create(osoba=osoba, trida=trida, platnost_do=platnost)
-            if jen_zak:
-                hotovo += 1
-                continue  # žák zatím bez licence
-
             licence = _licence(osoba)
+            if jen_zak:  # žák: bez licence, ale medical a radiofonní průkaz kvůli sólu
+                if i % 4 != 0:
+                    licence(TypLicence.RADIO, (D.OFL, za(3000)))
+                hotovo += 1
+                continue
+
             if Kategorie.MOTOR in kategorie or Kategorie.TMG in kategorie:
                 tridy = [D.SEP] if Kategorie.MOTOR in kategorie else []
                 if Kategorie.TMG in kategorie:

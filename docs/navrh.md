@@ -416,9 +416,16 @@ a nápovědu.
 
   U vypnutého modulu vidí kontroly v Můj nálet jen admin (pro kontrolu dat) a varování
   se neukazují. Přehled *Piloti a letadla* ukazuje vše vždy.
-- **Testovací data:** příkaz `manage.py testovaci_licence` doplní pestré licence a medical
-  osobám s příznakem *Testovací* (v pořádku, brzy vyprší, prošlé, chybějící).
-  `--prepsat` je vytvoří znovu.
+- **Žák před prvním sólem** musí mít platný medical a radiofonní průkaz. U letu *Výcvik
+  sólo* (žák je PIC) se proto kontroluje jen tohle, ne licence ani rozlétanost.
+- **Testovací data:**
+  - `manage.py testovaci_licence` doplní pestré licence a medical osobám s příznakem
+    *Testovací*. Stavy jsou v pořádku, brzy vyprší, prošlé i chybějící; žáci mají medical
+    a většinou radiofonní průkaz.
+  - `manage.py testovaci_letadla` doplní klubovým letadlům stav deníku a termíny
+    s poznámkou „testovací“: ARC, pojištění, prohlídky podle data i náletu, TBO, u UL
+    technický průkaz a záchranný systém.
+  - `--prepsat` vytvoří data znovu.
 - Počítá se jen z letů v LKKL Log. Uvažuje se o importu starších letů z Flight Office,
   se kterým by výpočet byl úplnější.
 
@@ -781,7 +788,8 @@ Co aplikace k tomu potřebuje:
 - Jedna instance aplikace, samostatné testovací prostředí zatím ne.
 
 **Postup při spuštění ostrého provozu (fáze 3):**
-1. Úklid před spuštěním: smazat testovací lety, uzávěrky, upozornění a testovací osoby.
+1. Úklid před spuštěním: smazat testovací lety, uzávěrky, upozornění, testovací osoby
+   (i s jejich licencemi) a testovací termíny letadel (poznámka „testovací“).
 2. **Stav provozních deníků letadel:** celkový nálet a starty každého letadla ke dni
    spuštění. Zadává se v *Piloti a letadla → Letadla → Stav deníku*, nebo hromadně
    v Excelu s číselníky (list Letadla, sloupce *Nálet z deníku [h:mm]*, *Starty z deníku*,

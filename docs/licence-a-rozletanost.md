@@ -52,6 +52,13 @@ v jazyce, který se ke spojení používá (v ČR i čeština). Aplikace při za
 jen když nemá platnou úroveň v žádném jazyce. Na blížící se konec platnosti upozorňuje
 3 měsíce předem.
 
+## Žák pilot
+
+- Před **prvním sólem** musí mít žák **platný medical** (Part-MED, MED.A.030) a **radiofonní
+  průkaz** (požadavek klubu; k obsluze letadlové radiostanice je potřeba průkaz ČTÚ).
+- Pilotní licenci ani rozlétanost žák ještě nemá. U letu *Výcvik sólo* aplikace kontroluje
+  jen medical a radiofonní průkaz.
+
 ## Medical (Part-MED)
 
 - Jedno osvědčení může mít **pro různé třídy různou platnost**, např. třída 2 a LAPL.

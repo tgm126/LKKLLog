@@ -475,7 +475,9 @@ def kontroly(osoba: Osoba, dnes: date | None = None) -> list[Kontrola]:
         ):
             vysledek.append(Kontrola("Licence", "Licence", CHYBA, "Pilotní licence není zadaná."))
         else:  # žák licenci ještě mít nemůže
-            vysledek.append(Kontrola("Licence", "Licence", INFO, "Žák – zatím bez licence."))
+            k = Kontrola("Licence", "Licence", INFO, "Žák – zatím bez licence.")
+            k.podrobnosti.append("Před prvním sólem potřebuje platný medical a radiofonní průkaz.")
+            vysledek.append(k)
         return vysledek
 
     druhy = {(lic.typ, kv.druh) for lic in licence for kv in lic.kvalifikace.all()}
@@ -573,4 +575,19 @@ def varovani_pilota(
             vysledek.append(
                 f"{jmeno}: nemá zadaný způsob vzletu {DruhKvalifikace(druh).label.lower()}."
             )
+    return vysledek
+
+
+def varovani_pred_solem(osoba: Osoba, dnes: date | None = None) -> list[str]:
+    """Žák před sólem musí mít platný medical a radiofonní průkaz (licenci ještě ne)."""
+    dnes = dnes or timezone.now().astimezone(UTC).date()
+    jmeno = osoba.get_full_name()
+    vysledek = []
+    if not Medical.objects.filter(osoba=osoba, platnost_do__gte=dnes).exists():
+        vysledek.append(f"{jmeno}: před sólem musí mít platný medical.")
+    radio = Licence.objects.filter(
+        osoba=osoba, typ=TypLicence.RADIO, kvalifikace__platnost_do__gte=dnes
+    )
+    if not radio.exists():
+        vysledek.append(f"{jmeno}: před sólem musí mít platný radiofonní průkaz.")
     return vysledek

@@ -301,3 +301,26 @@ def test_varovani_na_prosly_termin_letadla(jako, svet):
     nastaveni.save()
     [varovani] = post(klient, "/api/kontrola-posadky", let).json()["varovani"]
     assert varovani.startswith("OK-TCS: ARC – prošlo")
+
+
+def test_zak_pred_solem_potrebuje_medical_a_radiofonni_prukaz(jako, svet):
+    nastaveni = Nastaveni.aktualni()
+    nastaveni.hlidat_zpusobilost = True
+    nastaveni.save()
+    solo = {
+        "letadlo_id": svet.motor.pk,
+        "ucel": "vycvik_solo",
+        "posadka": [
+            {"osoba_id": svet.zak.pk, "funkce": "pic"},
+            {"osoba_id": svet.instruktor.pk, "funkce": "dozor"},
+        ],
+    }
+    klient = jako(svet.casomeric)
+    varovani = post(klient, "/api/kontrola-posadky", solo).json()["varovani"]
+    assert varovani == [
+        "Test Žák: před sólem musí mít platný medical.",
+        "Test Žák: před sólem musí mít platný radiofonní průkaz.",
+    ]  # o licenci ani rozlétanosti u žáka ne
+    medical(svet.zak)
+    licence(svet.zak, TypLicence.RADIO, (DruhKvalifikace.OFL, DNES + timedelta(days=3000)))
+    assert post(klient, "/api/kontrola-posadky", solo).json() == {"varovani": []}

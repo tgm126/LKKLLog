@@ -43,6 +43,7 @@ export type Rozletanost = {
 
 export type KontrolaPosadky = {
   letadlo_id: number
+  ucel: string
   posadka: { osoba_id: number; funkce: string }[]
   pocet_hostu: number
   zpusob_vzletu: string

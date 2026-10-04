@@ -455,6 +455,7 @@ export function NovyLet({
               letadloId
                 ? {
                     letadlo_id: letadloId,
+                    ucel,
                     posadka,
                     pocet_hostu: ucel === 'normalni' ? hoste : 0,
                     zpusob_vzletu: letadlo?.kategorie === 'kluzak' ? zpusob : 'vlastni',
