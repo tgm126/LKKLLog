@@ -30,6 +30,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    nepřepisovat. Změny struktury jen novým skriptem (`ALTER`…), který data zachová.
    Skripty `_data.sql` jsou jen počáteční naplnění; na server se data přenesou výpisem
    z lokální databáze. Žádné importy z Excelu.
+   Před každou změnou struktury udělat zálohu: `bash db/zaloha.sh` (do
+   `C:\GIT\LKKLLog-zalohy`, mimo git – budou tam i osobní údaje).
 6. Skripty v `db/` se před první migrací na server mohou sloučit do čistého celku (data
    se přitom vezmou z databáze).
 7. **Tabulky:** stará verze je zinventarizovaná v `docs/tabulky-v1.md` (po spuštění nové
