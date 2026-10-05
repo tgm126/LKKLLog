@@ -8,3 +8,9 @@
 .claude/settings.local.json
 .vscode/
 .idea/
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/

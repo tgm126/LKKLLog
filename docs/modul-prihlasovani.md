@@ -1,6 +1,6 @@
 # Modul: účty a přihlašování
 
-> **NÁVRH ke schválení.** Po schválení se podle něj napíše kód; změny nejdřív sem.
+> **Schváleno 5. 10. 2026.** Změny chování nejdřív sem, pak do kódu.
 
 Server: Python + FastAPI, dotazy přímo v SQL nad tabulkami `lkkl.ucet`, `lkkl.relace`
 a pohledem `lkkl.v_ucet` (skript `db/005_ucet.sql`). V tomto kroku **bez obrazovek** –
@@ -12,8 +12,12 @@ rozhraní (API) ověří automatické testy; přihlašovací obrazovka přijde p
 (pozvánka i zapomenuté heslo), aktivace osoby adminem, „přihlásit se jako“, přehled
 a odhlášení zařízení, ochrana proti hádání hesla.
 
-**Ne (později):** odesílání e-mailů (viz kap. 6), passkey, auditní log (zatím neexistuje
-tabulka – kde má modul zapisovat, je v textu označeno *audit*), další práva než `admin`.
+**Ne (později):** odesílání e-mailů a s ním samoobslužné „zapomenuté heslo“ (ve fázi 1 se
+e-maily neposílají – odkaz pro nastavení hesla dostane admin a předá ho osobě sám), passkey,
+auditní log (zatím neexistuje tabulka – kde má modul zapisovat, je v textu označeno *audit*).
+
+**Práva:** `admin` (smí všechno) a `smi_odblokovat` (smí odblokovat účet zablokovaný po
+neúspěšných pokusech; skript `db/006_odblokovani.sql`).
 
 ## 2. Pojmy
 
@@ -34,14 +38,15 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
 | `GET /api/ja` | přihlášený | jméno, e-mail, práva (`admin`), případně „přihlášen jako“ (kdo je skutečný admin) |
 | `GET /api/zarizeni` | přihlášený | moje relace: zařízení, poslední aktivita, které je aktuální |
 | `POST /api/zarizeni/odhlasit-ostatni` | přihlášený | ukončí všechny moje relace kromě aktuální |
-| `POST /api/heslo/zapomenute` | kdokoli | `{email}` → připraví odkaz pro nastavení hesla (kap. 6); odpověď je vždy stejná |
 | `GET /api/heslo/odkaz?klic=…` | kdokoli | ověří odkaz → jméno osoby, nebo „odkaz neplatí“ |
 | `POST /api/heslo/nastavit` | kdokoli s odkazem | `{klic, heslo}` → uloží heslo, zneplatní odkaz, rovnou přihlásí |
 | `POST /api/heslo/zmenit` | přihlášený | `{stare, nove}` → změní heslo, odhlásí ostatní zařízení |
-| `POST /api/ucty` | admin | `{osoba_id, admin}` → aktivuje osobu (založí účet) |
-| `POST /api/ucty/{osoba_id}` | admin | změní `aktivni` a `admin`; zablokování ukončí všechny relace osoby |
-| `POST /api/ucty/{osoba_id}/pozvanka` | admin | vytvoří odkaz pro nastavení hesla, zapíše `pozvanka_odeslana` |
+| `POST /api/ucty` | admin | `{osoba_id, admin, smi_odblokovat}` → aktivuje osobu (založí účet) |
+| `POST /api/ucty/{osoba_id}` | admin | změní `aktivni`, `admin`, `smi_odblokovat`; zablokování ukončí všechny relace osoby |
+| `POST /api/ucty/{osoba_id}/pozvanka` | admin | vrátí odkaz pro nastavení hesla (admin ho předá osobě), zapíše `pozvanka_odeslana` |
 | `GET /api/ucty` | admin | přehled účtů (z `v_ucet`) |
+| `GET /api/ucty/zablokovane` | admin, `smi_odblokovat` | účty zablokované po neúspěšných pokusech (jen jméno a do kdy) |
+| `POST /api/ucty/{osoba_id}/odblokovat` | admin, `smi_odblokovat` | zruší zablokování a vynuluje pokusy |
 | `POST /api/prihlasit-jako/{osoba_id}` | admin | aktuální relace začne jednat za jinou osobu |
 | `POST /api/prihlasit-jako/konec` | „přihlášen jako“ | návrat k vlastnímu účtu |
 
@@ -54,7 +59,11 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
    e-mail existuje. I pro neexistující e-mail se ověřuje (fiktivní) otisk, aby odpověď
    trvala stejně dlouho.
 4. **Ochrana proti hádání:** po **5** neúspěšných pokusech se účet zablokuje na **15 minut**
-   (`zablokovano_do`, odpověď 429). Úspěšné přihlášení počítadlo vynuluje.
+   (`zablokovano_do`, odpověď 429). Úspěšné přihlášení počítadlo vynuluje. Dřív ho může
+   odblokovat admin nebo osoba s právem `smi_odblokovat`. Zablokování brání jen novému
+   přihlášení – už přihlášená zařízení fungují dál (útočník tak nemůže vlastníka „vyhodit“).
+   Odpověď 429 prozradí, že účet existuje; je to vědomý kompromis (jinak by člověk nevěděl,
+   že má požádat o odblokování).
 5. Úspěch: nová relace (`plati_do` = teď + 30 dní), `posledni_prihlaseni`, cookie. *audit*
 
 ### 4.2 Relace a cookie
@@ -67,7 +76,7 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
 
 ### 4.3 Ochrana proti podvrženým požadavkům (CSRF)
 Rozhraní přijímá jen JSON. Každý požadavek, který něco mění (POST), musí mít hlavičku
-`Origin` odpovídající adrese aplikace; jinak 403. Spolu s `SameSite=Lax` to brání tomu,
+`Origin` z povolených adres (proměnná `LKKL_POVOLENE_ADRESY`); jinak 403. Spolu s `SameSite=Lax` to brání tomu,
 aby cizí stránka poslala požadavek s cookie přihlášeného uživatele.
 
 ### 4.4 Odkaz pro nastavení hesla
@@ -75,7 +84,9 @@ aby cizí stránka poslala požadavek s cookie přihlášeného uživatele.
   vydání; platí **3 dny**. Nic se kvůli němu neukládá do databáze.
 - Je **jednorázový**: podpis zahrnuje `heslo_zmeneno`, takže po nastavení hesla přestane
   platit (i všechny starší odkazy).
-- Pozvánka i zapomenuté heslo používají stejný odkaz.
+- Pozvánka i (později) zapomenuté heslo používají stejný odkaz. Ve fázi 1 ho admin získá
+  z `POST /api/ucty/{osoba_id}/pozvanka`, první heslo admina příkazem
+  `uv run python -m app.prikazy odkaz <e-mail>`.
 
 ### 4.5 Heslo
 - Délka **10 až 128 znaků**, žádná další pravidla (velká písmena, číslice) – delší heslo je
@@ -113,10 +124,10 @@ Testy pokryjí každé pravidlo z kap. 4: chybné heslo, neexistující e-mail, 
 5 pokusech, prošlá a zneplatněná relace, prošlý a použitý odkaz, CSRF bez `Origin`,
 přihlásit se jako (i zákaz za admina), zablokování ukončí relace.
 
-## 6. Otázky
+## 6. Rozhodnutí ke schválení (5. 10. 2026)
 
-1. **E-maily ve fázi 1:** navrhuji je zatím **neposílat** – adminovi se odkaz pro nastavení
-   hesla ukáže a pošle ho osobě sám (SMS, WhatsApp…). Odesílání e-mailů uděláme jako
-   samostatný modul před fází 2. Zapomenuté heslo do té doby řeší admin novým odkazem.
-2. **Zablokování po 5 pokusech na 15 minut** – vyhovuje?
-3. **Heslo 10–128 znaků** bez dalších pravidel – vyhovuje?
+1. E-maily se ve fázi 1 neposílají; odkaz pro nastavení hesla předává admin. Odesílání
+   e-mailů bude samostatný modul před fází 2.
+2. Zablokování po 5 pokusech na 15 minut, s možností dřívějšího odblokování (právo
+   `smi_odblokovat`).
+3. Heslo 10–128 znaků bez dalších pravidel.

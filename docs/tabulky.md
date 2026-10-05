@@ -11,10 +11,10 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `v_letadlo` | pohled | letadla s názvem typu, kategorií a počtem míst | 001, 002 |
 | `lov_letiste` | číselník | česká letiště s kódem ICAO, název, domovské (nejvýš jedno), souřadnice, nadmořská výška [ft] | 003 |
 | `osoba` | tabulka | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní | 004 |
-| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, příznak `admin`, pozvánka, ochrana proti hádání hesla | 005 |
+| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
-| `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005 |
-| `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem | 005 |
+| `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
+| `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
 | `osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005 |
 
 ## Rozhodnutí pro další tabulky

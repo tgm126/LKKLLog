@@ -60,6 +60,15 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 - Přihlášení e-mailem a heslem, platí 30 dní od poslední aktivity; admin se smí přihlásit
   jako jiná osoba (relace si pamatuje skutečného admina). Passkey zatím ne.
 
+## Příkazy (ve složce `backend/`)
+- Server pro vývoj: `uv run uvicorn app.main:app --reload` → rozhraní na
+  `http://localhost:8000/api/docs`.
+- **Před commitem:** `uv run ruff check . && uv run ruff format --check . && uv run pytest`.
+  Testy si samy sestaví databázi `lkkllog_test` ze skriptů `db/` (bez `_data`) – data
+  uživatele v `lkkllog` nikdy nepoužívají.
+- Odkaz pro nastavení hesla: `uv run python -m app.prikazy odkaz <e-mail>`; úklid prošlých
+  relací: `uv run python -m app.prikazy uklid`.
+
 ## Obrazovky
 13. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
     Každá obrazovka má návrh pro telefon (od šířky 375 px, ovládání palcem) i pro velkou
