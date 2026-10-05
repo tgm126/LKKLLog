@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="cs">
+<html lang="cs" data-rezim="auto">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,11 +16,12 @@
     /* Mezery: násobky 4 px */
     --m1: 4px; --m2: 8px; --m3: 12px; --m4: 16px;
 
-    /* Barvy jen pro význam */
+    /* Barvy jen pro význam – světlý režim */
     --text: #1d2125;
     --sedy: #6c727a;
-    --cara: #e6e8eb;
+    --cara: #e1e4e8;
     --pozadi: #ffffff;
+    --karta: #ffffff;        /* ukončený let, světlé tlačítko */
     --modra: #1c6fd1;        /* hlavní akce, běžící let */
     --modra-vypln: #eaf2fd;
     --zelena: #2b8a3e;       /* přistání, v pořádku */
@@ -30,16 +31,35 @@
     --cervena: #d1343a;      /* problém */
     --cervena-vypln: #fdecec;
     --seda-vypln: #f1f3f5;   /* připravené, neutrální štítek */
+    --stitek-text: #495057;
+    --okoli: #d9dde2;        /* jen pozadí makety kolem telefonu */
+    color-scheme: light;
   }
+  /* Tmavý režim: podle zařízení (auto), nebo vynucený přepínačem. */
+  @media (prefers-color-scheme: dark) {
+    :root[data-rezim="auto"] {
+      --text: #e7e9ec; --sedy: #9aa2ab; --cara: #30353b; --pozadi: #15181c; --karta: #1c2025;
+      --modra: #5ea1ff; --modra-vypln: #162a44; --zelena: #51cf66; --zelena-vypln: #173222;
+      --oranzova: #ffb357; --oranzova-vypln: #3a2a14; --cervena: #ff7b7b; --cervena-vypln: #3d1c1f;
+      --seda-vypln: #242930; --stitek-text: #c3c9d0; --okoli: #0b0d0f; color-scheme: dark;
+    }
+  }
+  :root[data-rezim="tmavy"] {
+    --text: #e7e9ec; --sedy: #9aa2ab; --cara: #30353b; --pozadi: #15181c; --karta: #1c2025;
+    --modra: #5ea1ff; --modra-vypln: #162a44; --zelena: #51cf66; --zelena-vypln: #173222;
+    --oranzova: #ffb357; --oranzova-vypln: #3a2a14; --cervena: #ff7b7b; --cervena-vypln: #3d1c1f;
+    --seda-vypln: #242930; --stitek-text: #c3c9d0; --okoli: #0b0d0f; color-scheme: dark;
+  }
+
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: #d9dde2; font-family: var(--pismo); color: var(--text);
+    margin: 0; background: var(--okoli); font-family: var(--pismo); color: var(--text);
     font-size: var(--m); line-height: 1.35;
     display: flex; gap: 32px; justify-content: center; align-items: flex-start; padding: 24px 16px;
   }
   .telefon {
     width: 390px; min-height: 844px; background: var(--pozadi); border-radius: 28px;
-    overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.18); position: relative;
+    overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.25); position: relative;
     display: flex; flex-direction: column;
   }
   .cisla { font-variant-numeric: tabular-nums; }
@@ -47,18 +67,20 @@
   .sede { color: var(--sedy); }
   .s { font-size: var(--s); }
   .l { font-size: var(--l); }
+  button { font: inherit; color: inherit; }
 
   /* Testovací pruh */
-  .pruh { background: #fcc419; text-align: center; font-size: var(--s); font-weight: 700; padding: 3px; }
+  .pruh { background: #fcc419; color: #1d2125; text-align: center; font-size: var(--s); font-weight: 700; padding: 3px; }
 
   /* Hlavička: 2 řádky */
   .hlavicka { padding: var(--m2) var(--m4) var(--m1); border-bottom: 1px solid var(--cara); }
-  .hlavicka .r1 { display: flex; align-items: center; justify-content: space-between; gap: var(--m2); }
+  .hlavicka .r1 { display: flex; align-items: center; gap: var(--m2); }
+  .hlavicka .r1 .hodiny { margin-left: auto; }
   .hlavicka .r2 { font-size: var(--s); color: var(--sedy); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hlavicka .r2 b { color: var(--text); font-weight: 600; }
-  .uzivatel {
-    width: 32px; height: 32px; border-radius: 50%; background: var(--seda-vypln);
-    display: grid; place-items: center; font-size: var(--s); font-weight: 700;
+  .kulate {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--seda-vypln); border: 0;
+    display: grid; place-items: center; font-size: var(--s); font-weight: 700; cursor: pointer;
   }
 
   /* Kompaktní menu */
@@ -72,15 +94,22 @@
 
   .obsah { padding: var(--m3) var(--m3) var(--m2); flex: 1; }
 
-  /* Sekce */
-  .sekce { display: flex; align-items: baseline; justify-content: space-between; margin: var(--m3) var(--m1) var(--m2); }
-  .sekce:first-child { margin-top: 0; }
+  /* Sekce – nadpis sbalí/rozbalí obsah */
+  .sekce {
+    display: flex; align-items: baseline; gap: var(--m2); width: 100%;
+    margin: var(--m3) 0 var(--m2); padding: 0 var(--m1); background: none; border: 0; cursor: pointer; text-align: left;
+  }
+  .obsah > .sekce:first-child { margin-top: 0; }
   .sekce h2 { margin: 0; font-size: var(--s); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--sedy); }
+  .sekce .sipka { font-size: var(--s); color: var(--sedy); transition: transform .15s; display: inline-block; }
+  .sekce .vpravo { margin-left: auto; }
+  .sekce[aria-expanded="false"] .sipka { transform: rotate(-90deg); }
+  .sekce[aria-expanded="false"] + .telo { display: none; }
 
   /* Štítky */
   .stitek {
     display: inline-block; font-size: var(--s); font-weight: 600; line-height: 1; padding: 4px 7px;
-    border-radius: 999px; background: var(--seda-vypln); color: #495057; white-space: nowrap;
+    border-radius: 999px; background: var(--seda-vypln); color: var(--stitek-text); white-space: nowrap;
   }
   .stitek.modry { background: var(--modra-vypln); color: var(--modra); }
   .stitek.zeleny { background: var(--zelena-vypln); color: var(--zelena); }
@@ -88,11 +117,12 @@
   .stitek.cerveny { background: var(--cervena-vypln); color: var(--cervena); }
   .stitky { display: flex; flex-wrap: wrap; gap: var(--m1); }
 
-  /* Karta letu ve vzduchu: výplň místo rámečku */
-  .let { border-radius: 12px; padding: var(--m2) var(--m3) var(--m3); margin-bottom: var(--m2); }
-  .let.vzduch { background: var(--modra-vypln); }
-  .let.problem { background: var(--cervena-vypln); }
-  .let.pripraven { background: var(--seda-vypln); padding: var(--m2) var(--m2) var(--m2) var(--m3); }
+  /* Let = zaoblený pásek (jako letový strip); stav určuje výplň */
+  .let { border-radius: 12px; padding: var(--m2) var(--m3); margin-bottom: var(--m2); }
+  .let.vzduch { background: var(--modra-vypln); padding-bottom: var(--m3); }
+  .let.problem { background: var(--cervena-vypln); padding-bottom: var(--m3); }
+  .let.pripraven { background: var(--seda-vypln); padding-right: var(--m2); }
+  .let.ukoncen { background: var(--karta); border: 1px solid var(--cara); margin-bottom: 6px; }
   .let .r1 { display: flex; align-items: baseline; gap: var(--m2); }
   .let .r1 .typ { font-size: var(--s); color: var(--sedy); }
   .let .r1 .cas { margin-left: auto; font-size: var(--l); font-weight: 700; }
@@ -101,39 +131,32 @@
   .let .r2 { display: flex; align-items: center; justify-content: space-between; gap: var(--m2); margin-top: 2px; }
   .let .duvod { font-size: var(--s); font-weight: 600; color: var(--cervena); margin-top: var(--m1); }
   .let .vic { color: var(--sedy); font-weight: 700; padding: 0 2px; }
+  .let.ukoncen .r1 .doba { margin-left: auto; font-weight: 700; }
+  .let.ukoncen .stitky { margin-top: 6px; }
 
   /* Tlačítka */
   .akce { display: flex; gap: var(--m2); margin-top: var(--m2); }
   .tl {
-    border: 0; border-radius: 10px; font: inherit; font-size: var(--m); font-weight: 700;
+    border: 0; border-radius: 10px; font-size: var(--m); font-weight: 700;
     letter-spacing: .03em; min-height: 44px; padding: 0 var(--m4); cursor: pointer;
   }
-  .tl.zelene { background: var(--zelena); color: #fff; flex: 2; }
-  .tl.svetle { background: #fff; color: var(--modra); flex: 1; }
-  .tl.modre { background: var(--modra); color: #fff; }
-  .tl.obrys { background: #fff; color: var(--text); border: 1px solid var(--cara); font-weight: 600; letter-spacing: 0; }
+  .tl.zelene { background: #2b8a3e; color: #fff; flex: 2; }
+  .tl.svetle { background: var(--karta); color: var(--modra); flex: 1; }
+  .tl.modre { background: #1c6fd1; color: #fff; }
+  .tl.obrys { background: var(--karta); color: var(--text); border: 1px solid var(--cara); font-weight: 600; letter-spacing: 0; }
 
   .pripraven .obal { display: flex; align-items: center; gap: var(--m2); }
   .pripraven .info { flex: 1; min-width: 0; }
   .pripraven .tl { min-width: 96px; }
 
-  /* Ukončené lety: kompaktní řádky */
-  .radky { border-top: 1px solid var(--cara); }
-  .radek { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--m2); padding: var(--m2) var(--m1); border-bottom: 1px solid var(--cara); }
-  .radek .doba { font-weight: 700; text-align: right; }
-  .radek .pod { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--m1); flex-wrap: wrap; }
+  .uzavrit { display: flex; align-items: center; justify-content: space-between; gap: var(--m2); margin-top: var(--m3); padding: 0 var(--m1); }
 
-  .uzavrit { display: flex; align-items: center; justify-content: space-between; margin-top: var(--m3); padding: 0 var(--m1); }
-
-  /* Spodní lišta s hlavní akcí – rezervované místo, nic nezakrývá */
-  .dole {
-    position: sticky; bottom: 0; padding: var(--m2) var(--m3) var(--m4);
-    background: #fff; border-top: 1px solid var(--cara);
-  }
+  /* Spodní lišta s hlavní akcí – přilepená dole, nic nezakrývá */
+  .dole { position: sticky; bottom: 0; padding: var(--m2) var(--m3) var(--m4); background: var(--pozadi); border-top: 1px solid var(--cara); }
   .dole .tl { width: 100%; min-height: 52px; }
 
   /* Legenda vedle telefonu */
-  .legenda { width: 360px; background: #fff; border-radius: 16px; padding: 20px; font-size: var(--m); }
+  .legenda { width: 360px; background: var(--pozadi); border-radius: 16px; padding: 20px; font-size: var(--m); }
   .legenda h3 { font-size: var(--s); text-transform: uppercase; letter-spacing: .04em; color: var(--sedy); margin: 18px 0 8px; }
   .legenda h3:first-child { margin-top: 0; }
   .legenda .vzor { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
@@ -149,10 +172,11 @@
   <header class="hlavicka">
     <div class="r1">
       <span class="l tucne">LKKL Log</span>
-      <span class="cisla tucne" id="utc">21:29:05 UTC</span>
-      <span class="uzivatel">TM</span>
+      <span class="hodiny cisla tucne" id="utc">21:29:05 UTC</span>
+      <button class="kulate" id="rezim" title="Režim zobrazení">◐</button>
+      <button class="kulate">TM</button>
     </div>
-    <div class="r2 cisla">Po 5. 10. · TB <b>04:47</b> · SR <b>05:19</b> · SS <b>16:33</b> · TE <b>17:06</b> UTC</div>
+    <div class="r2 cisla">Pondělí 5. 10. · TB <b>04:47</b> · SR <b>05:19</b> · SS <b>16:33</b> · TE <b>17:06</b> UTC</div>
   </header>
 
   <nav class="menu">
@@ -165,75 +189,73 @@
   </nav>
 
   <main class="obsah">
-    <div class="sekce"><h2>Ve vzduchu 2</h2></div>
-
-    <div class="let problem">
-      <div class="r1">
-        <span class="l tucne">OK-TCS</span><span class="typ">Cessna F 172</span>
-        <span class="cas cisla" data-od="2135">0:35:35</span><span class="vic">⋯</span>
-      </div>
-      <div class="r2">
-        <span>Adam Pilot <span class="sede s">PIC</span></span>
-        <span class="stitky"><span class="stitek">LKKL 20:54</span></span>
-      </div>
-      <div class="duvod">Po konci občanského soumraku (TE 17:06)</div>
-      <div class="akce"><button class="tl svetle">T&amp;G</button><button class="tl zelene">PŘISTÁL</button></div>
-    </div>
-
-    <div class="let vzduch">
-      <div class="r1">
-        <span class="l tucne">OK-2817</span><span class="typ">L 13</span>
-        <span class="cas cisla" data-od="754">0:12:34</span><span class="vic">⋯</span>
-      </div>
-      <div class="r2">
-        <span>Bára Žák <span class="sede s">žák</span> · Pavel Pačes <span class="sede s">instr.</span></span>
-      </div>
-      <div class="r2" style="justify-content:flex-start;margin-top:4px">
-        <span class="stitky"><span class="stitek">LKKL 21:16</span><span class="stitek">výcvik</span><span class="stitek">navijákem</span></span>
-      </div>
-      <div class="akce"><button class="tl zelene">PŘISTÁL</button></div>
-    </div>
-
-    <div class="sekce"><h2>Připravené 2</h2></div>
-
-    <div class="let pripraven">
-      <div class="obal">
-        <div class="info">
-          <div class="r1"><span class="l tucne">OK-3819</span><span class="typ">L 13</span></div>
-          <div class="s sede">Ivan Pilot · navijákem</div>
+    <button class="sekce" aria-expanded="true"><span class="sipka">▾</span><h2>Ve vzduchu 2</h2></button>
+    <div class="telo">
+      <div class="let problem">
+        <div class="r1">
+          <span class="l tucne">OK-TCS</span><span class="typ">Cessna F 172</span>
+          <span class="cas cisla" data-od="2135">0:35:35</span><span class="vic">⋯</span>
         </div>
-        <button class="tl modre">VZLET</button>
-      </div>
-    </div>
-
-    <div class="let pripraven">
-      <div class="obal">
-        <div class="info">
-          <div class="r1"><span class="l tucne">OK-MFV</span><span class="typ">Z 126</span></div>
-          <div class="s sede">Gustav Vlekař · vlek OK-6722</div>
+        <div class="r2">
+          <span>Adam Pilot <span class="sede s">PIC</span></span>
+          <span class="stitky"><span class="stitek">LKKL 20:54</span></span>
         </div>
-        <button class="tl modre">VZLET</button>
+        <div class="duvod">Po konci občanského soumraku (TE 17:06)</div>
+        <div class="akce"><button class="tl svetle">T&amp;G</button><button class="tl zelene">PŘISTÁL</button></div>
+      </div>
+
+      <div class="let vzduch">
+        <div class="r1">
+          <span class="l tucne">OK-2817</span><span class="typ">L 13</span>
+          <span class="cas cisla" data-od="754">0:12:34</span><span class="vic">⋯</span>
+        </div>
+        <div class="r2">
+          <span>Bára Žák <span class="sede s">žák</span> · Pavel Pačes <span class="sede s">instr.</span></span>
+        </div>
+        <div class="stitky" style="margin-top:4px"><span class="stitek">LKKL 21:16</span><span class="stitek">výcvik</span><span class="stitek">navijákem</span></div>
+        <div class="akce"><button class="tl zelene">PŘISTÁL</button></div>
       </div>
     </div>
 
-    <div class="sekce"><h2>Ukončené 4</h2><span class="s sede cisla">celkem 2°11"</span></div>
+    <button class="sekce" aria-expanded="true"><span class="sipka">▾</span><h2>Připravené 2</h2></button>
+    <div class="telo">
+      <div class="let pripraven">
+        <div class="obal">
+          <div class="info">
+            <div class="r1"><span class="l tucne">OK-3819</span><span class="typ">L 13</span></div>
+            <div class="s sede">Ivan Pilot · navijákem</div>
+          </div>
+          <button class="tl modre">VZLET</button>
+        </div>
+      </div>
+      <div class="let pripraven">
+        <div class="obal">
+          <div class="info">
+            <div class="r1"><span class="l tucne">OK-MFV</span><span class="typ">Z 126</span></div>
+            <div class="s sede">Gustav Vlekař · vlek OK-6722</div>
+          </div>
+          <button class="tl modre">VZLET</button>
+        </div>
+      </div>
+    </div>
 
-    <div class="radky">
-      <div class="radek">
-        <span><b>OK-TVA</b> Ivan Pilot</span><span class="doba cisla">45"</span>
-        <div class="pod"><span class="stitek cisla">LKKL 19:29 → LKKL 20:14</span><span class="stitek">3 přistání</span><span class="stitek">dodatečně</span></div>
+    <button class="sekce" aria-expanded="true"><span class="sipka">▾</span><h2>Ukončené 4</h2><span class="vpravo s sede cisla">celkem 2°11"</span></button>
+    <div class="telo">
+      <div class="let ukoncen">
+        <div class="r1"><b>OK-TVA</b><span>Ivan Pilot</span><span class="doba cisla">45"</span></div>
+        <div class="stitky"><span class="stitek cisla">LKKL 19:29 → LKKL 20:14</span><span class="stitek">3 přistání</span><span class="stitek">dodatečně</span></div>
       </div>
-      <div class="radek">
-        <span><b>OK-6722</b> Adam Pilot</span><span class="doba cisla">1°02"</span>
-        <div class="pod"><span class="stitek cisla">LKKL 18:40 → LKKL 19:42</span><span class="stitek">vlek</span></div>
+      <div class="let ukoncen">
+        <div class="r1"><b>OK-6722</b><span>Adam Pilot</span><span class="doba cisla">1°02"</span></div>
+        <div class="stitky"><span class="stitek cisla">LKKL 18:40 → LKKL 19:42</span><span class="stitek">vlek</span></div>
       </div>
-      <div class="radek">
-        <span><b>OK-MFV</b> Gustav Vlekař</span><span class="doba cisla">9"</span>
-        <div class="pod"><span class="stitek cisla">LKKL 18:40 → LKKL 18:49</span><span class="stitek">vlek OK-6722</span></div>
+      <div class="let ukoncen">
+        <div class="r1"><b>OK-MFV</b><span>Gustav Vlekař</span><span class="doba cisla">9"</span></div>
+        <div class="stitky"><span class="stitek cisla">LKKL 18:40 → LKKL 18:49</span><span class="stitek">vlek OK-6722</span></div>
       </div>
-      <div class="radek">
-        <span><b>OK-CWF</b> Tomáš Mandlík</span><span class="doba cisla">15"</span>
-        <div class="pod"><span class="stitek cisla">LKKL 17:02 → LKLT 17:17</span><span class="stitek oranzovy">opraveno</span></div>
+      <div class="let ukoncen">
+        <div class="r1"><b>OK-CWF</b><span>Tomáš Mandlík</span><span class="doba cisla">15"</span></div>
+        <div class="stitky"><span class="stitek cisla">LKKL 17:02 → LKLT 17:17</span><span class="stitek oranzovy">opraveno</span></div>
       </div>
     </div>
 
@@ -252,11 +274,11 @@
   <div>15 px · obsah, tlačítka</div>
   <div class="s sede">12 px · popisky, štítky, hlavička</div>
 
-  <h3>Výplně stavů letu</h3>
+  <h3>Let jako pásek (strip) – výplň podle stavu</h3>
   <div class="vzor"><span class="barva" style="background:var(--modra-vypln)"></span>ve vzduchu</div>
   <div class="vzor"><span class="barva" style="background:var(--cervena-vypln)"></span>ve vzduchu s problémem (soumrak, max. doba)</div>
   <div class="vzor"><span class="barva" style="background:var(--seda-vypln)"></span>připravený</div>
-  <div class="vzor"><span class="barva" style="background:#fff;border:1px solid var(--cara)"></span>ukončený (řádek)</div>
+  <div class="vzor"><span class="barva" style="background:var(--karta);border:1px solid var(--cara)"></span>ukončený</div>
 
   <h3>Štítky</h3>
   <div class="stitky" style="margin-bottom:6px"><span class="stitek">LKKL 20:54</span><span class="stitek">výcvik</span><span class="stitek">dodatečně</span></div>
@@ -264,14 +286,36 @@
   <div class="stitky" style="margin-bottom:6px"><span class="stitek zeleny">v pořádku</span><span class="stitek oranzovy">opraveno</span><span class="stitek cerveny">neukončeno</span><span class="stitek modry">ve vzduchu</span></div>
   <div class="s sede">barevné = stav (jen když nese význam)</div>
 
-  <h3>Akce</h3>
-  <div class="s">Hlavní akce velkým tlačítkem (min. 44 px, na palec): <b>PŘISTÁL</b> zeleně, <b>VZLET</b> a <b>+ NOVÝ LET</b> modře. Verzálky jen u nich. „+ NOVÝ LET“ má vlastní lištu dole – nic nezakrývá.</div>
+  <h3>Ovládání</h3>
+  <div class="s">Ťuknutí na nadpis sekce ji sbalí / rozbalí. ◐ přepíná režim: podle zařízení → světlý → tmavý (pamatuje si ho prohlížeč). Hlavní akce velkým tlačítkem (min. 44 px): <b>PŘISTÁL</b> zeleně, <b>VZLET</b> a <b>+ NOVÝ LET</b> modře – verzálky jen u nich.</div>
 
   <h3>Hlavička</h3>
-  <div class="s">2. řádek: datum, TB = začátek občanského soumraku, SR = východ, SS = západ slunce, TE = konec občanského soumraku (UTC).</div>
+  <div class="s">2. řádek: den, TB = začátek občanského soumraku, SR = východ, SS = západ slunce, TE = konec občanského soumraku (UTC).</div>
+  <div class="s sede" style="margin-top:6px" id="rezim-text"></div>
 </aside>
 
 <script>
+  // Režim zobrazení: auto (podle zařízení) → světlý → tmavý; pamatuje si ho prohlížeč.
+  const REZIMY = ['auto', 'svetly', 'tmavy'];
+  const NAZVY = { auto: 'podle zařízení', svetly: 'světlý', tmavy: 'tmavý' };
+  const koren = document.documentElement;
+  function nastavitRezim(r) {
+    koren.dataset.rezim = r;
+    document.getElementById('rezim-text').textContent = `Režim: ${NAZVY[r]}`;
+    try { localStorage.setItem('lkkl-rezim', r); } catch {}
+  }
+  let ulozeny = 'auto';
+  try { ulozeny = localStorage.getItem('lkkl-rezim') || 'auto'; } catch {}
+  nastavitRezim(REZIMY.includes(ulozeny) ? ulozeny : 'auto');
+  document.getElementById('rezim').addEventListener('click', () => {
+    nastavitRezim(REZIMY[(REZIMY.indexOf(koren.dataset.rezim) + 1) % REZIMY.length]);
+  });
+
+  // Sbalení sekce ťuknutím na nadpis.
+  document.querySelectorAll('.sekce').forEach((s) =>
+    s.addEventListener('click', () => s.setAttribute('aria-expanded', s.getAttribute('aria-expanded') === 'false'))
+  );
+
   // Hodiny a běžící časy jen pro dojem z makety.
   const start = Date.now();
   const dve = (n) => String(n).padStart(2, '0');
