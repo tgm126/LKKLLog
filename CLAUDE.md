@@ -37,7 +37,7 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    kaskádového mazání; pravidla v databázi (CHECK, UNIQUE, EXCLUDE).
 10. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
-    **Nové tabulky v samostatném schématu databáze** (návrh názvu `lkkl`); staré tabulky
+    **Nové tabulky ve schématu databáze `lkkl`**; staré tabulky
     první verze zůstávají ve schématu `public`, dokud je nesmažeme.
 12. *K projednání:* zdroj pravdy o schématu – SQL (DDL, pohledy) vs. modely frameworku.
 
