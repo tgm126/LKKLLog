@@ -25,8 +25,13 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    to tak bylo od začátku; starý kód se úplně smaže (žádné vrstvy kompatibility ani dočasné
    obezličky).
 4. **Slepé uličky** se zkoušejí na odbočce (větvi); když se nepovedou, odbočka se zahodí.
-5. Dokud nejsou ostrá data, **migrace se nehromadí** – slučují se do jedné čisté.
-6. **Data zadává uživatel** (číselníky, osoby, letadla…); žádné importy z Excelu.
+5. **Data zadává uživatel** (číselníky, osoby, letadla…) a **mění je i přímo v databázi**.
+   Pravdou o datech je databáze, ne skripty: nikdy schéma nezakládat znovu ani data
+   nepřepisovat. Změny struktury jen novým skriptem (`ALTER`…), který data zachová.
+   Skripty `_data.sql` jsou jen počáteční naplnění; na server se data přenesou výpisem
+   z lokální databáze. Žádné importy z Excelu.
+6. Skripty v `db/` se před první migrací na server mohou sloučit do čistého celku (data
+   se přitom vezmou z databáze).
 7. **Tabulky:** stará verze je zinventarizovaná v `docs/tabulky-v1.md` (po spuštění nové
    verze se smažou), nová se vede v `docs/tabulky.md`.
 

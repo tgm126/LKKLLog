@@ -1,4 +1,4 @@
--- 001 data: kategorie, typy a letadla podle zadání uživatele (5. 10. 2026).
+-- 001 data: POČÁTEČNÍ naplnění podle zadání uživatele (5. 10. 2026). Aktuální data jsou v databázi – uživatel je mění přímo.
 
 INSERT INTO lkkl.lov_kategorie (nazev) VALUES
     ('Kluzák'),
