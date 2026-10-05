@@ -28,7 +28,7 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 5. Dokud nejsou ostrá data, **migrace se nehromadí** – slučují se do jedné čisté.
 6. **Data zadává uživatel** (číselníky, osoby, letadla…); žádné importy z Excelu.
 7. **Tabulky:** stará verze je zinventarizovaná v `docs/tabulky-v1.md` (po spuštění nové
-   verze se smažou).
+   verze se smažou), nová se vede v `docs/tabulky.md`.
 
 ## Datový model
 8. **Normální formy:** každý údaj uložený jednou; odvozené hodnoty generovaným sloupcem
@@ -39,7 +39,10 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
     **Nové tabulky ve schématu databáze `lkkl`**; staré tabulky
     první verze zůstávají ve schématu `public`, dokud je nesmažeme.
-12. *K projednání:* zdroj pravdy o schématu – SQL (DDL, pohledy) vs. modely frameworku.
+12. **Zdrojem pravdy o schématu jsou SQL skripty** v `db/`, číslované `NNN_nazev.sql` (DDL)
+    a `NNN_nazev_data.sql` (data zadaná uživatelem). Vznikají a zkouší se v lokální databázi
+    (Docker, `127.0.0.1:5432`, databáze `lkkllog`), na server se zmigrují později.
+    Předpony: `lov_` číselníky, `v_` pohledy. Seznam objektů v `docs/tabulky.md`.
 
 ## Obrazovky
 13. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
