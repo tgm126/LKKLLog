@@ -9,6 +9,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_typ` | číselník | typy letadel → kategorie, počet míst | 001, 002 |
 | `letadlo` | tabulka | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné | 001, 002 |
 | `v_letadlo` | pohled | letadla s názvem typu, kategorií a počtem míst | 001, 002 |
+| `lov_letiste` | číselník | letiště a plochy: ICAO (nepovinné), název, domovské (nejvýš jedno), souřadnice, nadmořská výška [ft] | 003 |
 
 **Záloha** lokálních dat: `bash db/zaloha.sh` → `C:\GIT\LKKLLog-zalohy` (mimo git; obnova
 je popsaná v hlavičce skriptu).
