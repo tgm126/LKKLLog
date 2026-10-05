@@ -1,30 +1,10 @@
-# Tajné údaje a data
+# Tajné údaje a místní soubory
 .env
-backend/.env
-data/
+**/.env
 *.xlsx
-
-# Python
-__pycache__/
-*.pyc
-backend/.venv/
-backend/staticfiles/
-.pytest_cache/
-.ruff_cache/
-
-# Frontend
-frontend/node_modules/
-frontend/dist/
+**/.dev-prihlaseni.txt
 
 # Nástroje
 .claude/settings.local.json
 .vscode/
 .idea/
-
-# Balíček pro VPS Centrum
-*.zip
-vps-promenne.txt
-backend/.dev-prihlaseni.txt
-backend/e2e-vysledky/
-backend/test-results/
-backend/VERZE
