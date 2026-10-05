@@ -73,8 +73,21 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 13. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
     Každá obrazovka má návrh pro telefon (od šířky 375 px, ovládání palcem) i pro velkou
     obrazovku (víc informací najednou).
-14. **Jednotný vizuální systém** definovaný dřív než první obrazovka: dvě velikosti písma,
-    pevná sada mezer, barvy jen pro význam, sdílené komponenty; hustě, ale čitelně.
+14. **Jednotný vizuální systém** definovaný dřív než první obrazovka: **tři velikosti písma**
+    (12 / 15 / 20 px), bezpatkové; pevná sada mezer; barvy jen pro význam; štítky (badge);
+    lety jako zaoblené pásky (připomínají stripy ŘLP); světlý i tmavý režim s přepínačem
+    v aplikaci (podle zařízení / světlý / tmavý); hustě, ale čitelně. Maketa:
+    `docs/navrhy/lety-mobil.html`.
+    **Normalizace stylů – každá vlastnost definovaná právě jednou:**
+    - **Tokeny** na jednom místě: barvy (každá se světlou i tmavou hodnotou v jedné definici,
+      `light-dark()`), velikosti a tloušťky písma, stupnice mezer, zaoblení, rámeček, rozměry
+      dotykových prvků. Jinde žádná pevná barva ani rozměr.
+    - **Komponenty** (pásek letu, štítek, tlačítko, nadpis sekce…) definované jednou, složené
+      jen z tokenů. **Varianty** mění jen to, čím se liší (typicky přes vlastní proměnnou
+      komponenty), žádné přepisování přepsaného ani vložené styly v HTML.
+    - **Výjimka** je možná jen se zdůvodněním přímo u ní: komentář `VÝJIMKA: důvod`.
+    - V aplikaci to hlídá kontrola stylů (stylelint) před commitem: pevná barva nebo rozměr
+      mimo soubor s tokeny neprojde.
 15. Žádná vestavěná administrace frameworku; všechno, co admin dělá, je v aplikaci.
     Nouzové opravy přímo v databázi.
 

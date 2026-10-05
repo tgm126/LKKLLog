@@ -5,293 +5,384 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lety – návrh pro mobil</title>
 <style>
-  /* ===== Vizuální systém (návrh) ===== */
-  :root {
-    /* Písmo: bezpatkové, 3 velikosti */
-    --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --s: 12px;   /* popisky, štítky, druhý řádek hlavičky */
-    --m: 15px;   /* obsah, tlačítka */
-    --l: 20px;   /* imatrikulace, časomíra, název aplikace */
+/* =============================================================================================
+   1. TOKENY – jediné místo s pevnými hodnotami. Všechno níže se odkazuje sem.
+   ============================================================================================= */
+:root {
+  /* Režim: světlé / tmavé hodnoty barev volí color-scheme (přepínač nastaví data-rezim). */
+  color-scheme: light dark;
 
-    /* Mezery: násobky 4 px */
-    --m1: 4px; --m2: 8px; --m3: 12px; --m4: 16px;
+  /* Písmo: bezpatkové, 3 velikosti, 2 tloušťky */
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px;            /* popisky, štítky, hlavička, nadpisy sekcí */
+  --pismo-m: 15px;            /* obsah, tlačítka */
+  --pismo-l: 20px;            /* imatrikulace, časomíra, název aplikace */
+  --tloustka: 400;
+  --tloustka-tucna: 700;
+  --radkovani: 1.35;
+  --radkovani-tesne: 1;       /* štítky (pilulky) */
+  --proklad-verzalky: .04em;  /* proklad písmen u textu verzálkami */
 
-    /* Barvy jen pro význam – světlý režim */
-    --text: #1d2125;
-    --sedy: #6c727a;
-    --cara: #e1e4e8;
-    --pozadi: #ffffff;
-    --karta: #ffffff;        /* ukončený let, světlé tlačítko */
-    --modra: #1c6fd1;        /* hlavní akce, běžící let */
-    --modra-vypln: #eaf2fd;
-    --zelena: #2b8a3e;       /* přistání, v pořádku */
-    --zelena-vypln: #e7f5ea;
-    --oranzova: #c76a00;     /* pozor */
-    --oranzova-vypln: #fff3e0;
-    --cervena: #d1343a;      /* problém */
-    --cervena-vypln: #fdecec;
-    --seda-vypln: #f1f3f5;   /* připravené, neutrální štítek */
-    --stitek-text: #495057;
-    --okoli: #d9dde2;        /* jen pozadí makety kolem telefonu */
-    color-scheme: light;
-  }
-  /* Tmavý režim: podle zařízení (auto), nebo vynucený přepínačem. */
-  @media (prefers-color-scheme: dark) {
-    :root[data-rezim="auto"] {
-      --text: #e7e9ec; --sedy: #9aa2ab; --cara: #30353b; --pozadi: #15181c; --karta: #1c2025;
-      --modra: #5ea1ff; --modra-vypln: #162a44; --zelena: #51cf66; --zelena-vypln: #173222;
-      --oranzova: #ffb357; --oranzova-vypln: #3a2a14; --cervena: #ff7b7b; --cervena-vypln: #3d1c1f;
-      --seda-vypln: #242930; --stitek-text: #c3c9d0; --okoli: #0b0d0f; color-scheme: dark;
-    }
-  }
-  :root[data-rezim="tmavy"] {
-    --text: #e7e9ec; --sedy: #9aa2ab; --cara: #30353b; --pozadi: #15181c; --karta: #1c2025;
-    --modra: #5ea1ff; --modra-vypln: #162a44; --zelena: #51cf66; --zelena-vypln: #173222;
-    --oranzova: #ffb357; --oranzova-vypln: #3a2a14; --cervena: #ff7b7b; --cervena-vypln: #3d1c1f;
-    --seda-vypln: #242930; --stitek-text: #c3c9d0; --okoli: #0b0d0f; color-scheme: dark;
-  }
+  /* Mezery: stupnice */
+  --mezera-1: 4px;
+  --mezera-2: 8px;
+  --mezera-3: 12px;
+  --mezera-4: 16px;
 
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--okoli); font-family: var(--pismo); color: var(--text);
-    font-size: var(--m); line-height: 1.35;
-    display: flex; gap: 32px; justify-content: center; align-items: flex-start; padding: 24px 16px;
-  }
-  .telefon {
-    width: 390px; min-height: 844px; background: var(--pozadi); border-radius: 28px;
-    overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.25); position: relative;
-    display: flex; flex-direction: column;
-  }
-  .cisla { font-variant-numeric: tabular-nums; }
-  .tucne { font-weight: 700; }
-  .sede { color: var(--sedy); }
-  .s { font-size: var(--s); }
-  .l { font-size: var(--l); }
-  button { font: inherit; color: inherit; }
+  /* Tvary */
+  --zaobleni: 12px;
+  --zaobleni-pilulka: 999px;
+  --ramecek-sirka: 1px;
+  --prechod: .15s;            /* krátké animace (šipka sekce) */
 
-  /* Testovací pruh */
-  .pruh { background: #fcc419; color: #1d2125; text-align: center; font-size: var(--s); font-weight: 700; padding: 3px; }
+  /* Rozměry dotykových prvků */
+  --dotyk: 44px;              /* nejmenší tlačítko ovládané palcem */
+  --dotyk-hlavni: 52px;       /* hlavní akce stránky (+ NOVÝ LET) */
+  --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
+  --sirka-akce-vpravo: 96px;  /* tlačítko VZLET vedle údajů připraveného letu */
 
-  /* Hlavička: 2 řádky */
-  .hlavicka { padding: var(--m2) var(--m4) var(--m1); border-bottom: 1px solid var(--cara); }
-  .hlavicka .r1 { display: flex; align-items: center; gap: var(--m2); }
-  .hlavicka .r1 .hodiny { margin-left: auto; }
-  .hlavicka .r2 { font-size: var(--s); color: var(--sedy); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hlavicka .r2 b { color: var(--text); font-weight: 600; }
-  .kulate {
-    width: 32px; height: 32px; border-radius: 50%; background: var(--seda-vypln); border: 0;
-    display: grid; place-items: center; font-size: var(--s); font-weight: 700; cursor: pointer;
-  }
+  /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. */
+  --barva-text:         light-dark(#1d2125, #e7e9ec);
+  --barva-seda:         light-dark(#6c727a, #9aa2ab);   /* popisky, doplňkový text */
+  --barva-cara:         light-dark(#e1e4e8, #30353b);
+  --barva-pozadi:       light-dark(#ffffff, #15181c);
+  --barva-karta:        light-dark(#ffffff, #1c2025);   /* ukončený let, světlé tlačítko */
+  --barva-neutralni:    light-dark(#f1f3f5, #242930);   /* připravený let, šedý štítek */
+  --barva-neutralni-text: light-dark(#495057, #c3c9d0);
+  --barva-modra:        light-dark(#1c6fd1, #5ea1ff);   /* běžící let, aktivní záložka */
+  --barva-modra-vypln:  light-dark(#eaf2fd, #162a44);
+  --barva-zelena:       light-dark(#2b8a3e, #51cf66);   /* v pořádku */
+  --barva-zelena-vypln: light-dark(#e7f5ea, #173222);
+  --barva-oranzova:     light-dark(#c76a00, #ffb357);   /* pozor */
+  --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
+  --barva-cervena:      light-dark(#d1343a, #ff7b7b);   /* problém */
+  --barva-cervena-vypln: light-dark(#fdecec, #3d1c1f);
 
-  /* Kompaktní menu */
-  .menu { display: flex; gap: var(--m4); padding: 0 var(--m4); border-bottom: 1px solid var(--cara); overflow-x: auto; scrollbar-width: none; }
-  .menu::-webkit-scrollbar { display: none; }
-  .menu a {
-    font-size: var(--s); font-weight: 600; color: var(--sedy); text-decoration: none;
-    padding: var(--m2) 0; border-bottom: 2px solid transparent; white-space: nowrap; text-transform: uppercase; letter-spacing: .03em;
-  }
-  .menu a.aktivni { color: var(--modra); border-bottom-color: var(--modra); }
+  /* VÝJIMKA: akční a varovné barvy jsou v obou režimech stejné – syté plochy s bílým textem
+     musí být čitelné na slunci i ve tmě; tmavá varianta by ztratila kontrast. */
+  --barva-akce-modra:   #1c6fd1;
+  --barva-akce-zelena:  #2b8a3e;
+  --barva-na-akci:      #ffffff;
+  --barva-pruh:         #fcc419;  /* testovací provoz */
+  --barva-na-pruhu:     #1d2125;
 
-  .obsah { padding: var(--m3) var(--m3) var(--m2); flex: 1; }
+  /* Odvozené tokeny */
+  --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
+}
+:root[data-rezim="svetly"] { color-scheme: light; }
+:root[data-rezim="tmavy"]  { color-scheme: dark; }
 
-  /* Sekce – nadpis sbalí/rozbalí obsah */
-  .sekce {
-    display: flex; align-items: baseline; gap: var(--m2); width: 100%;
-    margin: var(--m3) 0 var(--m2); padding: 0 var(--m1); background: none; border: 0; cursor: pointer; text-align: left;
-  }
-  .obsah > .sekce:first-child { margin-top: 0; }
-  .sekce h2 { margin: 0; font-size: var(--s); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--sedy); }
-  .sekce .sipka { font-size: var(--s); color: var(--sedy); transition: transform .15s; display: inline-block; }
-  .sekce .vpravo { margin-left: auto; }
-  .sekce[aria-expanded="false"] .sipka { transform: rotate(-90deg); }
-  .sekce[aria-expanded="false"] + .telo { display: none; }
+/* =============================================================================================
+   2. ZÁKLAD
+   ============================================================================================= */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--pismo);
+  font-size: var(--pismo-m);
+  font-weight: var(--tloustka);
+  line-height: var(--radkovani);
+  color: var(--barva-text);
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+h2, h3 { margin: 0; }
 
-  /* Štítky */
-  .stitek {
-    display: inline-block; font-size: var(--s); font-weight: 600; line-height: 1; padding: 4px 7px;
-    border-radius: 999px; background: var(--seda-vypln); color: var(--stitek-text); white-space: nowrap;
-  }
-  .stitek.modry { background: var(--modra-vypln); color: var(--modra); }
-  .stitek.zeleny { background: var(--zelena-vypln); color: var(--zelena); }
-  .stitek.oranzovy { background: var(--oranzova-vypln); color: var(--oranzova); }
-  .stitek.cerveny { background: var(--cervena-vypln); color: var(--cervena); }
-  .stitky { display: flex; flex-wrap: wrap; gap: var(--m1); }
+/* Pomocné třídy */
+.cisla  { font-variant-numeric: tabular-nums; }   /* stejně široké číslice: čas neposkakuje */
+.tucne  { font-weight: var(--tloustka-tucna); }
+.seda   { color: var(--barva-seda); }
+.male   { font-size: var(--pismo-s); }
+.velke  { font-size: var(--pismo-l); }
 
-  /* Let = zaoblený pásek (jako letový strip); stav určuje výplň */
-  .let { border-radius: 12px; padding: var(--m2) var(--m3); margin-bottom: var(--m2); }
-  .let.vzduch { background: var(--modra-vypln); padding-bottom: var(--m3); }
-  .let.problem { background: var(--cervena-vypln); padding-bottom: var(--m3); }
-  .let.pripraven { background: var(--seda-vypln); padding-right: var(--m2); }
-  .let.ukoncen { background: var(--karta); border: 1px solid var(--cara); margin-bottom: 6px; }
-  .let .r1 { display: flex; align-items: baseline; gap: var(--m2); }
-  .let .r1 .typ { font-size: var(--s); color: var(--sedy); }
-  .let .r1 .cas { margin-left: auto; font-size: var(--l); font-weight: 700; }
-  .let.vzduch .cas { color: var(--modra); }
-  .let.problem .cas { color: var(--cervena); }
-  .let .r2 { display: flex; align-items: center; justify-content: space-between; gap: var(--m2); margin-top: 2px; }
-  .let .duvod { font-size: var(--s); font-weight: 600; color: var(--cervena); margin-top: var(--m1); }
-  .let .vic { color: var(--sedy); font-weight: 700; padding: 0 2px; }
-  .let.ukoncen .r1 .doba { margin-left: auto; font-weight: 700; }
-  .let.ukoncen .stitky { margin-top: 6px; }
+/* =============================================================================================
+   3. KOMPONENTY – každá definovaná jednou; varianty mění jen své proměnné.
+   ============================================================================================= */
 
-  /* Tlačítka */
-  .akce { display: flex; gap: var(--m2); margin-top: var(--m2); }
-  .tl {
-    border: 0; border-radius: 10px; font-size: var(--m); font-weight: 700;
-    letter-spacing: .03em; min-height: 44px; padding: 0 var(--m4); cursor: pointer;
-  }
-  .tl.zelene { background: #2b8a3e; color: #fff; flex: 2; }
-  .tl.svetle { background: var(--karta); color: var(--modra); flex: 1; }
-  .tl.modre { background: #1c6fd1; color: #fff; }
-  .tl.obrys { background: var(--karta); color: var(--text); border: 1px solid var(--cara); font-weight: 600; letter-spacing: 0; }
+/* Malý nadpis verzálkami: záložky menu, nadpisy sekcí */
+.nadpisek {
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  text-transform: uppercase;
+  letter-spacing: var(--proklad-verzalky);
+  color: var(--nadpisek-barva, var(--barva-seda));
+}
 
-  .pripraven .obal { display: flex; align-items: center; gap: var(--m2); }
-  .pripraven .info { flex: 1; min-width: 0; }
-  .pripraven .tl { min-width: 96px; }
+/* Testovací pruh */
+.pruh {
+  background: var(--barva-pruh);
+  color: var(--barva-na-pruhu);
+  text-align: center;
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  padding: var(--mezera-1);
+}
 
-  .uzavrit { display: flex; align-items: center; justify-content: space-between; gap: var(--m2); margin-top: var(--m3); padding: 0 var(--m1); }
+/* Hlavička: 1. řádek název, hodiny, tlačítka; 2. řádek den a soumrak */
+.hlavicka { padding: var(--mezera-2) var(--mezera-4) var(--mezera-1); border-bottom: var(--ramecek); }
+.hlavicka-radek { display: flex; align-items: center; gap: var(--mezera-2); }
+.hlavicka-radek .hodiny { margin-left: auto; }
+.hlavicka-den { font-size: var(--pismo-s); color: var(--barva-seda); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hlavicka-den b { color: var(--barva-text); font-weight: var(--tloustka-tucna); }
 
-  /* Spodní lišta s hlavní akcí – přilepená dole, nic nezakrývá */
-  .dole { position: sticky; bottom: 0; padding: var(--m2) var(--m3) var(--m4); background: var(--pozadi); border-top: 1px solid var(--cara); }
-  .dole .tl { width: 100%; min-height: 52px; }
+/* VÝJIMKA: kulatá tlačítka v hlavičce (režim, uživatel) jsou menší než --dotyk – šetří místo
+   v hlavičce, nejsou součástí provozního ovládání a používají se zřídka. */
+.kulate {
+  width: var(--kulate);
+  height: var(--kulate);
+  border: 0;
+  border-radius: var(--zaobleni-pilulka);
+  background: var(--barva-neutralni);
+  display: grid;
+  place-items: center;
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
 
-  /* Legenda vedle telefonu */
-  .legenda { width: 360px; background: var(--pozadi); border-radius: 16px; padding: 20px; font-size: var(--m); }
-  .legenda h3 { font-size: var(--s); text-transform: uppercase; letter-spacing: .04em; color: var(--sedy); margin: 18px 0 8px; }
-  .legenda h3:first-child { margin-top: 0; }
-  .legenda .vzor { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
-  .legenda .barva { width: 28px; height: 20px; border-radius: 6px; flex: none; }
-  @media (max-width: 820px) { .legenda { display: none; } body { padding: 0; } .telefon { border-radius: 0; box-shadow: none; } }
+/* Menu: jeden řádek záložek */
+.menu { display: flex; gap: var(--mezera-4); padding: 0 var(--mezera-4); border-bottom: var(--ramecek); overflow-x: auto; scrollbar-width: none; }
+.menu::-webkit-scrollbar { display: none; }
+.menu a {
+  padding: var(--mezera-2) 0;
+  white-space: nowrap;
+  text-decoration: none;
+  border-bottom: calc(2 * var(--ramecek-sirka)) solid var(--zalozka-cara, transparent);
+}
+.menu a.aktivni { --nadpisek-barva: var(--barva-modra); --zalozka-cara: var(--barva-modra); }
+
+.obsah { flex: 1; padding: var(--mezera-3) var(--mezera-3) var(--mezera-2); }
+
+/* Sekce: nadpis sbalí / rozbalí následující tělo */
+.sekce {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mezera-2);
+  width: 100%;
+  margin: var(--mezera-3) 0 var(--mezera-2);
+  padding: 0 var(--mezera-1);
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.obsah > .sekce:first-child { margin-top: 0; }
+.sekce-sipka { font-size: var(--pismo-s); color: var(--barva-seda); display: inline-block; transition: transform var(--prechod); }
+.sekce-vpravo { margin-left: auto; }
+.sekce[aria-expanded="false"] .sekce-sipka { transform: rotate(-90deg); }
+.sekce[aria-expanded="false"] + .sekce-telo { display: none; }
+
+/* Štítek (badge); varianta mění jen dvojici barev */
+.stitek {
+  display: inline-block;
+  padding: var(--mezera-1) var(--mezera-2);
+  border-radius: var(--zaobleni-pilulka);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  line-height: var(--radkovani-tesne);
+  white-space: nowrap;
+  background: var(--stitek-vypln, var(--barva-neutralni));
+  color: var(--stitek-barva, var(--barva-neutralni-text));
+}
+.stitek.modry    { --stitek-vypln: var(--barva-modra-vypln);    --stitek-barva: var(--barva-modra); }
+.stitek.zeleny   { --stitek-vypln: var(--barva-zelena-vypln);   --stitek-barva: var(--barva-zelena); }
+.stitek.oranzovy { --stitek-vypln: var(--barva-oranzova-vypln); --stitek-barva: var(--barva-oranzova); }
+.stitek.cerveny  { --stitek-vypln: var(--barva-cervena-vypln);  --stitek-barva: var(--barva-cervena); }
+.stitky { display: flex; flex-wrap: wrap; gap: var(--mezera-1); margin-top: var(--mezera-1); }
+
+/* Tlačítko; varianta mění jen výplň, barvu textu a okraj */
+.tl {
+  min-height: var(--dotyk);
+  padding: 0 var(--mezera-4);
+  border: var(--ramecek-sirka) solid var(--tl-okraj, transparent);
+  border-radius: var(--zaobleni);
+  background: var(--tl-vypln, var(--barva-karta));
+  color: var(--tl-barva, var(--barva-text));
+  font-size: var(--pismo-m);
+  font-weight: var(--tloustka-tucna);
+}
+.tl.hlavni { text-transform: uppercase; letter-spacing: var(--proklad-verzalky); }  /* verzálky jen u hlavních akcí */
+.tl.modre  { --tl-vypln: var(--barva-akce-modra);  --tl-barva: var(--barva-na-akci); }
+.tl.zelene { --tl-vypln: var(--barva-akce-zelena); --tl-barva: var(--barva-na-akci); }
+.tl.svetle { --tl-barva: var(--barva-modra); }
+.tl.obrys  { --tl-okraj: var(--barva-cara); }
+
+/* Let = zaoblený pásek (jako strip ŘLP); varianta stavu mění jen výplň, barvu času a okraj */
+.let {
+  margin-bottom: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3);
+  border: var(--ramecek-sirka) solid var(--let-okraj, transparent);
+  border-radius: var(--zaobleni);
+  background: var(--let-vypln);
+}
+.let.vzduch    { --let-vypln: var(--barva-modra-vypln);   --let-cas: var(--barva-modra); }
+.let.problem   { --let-vypln: var(--barva-cervena-vypln); --let-cas: var(--barva-cervena); }
+.let.pripraven { --let-vypln: var(--barva-neutralni); }
+.let.ukoncen   { --let-vypln: var(--barva-karta);         --let-okraj: var(--barva-cara); }
+
+.let-radek { display: flex; align-items: baseline; gap: var(--mezera-2); }
+.let-radek + .let-radek { margin-top: var(--mezera-1); }
+.let-radek.roztazeny { justify-content: space-between; align-items: center; }
+.let-typ { font-size: var(--pismo-s); color: var(--barva-seda); }
+.let-vpravo { margin-left: auto; }
+.let-cas { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); color: var(--let-cas, var(--barva-text)); }
+.let-vic { color: var(--barva-seda); font-weight: var(--tloustka-tucna); }
+.let-duvod { margin-top: var(--mezera-1); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-cervena); }
+.let-akce { display: flex; gap: var(--mezera-2); margin-top: var(--mezera-2); }
+.let-akce .tl { flex: 1; }
+.let-akce .tl.zelene { flex: 2; }   /* PŘISTÁL je hlavní, T&G vedlejší */
+
+/* Připravený let: údaje vlevo, akce vpravo – pásek na dva řádky */
+.let-vedle { display: flex; align-items: center; gap: var(--mezera-2); }
+.let-vedle > :first-child { flex: 1; min-width: 0; }
+.let-vedle .tl { min-width: var(--sirka-akce-vpravo); }
+
+/* Uzavření dne */
+.uzavrit { display: flex; align-items: center; justify-content: space-between; gap: var(--mezera-2); margin-top: var(--mezera-3); padding: 0 var(--mezera-1); }
+
+/* Spodní lišta s hlavní akcí – přilepená dole, nic nezakrývá */
+.dole { position: sticky; bottom: 0; padding: var(--mezera-2) var(--mezera-3) var(--mezera-4); background: var(--barva-pozadi); border-top: var(--ramecek); }
+.dole .tl { width: 100%; min-height: var(--dotyk-hlavni); }
+
+/* =============================================================================================
+   4. RÁM MAKETY – simulace telefonu a legenda; není součástí aplikace, proto vlastní rozměry.
+   ============================================================================================= */
+.maketa { --okoli: light-dark(#d9dde2, #0b0d0f); background: var(--okoli); display: flex; gap: 32px; justify-content: center; align-items: flex-start; padding: 24px 16px; }
+.telefon { width: 390px; min-height: 844px; display: flex; flex-direction: column; overflow: hidden; border-radius: 28px; background: var(--barva-pozadi); box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
+.legenda { width: 360px; padding: 20px; border-radius: 16px; background: var(--barva-pozadi); }
+.legenda .nadpisek { display: block; margin: 18px 0 8px; }
+.legenda .nadpisek:first-child { margin-top: 0; }
+.vzor { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+.vzor .let { width: 28px; height: 20px; margin: 0; padding: 0; flex: none; }
+@media (max-width: 820px) { .legenda { display: none; } .maketa { padding: 0; } .telefon { border-radius: 0; box-shadow: none; } }
 </style>
 </head>
-<body>
+<body class="maketa">
 
 <div class="telefon">
   <div class="pruh">TESTOVACÍ PROVOZ – data nejsou skutečná</div>
 
   <header class="hlavicka">
-    <div class="r1">
-      <span class="l tucne">LKKL Log</span>
+    <div class="hlavicka-radek">
+      <span class="velke tucne">LKKL Log</span>
       <span class="hodiny cisla tucne" id="utc">21:29:05 UTC</span>
       <button class="kulate" id="rezim" title="Režim zobrazení">◐</button>
       <button class="kulate">TM</button>
     </div>
-    <div class="r2 cisla">Pondělí 5. 10. · TB <b>04:47</b> · SR <b>05:19</b> · SS <b>16:33</b> · TE <b>17:06</b> UTC</div>
+    <div class="hlavicka-den cisla">Pondělí 5. 10. · TB <b>04:47</b> · SR <b>05:19</b> · SS <b>16:33</b> · TE <b>17:06</b> UTC</div>
   </header>
 
   <nav class="menu">
-    <a class="aktivni" href="#">Lety</a>
-    <a href="#">Výpis</a>
-    <a href="#">Můj nálet</a>
-    <a href="#">Uzávěrky</a>
-    <a href="#">Osoby</a>
-    <a href="#">Letadla</a>
+    <a class="nadpisek aktivni" href="#">Lety</a>
+    <a class="nadpisek" href="#">Výpis</a>
+    <a class="nadpisek" href="#">Můj nálet</a>
+    <a class="nadpisek" href="#">Uzávěrky</a>
+    <a class="nadpisek" href="#">Osoby</a>
+    <a class="nadpisek" href="#">Letadla</a>
   </nav>
 
   <main class="obsah">
-    <button class="sekce" aria-expanded="true"><span class="sipka">▾</span><h2>Ve vzduchu 2</h2></button>
-    <div class="telo">
+    <button class="sekce" aria-expanded="true"><span class="sekce-sipka">▾</span><h2 class="nadpisek">Ve vzduchu 2</h2></button>
+    <div class="sekce-telo">
       <div class="let problem">
-        <div class="r1">
-          <span class="l tucne">OK-TCS</span><span class="typ">Cessna F 172</span>
-          <span class="cas cisla" data-od="2135">0:35:35</span><span class="vic">⋯</span>
+        <div class="let-radek">
+          <span class="velke tucne">OK-TCS</span><span class="let-typ">Cessna F 172</span>
+          <span class="let-vpravo let-cas cisla" data-od="2135">0:35:35</span><span class="let-vic">⋯</span>
         </div>
-        <div class="r2">
-          <span>Adam Pilot <span class="sede s">PIC</span></span>
-          <span class="stitky"><span class="stitek">LKKL 20:54</span></span>
+        <div class="let-radek roztazeny">
+          <span>Adam Pilot <span class="seda male">PIC</span></span>
+          <span class="stitek">LKKL 20:54</span>
         </div>
-        <div class="duvod">Po konci občanského soumraku (TE 17:06)</div>
-        <div class="akce"><button class="tl svetle">T&amp;G</button><button class="tl zelene">PŘISTÁL</button></div>
+        <div class="let-duvod">Po konci občanského soumraku (TE 17:06)</div>
+        <div class="let-akce"><button class="tl svetle">T&amp;G</button><button class="tl zelene hlavni">Přistál</button></div>
       </div>
 
       <div class="let vzduch">
-        <div class="r1">
-          <span class="l tucne">OK-2817</span><span class="typ">L 13</span>
-          <span class="cas cisla" data-od="754">0:12:34</span><span class="vic">⋯</span>
+        <div class="let-radek">
+          <span class="velke tucne">OK-2817</span><span class="let-typ">L 13</span>
+          <span class="let-vpravo let-cas cisla" data-od="754">0:12:34</span><span class="let-vic">⋯</span>
         </div>
-        <div class="r2">
-          <span>Bára Žák <span class="sede s">žák</span> · Pavel Pačes <span class="sede s">instr.</span></span>
-        </div>
-        <div class="stitky" style="margin-top:4px"><span class="stitek">LKKL 21:16</span><span class="stitek">výcvik</span><span class="stitek">navijákem</span></div>
-        <div class="akce"><button class="tl zelene">PŘISTÁL</button></div>
+        <div class="let-radek">Bára Žák <span class="seda male">žák</span> · Pavel Pačes <span class="seda male">instr.</span></div>
+        <div class="stitky"><span class="stitek">LKKL 21:16</span><span class="stitek">výcvik</span><span class="stitek">navijákem</span></div>
+        <div class="let-akce"><button class="tl zelene hlavni">Přistál</button></div>
       </div>
     </div>
 
-    <button class="sekce" aria-expanded="true"><span class="sipka">▾</span><h2>Připravené 2</h2></button>
-    <div class="telo">
+    <button class="sekce" aria-expanded="true"><span class="sekce-sipka">▾</span><h2 class="nadpisek">Připravené 2</h2></button>
+    <div class="sekce-telo">
       <div class="let pripraven">
-        <div class="obal">
-          <div class="info">
-            <div class="r1"><span class="l tucne">OK-3819</span><span class="typ">L 13</span></div>
-            <div class="s sede">Ivan Pilot · navijákem</div>
+        <div class="let-vedle">
+          <div>
+            <div class="let-radek"><span class="velke tucne">OK-3819</span><span class="let-typ">L 13</span></div>
+            <div class="male seda">Ivan Pilot · navijákem</div>
           </div>
-          <button class="tl modre">VZLET</button>
+          <button class="tl modre hlavni">Vzlet</button>
         </div>
       </div>
       <div class="let pripraven">
-        <div class="obal">
-          <div class="info">
-            <div class="r1"><span class="l tucne">OK-MFV</span><span class="typ">Z 126</span></div>
-            <div class="s sede">Gustav Vlekař · vlek OK-6722</div>
+        <div class="let-vedle">
+          <div>
+            <div class="let-radek"><span class="velke tucne">OK-MFV</span><span class="let-typ">Z 126</span></div>
+            <div class="male seda">Gustav Vlekař · vlek OK-6722</div>
           </div>
-          <button class="tl modre">VZLET</button>
+          <button class="tl modre hlavni">Vzlet</button>
         </div>
       </div>
     </div>
 
-    <button class="sekce" aria-expanded="true"><span class="sipka">▾</span><h2>Ukončené 4</h2><span class="vpravo s sede cisla">celkem 2°11"</span></button>
-    <div class="telo">
+    <button class="sekce" aria-expanded="true"><span class="sekce-sipka">▾</span><h2 class="nadpisek">Ukončené 4</h2><span class="sekce-vpravo male seda cisla">celkem 2°11"</span></button>
+    <div class="sekce-telo">
       <div class="let ukoncen">
-        <div class="r1"><b>OK-TVA</b><span>Ivan Pilot</span><span class="doba cisla">45"</span></div>
+        <div class="let-radek"><b>OK-TVA</b><span>Ivan Pilot</span><span class="let-vpravo tucne cisla">45"</span></div>
         <div class="stitky"><span class="stitek cisla">LKKL 19:29 → LKKL 20:14</span><span class="stitek">3 přistání</span><span class="stitek">dodatečně</span></div>
       </div>
       <div class="let ukoncen">
-        <div class="r1"><b>OK-6722</b><span>Adam Pilot</span><span class="doba cisla">1°02"</span></div>
+        <div class="let-radek"><b>OK-6722</b><span>Adam Pilot</span><span class="let-vpravo tucne cisla">1°02"</span></div>
         <div class="stitky"><span class="stitek cisla">LKKL 18:40 → LKKL 19:42</span><span class="stitek">vlek</span></div>
       </div>
       <div class="let ukoncen">
-        <div class="r1"><b>OK-MFV</b><span>Gustav Vlekař</span><span class="doba cisla">9"</span></div>
+        <div class="let-radek"><b>OK-MFV</b><span>Gustav Vlekař</span><span class="let-vpravo tucne cisla">9"</span></div>
         <div class="stitky"><span class="stitek cisla">LKKL 18:40 → LKKL 18:49</span><span class="stitek">vlek OK-6722</span></div>
       </div>
       <div class="let ukoncen">
-        <div class="r1"><b>OK-CWF</b><span>Tomáš Mandlík</span><span class="doba cisla">15"</span></div>
+        <div class="let-radek"><b>OK-CWF</b><span>Tomáš Mandlík</span><span class="let-vpravo tucne cisla">15"</span></div>
         <div class="stitky"><span class="stitek cisla">LKKL 17:02 → LKLT 17:17</span><span class="stitek oranzovy">opraveno</span></div>
       </div>
     </div>
 
     <div class="uzavrit">
-      <span class="s sede">Den nejde uzavřít, dokud něco letí.</span>
+      <span class="male seda">Den nejde uzavřít, dokud něco letí.</span>
       <button class="tl obrys">Uzavřít den</button>
     </div>
   </main>
 
-  <div class="dole"><button class="tl modre">+ NOVÝ LET</button></div>
+  <div class="dole"><button class="tl modre hlavni">+ Nový let</button></div>
 </div>
 
 <aside class="legenda">
-  <h3>Písmo – 3 velikosti, bezpatkové</h3>
-  <div class="l tucne">20 px · OK-TCS 0:35:35</div>
+  <h3 class="nadpisek">Písmo – 3 velikosti, bezpatkové</h3>
+  <div class="velke tucne">20 px · OK-TCS 0:35:35</div>
   <div>15 px · obsah, tlačítka</div>
-  <div class="s sede">12 px · popisky, štítky, hlavička</div>
+  <div class="male seda">12 px · popisky, štítky, hlavička</div>
 
-  <h3>Let jako pásek (strip) – výplň podle stavu</h3>
-  <div class="vzor"><span class="barva" style="background:var(--modra-vypln)"></span>ve vzduchu</div>
-  <div class="vzor"><span class="barva" style="background:var(--cervena-vypln)"></span>ve vzduchu s problémem (soumrak, max. doba)</div>
-  <div class="vzor"><span class="barva" style="background:var(--seda-vypln)"></span>připravený</div>
-  <div class="vzor"><span class="barva" style="background:var(--karta);border:1px solid var(--cara)"></span>ukončený</div>
+  <h3 class="nadpisek">Let jako pásek (strip) – výplň podle stavu</h3>
+  <div class="vzor"><span class="let vzduch"></span>ve vzduchu</div>
+  <div class="vzor"><span class="let problem"></span>ve vzduchu s problémem (soumrak, max. doba)</div>
+  <div class="vzor"><span class="let pripraven"></span>připravený</div>
+  <div class="vzor"><span class="let ukoncen"></span>ukončený</div>
 
-  <h3>Štítky</h3>
-  <div class="stitky" style="margin-bottom:6px"><span class="stitek">LKKL 20:54</span><span class="stitek">výcvik</span><span class="stitek">dodatečně</span></div>
-  <div class="s sede" style="margin-bottom:6px">šedé = informace</div>
-  <div class="stitky" style="margin-bottom:6px"><span class="stitek zeleny">v pořádku</span><span class="stitek oranzovy">opraveno</span><span class="stitek cerveny">neukončeno</span><span class="stitek modry">ve vzduchu</span></div>
-  <div class="s sede">barevné = stav (jen když nese význam)</div>
+  <h3 class="nadpisek">Štítky</h3>
+  <div class="stitky"><span class="stitek">LKKL 20:54</span><span class="stitek">výcvik</span><span class="stitek">dodatečně</span></div>
+  <div class="male seda">šedé = informace</div>
+  <div class="stitky"><span class="stitek zeleny">v pořádku</span><span class="stitek oranzovy">opraveno</span><span class="stitek cerveny">neukončeno</span><span class="stitek modry">ve vzduchu</span></div>
+  <div class="male seda">barevné = stav (jen když nese význam)</div>
 
-  <h3>Ovládání</h3>
-  <div class="s">Ťuknutí na nadpis sekce ji sbalí / rozbalí. ◐ přepíná režim: podle zařízení → světlý → tmavý (pamatuje si ho prohlížeč). Hlavní akce velkým tlačítkem (min. 44 px): <b>PŘISTÁL</b> zeleně, <b>VZLET</b> a <b>+ NOVÝ LET</b> modře – verzálky jen u nich.</div>
+  <h3 class="nadpisek">Ovládání</h3>
+  <div class="male">Ťuknutí na nadpis sekce ji sbalí / rozbalí. ◐ přepíná režim: podle zařízení → světlý → tmavý (pamatuje si ho prohlížeč). Hlavní akce velkým tlačítkem (min. 44 px): <b>PŘISTÁL</b> zeleně, <b>VZLET</b> a <b>+ NOVÝ LET</b> modře – verzálky jen u nich.</div>
 
-  <h3>Hlavička</h3>
-  <div class="s">2. řádek: den, TB = začátek občanského soumraku, SR = východ, SS = západ slunce, TE = konec občanského soumraku (UTC).</div>
-  <div class="s sede" style="margin-top:6px" id="rezim-text"></div>
+  <h3 class="nadpisek">Hlavička</h3>
+  <div class="male">2. řádek: den, TB = začátek občanského soumraku, SR = východ, SS = západ slunce, TE = konec občanského soumraku (UTC).</div>
+  <div class="male seda" id="rezim-text"></div>
+
+  <h3 class="nadpisek">Stavba stylů</h3>
+  <div class="male">Tokeny (jediné pevné hodnoty) → základ → komponenty → varianty. Každá vlastnost je definovaná jednou; výjimky jsou v kódu označené <b>VÝJIMKA: důvod</b>.</div>
 </aside>
 
 <script>
