@@ -31,25 +31,25 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    verze se smažou).
 
 ## Datový model
-6. **Normální formy:** každý údaj uložený jednou; odvozené hodnoty generovaným sloupcem
+8. **Normální formy:** každý údaj uložený jednou; odvozené hodnoty generovaným sloupcem
    nebo pohledem (view), ne kopií.
-7. **Klíče a omezení:** umělý primární klíč + jedinečné přirozené klíče; cizí klíče všude bez
+9. **Klíče a omezení:** umělý primární klíč + jedinečné přirozené klíče; cizí klíče všude bez
    kaskádového mazání; pravidla v databázi (CHECK, UNIQUE, EXCLUDE).
-8. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
-9. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
-10. *K projednání:* zdroj pravdy o schématu – SQL (DDL, pohledy) vs. modely frameworku.
+10. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
+11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
+12. *K projednání:* zdroj pravdy o schématu – SQL (DDL, pohledy) vs. modely frameworku.
 
 ## Obrazovky
-11. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
+13. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
     Každá obrazovka má návrh pro telefon (od šířky 375 px, ovládání palcem) i pro velkou
     obrazovku (víc informací najednou).
-12. **Jednotný vizuální systém** definovaný dřív než první obrazovka: dvě velikosti písma,
+14. **Jednotný vizuální systém** definovaný dřív než první obrazovka: dvě velikosti písma,
     pevná sada mezer, barvy jen pro význam, sdílené komponenty; hustě, ale čitelně.
-13. Žádná vestavěná administrace frameworku; všechno, co admin dělá, je v aplikaci.
+15. Žádná vestavěná administrace frameworku; všechno, co admin dělá, je v aplikaci.
     Nouzové opravy přímo v databázi.
 
 ## Testování
-14. Každá funkce prochází **třemi fázemi**:
+16. Každá funkce prochází **třemi fázemi**:
     1. **testuje jen uživatel** (správce projektu);
     2. **testují vybraní pilotní uživatelé**;
     3. **rollout na všechny**.
