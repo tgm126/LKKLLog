@@ -29,7 +29,7 @@ Sloupec *Slabiny* shrnuje, co v modelu nesedí na normální formy nebo co se ne
 | `lety_uloha` | číselník | úlohy osnovy, u kterých účelů se nabízí | **pole účelů** (1NF) |
 | `lety_letadlo` | kmenová data | letadlo, stav provozního deníku při spuštění | **typ a kategorie zkopírované z typu** (3NF), odkaz na typ nepovinný |
 | `lety_terminletadla` | kmenová data | termíny letadla (do data / do náletu) | – |
-| `osoby_osoba` | kmenová data | osoba = uživatel (heslo, e-mail, telefon), příznaky | **role jako logické sloupce** (`role_*`, admin = `is_staff`), sloučená osoba a přihlašovací účet, sloupce frameworku |
+| `osoby_osoba` | kmenová data | osoba = uživatel (heslo, e-mail, telefon), příznaky | role jako logické sloupce (`role_*`) samy o sobě nevadí, ale byly u osoby místo u účtu a mísily se se sloupci frameworku (`is_staff`, `is_superuser`); **sloučená osoba a přihlašovací účet** |
 | `osoby_prukazosoby` | doklady | průkaz osoby (druh, číslo) | – |
 | `osoby_kvalifikaceosoby` | doklady | kvalifikace na průkazu s platností | – |
 | `osoby_preskoleni` | doklady | přeškolení osoby na typ letadla | – |

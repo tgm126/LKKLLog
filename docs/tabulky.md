@@ -18,7 +18,11 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 - **Přistání do terénu** není letiště: u letu cizí klíč na letiště, nebo popis místa (právě jedno).
 - **Aktivace v aplikaci** = založení přihlašovacího účtu (tabulka `ucet`, 1:0..1 k osobě);
   osoby se aktivují postupně (fáze 2 testování: vybraní pilotní uživatelé).
-- **Role v aplikaci** jako číselník `lov_role` + vazba osoba–role, ne sloupce osoby.
+- **Práva v aplikaci** nejsou role, ale **logické příznaky výjimečných práv na účtu**
+  (tabulka `ucet`, ne `osoba`): práva má jen ten, kdo se přihlašuje. Pojmenované jako práva
+  (`smi_uzavirat_den`, `smi_spravovat_osoby`…), výjimkou je `admin` = smí všechno. Co smí
+  každý přihlášený, příznak nemá. Novou potřebu řeší nový příznak (stejně vyžaduje nový kód).
+  Změny práv zachytí auditní log. Seznam práv až s tabulkou `ucet` a přihlašováním.
 - Datum narození se neeviduje (sloupec jde kdykoli přidat).
 
 **Záloha** lokálních dat: `bash db/zaloha.sh` → `C:\GIT\LKKLLog-zalohy` (mimo git; obnova
