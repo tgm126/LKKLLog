@@ -26,6 +26,9 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    obezličky).
 4. **Slepé uličky** se zkoušejí na odbočce (větvi); když se nepovedou, odbočka se zahodí.
 5. Dokud nejsou ostrá data, **migrace se nehromadí** – slučují se do jedné čisté.
+6. **Data zadává uživatel** (číselníky, osoby, letadla…); žádné importy z Excelu.
+7. **Tabulky:** stará verze je zinventarizovaná v `docs/tabulky-v1.md` (po spuštění nové
+   verze se smažou).
 
 ## Datový model
 6. **Normální formy:** každý údaj uložený jednou; odvozené hodnoty generovaným sloupcem
@@ -46,7 +49,12 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     Nouzové opravy přímo v databázi.
 
 ## Testování
-14. *K projednání:* **tři fáze testování** – upřesnit, co přesně znamenají.
+14. Každá funkce prochází **třemi fázemi**:
+    1. **testuje jen uživatel** (správce projektu);
+    2. **testují vybraní pilotní uživatelé**;
+    3. **rollout na všechny**.
+    *K projednání:* jak fáze technicky oddělit (prostředí, adresa, přístup) a zda se postupuje
+    po modulech, nebo za celou aplikaci. Automatické testy u mě běží při každé změně.
 
 ## K projednání (převzato z první verze, zatím neplatí)
 Projdeme jednotlivě, aby se nezanesl starý problém:
