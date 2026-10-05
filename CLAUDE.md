@@ -51,6 +51,15 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     (Docker, `127.0.0.1:5432`, databáze `lkkllog`), na server se zmigrují později.
     Předpony: `lov_` číselníky, `v_` pohledy. Seznam objektů v `docs/tabulky.md`.
 
+## Technologie
+- **Databáze:** PostgreSQL, schéma `lkkl` (viz výše).
+- **Server:** Python + **FastAPI**, dotazy **přímo v SQL** (psycopg) nad tabulkami a pohledy –
+  žádné ORM ani tabulky frameworku, schéma se nepopisuje podruhé v Pythonu. Přihlašování,
+  relace, ochrana formulářů a omezení pokusů jsou vlastní (tabulky `ucet`, `relace`), pokryté
+  testy. Hesla argon2id.
+- Přihlášení e-mailem a heslem, platí 30 dní od poslední aktivity; admin se smí přihlásit
+  jako jiná osoba (relace si pamatuje skutečného admina). Passkey zatím ne.
+
 ## Obrazovky
 13. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
     Každá obrazovka má návrh pro telefon (od šířky 375 px, ovládání palcem) i pro velkou
@@ -77,7 +86,7 @@ Projdeme jednotlivě, aby se nezanesl starý problém:
 - na server jedno SSH spojení (`ssh one12`, fail2ban banuje rychlá opakovaná spojení);
 - nasazení jen značkou verze – pozor: archivní značky nesmí odpovídat vzoru nasazovacích;
 - soubory uživatele nepřepisovat ani nemazat (nové verze pod novým jménem);
-- technologie (PostgreSQL, Python/Django, React) a hosting (Docker ve VPS Centru).
+- frontend (React?) a hosting (Docker ve VPS Centru).
 
 ## Stav
 - Server `https://lety.lkkl.cz` dál provozuje první verzi (větev `v1`). Případná oprava staré
