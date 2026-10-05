@@ -65,6 +65,7 @@
   --barva-na-akci:      #ffffff;
   --barva-pruh:         #fcc419;  /* testovací provoz */
   --barva-na-pruhu:     #1d2125;
+  --barva-zatmeni:      rgb(0 0 0 / .45);  /* pod panelem detailu; v obou režimech stejné */
 
   /* Odvozené tokeny */
   --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
@@ -211,6 +212,7 @@ h2, h3 { margin: 0; }
   border: var(--ramecek-sirka) solid var(--let-okraj, transparent);
   border-radius: var(--zaobleni);
   background: var(--let-vypln);
+  cursor: pointer;               /* ťuknutí mimo tlačítka otevře detail */
 }
 .let.vzduch    { --let-vypln: var(--barva-modra-vypln);   --let-cas: var(--barva-modra); }
 .let.problem   { --let-vypln: var(--barva-cervena-vypln); --let-cas: var(--barva-cervena); }
@@ -223,7 +225,6 @@ h2, h3 { margin: 0; }
 .let-typ { font-size: var(--pismo-s); color: var(--barva-seda); }
 .let-vpravo { margin-left: auto; }
 .let-cas { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); color: var(--let-cas, var(--barva-text)); }
-.let-vic { color: var(--barva-seda); font-weight: var(--tloustka-tucna); }
 .let-duvod { margin-top: var(--mezera-1); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-cervena); }
 .let-akce { display: flex; gap: var(--mezera-2); margin-top: var(--mezera-2); }
 .let-akce .tl { flex: 1; }
@@ -233,6 +234,14 @@ h2, h3 { margin: 0; }
 .let-vedle { display: flex; align-items: center; gap: var(--mezera-2); }
 .let-vedle > :first-child { flex: 1; min-width: 0; }
 .let-vedle .tl { min-width: var(--sirka-akce-vpravo); }
+
+/* Detail letu: panel vysunutý zespodu s akcemi */
+.zatmeni { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: var(--barva-zatmeni); }
+.zatmeni.otevrene { display: flex; }
+.detail { width: 100%; max-width: 390px; padding: var(--mezera-4); border-radius: var(--zaobleni) var(--zaobleni) 0 0; background: var(--barva-pozadi); }
+.detail-hlavicka { display: flex; align-items: baseline; gap: var(--mezera-2); }
+.detail-akce { display: grid; gap: var(--mezera-2); margin-top: var(--mezera-3); }
+.tl.cervene { --tl-barva: var(--barva-cervena); --tl-okraj: var(--barva-cara); }
 
 /* Uzavření dne */
 .uzavrit { display: flex; align-items: center; justify-content: space-between; gap: var(--mezera-2); margin-top: var(--mezera-3); padding: 0 var(--mezera-1); }
@@ -284,7 +293,7 @@ h2, h3 { margin: 0; }
       <div class="let problem">
         <div class="let-radek">
           <span class="velke tucne">OK-TCS</span><span class="let-typ">Cessna F 172</span>
-          <span class="let-vpravo let-cas cisla" data-od="2135">0:35:35</span><span class="let-vic">⋯</span>
+          <span class="let-vpravo let-cas cisla" data-od="2135">0:35:35</span>
         </div>
         <div class="let-radek roztazeny">
           <span>Adam Pilot <span class="seda male">PIC</span></span>
@@ -297,7 +306,7 @@ h2, h3 { margin: 0; }
       <div class="let vzduch">
         <div class="let-radek">
           <span class="velke tucne">OK-2817</span><span class="let-typ">L 13</span>
-          <span class="let-vpravo let-cas cisla" data-od="754">0:12:34</span><span class="let-vic">⋯</span>
+          <span class="let-vpravo let-cas cisla" data-od="754">0:12:34</span>
         </div>
         <div class="let-radek">Bára Žák <span class="seda male">žák</span> · Pavel Pačes <span class="seda male">instr.</span></div>
         <div class="stitky"><span class="stitek">LKKL 21:16</span><span class="stitek">výcvik</span><span class="stitek">navijákem</span></div>
@@ -356,6 +365,14 @@ h2, h3 { margin: 0; }
   <div class="dole"><button class="tl modre hlavni">+ Nový let</button></div>
 </div>
 
+<div class="zatmeni" id="zatmeni">
+  <div class="detail" role="dialog" aria-label="Detail letu">
+    <div class="detail-hlavicka"><span class="velke tucne" id="detail-letadlo"></span><span class="male seda" id="detail-stav"></span></div>
+    <div class="male seda">Obsah detailu (posádka, časy, trasa, plátce, historie oprav…) doplníme spolu s obsahem pásků.</div>
+    <div class="detail-akce" id="detail-akce"></div>
+  </div>
+</div>
+
 <aside class="legenda">
   <h3 class="nadpisek">Písmo – 3 velikosti, bezpatkové</h3>
   <div class="velke tucne">20 px · OK-TCS 0:35:35</div>
@@ -375,7 +392,7 @@ h2, h3 { margin: 0; }
   <div class="male seda">barevné = stav (jen když nese význam)</div>
 
   <h3 class="nadpisek">Ovládání</h3>
-  <div class="male">Ťuknutí na nadpis sekce ji sbalí / rozbalí. ◐ přepíná režim: podle zařízení → světlý → tmavý (pamatuje si ho prohlížeč). Hlavní akce velkým tlačítkem (min. 44 px): <b>PŘISTÁL</b> zeleně, <b>VZLET</b> a <b>+ NOVÝ LET</b> modře – verzálky jen u nich.</div>
+  <div class="male">Ťuknutí na pásek (mimo tlačítka) otevře detail s akcemi. Ťuknutí na nadpis sekce ji sbalí / rozbalí. ◐ přepíná režim: podle zařízení → světlý → tmavý (pamatuje si ho prohlížeč). Hlavní akce velkým tlačítkem (min. 44 px): <b>PŘISTÁL</b> zeleně, <b>VZLET</b> a <b>+ NOVÝ LET</b> modře – verzálky jen u nich.</div>
 
   <h3 class="nadpisek">Hlavička</h3>
   <div class="male">2. řádek: den, TB = začátek občanského soumraku, SR = východ, SS = západ slunce, TE = konec občanského soumraku (UTC).</div>
@@ -400,6 +417,31 @@ h2, h3 { margin: 0; }
   nastavitRezim(REZIMY.includes(ulozeny) ? ulozeny : 'auto');
   document.getElementById('rezim').addEventListener('click', () => {
     nastavitRezim(REZIMY[(REZIMY.indexOf(koren.dataset.rezim) + 1) % REZIMY.length]);
+  });
+
+  // Detail letu: ťuknutí na pásek mimo tlačítka; akce podle stavu letu.
+  const AKCE = {
+    problem: ['Přistál', 'T&G', 'Opravit', 'Zrušit let'],
+    vzduch: ['Přistál', 'Opravit', 'Zrušit let'],
+    pripraven: ['Vzlet', 'Upravit', 'Zrušit let'],
+    ukoncen: ['Další let odsud', 'Opravit', 'Zrušit let'],
+  };
+  const STAV = { problem: 've vzduchu – problém', vzduch: 've vzduchu', pripraven: 'připravený', ukoncen: 'ukončený' };
+  const TRIDA = { 'Přistál': 'tl zelene hlavni', 'Vzlet': 'tl modre hlavni', 'Zrušit let': 'tl cervene' };
+  const zatmeni = document.getElementById('zatmeni');
+  document.querySelectorAll('.telefon .let').forEach((pasek) =>
+    pasek.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return;
+      const stav = Object.keys(AKCE).find((s) => pasek.classList.contains(s));
+      document.getElementById('detail-letadlo').textContent = pasek.querySelector('.velke, b').textContent;
+      document.getElementById('detail-stav').textContent = STAV[stav];
+      document.getElementById('detail-akce').innerHTML = [...AKCE[stav], 'Zavřít']
+        .map((a) => `<button class="${TRIDA[a] || 'tl obrys'}">${a}</button>`).join('');
+      zatmeni.classList.add('otevrene');
+    })
+  );
+  zatmeni.addEventListener('click', (e) => {
+    if (e.target === zatmeni || e.target.textContent === 'Zavřít') zatmeni.classList.remove('otevrene');
   });
 
   // Sbalení sekce ťuknutím na nadpis.
