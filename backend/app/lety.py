@@ -194,10 +194,14 @@ PREKRYV = "Letadlo v tu dobu už letí – překrývá se s jiným letem."
 
 @contextmanager
 def zmena(conn: Connection) -> Iterator[None]:
-    """Změna letu v jedné transakci; pravidla databáze (i odložená na konec transakce) se
-    vyhodnotí hned a jejich chyba se vrátí jako srozumitelná hláška."""
+    """Změna letu v jedné transakci; pravidla databáze (kontroly letu odložené na konec
+    transakce) se vyhodnotí po všech příkazech změny a jejich chyba se vrátí jako
+    srozumitelná hláška."""
     try:
         with conn.transaction():
+            # Kontroly letu až po celé změně (např. výměna PIC = odebrat a přidat), i když
+            # předchozí změna ve stejné transakci (testy) přepnula kontroly na okamžité.
+            conn.execute("SET CONSTRAINTS ALL DEFERRED")
             yield
             conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
     except errors.RaiseException as e:
@@ -395,6 +399,11 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
         "ucely": ucely,
         "pic_id": conn.execute("SELECT id FROM lkkl.lov_funkce WHERE kod = 'PIC'").fetchone()["id"],
         "zpusoby": conn.execute("SELECT id, kod, nazev FROM lkkl.v_lov_zpusob_vzletu").fetchall(),
+        "duvody_zruseni": conn.execute("SELECT id, nazev FROM lkkl.v_lov_duvod_zruseni").fetchall(),
+        "letiste": conn.execute(
+            """SELECT l.id, l.kod, l.nazev, s.domovske
+               FROM lkkl.v_lov_letiste l JOIN lkkl.lov_letiste s ON s.id = l.id"""
+        ).fetchall(),
         "osoby": conn.execute(
             """SELECT id, jmeno, prijmeni, vlekar FROM lkkl.lov_osoba
                WHERE aktivni ORDER BY prijmeni, jmeno"""
@@ -552,3 +561,234 @@ def novy_let(
         akce=data.akce,
         cas=let["cas_vzletu"] if data.akce == "vzlet" else None,
     )
+
+
+# --- detail letu: údaje, historie, zrušení, obnovení, další let, úpravy -----------------------
+
+
+@router.get("/lety/{let_id}")
+def detail(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+    """Všechny údaje letu, posádka, časy T&G a historie z auditu (docs/modul-lety.md 3.5)."""
+    let = conn.execute(
+        """SELECT v.id, v.verze, v.stav, v.letadlo_id, v.rejstrik, v.typ, v.kategorie,
+                  v.kategorie_kod, t.pocet_mist, a.max_doba_min,
+                  v.ucel_id, v.ucel, v.ucel_kod, v.uloha_id, v.uloha,
+                  v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
+                  l.misto_vzletu_id, l.misto_vzletu_popis, v.misto_vzletu,
+                  l.misto_pristani_id, l.misto_pristani_popis, v.misto_pristani,
+                  v.cas_vzletu, v.cas_pristani, v.doba_min, v.doba_uctovana_min, l.doba_nulova,
+                  v.pocet_pristani, v.pob, l.pob AS pob_zadany,
+                  v.platce_id, v.plati_aeroklub, v.platce_jmeno, v.platce_prijmeni, v.poznamka,
+                  v.duvod_zruseni, v.zruseno, v.dodatecne, v.zalozeno,
+                  zl.jmeno || ' ' || zl.prijmeni AS zalozil,
+                  zr.jmeno || ' ' || zr.prijmeni AS zrusil,
+                  coalesce(v.vlecny_let_id, v.vleceny_let_id) AS vlek_let_id
+           FROM lkkl.v_let v
+           JOIN lkkl.let l ON l.id = v.id
+           JOIN lkkl.lov_letadlo a ON a.id = v.letadlo_id
+           JOIN lkkl.lov_typ t ON t.id = a.typ_id
+           JOIN lkkl.lov_osoba zl ON zl.id = v.zalozil_id
+           LEFT JOIN lkkl.lov_osoba zr ON zr.id = l.zrusil_id
+           WHERE v.id = %s""",
+        (let_id,),
+    ).fetchone()
+    if let is None:
+        raise HTTPException(404, "Let neexistuje.")
+    let["posadka"] = conn.execute(
+        """SELECT p.osoba_id, o.jmeno, o.prijmeni, p.funkce_id, f.kod AS funkce_kod,
+                  f.nazev AS funkce
+           FROM lkkl.posadka p
+           JOIN lkkl.lov_osoba o ON o.id = p.osoba_id
+           JOIN lkkl.lov_funkce f ON f.id = p.funkce_id
+           WHERE p.let_id = %s ORDER BY f.poradi""",
+        (let_id,),
+    ).fetchall()
+    let["tg"] = [
+        r["cas"]
+        for r in conn.execute(
+            "SELECT cas FROM lkkl.let_tg WHERE let_id = %s ORDER BY cas", (let_id,)
+        ).fetchall()
+    ]
+    let["vlek"] = (
+        conn.execute(
+            """SELECT v.id AS let_id, v.rejstrik, v.pic_jmeno || ' ' || v.pic_prijmeni AS pilot
+               FROM lkkl.v_let v WHERE v.id = %s""",
+            (let["vlek_let_id"],),
+        ).fetchone()
+        if let["vlek_let_id"]
+        else None
+    )
+    let["historie"] = conn.execute(
+        """SELECT kdy, kdo, akce, popis FROM lkkl.v_historie_letu
+           WHERE let_id = %s ORDER BY kdy, transakce""",
+        (let_id,),
+    ).fetchall()
+    den, ted, domovske = _den_a_domovske(conn, None)
+    let["varovani"] = varovani(let, ted, slunce(domovske, den).te)
+    return let
+
+
+class ZrusitIn(BaseModel):
+    duvod_id: int
+
+
+@router.post("/lety/{let_id}/zrusit", response_model=Provedeno)
+def zrusit(
+    let_id: int,
+    data: ZrusitIn,
+    p: Prihlaseny = Depends(prihlaseny),
+    conn: Connection = Depends(spojeni),
+):
+    """Let se nemaže, jen zruší s důvodem; u vleku oba lety dvojice."""
+    let = _let(conn, let_id)
+    with zmena(conn):
+        radky = conn.execute(
+            f"""UPDATE lkkl.let
+                SET zruseni_duvod_id = %(duvod)s, zruseno = now(), zrusil_id = %(kdo)s
+                WHERE id IN ({DVOJICE}) AND zruseni_duvod_id IS NULL""",  # noqa: S608 – pevný text
+            {"id": let_id, "duvod": data.duvod_id, "kdo": p.osoba_id},
+        ).rowcount
+    if not radky:
+        raise HTTPException(409, f"{let['rejstrik']}: let už je zrušený.")
+    return Provedeno(let_id=let_id, rejstrik=let["rejstrik"], akce="zrusit", cas=None)
+
+
+@router.post("/lety/{let_id}/obnovit", response_model=Provedeno)
+def obnovit(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+    let = _let(conn, let_id)
+    with zmena(conn):
+        radky = conn.execute(
+            f"""UPDATE lkkl.let SET zruseni_duvod_id = NULL, zruseno = NULL, zrusil_id = NULL
+                WHERE id IN ({DVOJICE}) AND zruseni_duvod_id IS NOT NULL""",  # noqa: S608
+            {"id": let_id},
+        ).rowcount
+    if not radky:
+        raise HTTPException(409, f"{let['rejstrik']}: let není zrušený.")
+    return Provedeno(let_id=let_id, rejstrik=let["rejstrik"], akce="obnovit", cas=None)
+
+
+def _kopie(conn: Connection, puvodni_id: int, vlecny_let_id: int | None, zalozil: int) -> int:
+    """Naplánovaná kopie letu: letadlo, účel, posádka, POB, způsob vzletu, úloha, plátce;
+    místo vzletu = místo přistání původního letu."""
+    let_id = conn.execute(
+        """INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
+               misto_vzletu_id, misto_vzletu_popis, pob, platce_id, plati_aeroklub, uloha_id,
+               zalozil_id)
+           SELECT letadlo_id, ucel_id, zpusob_vzletu_id, %(vlecny)s,
+                  coalesce(misto_pristani_id, CASE WHEN misto_pristani_popis IS NULL
+                                                   THEN misto_vzletu_id END),
+                  coalesce(misto_pristani_popis, CASE WHEN misto_pristani_id IS NULL
+                                                      THEN misto_vzletu_popis END),
+                  pob, platce_id, plati_aeroklub, uloha_id, %(zalozil)s
+           FROM lkkl.let WHERE id = %(id)s
+           RETURNING id""",
+        {"id": puvodni_id, "vlecny": vlecny_let_id, "zalozil": zalozil},
+    ).fetchone()["id"]
+    conn.execute(
+        """INSERT INTO lkkl.posadka (let_id, osoba_id, funkce_id)
+           SELECT %s, osoba_id, funkce_id FROM lkkl.posadka WHERE let_id = %s""",
+        (let_id, puvodni_id),
+    )
+    return let_id
+
+
+@router.post("/lety/{let_id}/dalsi", response_model=Provedeno)
+def dalsi(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+    """Další let odsud: naplánovaná kopie (u aerovleku i s vlečnou a vlekařem)."""
+    let = _let(conn, let_id)
+    vlecny = conn.execute("SELECT vlecny_let_id FROM lkkl.let WHERE id = %s", (let_id,)).fetchone()
+    with zmena(conn):
+        novy_vlecny = (
+            _kopie(conn, vlecny["vlecny_let_id"], None, p.osoba_id)
+            if vlecny["vlecny_let_id"]
+            else None
+        )
+        novy = _kopie(conn, let_id, novy_vlecny, p.osoba_id)
+    return Provedeno(let_id=novy, rejstrik=let["rejstrik"], akce="naplanovat", cas=None)
+
+
+class Uprava(BaseModel):
+    """Úprava z detailu: číslo verze a jen změněné údaje (prázdná hodnota = smazat)."""
+
+    verze: int
+    letadlo_id: int | None = None
+    pob: int | None = None
+    uloha_id: int | None = None
+    platce_id: int | None = None
+    plati_aeroklub: bool | None = None
+    poznamka: str | None = None
+    cas_vzletu: datetime | None = None
+    cas_pristani: datetime | None = None
+    misto_vzletu_id: int | None = None
+    misto_vzletu_popis: str | None = None
+    misto_pristani_id: int | None = None
+    misto_pristani_popis: str | None = None
+    pocet_pristani: int | None = None
+    doba_nulova: bool | None = None
+    posadka: list[ClenIn] | None = None
+
+
+# Místo je letiště, nebo popis (přistání do terénu) – zadané jedno smaže druhé.
+DRUHA_POLOVINA = {
+    "misto_vzletu_id": "misto_vzletu_popis",
+    "misto_vzletu_popis": "misto_vzletu_id",
+    "misto_pristani_id": "misto_pristani_popis",
+    "misto_pristani_popis": "misto_pristani_id",
+}
+
+
+@router.post("/lety/{let_id}")
+def upravit(
+    let_id: int,
+    data: Uprava,
+    _: Prihlaseny = Depends(prihlaseny),
+    conn: Connection = Depends(spojeni),
+):
+    """Úprava údajů letu; změnil-li let mezitím někdo jiný (jiná verze), odmítne se."""
+    let = _let(conn, let_id)
+    zmeny = data.model_dump(exclude_unset=True, exclude={"verze", "posadka"})
+    if isinstance(zmeny.get("poznamka"), str):
+        zmeny["poznamka"] = zmeny["poznamka"].strip() or None
+    for pole, druhe in DRUHA_POLOVINA.items():
+        if zmeny.get(pole) is not None and druhe not in zmeny:
+            zmeny[druhe] = None
+    if zmeny.get("platce_id") is not None:
+        zmeny["plati_aeroklub"] = False
+    elif zmeny.get("plati_aeroklub"):
+        zmeny["platce_id"] = None
+    with zmena(conn):
+        aktualni = conn.execute(
+            "SELECT verze, zruseni_duvod_id FROM lkkl.let WHERE id = %s FOR UPDATE", (let_id,)
+        ).fetchone()
+        if aktualni["verze"] != data.verze:
+            raise HTTPException(
+                409, f"{let['rejstrik']}: let mezitím změnil někdo jiný – ukazuji aktuální stav."
+            )
+        if aktualni["zruseni_duvod_id"] is not None:
+            raise HTTPException(409, "Zrušený let nejde upravit – nejdřív ho obnovte.")
+        # Sloupce jen z pevného seznamu modelu Uprava; i bez změny letu se zvýší verze.
+        nastavit = ", ".join(f"{s} = %({s})s" for s in zmeny) or "verze = verze"
+        conn.execute(
+            f"UPDATE lkkl.let SET {nastavit} WHERE id = %(id)s",  # noqa: S608
+            {**zmeny, "id": let_id},
+        )
+        if data.posadka is not None:
+            nove = {(c.osoba_id, c.funkce_id) for c in data.posadka}
+            stare = {
+                (r["osoba_id"], r["funkce_id"])
+                for r in conn.execute(
+                    "SELECT osoba_id, funkce_id FROM lkkl.posadka WHERE let_id = %s", (let_id,)
+                ).fetchall()
+            }
+            for osoba_id, funkce_id in stare - nove:
+                conn.execute(
+                    """DELETE FROM lkkl.posadka
+                       WHERE let_id = %s AND osoba_id = %s AND funkce_id = %s""",
+                    (let_id, osoba_id, funkce_id),
+                )
+            for osoba_id, funkce_id in nove - stare:
+                conn.execute(
+                    "INSERT INTO lkkl.posadka (let_id, osoba_id, funkce_id) VALUES (%s, %s, %s)",
+                    (let_id, osoba_id, funkce_id),
+                )
+    return detail(let_id, _, conn)
