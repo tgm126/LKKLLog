@@ -24,7 +24,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB), doba 0 u krátkého letu, počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
-| `v_let` | pohled | lety s odvozeným stavem, dnem, vlekem, účtovanou dobou, PIC, plátcem a příznakem „dodatečně“ | 009 |
+| `v_let` | pohled | lety s odvozeným stavem, dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011 |
 | `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G | 009 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat` | trigger | verze záznamu se zvyšuje; let nejde smazat | 009 |
@@ -39,8 +39,9 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 
 - **Let:** stav se neukládá – odvodí se (připravený = bez vzletu, ve vzduchu = vzlet bez
   přistání, ukončený = obojí, zrušený = důvod zrušení). **POB** (počet osob na palubě) je
-  jediný údaj o počtu lidí; pojem host se nezavádí – jménem jen funkce z `lov_funkce`
-  (normální let: jen PIC). Počet přistání vždy, časy T&G volitelně v podtabulce. Vlek se
+  jediný údaj o počtu lidí; pojem host se nezavádí. Kdo má funkci (žák, dozor, přezkoušený),
+  je uveden jménem; jinak jen PIC + POB. U výcviku, sóla a přezkoušení se POB nezadává –
+  odvodí se z posádky (skript 011). Počet přistání vždy, časy T&G volitelně v podtabulce. Vlek se
   odvodí z vazby kluzák–vlečná, „soukromé“ z letadla. Jedna úloha na let. Poznámka k letu.
 
 - **Přistání do terénu** není letiště: u letu cizí klíč na letiště, nebo popis místa (právě jedno).

@@ -40,6 +40,8 @@
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
   --sirka-akce-vpravo: 96px;  /* VZLET vedle údajů připraveného letu */
   --sirka-popisku: 108px;     /* sloupec popisků v detailu letu */
+  --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
+  --vrstva-nabidky: 1;        /* nabídka nad obsahem stránky */
 
   /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. */
   --barva-text:           light-dark(#1d2125, #e7e9ec);
@@ -95,11 +97,16 @@ h2, h3 { margin: 0; }
 .pruh { background: var(--barva-pruh); color: var(--barva-na-pruhu); text-align: center; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); padding: var(--mezera-1); }
 
 /* Hlavička */
-.hlavicka { padding: var(--mezera-2) var(--mezera-4) var(--mezera-1); border-bottom: var(--ramecek); }
-.hlavicka-radek { display: flex; align-items: center; gap: var(--mezera-2); }
-.hlavicka-radek .hodiny { margin-left: auto; }
-.hlavicka-den { font-size: var(--pismo-s); color: var(--barva-seda); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hlavicka-den b { color: var(--barva-text); font-weight: var(--tloustka-tucna); }
+.hlavicka { position: relative; padding: var(--mezera-2) var(--mezera-4); border-bottom: var(--ramecek); }
+.hlavicka-radek { display: flex; align-items: baseline; justify-content: space-between; gap: var(--mezera-2); }
+.hlavicka-radek + .hlavicka-radek { font-size: var(--pismo-s); color: var(--barva-seda); }
+.hlavicka-vpravo { display: flex; align-items: center; gap: var(--mezera-3); }
+
+/* Nabídka uživatele (pod iniciálami): režim zobrazení, odhlášení */
+.nabidka { position: absolute; top: 100%; right: var(--mezera-4); z-index: var(--vrstva-nabidky); display: none; min-width: var(--sirka-nabidky); padding: var(--mezera-2); border: var(--ramecek); border-radius: var(--zaobleni); background: var(--barva-pozadi); }
+.nabidka.otevrena { display: grid; gap: var(--mezera-1); }
+.nabidka .tl { text-align: left; font-weight: var(--tloustka); }
+.nabidka .tl[aria-pressed="true"] { --tl-vypln: var(--barva-modra-vypln); --tl-barva: var(--barva-modra); font-weight: var(--tloustka-tucna); }
 
 /* VÝJIMKA: kulatá tlačítka v hlavičce jsou menší než --dotyk – šetří místo, nejsou součástí
    provozního ovládání a používají se zřídka. */
@@ -144,12 +151,13 @@ h2, h3 { margin: 0; }
 .let.vzduch    { --let-vypln: var(--barva-modra-vypln);   --let-cas: var(--barva-modra); }
 .let.problem   { --let-vypln: var(--barva-cervena-vypln); --let-cas: var(--barva-cervena); }
 .let.pripraven { --let-vypln: var(--barva-neutralni); }
-.let.ukoncen   { --let-vypln: var(--barva-karta);         --let-okraj: var(--barva-cara); }
+.let.ukoncen   { --let-vypln: var(--barva-zelena-vypln); }
 .let.zrusen    { --let-vypln: var(--barva-karta);         --let-okraj: var(--barva-cara); color: var(--barva-seda); }
 
 .let-radek { display: flex; align-items: baseline; gap: var(--mezera-2); }
 .let-radek + .let-radek { margin-top: var(--mezera-1); }
 .let-typ { font-size: var(--pismo-s); color: var(--barva-seda); }
+.funkce { font-size: var(--pismo-s); color: var(--barva-seda); }   /* popisek funkce za jménem (PIC, žák) */
 .let-vpravo { margin-left: auto; }
 .let-cas { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); color: var(--let-cas, var(--barva-text)); }
 .let-duvod { margin-top: var(--mezera-1); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-cervena); }
@@ -209,11 +217,19 @@ h2, h3 { margin: 0; }
   <header class="hlavicka">
     <div class="hlavicka-radek">
       <span class="velke tucne">LKKL Log</span>
-      <span class="hodiny cisla tucne" id="utc">21:29:05 UTC</span>
-      <button class="kulate" id="rezim" title="Režim zobrazení">◐</button>
-      <button class="kulate">TM</button>
+      <span class="hlavicka-vpravo">
+        <span><span class="velke tucne cisla" id="utc">21:29:05</span> <span class="male seda">UTC</span></span>
+        <button class="kulate" id="uzivatel" aria-label="Nabídka uživatele" aria-expanded="false">TM</button>
+      </span>
     </div>
-    <div class="hlavicka-den cisla">Pondělí 5. 10. · TB <b>04:47</b> · SR <b>05:19</b> · SS <b>16:33</b> · TE <b>17:06</b> UTC</div>
+    <div class="hlavicka-radek cisla"><span>Pondělí 5. 10.</span><span>TB 04:47 · SR 05:19 · SS 16:33 · TE 17:06</span></div>
+    <div class="nabidka" id="nabidka">
+      <span class="nadpisek">Režim zobrazení</span>
+      <button class="tl bez-ramu" data-rezim="auto">Podle zařízení</button>
+      <button class="tl bez-ramu" data-rezim="svetly">Světlý</button>
+      <button class="tl bez-ramu" data-rezim="tmavy">Tmavý</button>
+      <button class="tl obrys">Odhlásit</button>
+    </div>
   </header>
 
   <nav class="menu">
@@ -234,7 +250,7 @@ h2, h3 { margin: 0; }
           <span class="velke tucne">OK-CWF</span><span class="let-typ">Cessna F 172</span>
           <span class="let-vpravo let-cas cisla" data-od="2135">0:35:35</span>
         </div>
-        <div class="let-radek">Tomáš Mandlík</div>
+        <div class="let-radek"><b>Tomáš Mandlík</b><span class="funkce">PIC</span></div>
         <div class="stitky"><span class="stitek cisla">vzlet 20:54</span><span class="stitek">POB 2</span></div>
         <div class="let-duvod">Po konci občanského soumraku (TE 17:06)</div>
         <div class="let-akce"><button class="tl svetle" data-akce="tg">T&amp;G <span class="cisla" data-tg>2</span></button><button class="tl zelene hlavni" data-akce="pristal">Přistál</button></div>
@@ -245,8 +261,8 @@ h2, h3 { margin: 0; }
           <span class="velke tucne">OK-2817</span><span class="let-typ">L 13</span>
           <span class="let-vpravo let-cas cisla" data-od="754">0:12:34</span>
         </div>
-        <div class="let-radek">Pavel Pačes · Bára Žák <span class="seda male">žák</span></div>
-        <div class="stitky"><span class="stitek cisla">vzlet 21:16</span><span class="stitek">POB 2</span><span class="stitek">výcvik</span><span class="stitek">naviják</span></div>
+        <div class="let-radek"><b>Pavel Pačes</b><span class="funkce">PIC</span><span>Bára Žák</span><span class="funkce">žák</span></div>
+        <div class="stitky"><span class="stitek cisla">vzlet 21:16</span><span class="stitek">výcvik</span><span class="stitek">naviják</span></div>
         <div class="let-akce"><button class="tl zelene hlavni" data-akce="pristal">Přistál</button></div>
       </div>
     </div>
@@ -258,7 +274,7 @@ h2, h3 { margin: 0; }
         <div class="let-vedle">
           <div>
             <div class="let-radek"><span class="velke tucne">OK-3819</span><span class="let-typ">L 13</span></div>
-            <div class="male seda">Ivan Pilot · POB 1 · naviják</div>
+            <div class="let-radek"><b>Ivan Pilot</b><span class="funkce">PIC · POB 1 · naviják</span></div>
           </div>
           <button class="tl modre hlavni" data-akce="vzlet">Vzlet</button>
         </div>
@@ -269,11 +285,11 @@ h2, h3 { margin: 0; }
           <div>
             <div class="let-par">
               <div class="let-radek"><span class="velke tucne">OK-6722</span><span class="let-typ">ASW 20</span></div>
-              <div class="male seda">Adam Pilot · POB 1 · aerovlek</div>
+              <div class="let-radek"><b>Adam Pilot</b><span class="funkce">PIC · POB 1 · aerovlek</span></div>
             </div>
             <div class="let-par">
               <div class="let-radek"><span class="velke tucne">OK-CRA</span><span class="let-typ">Z 526 · vlečná</span></div>
-              <div class="male seda">Gustav Vlekař · POB 1</div>
+              <div class="let-radek"><b>Gustav Vlekař</b><span class="funkce">PIC · POB 1</span></div>
             </div>
           </div>
           <button class="tl modre hlavni" data-akce="vzlet">Vzlet</button>
@@ -285,19 +301,19 @@ h2, h3 { margin: 0; }
     <button class="sekce" aria-expanded="true"><span class="sekce-sipka">▾</span><h2 class="nadpisek">Ukončené 4</h2><span class="sekce-vpravo male seda cisla">celkem 2°11"</span></button>
     <div class="sekce-telo">
       <div class="let ukoncen" data-let="mfv">
-        <div class="let-radek"><b>OK-MFV</b><span>Adam Pilot</span><span class="let-vpravo tucne cisla">45"</span></div>
+        <div class="let-radek"><b>OK-MFV</b><b>Adam Pilot</b><span class="funkce">PIC</span><span class="let-vpravo tucne cisla">45"</span></div>
         <div class="stitky"><span class="stitek cisla">19:29 → LKLT 20:14</span><span class="stitek">POB 2</span><span class="stitek">3 přistání</span></div>
       </div>
       <div class="let ukoncen" data-let="5626">
-        <div class="let-radek"><b>OK-5626</b><span>Ivan Pilot</span><span class="let-vpravo tucne cisla">1°02"</span></div>
+        <div class="let-radek"><b>OK-5626</b><b>Ivan Pilot</b><span class="funkce">PIC</span><span class="let-vpravo tucne cisla">1°02"</span></div>
         <div class="stitky"><span class="stitek cisla">18:40 → 19:42</span><span class="stitek">POB 1</span><span class="stitek">aerovlek</span></div>
       </div>
       <div class="let ukoncen" data-let="cra">
-        <div class="let-radek"><b>OK-CRA</b><span>Gustav Vlekař</span><span class="let-vpravo tucne cisla">9"</span></div>
+        <div class="let-radek"><b>OK-CRA</b><b>Gustav Vlekař</b><span class="funkce">PIC</span><span class="let-vpravo tucne cisla">9"</span></div>
         <div class="stitky"><span class="stitek cisla">18:40 → 18:49</span><span class="stitek">POB 1</span><span class="stitek">vleče OK-5626</span></div>
       </div>
       <div class="let ukoncen" data-let="cuo">
-        <div class="let-radek"><b>OK-CUO 78</b><span>Pavel Pačes</span><span class="let-vpravo tucne cisla">15"</span></div>
+        <div class="let-radek"><b>OK-CUO 78</b><b>Pavel Pačes</b><span class="funkce">PIC</span><span class="let-vpravo tucne cisla">15"</span></div>
         <div class="stitky"><span class="stitek cisla">17:02 → 17:17</span><span class="stitek">POB 1</span><span class="stitek">dodatečně</span><span class="stitek oranzovy">opraveno</span></div>
       </div>
     </div>
@@ -306,7 +322,7 @@ h2, h3 { margin: 0; }
     <button class="sekce" aria-expanded="false"><span class="sekce-sipka">▾</span><h2 class="nadpisek">Zrušené 1</h2></button>
     <div class="sekce-telo">
       <div class="let zrusen" data-let="7114">
-        <div class="let-radek"><b>OK-7114</b><span>Ivan Pilot</span><span class="let-vpravo male">Počasí</span></div>
+        <div class="let-radek"><b>OK-7114</b><span>Ivan Pilot</span><span class="funkce">PIC</span><span class="let-vpravo male">Počasí</span></div>
       </div>
     </div>
 
@@ -335,7 +351,7 @@ h2, h3 { margin: 0; }
 
 <aside class="legenda">
   <h3 class="nadpisek">Pásky – jen to, podle čeho se jedná</h3>
-  <p class="male">Běžný případ je tichý: štítky jen při odchylce (účel ≠ normální, naviják / vlek, místo ≠ domovské). <b>POB</b> vždy. Jménem jen PIC (u výcviku i žák).</p>
+  <p class="male">Běžný případ je tichý: štítky jen při odchylce (účel ≠ normální, naviják / vlek, místo ≠ domovské). <b>PIC</b> vždy tučně s popiskem. <b>POB</b> vždy – kromě výcviku, sóla a přezkoušení, kde se odvodí z posádky. Kdo má funkci (žák, dozor, přezkoušený), je uveden jménem.</p>
   <p class="male">Ve vzduchu podle času vzletu; připravené v pořadí založení (vlek jako jeden dvojitý pásek s jedním VZLET); ukončené od nejnovějšího; zrušené sbalené na konci.</p>
   <p class="male">T&amp;G jen u motorových, TMG a UL – počet je přímo na tlačítku.</p>
 
@@ -346,7 +362,7 @@ h2, h3 { margin: 0; }
   <p class="male">Po VZLET, PŘISTÁL a T&amp;G se nad tlačítkem Nový let na 6 s objeví lišta s časem a tlačítkem ZPĚT.</p>
 
   <h3 class="nadpisek">Ovládání makety</h3>
-  <p class="male">◐ režim (podle zařízení → světlý → tmavý), nadpis sekce sbalí / rozbalí.</p>
+  <p class="male">Iniciály vpravo nahoře: režim zobrazení a odhlášení. Nadpis sekce sbalí / rozbalí. Ukončené lety mají zelenou výplň (hotovo).</p>
   <p class="male seda" id="rezim-text"></p>
 </aside>
 
@@ -359,7 +375,7 @@ h2, h3 { margin: 0; }
       casy: [['Vzlet', 'LKKL 20:54:12'], ['T&G', '2 · 20:58, 21:03'], ['Přistání', '']],
       platba: 'Tomáš Mandlík', poznamka: '', evidence: [['Založil', 'Eva Časoměřič · 20:50']] },
     2817: { rejstrik: 'OK-2817', typ: 'L 13 · Kluzák', stav: 'vzduch',
-      posadka: [['PIC', 'Pavel Pačes'], ['Žák', 'Bára Žák'], ['POB', '2']],
+      posadka: [['PIC', 'Pavel Pačes'], ['Žák', 'Bára Žák']],
       let: [['Účel', 'Výcvik'], ['Úloha', 'B3 – okruhy (s osnovami)'], ['Způsob vzletu', 'Naviják']],
       casy: [['Vzlet', 'LKKL 21:16:40'], ['Přistání', '']],
       platba: 'Bára Žák', poznamka: '', evidence: [['Založil', 'Pavel Pačes · 21:05']] },
@@ -467,12 +483,20 @@ h2, h3 { margin: 0; }
   function nastavitRezim(r) {
     koren.dataset.rezim = r;
     document.getElementById('rezim-text').textContent = `Režim: ${NAZVY[r]}`;
+    document.querySelectorAll('#nabidka [data-rezim]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.rezim === r));
     try { localStorage.setItem('lkkl-rezim', r); } catch {}
   }
   let ulozeny = 'auto';
   try { ulozeny = localStorage.getItem('lkkl-rezim') || 'auto'; } catch {}
   nastavitRezim(REZIMY.includes(ulozeny) ? ulozeny : 'auto');
-  document.getElementById('rezim').addEventListener('click', () => nastavitRezim(REZIMY[(REZIMY.indexOf(koren.dataset.rezim) + 1) % REZIMY.length]));
+  const uzivatel = document.getElementById('uzivatel');
+  const nabidka = document.getElementById('nabidka');
+  uzivatel.addEventListener('click', () => {
+    const otevrit = !nabidka.classList.contains('otevrena');
+    nabidka.classList.toggle('otevrena', otevrit);
+    uzivatel.setAttribute('aria-expanded', otevrit);
+  });
+  nabidka.querySelectorAll('[data-rezim]').forEach((b) => b.addEventListener('click', () => nastavitRezim(b.dataset.rezim)));
 
   document.querySelectorAll('.sekce').forEach((s) =>
     s.addEventListener('click', () => s.setAttribute('aria-expanded', s.getAttribute('aria-expanded') === 'false'))
@@ -480,7 +504,7 @@ h2, h3 { margin: 0; }
 
   const start = Date.now();
   setInterval(() => {
-    document.getElementById('utc').textContent = `${cas()} UTC`;
+    document.getElementById('utc').textContent = cas();
     document.querySelectorAll('[data-od]').forEach((el) => {
       const s = Number(el.dataset.od) + Math.floor((Date.now() - start) / 1000);
       el.textContent = `${Math.floor(s / 3600)}:${dve(Math.floor(s / 60) % 60)}:${dve(s % 60)}`;
