@@ -49,3 +49,9 @@
 .dlazdice:disabled {
   cursor: not-allowed;
 }
+
+/* Sekce průvodce oddělené čarou (účel, PIC, POB…) */
+.pruvodce .blok + .blok {
+  margin-top: var(--mezera-2);
+  border-top: var(--ramecek);
+}

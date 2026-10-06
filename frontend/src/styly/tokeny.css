@@ -43,9 +43,12 @@
   --dotyk: 44px;              /* nejmenší tlačítko ovládané palcem */
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
+  --sloupce-udaju: 3.4fr 2fr 2fr 1.5fr 1.5fr; /* údaje letu: čas · účel · vzlet · POB · úloha */
   --sirka-popisku: 108px;     /* sloupec popisků v detailu letu */
   --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
-  --vrstva-nabidky: 1;        /* nabídka nad obsahem stránky */
+  --vrstva-zastinu: 1;        /* zástin pod nabídkou: ťuknutí vedle ji zavře */
+  --vrstva-nabidky: 2;        /* nabídka nad obsahem stránky */
+  --vrstva-dialogu: 3;        /* dialog (krátký let) nad vším */
   --pruhlednost-neaktivni: .4; /* tlačítko, které zatím nejde použít */
   --vyska-okna: 100dvh;       /* celá výška displeje (bez lišty prohlížeče na mobilu) */
   --sirka-mobilu: 480px;      /* na velké obrazovce mobilní návrh jako sloupec, než vznikne
@@ -76,6 +79,7 @@
   --barva-na-akci:     #fff;
   --barva-pruh:        #fcc419;
   --barva-na-pruhu:    #1d2125;
+  --barva-zastin:      rgb(0 0 0 / 45%);  /* pod dialogem – ztmaví stránku v obou režimech */
   --barva-oznameni:    #24292f;   /* lišta „Zpět“ – tmavá v obou režimech, aby vystoupila */
   --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
 }

@@ -5,18 +5,20 @@ import { doba, hodinyMinuty, stopky } from "../cas";
 import { Stitek, Stitky } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useTik } from "../tik";
-import type { Akce } from "./akce";
+import type { Akce, LetKPristani } from "./akce";
 import { useDen, type Clen, type Pasek as PasekLetu } from "./api";
 import "./Pasek.css";
 
-// Pásky podle makety docs/navrhy/lety-mobil.html. Pod posádkou řádek štítků se stálým
-// pořadím (stejný význam na stejném místě u všech pásků):
+// Pásky podle makety docs/navrhy/lety-mobil.html. Pod posádkou řádek údajů v pevných
+// sloupcích (stejný údaj vždy na stejném místě, i když chybí):
 //   1 čas (a letiště, není-li domovské) · 2 účel · 3 způsob vzletu · 4 POB · 5 úloha;
-// za nimi doplňky v jiném vzhledu (počet přistání, dodatečně).
+// pod nimi doplňky jen s rámečkem (počet přistání, dodatečně).
 
 const malymi = (text: string) => text.toLocaleLowerCase("cs-CZ");
 /** „Vlastní (motorem)“ → „vlastní“ – na štítku jen krátce. */
 const kratce = (text: string) => malymi(text.replace(/\s*\(.*\)\s*/, ""));
+/** Krátké názvy účelů, aby se vešly do sloupce (jinak název z číselníku). */
+const UCEL_KRATCE: Record<string, string> = { VYCVIK_SOLO: "sólo", PREZKOUSENI: "přezk." };
 
 const misto = (kod: string | null, cas: string | null) =>
   [kod, cas && hodinyMinuty(cas)].filter(Boolean).join(" ");
@@ -29,26 +31,31 @@ function UdajeLetu({ let: l }: { let: PasekLetu }) {
       : l.stav === "VE_VZDUCHU"
         ? misto(l.misto_vzletu, l.cas_vzletu)
         : `${misto(l.misto_vzletu, l.cas_vzletu)} → ${misto(l.misto_pristani, l.cas_pristani)}`;
+  const ucel = l.je_vlecny
+    ? "vlek"
+    : l.ucel_kod && (UCEL_KRATCE[l.ucel_kod] ?? (l.ucel && malymi(l.ucel)));
+  const sloupce = [cas, ucel, kratce(l.zpusob_vzletu), `POB ${l.pob}`, l.uloha?.split(" ")[0]];
+  const doplnky = [
+    (l.pocet_pristani ?? 1) > 1 && `${l.pocet_pristani} přistání`,
+    l.dodatecne && "dodatečně",
+  ].filter((d): d is string => !!d);
   return (
-    <Stitky>
-      {[
-        cas && <Stitek key="cas">{cas}</Stitek>,
-        <Stitek key="ucel">{l.je_vlecny ? "vlek" : l.ucel ? malymi(l.ucel) : "—"}</Stitek>,
-        <Stitek key="zpusob">{kratce(l.zpusob_vzletu)}</Stitek>,
-        <Stitek key="pob">POB {l.pob}</Stitek>,
-        l.uloha && <Stitek key="uloha">{l.uloha.split(" ")[0]}</Stitek>,
-        (l.pocet_pristani ?? 1) > 1 && (
-          <Stitek key="pristani" barva="obrys">
-            {l.pocet_pristani} přistání
-          </Stitek>
-        ),
-        l.dodatecne && (
-          <Stitek key="dodatecne" barva="obrys">
-            dodatečně
-          </Stitek>
-        ),
-      ]}
-    </Stitky>
+    <>
+      <div className="udaje">
+        {sloupce.map((u, i) => (
+          <span key={i}>{u && <Stitek>{u}</Stitek>}</span>
+        ))}
+      </div>
+      {doplnky.length > 0 && (
+        <Stitky>
+          {doplnky.map((d) => (
+            <Stitek key={d} barva="obrys">
+              {d}
+            </Stitek>
+          ))}
+        </Stitky>
+      )}
+    </>
   );
 }
 
@@ -83,12 +90,22 @@ function Polovina({ letId, children }: { letId: number; children: ReactNode }) {
 }
 
 /** Akce z pásku: provést (letId, akce); zaneprázdněn = akce tohoto letu právě běží. */
-type AkcePasku = { provest: (letId: number, akce: Akce) => void; zaneprazdnen: boolean };
+type AkcePasku = {
+  provest: (letId: number, akce: Akce) => void;
+  /** PŘISTÁL – u letu kratšího než minuta se nejdřív zeptá. */
+  pristat: (l: LetKPristani) => void;
+  zaneprazdnen: boolean;
+};
 
 
 /** Let ve vzduchu; vlek jako dvojitý pásek, dokud jsou ve vzduchu kluzák i vlečná
  *  (každý má své stopky a PŘISTÁL). */
-export function PasekVeVzduchu({ lety, provest, zaneprazdnen }: { lety: PasekLetu[] } & AkcePasku) {
+export function PasekVeVzduchu({
+  lety,
+  provest,
+  pristat,
+  zaneprazdnen,
+}: { lety: PasekLetu[] } & AkcePasku) {
   const ted = useTik();
   return (
     <div className={`let ${lety.some((l) => l.varovani) ? "problem" : "vzduch"}`}>
@@ -121,7 +138,7 @@ export function PasekVeVzduchu({ lety, provest, zaneprazdnen }: { lety: PasekLet
               varianta="zelene"
               hlavni
               disabled={zaneprazdnen}
-              onClick={() => provest(l.id, "pristani")}
+              onClick={() => pristat(l)}
             >
               Přistál
             </Tlacitko>

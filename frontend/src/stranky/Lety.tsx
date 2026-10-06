@@ -31,7 +31,7 @@ function dvojice(lety: Pasek[]): Pasek[][] {
 /** Přehled letů dne: ve vzduchu, naplánované, ukončené, zrušené (maketa lety-mobil.html). */
 export function Lety() {
   const { data: lety, error, dataUpdatedAt } = useLety();
-  const { provest, probiha } = useAkceLetu();
+  const { provest, pristat, dialog, probiha } = useAkceLetu();
   const navigate = useNavigate();
   const dole = (
     <div className="dole">
@@ -51,6 +51,7 @@ export function Lety() {
   }
   const akce = (lety: Pasek[]) => ({
     provest,
+    pristat,
     zaneprazdnen: lety.some((l) => l.id === probiha?.letId),
   });
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
@@ -99,6 +100,7 @@ export function Lety() {
       )}
     </main>
     {dole}
+    {dialog}
     </>
   );
 }

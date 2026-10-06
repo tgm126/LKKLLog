@@ -265,3 +265,54 @@ def test_probehly_let_se_prekryva(conn, pilot, let, flotila):
     odpoved = k.post("/api/lety", json=data)
     # (hláška jmenuje druhý z letů, které se překrývají – podle toho, který se kontroloval první)
     assert odpoved.status_code == 400 and "na palubě jiného letu" in odpoved.json()["detail"]
+
+
+def test_doba_nejmene_minuta(conn, pilot, let):
+    pilot_id, k = pilot
+    let_id = let("OK-CRA", {"PIC": pilot_id}, zpusob="VLASTNI", vzlet="now()")
+    k.post(f"/api/lety/{let_id}/pristani")  # v transakci testu stejný čas = 0 s
+    doba = conn.execute(
+        "SELECT doba_min, doba_uctovana_min FROM lkkl.v_let WHERE id = %s", (let_id,)
+    ).fetchone()
+    assert doba == {"doba_min": 1, "doba_uctovana_min": 1}
+
+
+def test_zruseni_vleku_po_vzletu_jen_jeden(conn, pilot, osoba, let):
+    """Kluzák po přetrženém laně se zruší, vlečná letí dál."""
+    pilot_id, k = pilot
+    vlekar = osoba("Vlekar")
+    vlecna = let("OK-CRA", {"PIC": vlekar}, ucel=None, zpusob="VLASTNI", vzlet="now()")
+    kluzak = let("OK-3819", {"PIC": pilot_id}, zpusob="VLEK", vlecny_let_id=vlecna, vzlet="now()")
+    preruseny = _id(conn, "lov_duvod_zruseni", "PRERUSENY_VZLET")
+    assert k.post(f"/api/lety/{kluzak}/zrusit", json={"duvod_id": preruseny}).status_code == 200
+    assert _stav(conn, kluzak)["stav"] == "ZRUSEN"
+    assert _stav(conn, vlecna)["stav"] == "VE_VZDUCHU"
+
+
+def test_novy_let_mista(conn, pilot, flotila):
+    pilot_id, k = pilot
+    letnany = _id(conn, "lov_letiste", "LKLT")
+    casy = conn.execute(
+        "SELECT now() - interval '50 minutes' AS v, now() - interval '10 minutes' AS p"
+    ).fetchone()
+    data = _novy(
+        conn, rejstrik="OK-CRA", zpusob="VLASTNI", posadka={"PIC": pilot_id}, pob=1,
+        akce="probehly", cas_vzletu=casy["v"].isoformat(), cas_pristani=casy["p"].isoformat(),
+        misto_vzletu_id=letnany, misto_pristani_popis="  pole u Slaného ",
+    )  # fmt: skip
+    odpoved = k.post("/api/lety", json=data)
+    assert odpoved.status_code == 200, odpoved.text
+    let = conn.execute(
+        "SELECT misto_vzletu, misto_pristani FROM lkkl.v_let WHERE id = %s",
+        (odpoved.json()["let_id"],),
+    ).fetchone()
+    assert let == {"misto_vzletu": "LKLT", "misto_pristani": "pole u Slaného"}
+    # Nezadané místo vzletu = domovské letiště.
+    plan = _novy(conn, rejstrik="OK-2817", posadka={"PIC": pilot_id}, pob=1, akce="naplanovat")
+    plan_id = k.post("/api/lety", json=plan).json()["let_id"]
+    assert (
+        _id(conn, "lov_letiste", "LKKL")
+        == conn.execute(
+            "SELECT misto_vzletu_id FROM lkkl.let WHERE id = %s", (plan_id,)
+        ).fetchone()["misto_vzletu_id"]
+    )

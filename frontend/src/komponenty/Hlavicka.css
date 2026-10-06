@@ -37,6 +37,13 @@
   font-weight: var(--tloustka-tucna);
 }
 
+/* Zástin pod otevřenou nabídkou: ťuknutí vedle nabídku jen zavře */
+.zastin {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vrstva-zastinu);
+}
+
 /* Nabídka uživatele pod iniciálami: kdo je přihlášen, režim zobrazení, odhlášení */
 .nabidka {
   position: absolute;

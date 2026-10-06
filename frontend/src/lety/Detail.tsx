@@ -7,7 +7,6 @@ import { doba, hodinyMinuty, hodinyMinutySekundy, ted } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
 import { Blok, Obrazovka } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
-import { Pole } from "../komponenty/Pole";
 import { Stitek, type BarvaStitku } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useJa } from "../uzivatel";
@@ -15,6 +14,7 @@ import { useAkceLetu, type Provedeno } from "./akce";
 import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from "./api";
 import { jmeno, PIC_NAZEV, VolbaPoctu, VolbaUlohy } from "./Pruvodce";
 import { denUtc, minutyUtc, VyberCasu } from "./VyberCasu";
+import { VyberMista } from "./VyberMista";
 import "./Detail.css";
 import "./Volby.css";
 
@@ -277,15 +277,6 @@ function DetailLetuObrazovka({
               popisek="Doba"
               hodnota={<b className="cisla">{doba(l.doba_uctovana_min ?? 0)}</b>}
             />
-            {(l.doba_min ?? 0) <= 1 && (
-              <Udaj
-                popisek="Start bez doby"
-                hodnota={l.doba_nulova ? "ano" : "ne"}
-                {...(lzeUpravit
-                  ? { upravit: () => ulozit({ doba_nulova: !l.doba_nulova }) }
-                  : {})}
-              />
-            )}
             <Udaj popisek="Přistání celkem" hodnota={l.pocet_pristani} {...u("pocet_pristani")}>
               <VolbaPoctu
                 pocet={5}
@@ -387,48 +378,6 @@ function UpravaCasu({
   );
 }
 
-/** Letiště (hledání podle kódu nebo názvu) nebo jiné místo popisem (přistání do terénu). */
-function VyberMista({
-  nabidky,
-  ulozit,
-}: {
-  nabidky: Nabidky;
-  ulozit: (id: number | null, popis: string | null) => void;
-}) {
-  const [hledat, setHledat] = useState("");
-  const [popis, setPopis] = useState("");
-  const h = hledat.trim().toLocaleLowerCase("cs-CZ");
-  const letiste = [...nabidky.letiste]
-    .sort((a, b) => Number(b.domovske) - Number(a.domovske))
-    .filter((x) => !h || `${x.kod} ${x.nazev}`.toLocaleLowerCase("cs-CZ").includes(h))
-    .slice(0, 12);
-  return (
-    <>
-      <Pole
-        popisek="Hledat letiště (kód nebo název)"
-        value={hledat}
-        onChange={(e) => setHledat(e.target.value)}
-        autoCapitalize="characters"
-      />
-      <div className="navrhy">
-        {letiste.map((x) => (
-          <Tlacitko key={x.id} varianta="obrys" onClick={() => ulozit(x.id, null)}>
-            {x.kod} {x.nazev}
-          </Tlacitko>
-        ))}
-      </div>
-      <Pole
-        popisek="Jiné místo (přistání do terénu)"
-        value={popis}
-        onChange={(e) => setPopis(e.target.value)}
-      />
-      <Tlacitko varianta="obrys" disabled={!popis.trim()} onClick={() => ulozit(null, popis.trim())}>
-        Uložit místo
-      </Tlacitko>
-    </>
-  );
-}
-
 function UpravaPoznamky({ puvodni, ulozit }: { puvodni: string; ulozit: (p: string) => void }) {
   const [text, setText] = useState(puvodni);
   return (
@@ -449,7 +398,7 @@ function UpravaPoznamky({ puvodni, ulozit }: { puvodni: string; ulozit: (p: stri
 // --- akce: podle stavu letu, zrušení s důvodem -------------------------------------------------
 
 function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky }) {
-  const { provest, probiha } = useAkceLetu();
+  const { provest, pristat, dialog, probiha } = useAkceLetu();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const oznamit = useOznamit();
@@ -500,6 +449,7 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
 
   return (
     <>
+      {dialog}
       <Oznameni />
       {l.stav === "VE_VZDUCHU" && (
         <div className="akce-vedle">
@@ -512,7 +462,7 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
             varianta="zelene"
             hlavni
             disabled={zaneprazdnen}
-            onClick={() => provest(l.id, "pristani")}
+            onClick={() => pristat(l)}
           >
             Přistál
           </Tlacitko>

@@ -33,6 +33,9 @@ test("přihlášení s chybou a odhlášení", async ({ page }) => {
   await uzivatel.click();
   await page.getByRole("button", { name: "Tmavý" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-rezim", "tmavy");
+  // Po volbě režimu se nabídka zavře.
+  await expect(page.getByRole("button", { name: "Odhlásit" })).toBeHidden();
+  await uzivatel.click();
   await page.getByRole("button", { name: "Odhlásit" }).click();
   await expect(page.getByRole("heading", { name: "AK Kladno Log" })).toBeVisible();
   await expect(page).toHaveURL(/\/prihlaseni$/);

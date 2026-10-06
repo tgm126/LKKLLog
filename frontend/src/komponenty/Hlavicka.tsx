@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 
 import { poslat, type Ja } from "../api";
@@ -69,30 +69,22 @@ function DenASlunce() {
 function NabidkaUzivatele({ ja }: { ja: Ja }) {
   const [otevrena, setOtevrena] = useState(false);
   const [rezim, setRezim] = useState<Rezim>(nacistRezim);
-  const obal = useRef<HTMLSpanElement>(null);
   const qc = useQueryClient();
   const odhlasit = useMutation({
     mutationFn: () => poslat("/odhlaseni"),
     onSettled: () => zmenitUzivatele(qc, null),
   });
 
-  // Zavřít ťuknutím mimo nabídku nebo klávesou Esc.
+  // Zavřít klávesou Esc; ťuknutí mimo nabídku zachytí zástin (neprojde na pásek pod ním).
   useEffect(() => {
     if (!otevrena) return;
-    const mimo = (e: PointerEvent) => {
-      if (!obal.current?.contains(e.target as Node)) setOtevrena(false);
-    };
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setOtevrena(false);
-    document.addEventListener("pointerdown", mimo);
     document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("pointerdown", mimo);
-      document.removeEventListener("keydown", esc);
-    };
+    return () => document.removeEventListener("keydown", esc);
   }, [otevrena]);
 
   return (
-    <span ref={obal}>
+    <span>
       <button
         className="kulate"
         aria-label="Nabídka uživatele"
@@ -101,6 +93,7 @@ function NabidkaUzivatele({ ja }: { ja: Ja }) {
       >
         {inicialy(ja)}
       </button>
+      {otevrena && <div className="zastin" onClick={() => setOtevrena(false)} />}
       {otevrena && (
         <div className="nabidka">
           <div className="nabidka-kdo">
@@ -118,6 +111,7 @@ function NabidkaUzivatele({ ja }: { ja: Ja }) {
               onClick={() => {
                 nastavitRezim(r.rezim);
                 setRezim(r.rezim);
+                setOtevrena(false);
               }}
             >
               {r.nazev}

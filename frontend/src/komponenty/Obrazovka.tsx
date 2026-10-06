@@ -10,6 +10,7 @@ export function Obrazovka({
   nadpis,
   vpravo,
   akce,
+  trida,
   children,
 }: {
   zpet: () => void;
@@ -18,10 +19,12 @@ export function Obrazovka({
   nadpis: ReactNode;
   vpravo?: ReactNode;
   akce?: ReactNode;
+  /** Varianta obrazovky (např. „pruvodce“ – oddělené sekce). */
+  trida?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="obrazovka">
+    <section className={["obrazovka", trida].filter(Boolean).join(" ")}>
       <div className="horni-lista">
         <Tlacitko varianta="bez-ramu" aria-label={zpetPopis} onClick={zpet}>
           {zpetPopis === "Zavřít" ? "✕" : "←"}

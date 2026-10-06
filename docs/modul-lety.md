@@ -64,12 +64,19 @@ volně, dozor na zemi se nepočítá. **Vlek** je dvojitý pásek, dokud je napl
 ve vzduchu; jednotlivě (po přistání vlečné) má vlečná štítek „vlek“. Ťuknutí na polovinu
 dvojice otevře detail jejího letu.
 
-**Štítky na páscích** (rozhodnuto při testování 6. 10. 2026, nahrazuje „štítky jen při
-odchylce“ z makety): pod posádkou jeden řádek štítků ve **stálém pořadí** – 1 čas (a letiště,
-není-li domovské; u naplánovaného letiště vzletu), 2 účel (u vlečné „vlek“), 3 způsob vzletu,
-4 POB (u výcviku z posádky), 5 označení úlohy (IU/4). Za nimi doplňky jen s rámečkem (počet
+**Údaje na páscích** (rozhodnuto při testování 6. 10. 2026, nahrazuje „štítky jen při
+odchylce“ z makety): pod posádkou řádek štítků v **pevných sloupcích** – každý údaj vždy na
+stejném místě, i když chybí: 1 čas (a letiště, není-li domovské; u naplánovaného letiště
+vzletu), 2 účel (u vlečné „vlek“; „sólo“, „přezk.“ zkráceně), 3 způsob vzletu, 4 POB (u výcviku
+z posádky), 5 označení úlohy (IU/4). Šířky sloupců s rezervou (token `--sloupce-udaju`);
+let z jiného letiště má čas delší a řádek se posune. Pod nimi doplňky jen s rámečkem (počet
 přistání, dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
 páskem přes celou šířku (jako PŘISTÁL).
+
+**Průvodce:** sekce oddělené čarou; **místo vzletu** (a u proběhlého letu **místo přistání**)
+je předvyplněné domovským letištěm, „Jiné…“ otevře hledání letiště nebo popis místa.
+**Zrušení vleku:** naplánovaný vlek se ruší celý, po vzletu jen zvolený let (kluzák po
+přetrženém laně – vlečná letí dál).
 
 ### 3.2 Souběh (víc lidí najednou)
 - **Stisk platí jen jednou:** VZLET u letadla, které už vzlétlo, vrátí 409 a zprávu
@@ -140,8 +147,9 @@ frontend/
 1. **Kdo smí co:** každý přihlášený smí zakládat lety, ovládat je, upravovat i rušit; omezení
    přijdou s uzávěrkami.
 2. **Zpět** jen 6 s po akci (lišta), ne později.
-3. **Krátký let do 1 minuty:** zatím bez dotazu při přistání; v detailu přepínač „start bez
-   doby“ (`doba_nulova`). Dotaz přidáme, ukáže-li ho praxe.
+3. **Krátký let do 1 minuty:** doba letu se zapisuje nejméně jako 1 minuta (`db/020`). PŘISTÁL
+   u letu kratšího než minuta se zeptá: **počítat** (1 minuta), nebo **zrušit** jako přerušený
+   vzlet. Přepínač „start bez doby“ (`doba_nulova`) zrušen.
 4. **Obnovování přehledu** každých 10 s.
 5. **Fáze testování 1** na serveru – nejdřív se rozchodí standardní nasazení (samostatný
    návrh `docs/nasazeni.md`).

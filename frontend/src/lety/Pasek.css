@@ -90,3 +90,19 @@
   flex: 2;
 }
 
+
+/* Údaje letu v pevných sloupcích: čas · účel · způsob vzletu · POB · úloha. Šířky sloupců
+   s rezervou pro nejdelší obsah (tokeny); delší text se zkrátí třemi tečkami. */
+.udaje {
+  display: grid;
+  grid-template-columns: var(--sloupce-udaju);
+  gap: var(--mezera-1);
+  margin-top: var(--mezera-1);
+}
+
+.udaje .stitek {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}

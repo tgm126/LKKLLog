@@ -1,0 +1,26 @@
+/* Dialog zdola obrazovky nad zástinem. */
+.dialog-zastin {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vrstva-dialogu);
+  background: var(--barva-zastin);
+}
+
+.dialog {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--vrstva-dialogu);
+  display: grid;
+  gap: var(--mezera-3);
+  max-width: var(--sirka-mobilu);
+  margin: 0 auto;
+  padding: var(--mezera-4) var(--mezera-4) var(--mezera-5);
+  border-radius: var(--zaobleni) var(--zaobleni) 0 0;
+  background: var(--barva-pozadi);
+}
+
+.dialog .tl {
+  min-height: var(--dotyk-hlavni);
+}

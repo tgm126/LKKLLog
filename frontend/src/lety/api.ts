@@ -110,7 +110,7 @@ export type Nabidky = {
   ucely: Ucel[];
   pic_id: number;
   zpusoby: { id: number; kod: string; nazev: string }[];
-  duvody_zruseni: { id: number; nazev: string }[];
+  duvody_zruseni: { id: number; kod: string; nazev: string }[];
   letiste: { id: number; kod: string; nazev: string; domovske: boolean }[];
   osoby: Osoba[];
   ulohy: Uloha[];
@@ -164,7 +164,6 @@ export type DetailLetu = {
   cas_pristani: string | null;
   doba_min: number | null;
   doba_uctovana_min: number | null;
-  doba_nulova: boolean;
   pocet_pristani: number | null;
   pob: number | null;
   /** Zadaný počet (u výcviku, sóla a přezkoušení prázdný – odvozuje se z posádky). */

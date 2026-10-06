@@ -23,7 +23,7 @@ test("přehled letů dne", async ({ page }) => {
   await expect(stopky).not.toHaveText(pred!, { timeout: 3000 });
 
   // Štítky ve stálém pořadí: čas · účel · způsob vzletu · POB (· úloha).
-  await expect(page.locator(".let.vzduch", { hasText: "OK-2817" }).locator(".stitek")).toHaveText([
+  await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-2817" }).locator(".stitek")).toHaveText([
     /^\d\d:\d\d$/,
     "normální",
     "naviják",

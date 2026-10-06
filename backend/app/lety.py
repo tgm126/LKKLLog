@@ -401,7 +401,9 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
         "ucely": ucely,
         "pic_id": conn.execute("SELECT id FROM lkkl.lov_funkce WHERE kod = 'PIC'").fetchone()["id"],
         "zpusoby": conn.execute("SELECT id, kod, nazev FROM lkkl.v_lov_zpusob_vzletu").fetchall(),
-        "duvody_zruseni": conn.execute("SELECT id, nazev FROM lkkl.v_lov_duvod_zruseni").fetchall(),
+        "duvody_zruseni": conn.execute(
+            "SELECT id, kod, nazev FROM lkkl.v_lov_duvod_zruseni"
+        ).fetchall(),
         "letiste": conn.execute(
             """SELECT l.id, l.kod, l.nazev, s.domovske
                FROM lkkl.v_lov_letiste l JOIN lkkl.lov_letiste s ON s.id = l.id"""
@@ -454,18 +456,30 @@ class NovyLet(BaseModel):
     pocet_pristani: int = 1
     cas_pristani_vlecne: datetime | None = None
     """Proběhlý aerovlek: kdy přistála vlečná."""
+    misto_vzletu_id: int | None = None
+    misto_vzletu_popis: str | None = None
+    """Místo vzletu (letiště, nebo popis); nezadané = domovské letiště (doplní databáze)."""
+    misto_pristani_id: int | None = None
+    misto_pristani_popis: str | None = None
+    """Proběhlý let: místo přistání; nezadané = domovské."""
 
 
 def _zalozit(conn: Connection, udaje: dict, posadka: list[ClenIn]) -> int:
     let_id = conn.execute(
         """INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
                cas_vzletu, cas_pristani, pocet_pristani, pob, platce_id, plati_aeroklub,
-               uloha_id, zalozil_id)
+               uloha_id, zalozil_id, misto_vzletu_id, misto_vzletu_popis,
+               misto_pristani_id, misto_pristani_popis)
            VALUES (%(letadlo_id)s, %(ucel_id)s, %(zpusob_vzletu_id)s, %(vlecny_let_id)s,
                    CASE WHEN %(ted)s THEN now() ELSE %(cas_vzletu)s END, %(cas_pristani)s,
                    CASE WHEN %(cas_pristani)s::timestamptz IS NOT NULL
                         THEN %(pocet_pristani)s END,
-                   %(pob)s, %(platce_id)s, %(plati_aeroklub)s, %(uloha_id)s, %(zalozil_id)s)
+                   %(pob)s, %(platce_id)s, %(plati_aeroklub)s, %(uloha_id)s, %(zalozil_id)s,
+                   %(misto_vzletu_id)s::bigint, %(misto_vzletu_popis)s::text,
+                   CASE WHEN %(cas_pristani)s::timestamptz IS NOT NULL
+                        THEN %(misto_pristani_id)s::bigint END,
+                   CASE WHEN %(cas_pristani)s::timestamptz IS NOT NULL
+                        THEN %(misto_pristani_popis)s::text END)
            RETURNING id""",
         udaje,
     ).fetchone()["id"]
@@ -521,6 +535,17 @@ def novy_let(
         "platce_id": platce_id,
         "plati_aeroklub": data.plati_aeroklub,
         "zalozil_id": p.osoba_id,
+        "misto_vzletu_id": data.misto_vzletu_id,
+        "misto_vzletu_popis": (data.misto_vzletu_popis or "").strip() or None,
+    }
+    pristani_kluzaku = {
+        "misto_pristani_id": data.misto_pristani_id,
+        "misto_pristani_popis": (data.misto_pristani_popis or "").strip() or None,
+    }
+    # vlečná se vrací na místo vzletu
+    pristani_vlecne = {
+        "misto_pristani_id": data.misto_vzletu_id,
+        "misto_pristani_popis": spolecne["misto_vzletu_popis"],
     }
     with zmena(conn):
         vlecny_let_id = None
@@ -540,6 +565,7 @@ def novy_let(
                     "pocet_pristani": 1,
                     "pob": 1,
                     "uloha_id": None,
+                    **pristani_vlecne,
                 },
                 [ClenIn(osoba_id=data.vlekar_id, funkce_id=pic_id)],
             )
@@ -555,6 +581,7 @@ def novy_let(
                 "pocet_pristani": data.pocet_pristani,
                 "pob": data.pob,
                 "uloha_id": data.uloha_id,
+                **pristani_kluzaku,
             },
             data.posadka,
         )
@@ -580,7 +607,7 @@ def detail(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = 
                   v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
                   l.misto_vzletu_id, l.misto_vzletu_popis, v.misto_vzletu,
                   l.misto_pristani_id, l.misto_pristani_popis, v.misto_pristani,
-                  v.cas_vzletu, v.cas_pristani, v.doba_min, v.doba_uctovana_min, l.doba_nulova,
+                  v.cas_vzletu, v.cas_pristani, v.doba_min, v.doba_uctovana_min,
                   v.pocet_pristani, v.pob, l.pob AS pob_zadany,
                   v.platce_id, v.plati_aeroklub, v.platce_jmeno, v.platce_prijmeni, v.poznamka,
                   v.duvod_zruseni, v.zruseno, v.dodatecne, v.zalozeno,
@@ -643,13 +670,15 @@ def zrusit(
     p: Prihlaseny = Depends(prihlaseny),
     conn: Connection = Depends(spojeni),
 ):
-    """Let se nemaže, jen zruší s důvodem; u vleku oba lety dvojice."""
+    """Let se nemaže, jen zruší s důvodem. Naplánovaný vlek se ruší celý (oba lety dvojice);
+    po vzletu je každý let samostatný (např. kluzák po přetrženém laně – vlečná letí dál)."""
     let = _let(conn, let_id)
     with zmena(conn):
         radky = conn.execute(
             f"""UPDATE lkkl.let
                 SET zruseni_duvod_id = %(duvod)s, zruseno = now(), zrusil_id = %(kdo)s
-                WHERE id IN ({DVOJICE}) AND zruseni_duvod_id IS NULL""",  # noqa: S608 – pevný text
+                WHERE id IN ({DVOJICE}) AND zruseni_duvod_id IS NULL
+                  AND (id = %(id)s OR cas_vzletu IS NULL)""",  # noqa: S608 – pevný text
             {"id": let_id, "duvod": data.duvod_id, "kdo": p.osoba_id},
         ).rowcount
     if not radky:
@@ -728,7 +757,6 @@ class Uprava(BaseModel):
     misto_pristani_id: int | None = None
     misto_pristani_popis: str | None = None
     pocet_pristani: int | None = None
-    doba_nulova: bool | None = None
     posadka: list[ClenIn] | None = None
 
 

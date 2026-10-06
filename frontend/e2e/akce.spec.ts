@@ -13,7 +13,7 @@ test("vzlet a Zpět, T&G a přistání z pásku", async ({ page }) => {
   const planovany = page.locator(".let.naplanovan", { hasText: "OK-3819" });
   await planovany.getByRole("button", { name: "Vzlet" }).click();
   await expect(oznameni).toContainText(/OK-3819 vzlet \d\d:\d\d:\d\d/);
-  await expect(page.locator(".let.vzduch", { hasText: "OK-3819" })).toBeVisible();
+  await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-3819" })).toBeVisible();
   await oznameni.getByRole("button", { name: "ZPĚT" }).click();
   await expect(planovany).toBeVisible();
   await expect(oznameni).toBeHidden();
@@ -29,7 +29,7 @@ test("vzlet a Zpět, T&G a přistání z pásku", async ({ page }) => {
 test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ page }) => {
   const par = page.locator(".let.naplanovan", { hasText: "OK-6722" });
   await par.getByRole("button", { name: "Vzlet" }).click();
-  const veVzduchu = page.locator(".let.vzduch", { hasText: "OK-6722" });
+  const veVzduchu = page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" });
   await expect(veVzduchu.locator(".let-par")).toHaveCount(2);
   await expect(veVzduchu).toContainText("Z 526 · vlečná");
   await expect(veVzduchu).not.toContainText("vleče");
@@ -38,14 +38,22 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
   await veVzduchu.locator(".let-par", { hasText: "OK-CRA" }).getByText("Adam Admin").click();
   await expect(page.getByRole("heading", { name: /OK-CRA/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Vleče/ })).toContainText("OK-6722");
+  // Let kratší než minuta: dialog – počítat (1 minuta), nebo zrušit.
   await page.getByRole("button", { name: "Přistál" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("let kratší než minuta");
+  await dialog.getByRole("button", { name: "Počítat let" }).click();
+  await expect(page.getByText("Ukončený", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
 
   // Vlečná přistála – kluzák zůstal ve vzduchu sám; vlečná mezi ukončenými se štítkem „vlek“.
-  await expect(page.locator(".let.vzduch", { hasText: "OK-6722" }).locator(".let-par")).toHaveCount(1);
-  await expect(page.locator(".let.ukoncen", { hasText: "OK-CRA" }).first()).toBeVisible();
-  await page.locator(".let.vzduch", { hasText: "OK-6722" }).getByRole("button", { name: "Přistál" }).click();
-  // vlečná má na místě účelu štítek „vlek“
+  const kluzak = page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" });
+  await expect(kluzak.locator(".let-par")).toHaveCount(1);
+  await expect(page.locator(".let.ukoncen .stitek", { hasText: /^vlek$/ })).toHaveCount(1);
+  // Kluzák po přetrženém laně: zrušit jako přerušený vzlet (vlečná zůstane ukončená).
+  await kluzak.getByRole("button", { name: "Přistál" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Zrušit – přerušený vzlet" }).click();
+  await expect(page.getByRole("status")).toHaveText(/OK-6722 zrušen – přerušený vzlet/);
   await expect(page.locator(".let.ukoncen .stitek", { hasText: /^vlek$/ })).toHaveCount(1);
 });
 
@@ -92,6 +100,10 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
   await dal.click();
 
   await expect(page.getByText("3 / 3 · Let")).toBeVisible();
+  // Místo vzletu předvyplněné domovským letištěm.
+  await expect(page.locator(".blok", { hasText: "Místo vzletu" }).getByRole("button").first()).toHaveText(
+    "LKKL Kladno",
+  );
   // Výchozí způsob vzletu = jak se dnes naposledy vzlétalo s kluzákem (předchozí test: aerovlek).
   await expect(page.getByRole("button", { name: "Aerovlek" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Naviják" }).click();
@@ -101,7 +113,7 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
   await page.getByRole("button", { name: "Vzlet teď" }).click();
 
   await expect(page.getByRole("status")).toContainText(/OK-6722 vzlet/);
-  await expect(page.locator(".let.vzduch", { hasText: "OK-6722" })).toContainText("Adam Admin");
+  await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" })).toContainText("Adam Admin");
 });
 
 test("průvodce: proběhlý let s časy prstem", async ({ page }) => {

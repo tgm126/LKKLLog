@@ -22,6 +22,7 @@ import {
 import "./Pruvodce.css";
 import "./Volby.css";
 import { denUtc, minutyUtc, VyberCasu } from "./VyberCasu";
+import { VolbaMista, type Misto } from "./VyberMista";
 
 // Průvodce novým letem podle makety docs/navrhy/lety-mobil.html:
 // 1 letadlo → 2 posádka → 3 let (úloha, u kluzáku vzlet a vlek, plátce) → VZLET TEĎ /
@@ -45,6 +46,8 @@ type Novy = {
   vlekar?: number;
   uloha?: number;
   platce?: number | "aeroklub";
+  /** prázdné = domovské letiště */
+  mistoVzletu?: Misto;
 };
 
 type Krok = 1 | 2 | 3 | "casy";
@@ -115,6 +118,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     casy: "Proběhlý let",
   };
   const spolecne = {
+    trida: "pruvodce",
     zpet,
     zpetPopis: krok === 1 ? ("Zavřít" as const) : ("Zpět" as const),
     nadpis: krok === 1 || !letadlo ? "Nový let" : letadlo.rejstrik,
@@ -366,6 +370,13 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
         vybrana={ulohy.find((u) => u.id === novy.uloha)}
         vybrat={(id) => zmenit({ uloha: id })}
       />
+      <Blok nadpis="Místo vzletu">
+        <VolbaMista
+          nabidky={nabidky}
+          misto={novy.mistoVzletu}
+          zmenit={(m) => zmenit({ mistoVzletu: m })}
+        />
+      </Blok>
       <Blok nadpis="Platí">
         {/* Předvyplněný podle účelu (modře); jiná osoba z posádky, Aeroklub, nebo kdokoli. */}
         <div className="navrhy">
@@ -543,7 +554,14 @@ type Spolecne = {
   zavrit: () => void;
 };
 
-type Casy = { cas_vzletu: string; cas_pristani: string; pocet_pristani: number; cas_pristani_vlecne?: string };
+type Casy = {
+  cas_vzletu: string;
+  cas_pristani: string;
+  pocet_pristani: number;
+  cas_pristani_vlecne?: string;
+  misto_pristani_id: number | null;
+  misto_pristani_popis: string | null;
+};
 
 function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: Spolecne) {
   const qc = useQueryClient();
@@ -566,6 +584,8 @@ function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: S
         platce_id: typeof platce === "number" ? platce : null,
         plati_aeroklub: platce === "aeroklub",
         akce: a.akce,
+        misto_vzletu_id: novy.mistoVzletu?.id ?? null,
+        misto_vzletu_popis: novy.mistoVzletu?.popis ?? null,
         ...a.casy,
       });
     },
@@ -645,6 +665,7 @@ function ProbehlyLet(
   });
   const [aktivni, setAktivni] = useState<PoleCasu | null>("vzlet");
   const [pocet, setPocet] = useState(1);
+  const [mistoPristani, setMistoPristani] = useState<Misto | undefined>();
 
   // Minuty od půlnoci UTC zvoleného dne. Dnes nejde vybrat budoucnost.
   const nyni = ted();
@@ -691,6 +712,8 @@ function ProbehlyLet(
                   cas_pristani: iso(pristani!),
                   pocet_pristani: pocet,
                   ...(aerovlek ? { cas_pristani_vlecne: iso(vlecna!) } : {}),
+                  misto_pristani_id: mistoPristani?.id ?? null,
+                  misto_pristani_popis: mistoPristani?.popis ?? null,
                 },
               })
             }
@@ -727,6 +750,9 @@ function ProbehlyLet(
         </p>
       )}
       {chyba && <p className="text-chyby">Přistání je dřív než vzlet.</p>}
+      <Blok nadpis="Místo přistání">
+        <VolbaMista nabidky={props.nabidky} misto={mistoPristani} zmenit={setMistoPristani} />
+      </Blok>
       {letadlo.kategorie_kod !== "KLUZAK" && (
         <Blok nadpis="Přistání celkem">
           <VolbaPoctu pocet={5} vybrano={pocet} vybrat={setPocet} />
