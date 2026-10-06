@@ -1,0 +1,82 @@
+/* Volby ťuknutím (průvodce i detail letu): mřížka voleb, rychlá volba, počet, čas prstem. */
+
+/* Volba z několika možností (účel, způsob vzletu, den): mřížka tlačítek, vybrané modře */
+.volby {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) 0;
+}
+
+.volby .tl[aria-pressed="true"],
+.volby-pocet .tl[aria-pressed="true"],
+.cas-pole .tl[aria-pressed="true"] {
+  --tl-okraj: var(--barva-modra);
+}
+
+/* Rychlá volba osoby a úlohy jedním ťuknutím */
+.navrhy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) 0;
+}
+
+.navrhy .tl {
+  font-weight: var(--tloustka);
+}
+
+.navrhy-skupina {
+  width: 100%;
+}
+
+/* Volba počtu (POB, přistání celkem): řada tlačítek */
+.volby-pocet {
+  display: flex;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) 0;
+}
+
+.volby-pocet .tl {
+  min-width: var(--dotyk);
+  padding: 0;
+}
+
+/* Výběr času prstem: pole času s −1 / +1, mřížka hodin (6 × 4) a minut po pěti (4 × 3) */
+.cas-pole {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) 0;
+}
+
+.cas-pole .tl.hodnota {
+  flex: 1;
+  min-height: var(--dotyk-hlavni);
+  font-size: var(--pismo-l);
+}
+
+.cas-pole .tl.krok {
+  min-width: var(--dotyk);
+  padding: 0;
+}
+
+.mrizka-casu {
+  display: grid;
+  grid-template-columns: repeat(var(--sloupcu, 6), minmax(0, 1fr));
+  gap: var(--mezera-1);
+  padding-bottom: var(--mezera-2);
+}
+
+.mrizka-casu.minuty {
+  --sloupcu: 4;
+}
+
+.mrizka-casu .tl {
+  padding: 0;
+}
+
+.chyba {
+  color: var(--barva-cervena);
+  font-weight: var(--tloustka-tucna);
+}

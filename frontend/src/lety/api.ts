@@ -108,6 +108,8 @@ export type Nabidky = {
   ucely: Ucel[];
   pic_id: number;
   zpusoby: { id: number; kod: string; nazev: string }[];
+  duvody_zruseni: { id: number; nazev: string }[];
+  letiste: { id: number; kod: string; nazev: string; domovske: boolean }[];
   osoby: Osoba[];
   ulohy: Uloha[];
   zpusob_kluzaku: string | null;
@@ -118,5 +120,75 @@ export function useNabidky() {
     queryKey: ["nabidky"],
     queryFn: () => ziskat<Nabidky>("/lety/nabidky"),
     staleTime: 0,
+  });
+}
+
+// --- detail letu -----------------------------------------------------------------------------
+
+export type ClenDetail = {
+  osoba_id: number;
+  jmeno: string;
+  prijmeni: string;
+  funkce_id: number;
+  funkce_kod: string;
+  funkce: string;
+};
+
+export type DetailLetu = {
+  id: number;
+  verze: number;
+  stav: Stav;
+  letadlo_id: number;
+  rejstrik: string;
+  typ: string;
+  kategorie: string;
+  kategorie_kod: string;
+  pocet_mist: number;
+  ucel_id: number | null;
+  ucel: string | null;
+  ucel_kod: string | null;
+  uloha_id: number | null;
+  uloha: string | null;
+  zpusob_vzletu: string;
+  zpusob_vzletu_kod: string;
+  je_vlecny: boolean;
+  misto_vzletu_id: number | null;
+  misto_vzletu_popis: string | null;
+  misto_vzletu: string | null;
+  misto_pristani_id: number | null;
+  misto_pristani_popis: string | null;
+  misto_pristani: string | null;
+  cas_vzletu: string | null;
+  cas_pristani: string | null;
+  doba_min: number | null;
+  doba_uctovana_min: number | null;
+  doba_nulova: boolean;
+  pocet_pristani: number | null;
+  pob: number | null;
+  /** Zadaný počet (u výcviku, sóla a přezkoušení prázdný – odvozuje se z posádky). */
+  pob_zadany: number | null;
+  platce_id: number | null;
+  plati_aeroklub: boolean;
+  platce_jmeno: string | null;
+  platce_prijmeni: string | null;
+  poznamka: string | null;
+  duvod_zruseni: string | null;
+  zruseno: string | null;
+  zrusil: string | null;
+  dodatecne: boolean;
+  zalozeno: string;
+  zalozil: string;
+  posadka: ClenDetail[];
+  tg: string[];
+  vlek: { let_id: number; rejstrik: string; pilot: string } | null;
+  historie: { kdy: string; kdo: string; akce: string; popis: string | null }[];
+  varovani: string | null;
+};
+
+export function useDetail(letId: number) {
+  return useQuery({
+    queryKey: ["let", letId],
+    queryFn: () => ziskat<DetailLetu>(`/lety/${letId}`),
+    refetchInterval: 10_000,
   });
 }

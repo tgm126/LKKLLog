@@ -5,6 +5,7 @@
   border: var(--ramecek-sirka) solid var(--let-okraj, transparent);
   border-radius: var(--zaobleni);
   background: var(--let-vypln);
+  cursor: pointer;
 }
 
 .let.vzduch {

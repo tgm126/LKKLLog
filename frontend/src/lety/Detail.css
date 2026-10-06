@@ -1,0 +1,32 @@
+/* Detail letu: údaje „popisek – hodnota“ (komponenta .udaj v Obrazovka.css), úprava pod údajem. */
+
+.uprava {
+  display: grid;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) 0 var(--mezera-3);
+  border-bottom: var(--ramecek);
+}
+
+.udaj-pod {
+  display: block;
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}
+
+.poznamka {
+  width: 100%;
+  min-height: calc(3 * var(--dotyk));
+  padding: var(--mezera-2) var(--mezera-3);
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+  color: inherit;
+  font: inherit;
+  font-size: var(--pismo-pole);
+  resize: vertical;
+}
+
+.poznamka:focus {
+  border-color: var(--barva-modra);
+  outline: none;
+}

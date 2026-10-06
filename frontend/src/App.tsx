@@ -8,6 +8,7 @@ import { OznameniProvider } from "./komponenty/Oznameni";
 import { Pruh, PruhProvozu } from "./komponenty/Pruh";
 import { Tlacitko } from "./komponenty/Tlacitko";
 import { Vstupni } from "./komponenty/Vstupni";
+import { Detail } from "./lety/Detail";
 import { Pruvodce } from "./lety/Pruvodce";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
@@ -24,6 +25,7 @@ export function App() {
           <Route index element={<Lety />} />
         </Route>
         <Route path="/novy-let" element={<Pruvodce />} />
+        <Route path="/let/:id" element={<Detail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

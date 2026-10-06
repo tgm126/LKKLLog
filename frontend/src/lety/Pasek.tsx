@@ -1,4 +1,5 @@
-import { Fragment } from "react";
+import { Fragment, type MouseEvent } from "react";
+import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
 import { Stitek, Stitky } from "../komponenty/Stitek";
@@ -35,6 +36,14 @@ function Posadka({ clenove }: { clenove: Clen[] }) {
 
 const pic = (l: PasekLetu) => l.posadka.filter((c) => c.funkce_kod === "PIC");
 const typ = (l: PasekLetu) => (l.je_vlecny ? `${l.typ} · vlečná` : l.typ);
+/** Ťuknutí na pásek otevře detail letu (tlačítka akcí ne). */
+function useOtevrit(letId: number) {
+  const navigate = useNavigate();
+  return (e: MouseEvent) => {
+    if (!(e.target as HTMLElement).closest("button")) navigate(`/let/${letId}`);
+  };
+}
+
 /** Akce z pásku: provést (letId, akce); zaneprázdněn = akce tohoto letu právě běží. */
 type AkcePasku = { provest: (letId: number, akce: Akce) => void; zaneprazdnen: boolean };
 
@@ -43,8 +52,9 @@ const misto = (kod: string | null, cas: string | null) =>
 
 export function PasekVeVzduchu({ let: l, provest, zaneprazdnen }: { let: PasekLetu } & AkcePasku) {
   const ted = useTik();
+  const otevrit = useOtevrit(l.id);
   return (
-    <div className={`let ${l.varovani ? "problem" : "vzduch"}`}>
+    <div className={`let ${l.varovani ? "problem" : "vzduch"}`} onClick={otevrit}>
       <div className="let-radek">
         <span className="velke tucne">{l.rejstrik}</span>
         <span className="let-typ">{typ(l)}</span>
@@ -90,8 +100,9 @@ export function PasekNaplanovany({
   zaneprazdnen,
 }: { lety: PasekLetu[] } & AkcePasku) {
   const vlek = lety.length > 1;
+  const otevrit = useOtevrit(lety[0]!.id);
   return (
-    <div className="let naplanovan">
+    <div className="let naplanovan" onClick={otevrit}>
       <div className="let-vedle">
         <div>
       {lety.map((l) => {
@@ -130,8 +141,9 @@ export function PasekNaplanovany({
 }
 
 export function PasekUkonceny({ let: l }: { let: PasekLetu }) {
+  const otevrit = useOtevrit(l.id);
   return (
-    <div className="let ukoncen">
+    <div className="let ukoncen" onClick={otevrit}>
       <div className="let-radek">
         <b>{l.rejstrik}</b>
         <Posadka clenove={pic(l)} />
@@ -155,8 +167,9 @@ export function PasekUkonceny({ let: l }: { let: PasekLetu }) {
 }
 
 export function PasekZruseny({ let: l }: { let: PasekLetu }) {
+  const otevrit = useOtevrit(l.id);
   return (
-    <div className="let zrusen">
+    <div className="let zrusen" onClick={otevrit}>
       <div className="let-radek">
         <b>{l.rejstrik}</b>
         <Posadka clenove={pic(l)} />

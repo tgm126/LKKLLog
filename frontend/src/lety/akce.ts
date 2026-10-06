@@ -14,7 +14,10 @@ const NAZEV: Record<Akce, string> = { vzlet: "vzlet", pristani: "přistání", t
 export function useAkceLetu() {
   const qc = useQueryClient();
   const oznamit = useOznamit();
-  const obnovit = () => qc.invalidateQueries({ queryKey: ["lety"] });
+  const obnovit = () => {
+    qc.invalidateQueries({ queryKey: ["lety"] });
+    qc.invalidateQueries({ queryKey: ["let"] });
+  };
 
   const zpet = useMutation({
     mutationFn: (a: { letId: number; akce: Akce }) =>

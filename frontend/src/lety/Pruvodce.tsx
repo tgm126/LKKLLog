@@ -20,13 +20,15 @@ import {
   type Uloha,
 } from "./api";
 import "./Pruvodce.css";
+import "./Volby.css";
+import { denUtc, minutyUtc, VyberCasu } from "./VyberCasu";
 
 // Průvodce novým letem podle makety docs/navrhy/lety-mobil.html:
 // 1 letadlo → 2 posádka → 3 let (úloha, u kluzáku vzlet a vlek, plátce) → VZLET TEĎ /
 // Naplánovat / Proběhlý let (výběr časů prstem).
 
 /** Popisek PIC podle účelu (kdo je velitel letadla). */
-const PIC_NAZEV: Record<string, string> = {
+export const PIC_NAZEV: Record<string, string> = {
   VYCVIK: "Instruktor (PIC)",
   VYCVIK_SOLO: "Žák (PIC)",
   PREZKOUSENI: "Examinátor (PIC)",
@@ -47,7 +49,7 @@ type Novy = {
 
 type Krok = 1 | 2 | 3 | "casy";
 
-const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
+export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
 
 export function Pruvodce() {
   const { data: nabidky, error } = useNabidky();
@@ -247,19 +249,11 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
         )}
         {pob && (
           <Blok nadpis="POB">
-            <div className="volby-pocet">
-              {Array.from({ length: letadlo.pocet_mist }, (_, k) => k + 1).map((n) => (
-                <Tlacitko
-                  key={n}
-                  varianta="obrys"
-                  className="cisla"
-                  aria-pressed={n === novy.pob}
-                  onClick={() => zmenit({ pob: n })}
-                >
-                  {n}
-                </Tlacitko>
-              ))}
-            </div>
+            <VolbaPoctu
+              pocet={letadlo.pocet_mist}
+              vybrano={novy.pob}
+              vybrat={(n) => zmenit({ pob: n })}
+            />
           </Blok>
         )}
       </Obrazovka>
@@ -431,7 +425,7 @@ function Dlazdice({
 
 /** Povinná úloha (výcvik, sólo, přezkoušení): všechny z osnov. Nepovinná (normální let):
  *  obecné úlohy a „Z osnovy…“. Úlohy seskupené podle osnovy. */
-function VolbaUlohy({
+export function VolbaUlohy({
   ulohy,
   povinna,
   vybrana,
@@ -582,9 +576,6 @@ function Dokonceni(
 
 type PoleCasu = "vzlet" | "pristani" | "vlecna";
 
-const dve = (n: number) => String(n).padStart(2, "0");
-const hhmm = (min: number) => `${dve(Math.floor(min / 60))}:${dve(min % 60)}`;
-
 function ProbehlyLet(
   props: Spolecne & {
     spolecne: Omit<Parameters<typeof Obrazovka>[0], "children" | "akce">;
@@ -599,21 +590,15 @@ function ProbehlyLet(
     vlecna: null,
   });
   const [aktivni, setAktivni] = useState<PoleCasu | null>("vzlet");
-  const [hodina, setHodina] = useState<number | null>(null);
   const [pocet, setPocet] = useState(1);
 
-  // Minuty od půlnoci UTC zvoleného dne → ISO čas. Dnes nejde vybrat budoucnost.
+  // Minuty od půlnoci UTC zvoleného dne. Dnes nejde vybrat budoucnost.
   const nyni = ted();
-  const zacatekDne = Date.UTC(nyni.getUTCFullYear(), nyni.getUTCMonth(), nyni.getUTCDate()) -
+  const zacatekDne =
+    Date.UTC(nyni.getUTCFullYear(), nyni.getUTCMonth(), nyni.getUTCDate()) -
     (den === "vcera" ? 86_400_000 : 0);
-  const iso = (min: number) => new Date(zacatekDne + min * 60_000).toISOString();
-  const mistni = (min: number) =>
-    new Date(zacatekDne + min * 60_000).toLocaleTimeString("cs-CZ", {
-      timeZone: "Europe/Prague",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  const limit = den === "dnes" ? nyni.getUTCHours() * 60 + nyni.getUTCMinutes() : 1439;
+  const { iso, mistni } = denUtc(zacatekDne);
+  const limit = den === "dnes" ? minutyUtc(nyni) : 1439;
 
   const poradi: PoleCasu[] = aerovlek ? ["vzlet", "pristani", "vlecna"] : ["vzlet", "pristani"];
   const nazvy: Record<PoleCasu, string> = {
@@ -621,16 +606,10 @@ function ProbehlyLet(
     pristani: "Přistání",
     vlecna: "Přistání vlečné",
   };
-  const nastavit = (pole: PoleCasu, min: number | null) => {
+  const nastavit = (pole: PoleCasu, min: number, vybrano: boolean) => {
     setCasy((c) => ({ ...c, [pole]: min }));
-  };
-  const vybratMinutu = (min: number) => {
-    if (!aktivni) return;
-    nastavit(aktivni, min);
-    setHodina(null);
-    // Po vzletu se samo otevře další nevyplněné pole (přistání, přistání vlečné).
-    const dalsi = poradi.find((p) => p !== aktivni && casy[p] === null);
-    setAktivni(dalsi ?? null);
+    // Po výběru z mřížky se samo otevře další nevyplněné pole (přistání, přistání vlečné).
+    if (vybrano) setAktivni(poradi.find((p) => p !== pole && casy[p] === null) ?? null);
   };
 
   const { vzlet, pristani, vlecna } = casy;
@@ -676,77 +655,18 @@ function ProbehlyLet(
           ))}
         </div>
       </Blok>
-      {poradi.map((p) => {
-        const min = casy[p];
-        return (
-          <Blok
-            key={p}
-            nadpis={`${nazvy[p]} (UTC)${min === null ? "" : ` · místní ${mistni(min)}`}`}
-          >
-            <div className="cas-pole">
-              <Tlacitko
-                varianta="obrys"
-                className="krok"
-                disabled={min === null || min === 0}
-                aria-label="o minutu dřív"
-                onClick={() => nastavit(p, min! - 1)}
-              >
-                −1
-              </Tlacitko>
-              <Tlacitko
-                varianta="obrys"
-                className="hodnota cisla"
-                aria-pressed={aktivni === p}
-                onClick={() => {
-                  setAktivni(aktivni === p ? null : p);
-                  setHodina(null);
-                }}
-              >
-                {min === null ? "—:—" : hhmm(min)}
-              </Tlacitko>
-              <Tlacitko
-                varianta="obrys"
-                className="krok"
-                disabled={min === null || min >= limit}
-                aria-label="o minutu později"
-                onClick={() => nastavit(p, min! + 1)}
-              >
-                +1
-              </Tlacitko>
-            </div>
-            {aktivni === p &&
-              (hodina === null ? (
-                <div className="mrizka-casu">
-                  {Array.from({ length: 24 }, (_, h) => (
-                    <Tlacitko
-                      key={h}
-                      varianta="obrys"
-                      className="cisla"
-                      disabled={h * 60 > limit}
-                      onClick={() => setHodina(h)}
-                    >
-                      {dve(h)}
-                    </Tlacitko>
-                  ))}
-                </div>
-              ) : (
-                <div className="mrizka-casu minuty">
-                  {Array.from({ length: 12 }, (_, k) => hodina * 60 + k * 5).map((m) => (
-                    <Tlacitko
-                      key={m}
-                      varianta="obrys"
-                      className="cisla"
-                      disabled={m > limit}
-                      onClick={() => vybratMinutu(m)}
-                    >
-                      {hhmm(m)}
-                    </Tlacitko>
-                  ))}
-                </div>
-              ))}
-          </Blok>
-        );
-      })}
+      {poradi.map((p) => (
+        <VyberCasu
+          key={p}
+          nadpis={nazvy[p]}
+          min={casy[p]}
+          otevreno={aktivni === p}
+          prepnout={() => setAktivni(aktivni === p ? null : p)}
+          nastavit={(min, vybrano) => nastavit(p, min, vybrano)}
+          limit={limit}
+          mistni={mistni}
+        />
+      ))}
       {dobaLetu !== null && !chyba && (
         <p>
           Doba letu <b className="cisla">{doba(dobaLetu)}</b>
@@ -755,21 +675,36 @@ function ProbehlyLet(
       {chyba && <p className="chyba">Přistání je dřív než vzlet.</p>}
       {letadlo.kategorie_kod !== "KLUZAK" && (
         <Blok nadpis="Přistání celkem">
-          <div className="volby-pocet">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <Tlacitko
-                key={n}
-                varianta="obrys"
-                className="cisla"
-                aria-pressed={n === pocet}
-                onClick={() => setPocet(n)}
-              >
-                {n}
-              </Tlacitko>
-            ))}
-          </div>
+          <VolbaPoctu pocet={5} vybrano={pocet} vybrat={setPocet} />
         </Blok>
       )}
     </Obrazovka>
+  );
+}
+
+/** Řada tlačítek 1 … počet (POB, přistání celkem). */
+export function VolbaPoctu({
+  pocet,
+  vybrano,
+  vybrat,
+}: {
+  pocet: number;
+  vybrano: number | null;
+  vybrat: (n: number) => void;
+}) {
+  return (
+    <div className="volby-pocet">
+      {Array.from({ length: pocet }, (_, k) => k + 1).map((n) => (
+        <Tlacitko
+          key={n}
+          varianta="obrys"
+          className="cisla"
+          aria-pressed={n === vybrano}
+          onClick={() => vybrat(n)}
+        >
+          {n}
+        </Tlacitko>
+      ))}
+    </div>
   );
 }

@@ -81,6 +81,13 @@ let do stavu před akcí (vzlet → naplánovaný, přistání → ve vzduchu, T
 ho upraví na místě (výběr z nabídky, čas stejným výběrem jako u proběhlého letu). Evidence
 ukazuje historii z `v_historie_letu`.
 
+Upravit jde: posádka (jiná osoba ve funkci), POB (je-li zadaný), úloha, místo a čas vzletu,
+po přistání čas a místo přistání (letiště, nebo popis místa v terénu), přistání celkem, start
+bez doby (do 1 min), plátce a poznámka. **Neupravuje se** letadlo, účel ani způsob vzletu –
+takový let se zruší s důvodem „Založeno omylem“ a založí znovu (mění se s nimi pravidla
+posádky, úlohy i vleku). Zrušení a obnovení vleku platí pro oba lety dvojice. Zrušený let
+nejde upravit, jen obnovit.
+
 ## 4. Frontend
 
 - **React + TypeScript**, sestavení **Vite**; data **TanStack Query** (obnovování, opakování
