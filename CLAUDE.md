@@ -26,10 +26,11 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    obezličky).
 4. **Slepé uličky** se zkoušejí na odbočce (větvi); když se nepovedou, odbočka se zahodí.
 5. **Data zadává uživatel** (číselníky, osoby, letadla…) a **mění je i přímo v databázi**.
-   Pravdou o datech je databáze, ne skripty: nikdy schéma nezakládat znovu ani data
-   nepřepisovat. Změny struktury jen novým skriptem (`ALTER`…), který data zachová.
-   Skripty `_data.sql` jsou jen počáteční naplnění; na server se data přenesou výpisem
-   z lokální databáze. Žádné importy z Excelu.
+   **Pravdou o datech je serverová databáze** (od 6. 10. 2026; ruční úpravy přes správce
+   databází ve VPS Centru). Lokální databáze je jen pro testy a vývoj změn datového modelu.
+   Nikdy schéma nezakládat znovu ani data nepřepisovat. Změny struktury jen novým skriptem
+   (`ALTER`…), který data zachová; na server je doveze spouštěč migrací při nasazení.
+   Skripty `_data.sql` jsou jen počáteční naplnění. Žádné importy z Excelu.
    Před každou změnou struktury udělat zálohu: `bash db/zaloha.sh` (do
    `C:\GIT\LKKLLog-zalohy`, mimo git – budou tam i osobní údaje).
 6. Skripty v `db/` se před první migrací na server mohou sloučit do čistého celku (data
