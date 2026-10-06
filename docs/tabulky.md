@@ -62,7 +62,10 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 - Datum narození se neeviduje (sloupec jde kdykoli přidat).
 - **Úlohy:** u výcviku a sóla z osnovy pro kategorii letadla, u přezkoušení typ přezkoušení,
   u normálního letu úlohy z osnov i obecné (let do prostoru, okruhy, navigační let…).
-  Osnovy a úlohy dodá uživatel.
+  **Úlohy jsou členěné do osnov** (hierarchie): např. u kluzáků základní výcvik, pokračovací
+  výcvik a sportovní výcvik. Návrh: číselník osnov (→ kategorie letadla) a číselník úloh
+  (→ osnova); obecné úlohy jako samostatná osnova. V průvodci volba osnova → úloha (nebo úlohy
+  seskupené podle osnovy). Osnovy a úlohy dodá uživatel.
 - **Průvodce novým letem** nezadává poznámku ani místo vzletu (jen v detailu, editovatelné
   později). Plánovaný čas vzletu se zatím neeviduje.
 - **Vlekař** je zatím příznak u osoby (015); s doklady se rozhodne, zda ho odvodit z kvalifikace.
