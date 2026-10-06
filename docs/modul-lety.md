@@ -66,11 +66,11 @@ dvojice otevře detail jejího letu.
 
 **Údaje na páscích** (rozhodnuto při testování 6. 10. 2026, nahrazuje „štítky jen při
 odchylce“ z makety): pod posádkou řádek štítků v **pevných sloupcích** – každý údaj vždy na
-stejném místě, i když chybí: 1 čas (a letiště, není-li domovské; u naplánovaného letiště
-vzletu), 2 účel (u vlečné „vlek“; „sólo“, „přezk.“ zkráceně), 3 způsob vzletu, 4 POB (u výcviku
-z posádky), 5 označení úlohy (IU/4). Šířky sloupců s rezervou (token `--sloupce-udaju`);
-let z jiného letiště má čas delší a řádek se posune. Pod nimi doplňky jen s rámečkem (počet
-přistání, dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
+stejném místě, i když chybí: 1 čas vzletu (→ přistání), 2 účel (u vlečné „vlek“; „sólo“,
+„přezk.“ zkráceně), 3 způsob vzletu, 4 POB (u výcviku z posádky), 5 označení úlohy (IU/4)
+a vpravo pod dobou letu **počet přistání** jen číslem (u ukončeného letu vždy). Letiště
+vzletu a přistání se na pásku neukazují, jen v detailu letu. Šířky sloupců s rezervou (token
+`--sloupce-udaju`). Pod nimi doplněk s rámečkem (dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
 páskem přes celou šířku (jako PŘISTÁL).
 
 **Průvodce:** sekce oddělené čarou; **místo vzletu** (a u proběhlého letu **místo přistání**)

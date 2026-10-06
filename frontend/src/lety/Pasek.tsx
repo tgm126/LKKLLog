@@ -6,13 +6,13 @@ import { Stitek, Stitky } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useTik } from "../tik";
 import type { Akce, LetKPristani } from "./akce";
-import { useDen, type Clen, type Pasek as PasekLetu } from "./api";
+import type { Clen, Pasek as PasekLetu } from "./api";
 import "./Pasek.css";
 
 // Pásky podle makety docs/navrhy/lety-mobil.html. Pod posádkou řádek údajů v pevných
 // sloupcích (stejný údaj vždy na stejném místě, i když chybí):
-//   1 čas (a letiště, není-li domovské) · 2 účel · 3 způsob vzletu · 4 POB · 5 úloha;
-// pod nimi doplňky jen s rámečkem (počet přistání, dodatečně).
+//   1 čas · 2 účel · 3 způsob vzletu · 4 POB · 5 úloha · vpravo počet přistání;
+// pod nimi doplněk s rámečkem (dodatečně). Letiště jen v detailu letu.
 
 const malymi = (text: string) => text.toLocaleLowerCase("cs-CZ");
 /** „Vlastní (motorem)“ → „vlastní“ – na štítku jen krátce. */
@@ -20,41 +20,32 @@ const kratce = (text: string) => malymi(text.replace(/\s*\(.*\)\s*/, ""));
 /** Krátké názvy účelů, aby se vešly do sloupce (jinak název z číselníku). */
 const UCEL_KRATCE: Record<string, string> = { VYCVIK_SOLO: "sólo", PREZKOUSENI: "přezk." };
 
-const misto = (kod: string | null, cas: string | null) =>
-  [kod, cas && hodinyMinuty(cas)].filter(Boolean).join(" ");
-
 function UdajeLetu({ let: l }: { let: PasekLetu }) {
-  const domovske = useDen().data?.domovske ?? null;
   const cas =
-    l.stav === "NAPLANOVAN"
-      ? (l.misto_vzletu ?? domovske)
-      : l.stav === "VE_VZDUCHU"
-        ? misto(l.misto_vzletu, l.cas_vzletu)
-        : `${misto(l.misto_vzletu, l.cas_vzletu)} → ${misto(l.misto_pristani, l.cas_pristani)}`;
+    l.cas_vzletu &&
+    [l.cas_vzletu, l.cas_pristani].filter((c) => c !== null).map(hodinyMinuty).join(" → ");
   const ucel = l.je_vlecny
     ? "vlek"
     : l.ucel_kod && (UCEL_KRATCE[l.ucel_kod] ?? (l.ucel && malymi(l.ucel)));
   const sloupce = [cas, ucel, kratce(l.zpusob_vzletu), `POB ${l.pob}`, l.uloha?.split(" ")[0]];
-  const doplnky = [
-    (l.pocet_pristani ?? 1) > 1 && `${l.pocet_pristani} přistání`,
-    l.dodatecne && "dodatečně",
-  ].filter((d): d is string => !!d);
   return (
     <>
       <div className="udaje">
         {sloupce.map((u, i) => (
           <span key={i}>{u && <Stitek>{u}</Stitek>}</span>
         ))}
+        {/* Počet přistání pod dobou letu (vpravo), jen číslo; vyplní se při přistání */}
+        <span className="udaje-pristani cisla">{l.pocet_pristani}</span>
       </div>
-      {doplnky.length > 0 && (
-        <Stitky>
-          {doplnky.map((d) => (
-            <Stitek key={d} barva="obrys">
-              {d}
+      <Stitky>
+        {[
+          l.dodatecne && (
+            <Stitek key="dodatecne" barva="obrys">
+              dodatečně
             </Stitek>
-          ))}
-        </Stitky>
-      )}
+          ),
+        ]}
+      </Stitky>
     </>
   );
 }

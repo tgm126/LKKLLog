@@ -23,7 +23,9 @@ test("vzlet a Zpět, T&G a přistání z pásku", async ({ page }) => {
   await expect(oznameni).toContainText("OK-MFV T&G");
   await expect(mfv.getByRole("button", { name: /T&G/ })).toHaveText("T&G 2");
   await mfv.getByRole("button", { name: "Přistál" }).click();
-  await expect(page.locator(".let.ukoncen", { hasText: "OK-MFV" })).toContainText("3 přistání");
+  await expect(
+    page.locator(".let.ukoncen", { hasText: "OK-MFV" }).locator(".udaje-pristani"),
+  ).toHaveText("3");
 });
 
 test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ page }) => {

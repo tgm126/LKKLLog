@@ -91,7 +91,7 @@
 }
 
 
-/* Údaje letu v pevných sloupcích: čas · účel · způsob vzletu · POB · úloha. Šířky sloupců
+/* Údaje letu v pevných sloupcích: čas · účel · způsob vzletu · POB · úloha · přistání. Šířky sloupců
    s rezervou pro nejdelší obsah (tokeny); delší text se zkrátí třemi tečkami. */
 .udaje {
   display: grid;
@@ -105,4 +105,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: top;
+}
+
+/* Počet přistání vpravo pod dobou letu */
+.udaje-pristani {
+  text-align: right;
 }

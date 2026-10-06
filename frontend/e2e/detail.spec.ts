@@ -8,7 +8,7 @@ test.beforeAll(() => pripravitData());
 test.beforeEach(async ({ page }) => prihlasit(page));
 
 test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page }) => {
-  await page.locator(".let.ukoncen", { hasText: "3 přistání" }).click();
+  await page.locator(".let.ukoncen", { hasText: "OK-CRA" }).click();
   await expect(page.getByRole("heading", { name: /OK-CRA/ })).toBeVisible();
   await expect(page.getByText("Ukončený")).toBeVisible();
   await expect(page.getByRole("button", { name: /Místo přistání\s*LKLT/ })).toBeVisible();
@@ -38,6 +38,9 @@ test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page 
   // Další let odsud: naplánovaný, místo vzletu = místo přistání.
   await page.getByRole("button", { name: "Další let odsud" }).click();
   await expect(page.getByRole("status")).toHaveText(/OK-CRA naplánován/);
-  const dalsi = page.locator(".let-par", { hasText: "OK-CRA" }).filter({ hasText: "LKLT" });
-  await expect(dalsi.locator(".stitek").first()).toHaveText("LKLT");
+  await page
+    .locator(".let.naplanovan", { hasText: "OK-CRA" })
+    .filter({ hasNotText: "OK-6722" })
+    .click();
+  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT/ })).toBeVisible();
 });

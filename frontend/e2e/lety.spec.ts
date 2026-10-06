@@ -36,9 +36,11 @@ test("přehled letů dne", async ({ page }) => {
   await expect(vlek).toContainText("OK-CRA");
   await expect(vlek).toContainText("aerovlek");
 
-  // Ukončené: místo jen mimo domovské letiště, celkový čas.
+  // Ukončené: počet přistání jen číslem, letiště jen v detailu; celkový čas.
   await expect(page.getByRole("button", { name: /Ukončené 2/ })).toContainText('celkem 1°07"');
-  await expect(page.locator(".let", { hasText: "3 přistání" })).toContainText("→ LKLT");
+  const cra = page.locator(".let.ukoncen", { hasText: "OK-CRA" });
+  await expect(cra.locator(".udaje-pristani")).toHaveText("3");
+  await expect(cra).not.toContainText("LKLT");
 
   // Zrušené jsou sbalené, ťuknutím se rozbalí.
   await expect(page.locator(".let.zrusen")).toHaveCount(0);
