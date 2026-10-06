@@ -17,16 +17,20 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `v_letadlo` | pohled | letadla s názvem typu, kategorií a počtem míst | 001, 002, 013 |
 | `v_letadlo_nabidka` | pohled | nabídka letadel pro nový let: pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 013, 014 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft] | 003, 008 |
-| `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby) | 008 |
+| `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` | 008, 016 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK, PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
+| `lov_osnova` | číselník | osnova (skupina úloh) → kategorie letadla (prázdná = všechny) | 016 |
+| `lov_uloha` | číselník | úloha → osnova; označení (B3…) je součástí názvu | 016 |
+| `osnova_ucel` | pravidlo | u kterých účelů se osnova nabízí | 016 |
+| `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie | 016 |
 | `ucel_funkce` | pravidlo | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009 |
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB), doba 0 u krátkého letu, počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
 | `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
-| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G | 009 |
+| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G, úloha (povinnost, účel, kategorie) | 009, 011, 016 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat` | trigger | verze záznamu se zvyšuje; let nejde smazat | 009 |
 | `osoba` | tabulka | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní, vlekař | 004, 015 |

@@ -108,17 +108,15 @@ frontend/
   PŘISTÁL → Zpět; aerovlek; proběhlý let; úprava v detailu. Před čekáním na prvek po přechodu
   vždy ověřit nadpis nové obrazovky.
 
-## 6. Otázky
+## 6. Rozhodnutí (6. 10. 2026)
 
-1. **Kdo smí co:** navrhuji, že **každý přihlášený** smí zakládat lety a ovládat je (provoz je
-   společný – pilot i časoměřič), úpravy a zrušení také. Omezení přijdou s uzávěrkami (po
-   uzávěrce jen právo `smi_opravovat`…). Souhlasíte?
-2. **Zpět:** jen 6 s po akci (lišta), nebo i později z detailu letu?
-3. **Krátký let do 1 minuty** (přetržené lano): první verze se při přistání zeptala, jak let
-   brát („start se počítá, doba 0“ / zrušit / normální let). Zařadit už teď?
-4. **Obnovování přehledu každých 10 s** – vyhovuje?
-5. **Kde běží fáze testování 1:** zatím jen u vás lokálně (spustím server a otevřete adresu
-   v prohlížeči), nebo rovnou na testovací adrese na serveru?
-6. **Obecné úlohy** (let do prostoru, okruhy, navigační let) potřebují tabulku dřív než
-   osnovy. Navrhuji číselník osnov a úloh založit hned jen s osnovou „Obecné“ a doplnit
-   ostatní, až je dodáte. Souhlasíte?
+1. **Kdo smí co:** každý přihlášený smí zakládat lety, ovládat je, upravovat i rušit; omezení
+   přijdou s uzávěrkami.
+2. **Zpět** jen 6 s po akci (lišta), ne později.
+3. **Krátký let do 1 minuty:** zatím bez dotazu při přistání; v detailu přepínač „start bez
+   doby“ (`doba_nulova`). Dotaz přidáme, ukáže-li ho praxe.
+4. **Obnovování přehledu** každých 10 s.
+5. **Fáze testování 1** na serveru – nejdřív se rozchodí standardní nasazení (samostatný
+   návrh `docs/nasazeni.md`).
+6. **Osnovy a úlohy** založené (`db/016`) s testovacími daty; úloha je u výcviku, sóla
+   a přezkoušení povinná.
