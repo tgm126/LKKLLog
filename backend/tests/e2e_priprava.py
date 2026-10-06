@@ -12,6 +12,9 @@ import psycopg
 
 from app import bezpecnost, migrace
 
+# Osnovy kluzáků jako na serveru (IU, IA, II).
+OSNOVY = (migrace.ADRESAR / "019_uloha_podle_ucelu_data.sql").read_text(encoding="utf-8")
+
 ZAKLAD = os.environ.get("LKKL_E2E_ZAKLAD", "postgresql://lkkllog:lkkllog@127.0.0.1:5432")
 DATABAZE = "lkkllog_e2e"
 HESLO_ADMINA = "heslo-pro-e2e-test"  # noqa: S105 – jen testovací databáze
@@ -135,6 +138,7 @@ def pripravit() -> None:
             ).fetchone()[0]
             c.execute("INSERT INTO lkkl.ucet (osoba_id) VALUES (%s)", (nova,))
             c.execute(FLOTILA)
+            c.execute(OSNOVY)
             lety(c, admin, nova)
 
 

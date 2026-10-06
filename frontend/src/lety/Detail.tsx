@@ -201,8 +201,6 @@ function DetailLetuObrazovka({
               ulohy={ulohy}
               povinna={!!ucel?.uloha_povinna}
               vybrana={ulohy.find((x) => x.id === l.uloha_id)}
-              rozbaleno
-              rozbalit={() => {}}
               vybrat={(id) => ulozit({ uloha_id: id ?? null })}
             />
             {!ucel?.uloha_povinna && l.uloha_id && (

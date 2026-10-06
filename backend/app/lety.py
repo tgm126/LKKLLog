@@ -411,7 +411,9 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
         "ulohy": conn.execute(
             """SELECT u.id, u.nazev, u.osnova_id, u.osnova, u.ucel_id, k.kod AS kategorie_kod
                FROM lkkl.v_uloha_nabidka u
-               LEFT JOIN lkkl.lov_kategorie k ON k.id = u.kategorie_id"""
+               LEFT JOIN lkkl.lov_kategorie k ON k.id = u.kategorie_id
+               -- pořadí osnov a úloh podle číselníku (spojení pořadí z pohledu nezaručí)
+               ORDER BY u.osnova_poradi, u.osnova, u.poradi, u.nazev"""
         ).fetchall(),
         # jak se dnes naposledy vzlétalo s kluzákem (výchozí volba naviják / aerovlek)
         "zpusob_kluzaku": (

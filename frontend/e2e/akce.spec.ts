@@ -115,3 +115,32 @@ test("průvodce: proběhlý let s časy prstem", async ({ page }) => {
 
   await expect(page.getByRole("status")).toHaveText(/OK-CRA proběhlý let 10:00–10:45 uložen/);
 });
+
+test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page }) => {
+  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: /^OK-3819/ }).click();
+  await page.getByRole("button", { name: "Výcvik", exact: true }).click();
+  await page
+    .locator(".blok", { hasText: "Instruktor (PIC)" })
+    .getByRole("button", { name: "Já (Adam Admin)" })
+    .click();
+  const zak = page.locator(".blok", { hasText: "Žák" });
+  await zak.getByRole("button", { name: "Všichni…" }).click();
+  await zak.getByRole("button", { name: "Nela Nová" }).click();
+  await page.getByRole("button", { name: "Dál" }).click();
+
+  const uloha = page.locator(".blok", { hasText: "Úloha" });
+  await expect(uloha.locator(".navrhy").first().getByRole("button")).toHaveText([
+    /^IU/,
+    /^IA/,
+    /^II/,
+  ]);
+  await expect(page.getByRole("button", { name: "Naplánovat" })).toBeDisabled(); // úloha povinná
+  await uloha.getByRole("button", { name: /^IU –/ }).click();
+  const ulohyIU = uloha.locator(".navrhy").nth(1).getByRole("button");
+  await expect(ulohyIU.first()).toHaveText("IU/1 Seznamovací let");
+  await expect(ulohyIU.last()).toHaveText("IU/13 Traťový navigační let");
+  await uloha.getByRole("button", { name: "IU/4 Navijákové vzlety, okruh a přistání" }).click();
+  await page.getByRole("button", { name: "Naplánovat" }).click();
+  await expect(page.getByRole("status")).toHaveText(/OK-3819 naplánován/);
+});

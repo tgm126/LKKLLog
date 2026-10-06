@@ -316,11 +316,10 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
       }
     >
       <VolbaUlohy
+        key={ucel.id}
         ulohy={ulohy}
         povinna={ulohaPovinna}
         vybrana={ulohy.find((u) => u.id === novy.uloha)}
-        rozbaleno={rozbaleno === "osnova"}
-        rozbalit={() => setRozbaleno("osnova")}
         vybrat={(id) => zmenit({ uloha: id })}
       />
       {kluzak && (
@@ -442,59 +441,56 @@ function Dlazdice({
   );
 }
 
-// --- úloha -----------------------------------------------------------------------------------
+// --- úloha ---------------------------------------------------------------------------------
 
-/** Povinná úloha (výcvik, sólo, přezkoušení): všechny z osnov. Nepovinná (normální let):
- *  obecné úlohy a „Z osnovy…“. Úlohy seskupené podle osnovy. */
+/** Úloha ve dvou krocích: osnova (IU, IA, II…), pak úloha v ní (vzestupně podle osnovy).
+ *  Je-li úloha povinná a osnova jen jedna, je rovnou otevřená. Nepovinnou úlohu jde druhým
+ *  ťuknutím zrušit. */
 export function VolbaUlohy({
   ulohy,
   povinna,
   vybrana,
-  rozbaleno,
-  rozbalit,
   vybrat,
 }: {
   ulohy: Uloha[];
   povinna: boolean;
   vybrana: Uloha | undefined;
-  rozbaleno: boolean;
-  rozbalit: () => void;
   vybrat: (id: number | undefined) => void;
 }) {
-  const nadpis = povinna ? "Úloha" : "Úloha (nepovinná)";
+  const osnovy = [...new Map(ulohy.map((u) => [u.osnova_id, u.osnova])).entries()];
+  const [osnovaId, setOsnovaId] = useState<number | undefined>(
+    vybrana?.osnova_id ?? (povinna && osnovy.length === 1 ? osnovy[0]![0] : undefined),
+  );
   if (ulohy.length === 0) return null;
-  const obecne = ulohy.filter((u) => u.kategorie_kod === null);
-  const zOsnov = ulohy.filter((u) => u.kategorie_kod !== null);
-  // vybraná úloha z osnovy je vidět i při sbalené nabídce
-  const vsechny = povinna || rozbaleno || (vybrana !== undefined && vybrana.kategorie_kod !== null);
-  const ukazat = vsechny ? ulohy : obecne;
-  const osnovy = [...new Map(ukazat.map((u) => [u.osnova_id, u.osnova])).entries()];
   return (
-    <Blok nadpis={nadpis}>
-      {osnovy.map(([id, nazev]) => (
-        <div key={id}>
-          {osnovy.length > 1 && <span className="male seda">{nazev}</span>}
-          <div className="navrhy">
-            {ukazat
-              .filter((u) => u.osnova_id === id)
-              .map((u) => (
-                <Tlacitko
-                  key={u.id}
-                  varianta="obrys"
-                  aria-pressed={u.id === vybrana?.id}
-                  // nepovinnou úlohu jde druhým ťuknutím zrušit
-                  onClick={() => vybrat(u.id === vybrana?.id && !povinna ? undefined : u.id)}
-                >
-                  {u.nazev}
-                </Tlacitko>
-              ))}
-          </div>
+    <Blok nadpis={povinna ? "Úloha" : "Úloha (nepovinná)"}>
+      <div className="navrhy">
+        {osnovy.map(([id, nazev]) => (
+          <Tlacitko
+            key={id}
+            varianta="obrys"
+            aria-pressed={id === osnovaId}
+            onClick={() => setOsnovaId(id === osnovaId ? undefined : id)}
+          >
+            {nazev}
+          </Tlacitko>
+        ))}
+      </div>
+      {osnovaId !== undefined && (
+        <div className="navrhy">
+          {ulohy
+            .filter((u) => u.osnova_id === osnovaId)
+            .map((u) => (
+              <Tlacitko
+                key={u.id}
+                varianta="obrys"
+                aria-pressed={u.id === vybrana?.id}
+                onClick={() => vybrat(u.id === vybrana?.id && !povinna ? undefined : u.id)}
+              >
+                {u.nazev}
+              </Tlacitko>
+            ))}
         </div>
-      ))}
-      {!vsechny && zOsnov.length > 0 && (
-        <Tlacitko varianta="bez-ramu" onClick={rozbalit}>
-          Z osnovy…
-        </Tlacitko>
       )}
     </Blok>
   );
