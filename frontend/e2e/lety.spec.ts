@@ -22,14 +22,13 @@ test("přehled letů dne", async ({ page }) => {
   const pred = await stopky.textContent();
   await expect(stopky).not.toHaveText(pred!, { timeout: 3000 });
 
-  // Štítky ve stálém pořadí: čas · účel · způsob vzletu · POB (· úloha); účel normální
-  // a vzlet vlastní se nevypisují.
-  await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-2817" }).locator(".stitek")).toHaveText([
-    /^\d\d:\d\d$/,
-    "naviják",
-    "POB 2",
-  ]);
-  await expect(mfv.locator(".stitek")).toHaveText([/^\d\d:\d\d$/, "POB 1"]);
+  // Pás údajů v pevných polích: účel · způsob vzletu · POB · úloha · přistání · doba;
+  // účel normální a vzlet vlastní se nevypisují (pole zůstane prázdné).
+  await expect(
+    page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-2817" }).locator(".udaje > span"),
+  ).toHaveText(["", "naviják", "POB 2", "", "", ""]);
+  await expect(mfv.locator(".udaje > span")).toHaveText(["", "", "POB 1", "", "", ""]);
+  await expect(mfv.locator(".let-cas")).toContainText(/↑ \d\d:\d\d/);
 
   // Naplánované: vlek jako jeden dvojitý pásek.
   await expect(page.getByRole("heading", { name: "Naplánované 2" })).toBeVisible();
@@ -37,14 +36,15 @@ test("přehled letů dne", async ({ page }) => {
   await expect(vlek).toContainText("OK-CRA");
   await expect(vlek).toContainText("aerovlek");
 
-  // Ukončené: počet přistání jen číslem, letiště jen v detailu; celkový čas.
+  // Ukončené jako deník: čas, doba, počet přistání; letiště jen v detailu; celkový čas.
   await expect(page.getByRole("button", { name: /Ukončené 2/ })).toContainText('celkem 1°07"');
-  const cra = page.locator(".let.ukoncen", { hasText: "OK-CRA" });
-  await expect(cra.locator(".udaje-pristani")).toHaveText("3");
+  const cra = page.locator(".denik-radek.ukoncen", { hasText: "OK-CRA" });
+  await expect(cra.locator(".denik-pristani")).toHaveText("3");
+  await expect(cra.locator(".denik-doba")).toHaveText('45"');
   await expect(cra).not.toContainText("LKLT");
 
   // Zrušené jsou sbalené, ťuknutím se rozbalí.
-  await expect(page.locator(".let.zrusen")).toHaveCount(0);
+  await expect(page.locator(".denik-radek.zrusen")).toHaveCount(0);
   await page.getByRole("button", { name: /Zrušené 1/ }).click();
-  await expect(page.locator(".let.zrusen")).toHaveCount(1);
+  await expect(page.locator(".denik-radek.zrusen")).toHaveCount(1);
 });

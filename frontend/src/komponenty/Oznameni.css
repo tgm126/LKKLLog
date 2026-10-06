@@ -4,7 +4,7 @@
   bottom: 0;
   padding: var(--mezera-2) var(--mezera-3) var(--mezera-4);
   border-top: var(--ramecek);
-  background: var(--barva-pozadi);
+  background: var(--barva-karta);
 }
 
 .dole > .tl {

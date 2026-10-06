@@ -5,6 +5,16 @@ import { Tlacitko } from "../komponenty/Tlacitko";
 import type { Nabidky } from "./api";
 import "./Volby.css";
 
+/** Místo: letiště, nebo popis místa v terénu; prázdné = domovské letiště. */
+export type Misto = { id: number | null; popis: string | null };
+
+/** Název místa pro údaj „Místo vzletu / přistání“ (prázdné = domovské letiště). */
+export function nazevMista(nabidky: Nabidky, misto: Misto | undefined) {
+  if (misto?.popis) return misto.popis;
+  const letiste = nabidky.letiste.find((l) => (misto?.id ? l.id === misto.id : l.domovske));
+  return letiste ? `${letiste.kod} ${letiste.nazev}` : null;
+}
+
 /** Letiště (hledání podle kódu nebo názvu) nebo jiné místo popisem (přistání do terénu). */
 export function VyberMista({
   nabidky,
@@ -28,7 +38,7 @@ export function VyberMista({
         onChange={(e) => setHledat(e.target.value)}
         autoCapitalize="characters"
       />
-      <div className="navrhy">
+      <div className="cipy">
         {letiste.map((x) => (
           <Tlacitko key={x.id} varianta="obrys" onClick={() => ulozit(x.id, null)}>
             {x.kod} {x.nazev}
@@ -44,47 +54,5 @@ export function VyberMista({
         Uložit místo
       </Tlacitko>
     </>
-  );
-}
-
-
-/** Místo: letiště, nebo popis místa v terénu; prázdné = domovské letiště. */
-export type Misto = { id: number | null; popis: string | null };
-
-/** Volba místa v průvodci: vybrané místo modře (výchozí domovské letiště), „Jiné…“ otevře
- *  hledání letiště nebo popis místa. */
-export function VolbaMista({
-  nabidky,
-  misto,
-  zmenit,
-}: {
-  nabidky: Nabidky;
-  misto: Misto | undefined;
-  zmenit: (misto: Misto | undefined) => void;
-}) {
-  const [hledam, setHledam] = useState(false);
-  const domovske = nabidky.letiste.find((l) => l.domovske);
-  const letiste = nabidky.letiste.find((l) => l.id === (misto?.id ?? domovske?.id));
-  const nazev = misto?.popis ?? (letiste ? `${letiste.kod} ${letiste.nazev}` : "—");
-  if (hledam) {
-    return (
-      <VyberMista
-        nabidky={nabidky}
-        ulozit={(id, popis) => {
-          zmenit(id === domovske?.id ? undefined : { id, popis });
-          setHledam(false);
-        }}
-      />
-    );
-  }
-  return (
-    <div className="navrhy">
-      <Tlacitko varianta="obrys" aria-pressed onClick={() => setHledam(true)}>
-        {nazev}
-      </Tlacitko>
-      <Tlacitko varianta="bez-ramu" onClick={() => setHledam(true)}>
-        Jiné…
-      </Tlacitko>
-    </div>
   );
 }

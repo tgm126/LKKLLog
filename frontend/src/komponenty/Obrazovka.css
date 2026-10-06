@@ -1,4 +1,5 @@
-/* Obrazovka přes celý displej (průvodce, detail): horní lišta, obsah v blocích, akce dole. */
+/* Obrazovka přes celý displej (průvodce, detail): horní lišta, obsah v blocích (kartách),
+   akce dole. Návrh docs/navrhy/lety-mobil-v4.html a pruvodce-mobil-v4.html. */
 .obrazovka {
   display: flex;
   flex: 1;
@@ -6,11 +7,15 @@
 }
 
 .horni-lista {
+  border-bottom: var(--ramecek);
+  background: var(--barva-karta);
+}
+
+.horni-lista-radek {
   display: flex;
   align-items: center;
   gap: var(--mezera-2);
   padding: var(--mezera-2) var(--mezera-3);
-  border-bottom: var(--ramecek);
 }
 
 .horni-lista-vpravo {
@@ -20,7 +25,7 @@
 
 .obrazovka-obsah {
   flex: 1;
-  padding: 0 var(--mezera-4) var(--mezera-3);
+  padding: var(--mezera-3) var(--mezera-3) var(--mezera-3);
 }
 
 .obrazovka-akce {
@@ -30,14 +35,14 @@
   gap: var(--mezera-2);
   padding: var(--mezera-2) var(--mezera-3) var(--mezera-4);
   border-top: var(--ramecek);
-  background: var(--barva-pozadi);
+  background: var(--barva-karta);
 }
 
-.obrazovka-akce > .tl {
+.obrazovka-akce > .tl.hlavni {
   min-height: var(--dotyk-hlavni);
 }
 
-/* Dvě akce vedle sebe (Naplánovat / Proběhlý let) */
+/* Dvě akce vedle sebe (Naplánovat / Proběhlý let, Další let odsud / Zrušit let) */
 .akce-vedle {
   display: flex;
   gap: var(--mezera-2);
@@ -47,30 +52,32 @@
   flex: 1;
 }
 
-/* Blok s nadpisem a údaji „popisek – hodnota“ */
+/* Blok: karta s hlavičkou (pruh s nadpisem) – volby průvodce, údaje detailu */
 .blok {
-  padding-top: var(--mezera-3);
+  margin-bottom: var(--mezera-2);
+  overflow: hidden;
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+  box-shadow: var(--stin-karty);
 }
 
-.blok > .nadpisek {
-  display: block;
-  margin-bottom: var(--mezera-1);
-}
-
-.udaj {
-  display: grid;
-  grid-template-columns: var(--sirka-popisku) 1fr;
+.blok-nadpis {
+  display: flex;
+  justify-content: space-between;
   gap: var(--mezera-2);
-  width: 100%;
-  padding: var(--mezera-2) 0;
-  border: 0;
+  padding: var(--mezera-1) var(--mezera-3);
   border-bottom: var(--ramecek);
-  background: none;
-  text-align: left;
+  background: var(--barva-neutralni);
 }
 
-.udaj-popisek {
-  align-self: center;
-  font-size: var(--pismo-s);
-  color: var(--barva-seda);
+.blok-vpravo {
+  font-weight: var(--tloustka);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.blok-telo {
+  display: grid;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3);
 }

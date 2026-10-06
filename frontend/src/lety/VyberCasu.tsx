@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
-import { Blok } from "../komponenty/Obrazovka";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import "./Volby.css";
 
-// Výběr času prstem bez psaní (maketa lety-mobil.html): ťuknutí na pole → mřížka hodin →
-// mřížka minut po pěti → doladění −1 / +1. Čas v minutách od půlnoci UTC zvoleného dne.
+// Výběr času prstem bez psaní (maketa pruvodce-mobil-v4.html): pole vedle sebe (vzlet,
+// přistání…), ťuknutí na pole → mřížka hodin → mřížka minut po pěti → doladění −1 / +1.
+// Čas v minutách od půlnoci UTC zvoleného dne.
 
 const dve = (n: number) => String(n).padStart(2, "0");
 export const hhmm = (min: number) => `${dve(Math.floor(min / 60))}:${dve(min % 60)}`;
@@ -30,85 +30,67 @@ export const minutyUtc = (cas: string | Date) => {
   return d.getUTCHours() * 60 + d.getUTCMinutes();
 };
 
-export function VyberCasu({
-  nadpis,
-  min,
-  otevreno,
-  prepnout,
+export type PoleCasu<K extends string> = { klic: K; nazev: string; min: number | null };
+
+export function VolbaCasu<K extends string>({
+  pole,
+  aktivni,
+  aktivovat,
   nastavit,
   limit,
-  mistni,
+  doplnek,
 }: {
-  nadpis: string;
-  min: number | null;
-  otevreno: boolean;
-  prepnout: () => void;
-  /** Nová hodnota; vybrano = vybráno z mřížky (ne jen doladění ±1). */
-  nastavit: (min: number, vybrano: boolean) => void;
+  pole: PoleCasu<K>[];
+  /** Pole, které se právě vybírá (otevřená mřížka), nebo žádné. */
+  aktivni: K | null;
+  aktivovat: (klic: K | null) => void;
+  /** Nová hodnota pole; vybrano = vybráno z mřížky (ne jen doladění ±1). */
+  nastavit: (klic: K, min: number, vybrano: boolean) => void;
   /** Nejpozdější minuta, kterou jde vybrat (dnes nejde budoucnost). */
   limit: number;
-  mistni: (min: number) => string;
+  /** Mezi −1 a +1 (doba letu). */
+  doplnek?: ReactNode;
 }) {
   const [hodina, setHodina] = useState<number | null>(null);
+  const min = pole.find((p) => p.klic === aktivni)?.min ?? null;
   return (
-    <Blok nadpis={`${nadpis} (UTC)${min === null ? "" : ` · místní ${mistni(min)}`}`}>
-      <div className="cas-pole">
-        <Tlacitko
-          varianta="obrys"
-          className="krok"
-          disabled={min === null || min === 0}
-          aria-label="o minutu dřív"
-          onClick={() => nastavit(min! - 1, false)}
-        >
-          −1
-        </Tlacitko>
-        <Tlacitko
-          varianta="obrys"
-          className="hodnota cisla"
-          aria-pressed={otevreno}
-          onClick={() => {
-            setHodina(null);
-            prepnout();
-          }}
-        >
-          {min === null ? "—:—" : hhmm(min)}
-        </Tlacitko>
-        <Tlacitko
-          varianta="obrys"
-          className="krok"
-          disabled={min === null || min >= limit}
-          aria-label="o minutu později"
-          onClick={() => nastavit(min! + 1, false)}
-        >
-          +1
-        </Tlacitko>
+    <>
+      <div className="casy-pole">
+        {pole.map((p) => (
+          <Tlacitko
+            key={p.klic}
+            varianta="obrys"
+            className="cisla"
+            aria-pressed={aktivni === p.klic}
+            onClick={() => {
+              setHodina(null);
+              aktivovat(aktivni === p.klic ? null : p.klic);
+            }}
+          >
+            <span>{p.nazev}</span> {p.min === null ? "—:—" : hhmm(p.min)}
+          </Tlacitko>
+        ))}
       </div>
-      {otevreno &&
+      {aktivni !== null &&
         (hodina === null ? (
-          <div className="mrizka-casu">
+          <div className="mrizka-casu cisla">
             {Array.from({ length: 24 }, (_, h) => (
-              <Tlacitko
-                key={h}
-                varianta="obrys"
-                className="cisla"
-                disabled={h * 60 > limit}
-                onClick={() => setHodina(h)}
-              >
+              <Tlacitko key={h} varianta="obrys" disabled={h * 60 > limit} onClick={() => setHodina(h)}>
                 {dve(h)}
               </Tlacitko>
             ))}
           </div>
         ) : (
-          <div className="mrizka-casu minuty">
+          <div className="mrizka-casu cisla">
             {Array.from({ length: 12 }, (_, k) => hodina * 60 + k * 5).map((m) => (
               <Tlacitko
                 key={m}
                 varianta="obrys"
-                className="cisla"
+                aria-pressed={m === min}
                 disabled={m > limit}
                 onClick={() => {
                   setHodina(null);
-                  nastavit(m, true);
+                  nastavit(aktivni, m, true);
                 }}
               >
                 {hhmm(m)}
@@ -116,6 +98,27 @@ export function VyberCasu({
             ))}
           </div>
         ))}
-    </Blok>
+      {(aktivni !== null || doplnek) && (
+        <div className="doladeni">
+          <Tlacitko
+            varianta="obrys"
+            disabled={aktivni === null || min === null || min === 0}
+            aria-label="o minutu dřív"
+            onClick={() => nastavit(aktivni!, min! - 1, false)}
+          >
+            −1
+          </Tlacitko>
+          <span>{doplnek}</span>
+          <Tlacitko
+            varianta="obrys"
+            disabled={aktivni === null || min === null || min >= limit}
+            aria-label="o minutu později"
+            onClick={() => nastavit(aktivni!, min! + 1, false)}
+          >
+            +1
+          </Tlacitko>
+        </div>
+      )}
+    </>
   );
 }

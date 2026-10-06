@@ -1,0 +1,70 @@
+/* Údaje v bloku: dvě pole vedle sebe jako přihrádky (čáry = mezera 1 px nad barvou čáry);
+   úprava pole se otevře pod jeho řádkem (hustá mřížka doplní pole vpravo nad ni). */
+.udaje-bloku {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row dense;
+  gap: var(--ramecek-sirka);
+  background: var(--barva-cara);
+}
+
+.udaj {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: var(--mezera-2) calc(2 * var(--mezera-3)) var(--mezera-2) var(--mezera-3);
+  border: 0;
+  background: var(--barva-karta);
+  text-align: left;
+}
+
+.udaj.cely,
+.uprava {
+  grid-column: 1 / -1;
+}
+
+.udaj-popisek {
+  display: block;
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}
+
+.udaj-hodnota {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.udaj.zvyraznit .udaj-hodnota {
+  font-weight: var(--tloustka-tucna);
+}
+
+.udaj.odkaz .udaj-hodnota {
+  color: var(--barva-modra);
+}
+
+/* Upravitelné pole: „›“ vpravo; otevřené zvýrazněné */
+.udaj.upravit::after {
+  content: "›";
+  position: absolute;
+  top: 50%;
+  right: var(--mezera-3);
+  transform: translateY(-50%);
+  color: var(--barva-seda);
+}
+
+.udaj[aria-expanded="true"] {
+  background: var(--barva-modra-vypln);
+}
+
+.uprava {
+  display: grid;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3) var(--mezera-3);
+  background: var(--barva-modra-vypln);
+}
+
+.udaj-pod {
+  display: block;
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}

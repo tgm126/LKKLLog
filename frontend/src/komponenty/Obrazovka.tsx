@@ -9,8 +9,8 @@ export function Obrazovka({
   zpetPopis,
   nadpis,
   vpravo,
+  pod,
   akce,
-  trida,
   children,
 }: {
   zpet: () => void;
@@ -18,19 +18,22 @@ export function Obrazovka({
   zpetPopis: "Zavřít" | "Zpět";
   nadpis: ReactNode;
   vpravo?: ReactNode;
+  /** Pod horní lištou přes celou šířku (ukazatel postupu průvodce). */
+  pod?: ReactNode;
   akce?: ReactNode;
-  /** Varianta obrazovky (např. „pruvodce“ – oddělené sekce). */
-  trida?: string;
   children: ReactNode;
 }) {
   return (
-    <section className={["obrazovka", trida].filter(Boolean).join(" ")}>
+    <section className="obrazovka">
       <div className="horni-lista">
-        <Tlacitko varianta="bez-ramu" aria-label={zpetPopis} onClick={zpet}>
-          {zpetPopis === "Zavřít" ? "✕" : "←"}
-        </Tlacitko>
-        <h1 className="velke tucne">{nadpis}</h1>
-        {vpravo && <span className="horni-lista-vpravo">{vpravo}</span>}
+        <div className="horni-lista-radek">
+          <Tlacitko varianta="bez-ramu" aria-label={zpetPopis} onClick={zpet}>
+            {zpetPopis === "Zavřít" ? "✕" : "←"}
+          </Tlacitko>
+          <h1 className="velke tucne">{nadpis}</h1>
+          {vpravo && <span className="horni-lista-vpravo">{vpravo}</span>}
+        </div>
+        {pod}
       </div>
       <div className="obrazovka-obsah">{children}</div>
       {akce && <div className="obrazovka-akce">{akce}</div>}
@@ -38,11 +41,28 @@ export function Obrazovka({
   );
 }
 
-export function Blok({ nadpis, children }: { nadpis: string; children: ReactNode }) {
+/** Blok obrazovky: karta s hlavičkou (nadpis, vpravo doplněk). */
+export function Blok({
+  nadpis,
+  vpravo,
+  children,
+}: {
+  nadpis: ReactNode;
+  vpravo?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <div className="blok">
-      <span className="nadpisek">{nadpis}</span>
+    <section className="blok">
+      <h2 className="blok-nadpis nadpisek">
+        {nadpis}
+        {vpravo && <span className="blok-vpravo">{vpravo}</span>}
+      </h2>
       {children}
-    </div>
+    </section>
   );
+}
+
+/** Tělo bloku s odsazením (volby, seznamy). */
+export function BlokTelo({ children }: { children: ReactNode }) {
+  return <div className="blok-telo">{children}</div>;
 }

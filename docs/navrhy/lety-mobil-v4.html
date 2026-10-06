@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lety v4 – návrh</title>
+<style>
+/* =============================================================================================
+   NÁVRH v4 (7. 10. 2026) – hlavička a menu beze změny. Ve vzduchu a naplánované: pásky
+   s přihrádkami (v3) jako barevný panel s výrazným okrajem (bez proužku vlevo).
+   Ukončené: deník – řádky v jedné kartě (v2). Detail z v3, nahoře panel bez proužku.
+   Světlý a tmavý režim vedle sebe. Osoby jsou smyšlené.
+   ============================================================================================= */
+:root {
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px;
+  --pismo-m: 15px;
+  --pismo-l: 20px;
+  --tloustka: 400;
+  --tloustka-tucna: 700;
+  --mezera-1: 4px;
+  --mezera-2: 8px;
+  --mezera-3: 12px;
+  --mezera-4: 16px;
+  --zaobleni: 10px;
+  --zaobleni-pilulka: 999px;
+  --dotyk: 44px;
+  --dotyk-hlavni: 52px;
+  --sloupec-casu: 84px;          /* pravá přihrádka pásku: stopky / vzlet–přistání / doba */
+
+  /* Barvy – světlá / tmavá hodnota; text na kartě ≥ 4,7 : 1 (WCAG AA) */
+  --barva-pozadi:        light-dark(#eef0f3, #0d1015);
+  --barva-karta:         light-dark(#ffffff, #171b21);
+  --barva-cara:          light-dark(#d9dde2, #2c333c);   /* přihrádky pásku */
+  --barva-text:          light-dark(#1a1d21, #e8eaed);
+  --barva-seda:          light-dark(#5b6570, #9aa4af);
+  --barva-neutralni:     light-dark(#8a939d, #5d6670);   /* okraj ukončeného letu */
+  --barva-modra:         light-dark(#0a5fd0, #6aa8ff);
+  --barva-zelena:        light-dark(#137a38, #4cc777);
+  --barva-cervena:       light-dark(#c42b2b, #ff7a7a);
+  --barva-oranzova:      light-dark(#a35400, #f0a64a);
+  /* Barevný panel podle stavu, pás údajů o stupeň sytější; text na nich ≥ 10 : 1 */
+  --vypln-ukoncen:   light-dark(#ffffff, #171b21);
+  --pas-ukoncen:     light-dark(#f1f3f5, #1f252c);
+  --vypln-vzduch:    light-dark(#e3f4e8, #122a1b);
+  --pas-vzduch:      light-dark(#cdebd6, #1a3a26);
+  --vypln-plan:      light-dark(#e3edfc, #122440);
+  --pas-plan:        light-dark(#cfdff9, #1a3156);
+  --vypln-problem:   light-dark(#fce6e6, #2f171a);
+  --pas-problem:     light-dark(#f7d2d2, #432024);
+  /* Okraj panelu: ve světlém téměř černý, v tmavém světle šedý (černý by na tmavém zmizel) */
+  --barva-obrys:     light-dark(#2b3138, #7d8894);
+  --obrys-sirka:     1.5px;
+  --barva-prepazka:  light-dark(#aab2bb, #3f4852);  /* přihrádky uvnitř panelu */
+  --akce-modra: #0a5fd0;
+  --akce-zelena: #137a38;
+  --na-akci: #fff;
+  --pruh-testu: #f5b700;
+  --na-pruhu: #1a1d21;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--pismo); font-size: var(--pismo-m); line-height: 1.3; background: #8a9099; padding: var(--mezera-4); }
+.cisla { font-variant-numeric: tabular-nums; }
+.male { font-size: var(--pismo-s); }
+.seda { color: var(--barva-seda); }
+.tucne { font-weight: var(--tloustka-tucna); }
+
+.navrh-nadpis { color: #fff; margin-bottom: var(--mezera-4); }
+.navrh-nadpis h1 { font-size: 22px; }
+.navrh-nadpis p { max-width: 900px; opacity: .9; }
+.rada { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-bottom: 32px; }
+.popis-telefonu { color: #fff; font-size: 13px; margin-bottom: 6px; }
+.telefon {
+  width: 375px; height: 812px; overflow: hidden; position: relative;
+  border-radius: 28px; border: 8px solid #1b1b1b;
+  background: var(--barva-pozadi); color: var(--barva-text);
+  display: flex; flex-direction: column;
+}
+.telefon.svetly { color-scheme: light; }
+.telefon.tmavy  { color-scheme: dark; }
+.obsah { flex: 1; overflow: hidden; padding: 0 var(--mezera-3); }
+
+/* --- hlavička a menu jako dnes ----------------------------------------------------------- */
+.pruh { background: var(--pruh-testu); color: var(--na-pruhu); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); text-align: center; padding: var(--mezera-1); letter-spacing: .04em; }
+.hlavicka { background: var(--barva-karta); padding: var(--mezera-3) var(--mezera-3) var(--mezera-2); }
+.hlavicka-radek { display: flex; align-items: baseline; justify-content: space-between; gap: var(--mezera-2); }
+.hlavicka-radek + .hlavicka-radek { margin-top: var(--mezera-1); font-size: var(--pismo-s); color: var(--barva-seda); }
+.hlavicka-radek b { color: var(--barva-text); }
+.kulate { width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--barva-pozadi); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); vertical-align: middle; margin-left: var(--mezera-2); }
+.menu { background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); padding: 0 var(--mezera-3); }
+.menu span { display: inline-block; padding: var(--mezera-2) 0; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: .04em; color: var(--barva-modra); border-bottom: 2px solid var(--barva-modra); }
+
+.sekce { display: flex; justify-content: space-between; align-items: baseline; margin: var(--mezera-3) var(--mezera-1) var(--mezera-2); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); }
+.sekce .vpravo { text-transform: none; letter-spacing: 0; font-weight: var(--tloustka); }
+
+/* =============================================================================================
+   PÁSEK (strip): barevný okraj vlevo = stav; vpravo přihrádka času oddělená čarou; dole pás
+   údajů v pevných přihrádkách (účel · vzlet · POB · úloha · přistání), prázdná zůstane prázdná.
+   ============================================================================================= */
+.strip {
+  --vypln: var(--vypln-ukoncen);
+  --pas: var(--pas-ukoncen);
+  --stav: var(--barva-neutralni);
+  background: var(--vypln);
+  border: var(--obrys-sirka) solid var(--barva-obrys);
+  border-radius: var(--zaobleni);
+  margin-bottom: var(--mezera-2);
+  overflow: hidden;
+}
+.strip.vzduch  { --vypln: var(--vypln-vzduch);  --pas: var(--pas-vzduch);  --stav: var(--barva-zelena); }
+.strip.plan    { --vypln: var(--vypln-plan);    --pas: var(--pas-plan);    --stav: var(--barva-modra); }
+.strip.problem { --vypln: var(--vypln-problem); --pas: var(--pas-problem); --stav: var(--barva-cervena); }
+
+
+.polovina {
+  display: grid;
+  grid-template-columns: 1fr var(--sloupec-casu);
+  grid-template-areas: "hlava cas" "posadka cas" "pas pas";
+}
+.polovina + .polovina { border-top: var(--obrys-sirka) solid var(--barva-obrys); }
+.s-hlava { grid-area: hlava; display: flex; align-items: baseline; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3) 0; white-space: nowrap; min-width: 0; }
+.rejstrik { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); letter-spacing: .01em; }
+.typ { font-size: var(--pismo-s); color: var(--barva-seda); overflow: hidden; text-overflow: ellipsis; }
+.typ .vlecna { color: var(--barva-text); font-weight: var(--tloustka-tucna); }
+.s-posadka { grid-area: posadka; padding: 2px var(--mezera-3) var(--mezera-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.funkce { font-size: var(--pismo-s); color: var(--barva-seda); }
+.oddelovac { color: var(--barva-cara); margin: 0 var(--mezera-1); }
+
+/* přihrádka času vpravo */
+.s-cas {
+  grid-area: cas;
+  border-left: 1px solid var(--barva-prepazka);
+  display: grid; align-content: center; justify-items: end;
+  padding: var(--mezera-2) var(--mezera-3);
+  line-height: 1.25;
+}
+.s-cas .stopky { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); color: var(--barva-zelena); }
+.problem .s-cas .stopky { color: var(--barva-cervena); }
+.s-cas .od { font-weight: var(--tloustka-tucna); }
+.s-cas .do { color: var(--barva-seda); }
+.s-cas .popisek { font-size: var(--pismo-s); color: var(--barva-seda); }
+
+/* pás údajů */
+.s-pas {
+  grid-area: pas;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr .95fr .85fr .4fr var(--sloupec-casu);
+  background: var(--pas);
+  border-top: 1px solid var(--barva-prepazka);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+.s-pas > span { padding: 6px 6px; border-left: 1px solid var(--barva-prepazka); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 26px; }
+.s-pas > span:first-child { border-left: 0; padding-left: var(--mezera-3); }
+.s-pas .prist { text-align: right; }
+.s-pas .doba { text-align: right; font-size: var(--pismo-m); padding-top: 3px; padding-bottom: 3px; padding-right: var(--mezera-3); }
+.s-varovani { grid-column: 1 / -1; padding: 6px var(--mezera-3); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-cervena); border-top: 1px solid var(--barva-prepazka); }
+
+
+/* =============================================================================================
+   UKONČENÉ: deník – jedna karta, řádky s pevnými sloupci Letadlo · Posádka · Čas · Doba · P
+   ============================================================================================= */
+.denik { background: var(--barva-karta); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni); overflow: hidden; }
+.denik-radek { display: grid; grid-template-columns: 86px 1fr 44px 34px 14px; column-gap: var(--mezera-2); align-items: start; padding: 7px var(--mezera-3); border-top: 1px solid var(--barva-cara); }
+.denik-radek:first-child { border-top: 0; }
+.denik-radek.zahlavi { font-size: var(--pismo-s); color: var(--barva-seda); padding-top: var(--mezera-1); padding-bottom: var(--mezera-1); background: var(--pas-ukoncen); }
+.denik-radek .r { font-weight: var(--tloustka-tucna); white-space: nowrap; }
+.denik-radek .pos { min-width: 0; }
+.denik-radek .pos > span { display: block; }  /* delší posádka nebo údaje se zalomí – řádek až na tři řádky */
+.denik-radek .meta { font-size: var(--pismo-s); color: var(--barva-seda); }
+.denik-radek .cas { text-align: right; line-height: 1.25; }
+.denik-radek .cas span { display: block; }
+.denik-radek .cas span + span { color: var(--barva-seda); }
+.denik-radek .doba { text-align: right; font-weight: var(--tloustka-tucna); }
+.denik-radek .prist { text-align: right; color: var(--barva-seda); }
+
+/* akce pod páskem */
+.s-akce { display: flex; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); border-top: 1px solid var(--barva-prepazka); }
+.tl { height: var(--dotyk); border: 0; border-radius: var(--zaobleni); font: inherit; font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; padding: 0 var(--mezera-3); }
+.s-akce .tl { flex: 1; }
+.s-akce .tl.zelene, .s-akce .tl.modre { flex: 2; }
+.tl.zelene { background: var(--akce-zelena); color: var(--na-akci); }
+.tl.modre  { background: var(--akce-modra); color: var(--na-akci); }
+.tl.svetle { background: var(--barva-karta); color: var(--barva-modra); box-shadow: inset 0 0 0 1px var(--barva-cara); }
+.tl.obrys  { background: var(--barva-karta); color: var(--barva-text); box-shadow: inset 0 0 0 1px var(--barva-cara); }
+.tl.cervene-text { background: var(--barva-karta); color: var(--barva-cervena); box-shadow: inset 0 0 0 1px var(--barva-cara); }
+
+.zruseny-radek { display: flex; gap: var(--mezera-2); align-items: baseline; padding: var(--mezera-2) var(--mezera-3); }
+.zruseny-radek .vpravo { margin-left: auto; font-size: var(--pismo-s); }
+
+.dole { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--mezera-2) var(--mezera-3) var(--mezera-3); background: linear-gradient(transparent, var(--barva-pozadi) 35%); }
+.dole .tl { width: 100%; height: var(--dotyk-hlavni); }
+
+/* =============================================================================================
+   DETAIL: nahoře stejný pásek jako v přehledu, pod ním bloky polí – každé pole v přihrádce
+   (popisek nad hodnotou), dvě vedle sebe; ťuknutí na pole ho upraví (›).
+   ============================================================================================= */
+.det-hlava { display: grid; grid-template-columns: auto 1fr auto; gap: var(--mezera-2); align-items: center; background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); padding: var(--mezera-2) var(--mezera-3); }
+.det-hlava .zpet { font-size: var(--pismo-l); width: 28px; }
+.stitek { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); padding: 4px 10px; border-radius: var(--zaobleni-pilulka); background: var(--pas-ukoncen); color: var(--barva-seda); box-shadow: inset 0 0 0 1px var(--barva-cara); }
+.obsah.detail { padding-top: var(--mezera-3); }
+.blok { background: var(--barva-karta); border-radius: var(--zaobleni); margin-bottom: var(--mezera-2); overflow: hidden; box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.blok-nadpis { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); padding: 6px var(--mezera-3); background: var(--pas-ukoncen); border-bottom: 1px solid var(--barva-cara); }
+.pole { display: grid; grid-template-columns: 1fr 1fr; }
+.p { position: relative; padding: 6px 22px 7px var(--mezera-3); border-top: 1px solid var(--barva-cara); min-width: 0; }
+.p:nth-child(-n+2) { border-top: 0; }
+.p:nth-child(2n) { border-left: 1px solid var(--barva-cara); }
+.p.cely { grid-column: 1 / -1; border-left: 0; }
+.p .popisek { display: block; font-size: var(--pismo-s); color: var(--barva-seda); }
+.p .hodnota { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p.upravit::after { content: "›"; position: absolute; right: var(--mezera-3); top: 50%; transform: translateY(-50%); color: var(--barva-seda); }
+.p.odkaz .hodnota { color: var(--barva-modra); }
+.p .pridat { color: var(--barva-seda); }
+.p.zvyraznit .hodnota { font-weight: var(--tloustka-tucna); }
+.det-dole { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3) var(--mezera-3); background: var(--barva-pozadi); border-top: 1px solid var(--barva-cara); }
+
+.panel { background: #fff; color: #111; border-radius: 12px; padding: 16px; max-width: 780px; }
+.panel h2 { font-size: 17px; margin: 0 0 8px; }
+.panel ul { padding-left: 20px; margin: 0 0 12px; }
+.panel li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="navrh-nadpis">
+  <h1>Lety v4 – barevné panely s okrajem, ukončené jako deník, detail z v3</h1>
+  <p>Ve vzduchu a naplánované: pásky s přihrádkami (v3) jako barevný panel s výrazným okrajem,
+     bez proužku vlevo. Ukončené: deník z v2. Detail z v3 – nahoře stejný panel bez proužku.
+     Světlý a tmavý režim vedle sebe, telefon 375 px.</p>
+</div>
+
+<!-- ======================================================================================= -->
+<template id="lety">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="hlavicka">
+    <div class="hlavicka-radek">
+      <span class="rejstrik">AK Kladno Log</span>
+      <span><span class="rejstrik cisla">19:57:58</span> <span class="male seda">UTC</span><span class="kulate">TM</span></span>
+    </div>
+    <div class="hlavicka-radek cisla">
+      <span>Úterý 6. 10. 2026</span>
+      <span><b>TB</b> 04:38 · <b>SR</b> 05:11 · <b>SS</b> 16:31 · <b>TE</b> 17:04</span>
+    </div>
+  </header>
+  <nav class="menu"><span>LETY</span></nav>
+
+  <main class="obsah">
+    <div class="sekce"><span>▾ Ve vzduchu 2</span></div>
+
+    <div class="strip problem">
+      <div class="polovina">
+        <div class="s-hlava"><span class="rejstrik">OK-MFV</span><span class="typ">Z 126</span></div>
+        <div class="s-posadka">Jan Kovář <span class="funkce">PIC</span></div>
+        <div class="s-cas cisla"><span class="stopky">0:00:30</span><span class="popisek">↑ 19:57</span></div>
+        <div class="s-pas"><span></span><span></span><span>POB 1</span><span></span><span></span><span class="doba"></span></div>
+        <div class="s-varovani">Po konci občanského soumraku (TE 17:04)</div>
+      </div>
+      <div class="s-akce"><button class="tl svetle">T&amp;G 0</button><button class="tl zelene">Přistál</button></div>
+    </div>
+
+    <div class="strip vzduch">
+      <div class="polovina">
+        <div class="s-hlava"><span class="rejstrik">OK-2817</span><span class="typ">L 13 Blaník</span></div>
+        <div class="s-posadka">Marek Dvořák <span class="funkce">PIC</span><span class="oddelovac">|</span>Eva Malá <span class="funkce">žák</span></div>
+        <div class="s-cas cisla"><span class="stopky">0:18:02</span><span class="popisek">↑ 19:39</span></div>
+        <div class="s-pas"><span>výcvik</span><span>aerovlek</span><span>POB 2</span><span>IU/6</span><span></span><span class="doba"></span></div>
+      </div>
+      <div class="s-akce"><button class="tl zelene">Přistál</button></div>
+      <div class="polovina">
+        <div class="s-hlava"><span class="rejstrik">OK-CUO 78</span><span class="typ">Skylane · <span class="vlecna">vlečná</span></span></div>
+        <div class="s-posadka">Pavel Brož <span class="funkce">PIC</span></div>
+        <div class="s-cas cisla"><span class="stopky">0:18:02</span><span class="popisek">↑ 19:39</span></div>
+        <div class="s-pas"><span>vlek</span><span></span><span>POB 1</span><span></span><span></span><span class="doba"></span></div>
+      </div>
+      <div class="s-akce"><button class="tl zelene">Přistál</button></div>
+    </div>
+
+    <div class="sekce"><span>▾ Naplánované 1</span></div>
+    <div class="strip plan">
+      <div class="polovina">
+        <div class="s-hlava"><span class="rejstrik">OK-CWF</span><span class="typ">Cessna 172</span></div>
+        <div class="s-posadka">Petr Hora <span class="funkce">PIC</span><span class="oddelovac">|</span>David Malý <span class="funkce">žák</span></div>
+        <div class="s-cas cisla"><span class="popisek">plán</span><span class="od">—:—</span></div>
+        <div class="s-pas"><span>výcvik</span><span></span><span>POB 2</span><span></span><span></span><span class="doba"></span></div>
+      </div>
+      <div class="s-akce"><button class="tl modre">Vzlet</button></div>
+    </div>
+
+    <div class="sekce"><span>▾ Ukončené 25</span><span class="vpravo">celkem <b class="cisla">1°24″</b></span></div>
+    <div class="denik">
+      <div class="denik-radek zahlavi"><span>Letadlo</span><span>Posádka</span><span class="cas">Čas</span><span class="doba">Doba</span><span class="prist">P</span></div>
+      <div class="denik-radek"><span class="r">OK-MFV</span><span class="pos"><span>Jan Kovář</span></span><span class="cas cisla"><span>19:11</span><span>19:35</span></span><span class="doba cisla">24″</span><span class="prist cisla">2</span></div>
+      <div class="denik-radek"><span class="r">OK-2817</span><span class="pos"><span>Marek Dvořák · Eva Malá</span><span class="meta">výcvik · aerovlek · IU/6 · POB 2</span></span><span class="cas cisla"><span>19:09</span><span>19:11</span></span><span class="doba cisla">2″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-0914</span><span class="pos"><span>Tomáš Bílek</span><span class="meta">naviják · II/3</span></span><span class="cas cisla"><span>19:04</span><span>19:10</span></span><span class="doba cisla">6″</span><span class="prist cisla">1</span></div>
+    </div>
+  </main>
+  <div class="dole"><button class="tl modre">+ Nový let</button></div>
+</template>
+
+<template id="ukoncene">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="hlavicka">
+    <div class="hlavicka-radek">
+      <span class="rejstrik">AK Kladno Log</span>
+      <span><span class="rejstrik cisla">19:57:58</span> <span class="male seda">UTC</span><span class="kulate">TM</span></span>
+    </div>
+    <div class="hlavicka-radek cisla">
+      <span>Úterý 6. 10. 2026</span>
+      <span><b>TB</b> 04:38 · <b>SR</b> 05:11 · <b>SS</b> 16:31 · <b>TE</b> 17:04</span>
+    </div>
+  </header>
+  <nav class="menu"><span>LETY</span></nav>
+  <main class="obsah">
+    <div class="sekce"><span>▾ Ukončené 25</span><span class="vpravo">celkem <b class="cisla">1°24″</b></span></div>
+    <div class="denik">
+      <div class="denik-radek zahlavi"><span>Letadlo</span><span>Posádka</span><span class="cas">Čas</span><span class="doba">Doba</span><span class="prist">P</span></div>
+      <div class="denik-radek"><span class="r">OK-MFV</span><span class="pos"><span>Jan Kovář</span></span><span class="cas cisla"><span>19:11</span><span>19:35</span></span><span class="doba cisla">24″</span><span class="prist cisla">2</span></div>
+      <div class="denik-radek"><span class="r">OK-2817</span><span class="pos"><span>Marek Dvořák · Eva Malá</span><span class="meta">výcvik · aerovlek · IU/6 · POB 2</span></span><span class="cas cisla"><span>19:09</span><span>19:11</span></span><span class="doba cisla">2″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-0914</span><span class="pos"><span>Tomáš Bílek</span><span class="meta">naviják · II/3</span></span><span class="cas cisla"><span>19:04</span><span>19:10</span></span><span class="doba cisla">6″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-CUO 78</span><span class="pos"><span>Pavel Brož</span><span class="meta">vlek</span></span><span class="cas cisla"><span>19:09</span><span>19:10</span></span><span class="doba cisla">1″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-6512</span><span class="pos"><span>Tomáš Bílek</span><span class="meta">sólo · naviják · IU/8</span></span><span class="cas cisla"><span>17:22</span><span>17:24</span></span><span class="doba cisla">2″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-CWF</span><span class="pos"><span>Tomáš Bílek</span></span><span class="cas cisla"><span>16:59</span><span>17:00</span></span><span class="doba cisla">1″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-CRA</span><span class="pos"><span>Jan Kaplan · Ivo Sýkora</span><span class="meta">POB 2</span></span><span class="cas cisla"><span>16:48</span><span>16:54</span></span><span class="doba cisla">6″</span><span class="prist cisla">4</span></div>
+      <div class="denik-radek"><span class="r">OK-MFV</span><span class="pos"><span>Tomáš Bílek</span></span><span class="cas cisla"><span>16:41</span><span>16:42</span></span><span class="doba cisla">1″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-3656</span><span class="pos"><span>Tomáš Bílek</span><span class="meta">naviják</span></span><span class="cas cisla"><span>16:30</span><span>16:31</span></span><span class="doba cisla">1″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-0914</span><span class="pos"><span>Jan Kovář</span><span class="meta">naviják · II/2</span></span><span class="cas cisla"><span>16:10</span><span>16:21</span></span><span class="doba cisla">11″</span><span class="prist cisla">1</span></div>
+      <div class="denik-radek"><span class="r">OK-2817</span><span class="pos"><span>Marek Dvořák · Eva Malá</span><span class="meta">výcvik · naviják · IU/4 · POB 2</span></span><span class="cas cisla"><span>15:58</span><span>16:03</span></span><span class="doba cisla">5″</span><span class="prist cisla">1</span></div>
+    </div>
+    <div class="sekce"><span>▸ Zrušené 2</span></div>
+  </main>
+  <div class="dole"><button class="tl modre">+ Nový let</button></div>
+</template>
+
+<!-- ======================================================================================= -->
+<template id="detail">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="det-hlava">
+    <span class="zpet">←</span>
+    <span class="tucne">Let</span>
+    <span class="stitek">Ukončený</span>
+  </header>
+  <main class="obsah detail">
+    <div class="strip">
+      <div class="polovina">
+        <div class="s-hlava"><span class="rejstrik">OK-2817</span><span class="typ">L 13 Blaník · kluzák</span></div>
+        <div class="s-posadka">Marek Dvořák <span class="funkce">PIC</span><span class="oddelovac">|</span>Eva Malá <span class="funkce">žák</span></div>
+        <div class="s-cas cisla"><span class="od">19:09</span><span class="do">19:11</span></div>
+        <div class="s-pas"><span>výcvik</span><span>aerovlek</span><span>POB 2</span><span>IU/6</span><span class="prist cisla">1</span><span class="doba cisla">2″</span></div>
+      </div>
+    </div>
+
+    <section class="blok">
+      <div class="blok-nadpis">Posádka a let</div>
+      <div class="pole">
+        <div class="p upravit"><span class="popisek">Instruktor (PIC)</span><span class="hodnota">Marek Dvořák</span></div>
+        <div class="p upravit"><span class="popisek">Žák</span><span class="hodnota">Eva Malá</span></div>
+        <div class="p"><span class="popisek">Účel</span><span class="hodnota">Výcvik</span></div>
+        <div class="p"><span class="popisek">Způsob vzletu</span><span class="hodnota">Aerovlek</span></div>
+        <div class="p cely upravit"><span class="popisek">Úloha</span><span class="hodnota">IU/6 Pády a vývrtky</span></div>
+        <div class="p cely odkaz"><span class="popisek">Vlečná</span><span class="hodnota">OK-CUO 78 · Pavel Brož ›</span></div>
+      </div>
+    </section>
+
+    <section class="blok">
+      <div class="blok-nadpis">Časy a místa (UTC)</div>
+      <div class="pole">
+        <div class="p upravit zvyraznit"><span class="popisek">Vzlet</span><span class="hodnota cisla">19:09:20</span></div>
+        <div class="p upravit zvyraznit"><span class="popisek">Přistání</span><span class="hodnota cisla">19:11:02</span></div>
+        <div class="p upravit"><span class="popisek">Místo vzletu</span><span class="hodnota">LKKL Kladno</span></div>
+        <div class="p upravit"><span class="popisek">Místo přistání</span><span class="hodnota">LKKL Kladno</span></div>
+        <div class="p zvyraznit"><span class="popisek">Doba</span><span class="hodnota cisla">2″</span></div>
+        <div class="p upravit"><span class="popisek">Přistání celkem</span><span class="hodnota">1</span></div>
+      </div>
+    </section>
+
+    <section class="blok">
+      <div class="blok-nadpis">Platba a poznámka</div>
+      <div class="pole">
+        <div class="p cely upravit"><span class="popisek">Platí</span><span class="hodnota">Eva Malá</span></div>
+        <div class="p cely upravit"><span class="popisek">Poznámka</span><span class="hodnota pridat">ťuknutím přidat</span></div>
+      </div>
+    </section>
+
+    <section class="blok">
+      <div class="blok-nadpis">Evidence</div>
+      <div class="pole">
+        <div class="p"><span class="popisek">Založil</span><span class="hodnota">Tomáš Bílek · 19:09</span></div>
+        <div class="p upravit"><span class="popisek">Historie</span><span class="hodnota">2 úpravy</span></div>
+      </div>
+    </section>
+  </main>
+  <div class="det-dole"><button class="tl obrys">Další let odsud</button><button class="tl cervene-text">Zrušit let</button></div>
+</template>
+
+<div class="rada">
+  <div><div class="popis-telefonu">Přehled – světlý</div><div class="telefon svetly" data-sablona="lety"></div></div>
+  <div><div class="popis-telefonu">Přehled – tmavý</div><div class="telefon tmavy" data-sablona="lety"></div></div>
+  <div><div class="popis-telefonu">Ukončené – světlý</div><div class="telefon svetly" data-sablona="ukoncene"></div></div>
+  <div><div class="popis-telefonu">Ukončené – tmavý</div><div class="telefon tmavy" data-sablona="ukoncene"></div></div>
+  <div><div class="popis-telefonu">Detail – světlý</div><div class="telefon svetly" data-sablona="detail"></div></div>
+  <div><div class="popis-telefonu">Detail – tmavý</div><div class="telefon tmavy" data-sablona="detail"></div></div>
+</div>
+
+<div class="rada"><div class="panel">
+  <h2>Verze 4 proti v3</h2>
+  <ul>
+    <li><b>Panel místo proužku</b>: celý pásek je barevná plocha podle stavu (zelená ve vzduchu,
+      modrá naplánovaný, červená problém, bílá ukončený) s okrajem 1,5 px – ve světlém režimu
+      téměř černým, v tmavém světle šedým (černý by na tmavém pozadí zmizel). Přepážky
+      přihrádek uvnitř jsou tmavší než dřív.</li>
+    <li><b>Ukončené jako deník z v2</b>: řádky Letadlo · Posádka · Čas (vzlet nad přistáním) ·
+      Doba · P (přistání); druhý řádek šedě jen pro odchylky od běžného letu.</li>
+    <li><b>Detail z v3</b>: nahoře panel ukončeného letu s okrajem, bez proužku vlevo.</li>
+  </ul>
+</div></div>
+
+<script>
+for (const t of document.querySelectorAll(".telefon")) {
+  t.append(document.getElementById(t.dataset.sablona).content.cloneNode(true));
+}
+</script>
+</body>
+</html>

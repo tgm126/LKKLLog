@@ -18,7 +18,7 @@
   margin: 0 auto;
   padding: var(--mezera-4) var(--mezera-4) var(--mezera-5);
   border-radius: var(--zaobleni) var(--zaobleni) 0 0;
-  background: var(--barva-pozadi);
+  background: var(--barva-karta);
 }
 
 .dialog .tl {

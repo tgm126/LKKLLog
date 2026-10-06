@@ -25,25 +25,24 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
 
-  await page.getByRole("button", { name: "Aerovlek" }).click();
+  await page.getByRole("button", { name: "Aerovlek", exact: true }).click();
   await blok(page, "Vlečná").getByRole("button", { name: /^OK-CRA/ }).click();
   const vlekar = blok(page, "Vlekař");
-  await vlekar.getByRole("button", { name: "Všichni…" }).click();
+  await vlekar.getByRole("button", { name: "Hledat…" }).click();
   // Pilot kluzáku nesmí vlekat – v nabídce vlekaře není.
   await expect(vlekar.getByRole("button", { name: /Adam Admin/ })).toHaveCount(0);
   await vlekar.getByRole("button", { name: "Nela Nová" }).click();
 
-  await blok(page, "Místo vzletu").getByRole("button", { name: "Jiné…" }).click();
+  // Vlečná v rozpracovaném pásku nahoře.
+  await expect(page.locator(".let.rozpracovany .let-cas")).toContainText("OK-CRA");
+
+  await page.getByRole("button", { name: /^Místo vzletu/ }).click();
   await page.getByLabel("Hledat letiště (kód nebo název)").fill("LKLT");
   await page.getByRole("button", { name: "LKLT Letňany" }).click();
-  await expect(
-    blok(page, "Místo vzletu").getByRole("button", { name: "LKLT Letňany" }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await blok(page, "Platí").getByRole("button", { name: "Aeroklub" }).click();
-  await expect(blok(page, "Platí").getByRole("button", { name: "Aeroklub" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT Letňany/ })).toBeVisible();
+  await page.getByRole("button", { name: /^Platí/ }).click();
+  await page.getByRole("button", { name: "Aeroklub" }).click();
+  await expect(page.getByRole("button", { name: /Platí\s*Aeroklub/ })).toBeVisible();
 
   await page.getByRole("button", { name: "Proběhlý let" }).click();
   await page.getByRole("button", { name: "Včera" }).click();

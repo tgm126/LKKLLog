@@ -1,85 +1,165 @@
-/* Let = zaoblený pásek (strip ŘLP); varianta stavu mění jen výplň, barvu stopek a okraj. */
+/* Pásek letu = barevný panel s výrazným okrajem rozdělený na přihrádky (strip ŘLP).
+   Varianta stavu mění jen výplň panelu, pás údajů a barvu stopek. */
 .let {
+  --let-vypln: var(--barva-karta);
+  --let-pas: var(--barva-neutralni);
+
   margin-bottom: var(--mezera-2);
-  padding: var(--mezera-2) var(--mezera-3);
-  border: var(--ramecek-sirka) solid var(--let-okraj, transparent);
+  overflow: hidden;
+  border: var(--okraj-pasku) solid var(--barva-obrys);
   border-radius: var(--zaobleni);
   background: var(--let-vypln);
-  cursor: pointer;
 }
 
 .let.vzduch {
   --let-vypln: var(--barva-zelena-vypln);
-  --let-cas: var(--barva-zelena);
+  --let-pas: var(--barva-zelena-pas);
+  --let-stopky: var(--barva-zelena);
 }
 
 .let.problem {
   --let-vypln: var(--barva-cervena-vypln);
-  --let-cas: var(--barva-cervena);
+  --let-pas: var(--barva-cervena-pas);
+  --let-stopky: var(--barva-cervena);
 }
 
-.let.naplanovan {
+.let.naplanovan,
+.let.rozpracovany {
   --let-vypln: var(--barva-modra-vypln);
+  --let-pas: var(--barva-modra-pas);
 }
 
-.let.ukoncen {
-  --let-vypln: var(--barva-neutralni);
+/* Rozpracovaný let v průvodci: čárkovaný okraj = ještě neuložený */
+.let.rozpracovany {
+  border-style: dashed;
 }
 
-.let.zrusen {
-  --let-vypln: transparent;
-  --let-okraj: var(--barva-cara);
-
-  color: var(--barva-seda);
+/* Polovina pásku: rejstřík a typ · posádka | přihrádka času; pod tím pás údajů přes celou šířku */
+.let-par {
+  display: grid;
+  grid-template-areas:
+    "hlava cas"
+    "posadka cas"
+    "udaje udaje"
+    "varovani varovani"
+    "akce akce";
+  grid-template-columns: minmax(0, 1fr) var(--sirka-casu);
 }
 
-.let-radek {
+/* Pásek v přehledu: ťuknutí otevře detail letu */
+.let-par.otevira {
+  cursor: pointer;
+}
+
+/* Vlek: kluzák a vlečná v jednom pásku, mezi nimi silná čára */
+.let-par + .let-par {
+  border-top: var(--okraj-pasku) solid var(--barva-obrys);
+}
+
+.let-hlava {
   display: flex;
-  flex-wrap: wrap;
+  grid-area: hlava;
   align-items: baseline;
-  column-gap: var(--mezera-2);
+  gap: var(--mezera-2);
+  min-width: 0;
+  padding: var(--mezera-2) var(--mezera-3) 0;
+  white-space: nowrap;
 }
 
-.let-radek + .let-radek {
-  margin-top: var(--mezera-1);
+.let-typ {
+  overflow: hidden;
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+  text-overflow: ellipsis;
 }
 
-/* Typ letadla a popisek funkce za jménem (PIC, žák) */
-.let-typ,
+.let-typ b {
+  color: var(--barva-text);
+}
+
+.let-posadka {
+  grid-area: posadka;
+  padding: 0 var(--mezera-3) var(--mezera-2);
+}
+
+/* Posádka: osoby oddělené svislou čarou, funkce malým šedým písmem */
+.oddelovac {
+  margin: 0 var(--mezera-1);
+  color: var(--barva-prepazka);
+}
+
 .funkce {
   font-size: var(--pismo-s);
   color: var(--barva-seda);
 }
 
-.let-vpravo {
-  margin-left: auto;
+/* Přihrádka času vpravo: stopky a vzlet, nebo vzlet nad přistáním */
+.let-cas {
+  display: grid;
+  grid-area: cas;
+  align-content: center;
+  justify-items: end;
+  padding: var(--mezera-2) var(--mezera-3);
+  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
 }
 
-.let-cas {
-  color: var(--let-cas, var(--barva-text));
+.let-stopky {
+  color: var(--let-stopky, var(--barva-text));
   font-size: var(--pismo-l);
   font-weight: var(--tloustka-tucna);
 }
 
-.let-duvod {
-  margin-top: var(--mezera-1);
+/* Pás údajů: pevná pole s přepážkami, prázdné zůstane prázdné; doba pod přihrádkou času */
+.udaje {
+  display: grid;
+  grid-area: udaje;
+  grid-template-columns: var(--pole-pasku);
+  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
+  background: var(--let-pas);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+
+.udaje > span {
+  min-height: calc(var(--pismo-s) + 2 * var(--mezera-2));
+  padding: var(--mezera-1);
+  overflow: hidden;
+  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.udaje > span:first-child {
+  padding-left: var(--mezera-3);
+  border-left: 0;
+}
+
+.udaje-pristani {
+  text-align: right;
+}
+
+.udaje > .udaje-doba {
+  padding-right: var(--mezera-3);
+  font-size: var(--pismo-m);
+  text-align: right;
+}
+
+.let-varovani {
+  grid-area: varovani;
+  padding: var(--mezera-1) var(--mezera-3);
+  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
   color: var(--barva-cervena);
   font-size: var(--pismo-s);
   font-weight: var(--tloustka-tucna);
 }
 
-/* Vlek před vzletem: dvojitý pásek, oddělovač mezi kluzákem a vlečnou */
-.let-par + .let-par {
-  margin-top: var(--mezera-2);
-  padding-top: var(--mezera-2);
-  border-top: var(--ramecek);
-}
-
-/* Akce ve vzduchu: T&G a PŘISTÁL v řádku, PŘISTÁL širší */
+/* Akce pod páskem: T&G a PŘISTÁL v řádku (PŘISTÁL širší), VZLET přes celou šířku */
 .let-akce {
   display: flex;
+  grid-area: akce;
   gap: var(--mezera-2);
-  margin-top: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3);
+  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
 }
 
 .let-akce .tl {
@@ -90,30 +170,61 @@
   flex: 2;
 }
 
-
-/* Údaje letu v pevných sloupcích: čas · účel · způsob vzletu · POB · úloha · přistání.
-   Sloupec je široký na nejdelší text (token v písmu štítku + okraje štítku), zbylé místo
-   se rozdělí rovnoměrně mezi sloupce; na úzkém displeji se sloupce zúží a delší text
-   se zkrátí třemi tečkami. */
-.udaje {
-  display: grid;
-  grid-template-columns: var(--sloupce-udaju);
-  justify-content: space-between;
-  margin-top: var(--mezera-1);
-  font-size: var(--pismo-s);
-  font-weight: var(--tloustka-tucna);
-}
-
-.udaje .stitek {
-  max-width: 100%;
+/* --- deník ukončených a zrušených letů: řádky v jedné kartě --------------------------- */
+.denik {
+  margin-bottom: var(--mezera-2);
   overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: top;
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
 }
 
-/* Počet přistání vpravo pod dobou letu, písmem obsahu */
-.udaje-pristani {
-  font-size: var(--pismo-m);
-  font-weight: var(--tloustka);
+.denik-radek {
+  display: grid;
+  grid-template-columns: var(--sloupce-deniku);
+  align-items: start;
+  column-gap: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3);
+  border-top: var(--ramecek);
+  cursor: pointer;
+}
+
+.denik-radek.zahlavi {
+  padding-top: var(--mezera-1);
+  padding-bottom: var(--mezera-1);
+  border-top: 0;
+  background: var(--barva-neutralni);
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+  cursor: default;
+}
+
+.denik-radek.zrusen {
+  color: var(--barva-seda);
+}
+
+.denik-rejstrik {
+  font-weight: var(--tloustka-tucna);
+  white-space: nowrap;
+}
+
+/* Posádka (jméno se nezalomí, jen mezi osobami) a pod ní odchylky od běžného letu */
+.denik-posadka {
+  display: grid;
+  min-width: 0;
+}
+
+.denik-cas {
+  display: grid;
+  text-align: right;
+}
+
+.denik-doba {
+  font-weight: var(--tloustka-tucna);
+  text-align: right;
+}
+
+.denik-pristani {
+  color: var(--barva-seda);
   text-align: right;
 }

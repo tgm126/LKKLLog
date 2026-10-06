@@ -2,7 +2,8 @@
 
 > **NÁVRH ke schválení.** Po schválení se podle něj napíše kód; změny nejdřív sem.
 
-Vzhled a chování podle makety `docs/navrhy/lety-mobil.html` (mobil). Data v tabulkách
+Vzhled podle maket `docs/navrhy/lety-mobil-v4.html` (přehled a detail) a
+`docs/navrhy/pruvodce-mobil-v4.html` (nový let) – mobil, světlý i tmavý režim. Data v tabulkách
 `let`, `posadka`, `let_tg` a pohledech `v_let`, `v_historie_letu`, `v_lov_letadlo`,
 `v_lov_*` (skripty `db/009`–`015`). Obrazovka pro počítač zatím ne.
 
@@ -61,22 +62,37 @@ s vlastní dobou); vzlet je u obou stejný. **Vlekař** nemůže být zároveň 
 **Osoba na palubě** (PIC, žák, přezkoušený) nemůže být ve vzduchu ve dvou letech zároveň –
 hlídá databáze při vzletu, proběhlém letu i úpravě časů a posádky (`db/018`); plánovat jde
 volně, dozor na zemi se nepočítá. **Vlek** je dvojitý pásek, dokud je naplánovaný nebo
-ve vzduchu; jednotlivě (po přistání vlečné) má vlečná štítek „vlek“. Ťuknutí na polovinu
+ve vzduchu; jednotlivě (po přistání vlečné) má vlečná účel „vlek“. Ťuknutí na polovinu
 dvojice otevře detail jejího letu.
 
-**Údaje na páscích** (rozhodnuto při testování 6. 10. 2026, nahrazuje „štítky jen při
-odchylce“ z makety): pod posádkou řádek štítků v **pevných sloupcích** – každý údaj vždy na
-stejném místě, i když chybí: 1 čas vzletu (–přistání), 2 účel (u vlečné „vlek“; „sólo“,
-„přezk.“ zkráceně), 3 způsob vzletu, 4 POB (u výcviku z posádky), 5 označení úlohy (IU/4)
-a vpravo pod dobou letu **počet přistání** jen číslem (u ukončeného letu vždy). Letiště
-vzletu a přistání se na pásku neukazují, jen v detailu letu. Sloupec je široký na nejdelší možný text
-(token `--sloupce-udaju`), zbylé místo se dělí rovnoměrně mezi sloupce. Běžné hodnoty se nevypisují (sloupec zůstane prázdný): účel „normální“
-a způsob vzletu „vlastní“ (ten aplikace sama přiřadí každému letu, který není kluzák – i vlečné).
-Pod nimi doplněk s rámečkem (dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
-páskem přes celou šířku (jako PŘISTÁL).
+**Vzhled přehledu** (návrh v4, odsouhlaseno 7. 10. 2026, nahrazuje štítky z 6. 10.):
+- **Ve vzduchu a naplánované = pásek** jako papírový strip: barevný panel podle stavu (zelený
+  ve vzduchu, modrý naplánovaný, červený problém) s výrazným okrajem (ve světlém režimu téměř
+  černým, v tmavém světle šedým) rozdělený na **přihrádky**: rejstřík a typ · posádka (osoby
+  oddělené svislou čarou) · vpravo **přihrádka času** (stopky a čas vzletu) · dole **pás
+  údajů v pevných polích** účel · způsob vzletu · POB · úloha · přistání · doba. Prázdné pole
+  zůstane prázdné, takže stejný údaj je u všech pásků pod sebou. Běžné hodnoty se nevypisují:
+  účel „normální“ a způsob vzletu „vlastní“ (ten aplikace sama přiřadí každému letu, který
+  není kluzák – i vlečné). Varování má v pásku vlastní červený řádek. Akce pod páskem
+  (T&G a PŘISTÁL, u naplánovaného VZLET přes celou šířku).
+- **Ukončené a zrušené = deník**: řádky v jedné kartě, sloupce Letadlo · Posádka · Čas (vzlet
+  nad přistáním) · Doba · P (počet přistání); pod posádkou šedě jen odchylky od běžného letu
+  (účel, způsob vzletu, úloha, POB 2, dodatečně), u zrušeného důvod. Jméno se nezalomí
+  uprostřed, řádek může mít až tři řádky.
+- **Letiště** vzletu a přistání se v přehledu neukazují, jen v detailu letu.
+- Šířky polí pásku a sloupců deníku (tokeny `--pole-pasku`, `--sloupce-deniku`) mají rezervu
+  pro nejdelší text i širší písmo telefonu.
 
-**Průvodce:** sekce oddělené čarou; **místo vzletu** (a u proběhlého letu **místo přistání**)
-je předvyplněné domovským letištěm, „Jiné…“ otevře hledání letiště nebo popis místa.
+**Průvodce:** nahoře ukazatel postupu (tři díly) a od kroku 2 **rozpracovaný pásek** letu
+(čárkovaný okraj = ještě neuložený), který se plní s každou volbou. Krok 1: dlaždice letadel
+ve skupinách podle kategorie (barva podle stavu jako v přehledu). Volby v blocích (karta
+s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
+(vybraná plně modře s ✓, „Hledat…“ otevře hledání podle jména), chybějící povinná volba má
+v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. **Místo vzletu**
+(u proběhlého letu **místo přistání**) a **plátce** jsou předvyplněné řádky v bloku Další
+údaje, ťuknutím se změní (místo: hledání letiště nebo popis místa). Proběhlý let: časy vzletu,
+přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin a minut,
+−1 / +1 a doba letu.
 **Zrušení vleku:** naplánovaný vlek se ruší celý, po vzletu jen zvolený let (kluzák po
 přetrženém laně – vlečná letí dál).
 
@@ -101,13 +117,16 @@ let do stavu před akcí (vzlet → naplánovaný, přistání → ve vzduchu, T
 času). V auditu zůstane obojí (akce i návrat).
 
 ### 3.5 Detail letu
-Údaje v blocích Posádka · Let · Časy a místa · Platba · Poznámka · Evidence. Ťuknutí na údaj
-ho upraví na místě (výběr z nabídky, čas stejným výběrem jako u proběhlého letu). Evidence
-ukazuje historii z `v_historie_letu`.
+Nahoře **stejný pásek jako v přehledu** (bez akcí), pod ním bloky Posádka a let · Časy a místa
+(UTC) · Platba a poznámka · Evidence. Údaje jsou **pole ve dvou sloupcích** (popisek nad
+hodnotou, přepážky jako na pásku); upravitelné pole má vpravo „›“ a ťuknutím se pod ním
+otevře úprava (výběr z nabídky, čas stejným výběrem jako u proběhlého letu). Historie
+z `v_historie_letu` je v Evidenci sbalená („3 úpravy“), ťuknutím se rozbalí. Akce dole
+(u ukončeného letu „Další let odsud“ a „Zrušit let“ vedle sebe).
 
 Upravit jde: posádka (jiná osoba ve funkci), POB (je-li zadaný), úloha, místo a čas vzletu,
-po přistání čas a místo přistání (letiště, nebo popis místa v terénu), přistání celkem, start
-bez doby (do 1 min), plátce a poznámka. **Neupravuje se** letadlo, účel ani způsob vzletu –
+po přistání čas a místo přistání (letiště, nebo popis místa v terénu), přistání celkem,
+plátce a poznámka. **Neupravuje se** letadlo, účel ani způsob vzletu –
 takový let se zruší s důvodem „Založeno omylem“ a založí znovu (mění se s nimi pravidla
 posádky, úlohy i vleku). Zrušení a obnovení vleku platí pro oba lety dvojice. Zrušený let
 nejde upravit, jen obnovit.
@@ -120,9 +139,10 @@ nejde upravit, jen obnovit.
   normalizace: `styly/tokeny.css` (jediné místo s pevnými hodnotami, převzaté z makety),
   komponenty každá se svým CSS jen z tokenů. **stylelint** před commitem odmítne pevnou barvu
   nebo rozměr mimo tokeny.
-- Komponenty: hlavička, menu, sekce, pásek letu (varianty stavu), štítek, tlačítko, dlaždice
-  letadla, rychlá volba osoby, volba počtu, výběr času, oznámení Zpět, obrazovka (průvodce,
-  detail).
+- Komponenty: hlavička, menu, sekce, pásek letu (varianty stavu, `lety/Pasek.tsx`), deník,
+  blok s poli (`lety/Udaje.tsx`), volby – segmenty, čipy osob, seznam úloh, počet
+  (`lety/Volby.tsx`), výběr času (`lety/VyberCasu.tsx`), dlaždice letadla, štítek, tlačítko,
+  oznámení Zpět, obrazovka s bloky (průvodce, detail).
 - **Provoz:** server FastAPI vrací i sestavený frontend (jedna adresa); při vývoji Vite
   s přesměrováním `/api` na server.
 
@@ -140,8 +160,10 @@ frontend/
 - **Server (pytest):** každý endpoint a pravidlo – vytvoření letu všemi akcemi, vlek (dvojice,
   společný vzlet), idempotence vzletu a přistání, Zpět, zrušení a obnovení, úprava s verzí,
   varování soumrak / max. doba, historie v detailu.
-- **Klikací testy (Playwright, rozměr mobilu):** přihlášení; průvodce → VZLET TEĎ → T&G →
-  PŘISTÁL → Zpět; aerovlek; proběhlý let; úprava v detailu. Před čekáním na prvek po přechodu
+- **Klikací testy (Playwright, rozměr mobilu):** přihlášení a nastavení hesla; přehled (pásky,
+  deník); průvodce → VZLET TEĎ → T&G → PŘISTÁL → Zpět; aerovlek; proběhlý let (i aerovlek
+  odjinud); úprava v detailu (posádka, úloha, místa, časy, plátce, zrušení, obnovení, další
+  let); pruh nové verze, režim zobrazení. Běží i na GitHubu (CI) při každém commitu. Před čekáním na prvek po přechodu
   vždy ověřit nadpis nové obrazovky.
 
 ## 6. Rozhodnutí (6. 10. 2026)

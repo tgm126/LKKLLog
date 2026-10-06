@@ -1,6 +1,7 @@
 /* Hlavička: název aplikace, čas UTC, iniciály s nabídkou uživatele; pod ní menu. */
 .hlavicka {
   position: relative;
+  background: var(--barva-karta);
   padding: var(--mezera-2) var(--mezera-4);
   border-bottom: var(--ramecek);
 }
@@ -56,7 +57,7 @@
   padding: var(--mezera-2);
   border: var(--ramecek);
   border-radius: var(--zaobleni);
-  background: var(--barva-pozadi);
+  background: var(--barva-karta);
 }
 
 .nabidka-kdo {
@@ -83,6 +84,7 @@
   gap: var(--mezera-4);
   padding: 0 var(--mezera-4);
   border-bottom: var(--ramecek);
+  background: var(--barva-karta);
   overflow-x: auto;
   scrollbar-width: none;
 }

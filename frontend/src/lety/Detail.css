@@ -1,17 +1,4 @@
-/* Detail letu: údaje „popisek – hodnota“ (komponenta .udaj v Obrazovka.css), úprava pod údajem. */
-
-.uprava {
-  display: grid;
-  gap: var(--mezera-2);
-  padding: var(--mezera-2) 0 var(--mezera-3);
-  border-bottom: var(--ramecek);
-}
-
-.udaj-pod {
-  display: block;
-  font-size: var(--pismo-s);
-  color: var(--barva-seda);
-}
+/* Detail letu: pásek a bloky údajů (Obrazovka.css, Udaje.css, Pasek.css); úprava poznámky. */
 
 .poznamka {
   width: 100%;

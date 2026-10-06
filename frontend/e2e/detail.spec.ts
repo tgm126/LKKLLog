@@ -8,8 +8,8 @@ test.beforeAll(() => pripravitData());
 test.beforeEach(async ({ page }) => prihlasit(page));
 
 test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page }) => {
-  await page.locator(".let.ukoncen", { hasText: "OK-CRA" }).click();
-  await expect(page.getByRole("heading", { name: /OK-CRA/ })).toBeVisible();
+  await page.locator(".denik-radek.ukoncen", { hasText: "OK-CRA" }).click();
+  await expect(page.locator(".obrazovka .let-hlava")).toContainText("OK-CRA");
   await expect(page.getByText("Ukončený")).toBeVisible();
   await expect(page.getByRole("button", { name: /Místo přistání\s*LKLT/ })).toBeVisible();
 
@@ -32,7 +32,8 @@ test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page 
   await page.getByRole("button", { name: "Obnovit let" }).click();
   await expect(page.getByText("Ukončený")).toBeVisible();
 
-  // Historie úprav v evidenci.
+  // Historie úprav v evidenci (rozbalí se ťuknutím).
+  await page.getByRole("button", { name: /Historie/ }).click();
   await expect(page.getByText(/Úprava · Adam Admin/).first()).toBeVisible();
 
   // Další let odsud: naplánovaný, místo vzletu = místo přistání.
@@ -48,7 +49,7 @@ test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page 
 test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa", async ({ page }) => {
   const blok = (nadpis: string) => page.locator(".blok", { hasText: nadpis });
   await page.locator(".let-par", { hasText: "OK-3819" }).getByText("OK-3819").click();
-  await expect(page.getByRole("heading", { name: /OK-3819/ })).toBeVisible();
+  await expect(page.locator(".obrazovka .let-hlava")).toContainText("OK-3819");
   await expect(page.getByText("Naplánovaný", { exact: true })).toBeVisible();
 
   // Posádka: jiný PIC.
@@ -70,6 +71,7 @@ test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa"
 
   // Platí: místo aeroklubu osoba.
   await page.getByRole("button", { name: /Platí\s*Aeroklub/ }).click();
+  await blok("Platba").getByRole("button", { name: "Hledat…" }).click();
   await blok("Platba").getByRole("button", { name: "Nela Nová" }).click();
   await expect(page.getByRole("button", { name: /Platí\s*Nela Nová/ })).toBeVisible();
 
@@ -105,15 +107,17 @@ test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa"
 
   // Zpět na přehled: let mezi ukončenými s novou posádkou a úlohou.
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
-  const ukonceny = page.locator(".let.ukoncen", { hasText: "OK-3819" }).filter({ hasText: "II/2" });
+  const ukonceny = page
+    .locator(".denik-radek.ukoncen", { hasText: "OK-3819" })
+    .filter({ hasText: "II/2" });
   await expect(ukonceny).toContainText("Adam Admin");
-  await expect(ukonceny.locator(".udaje-pristani")).toHaveText("1");
+  await expect(ukonceny.locator(".denik-pristani")).toHaveText("1");
 });
 
 test("zrušení naplánovaného vleku z detailu zruší kluzák i vlečnou", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Zrušené 1/ })).toBeVisible();
   await page.locator(".let-par", { hasText: "OK-6722" }).getByText("OK-6722").click();
-  await expect(page.getByRole("heading", { name: /OK-6722/ })).toBeVisible();
+  await expect(page.locator(".obrazovka .let-hlava")).toContainText("OK-6722");
 
   // Rozmyšlení: Nerušit vrátí akce.
   await page.getByRole("button", { name: "Zrušit let" }).click();
@@ -124,7 +128,7 @@ test("zrušení naplánovaného vleku z detailu zruší kluzák i vlečnou", asy
 
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
   await page.getByRole("button", { name: /Zrušené 3/ }).click();
-  await expect(page.locator(".let.zrusen", { hasText: "OK-6722" })).toHaveCount(1);
-  await expect(page.locator(".let.zrusen", { hasText: "OK-CRA" })).toHaveCount(1);
+  await expect(page.locator(".denik-radek.zrusen", { hasText: "OK-6722" })).toHaveCount(1);
+  await expect(page.locator(".denik-radek.zrusen", { hasText: "OK-CRA" })).toHaveCount(1);
   await expect(page.locator(".let.naplanovan", { hasText: "OK-6722" })).toHaveCount(0);
 });

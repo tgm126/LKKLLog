@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import { poslat } from "../api";
@@ -12,14 +12,16 @@ import { Tlacitko } from "../komponenty/Tlacitko";
 import { useJa } from "../uzivatel";
 import { useAkceLetu, type Provedeno } from "./akce";
 import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from "./api";
-import { jmeno, PIC_NAZEV, VolbaPoctu, VolbaUlohy } from "./Pruvodce";
-import { denUtc, minutyUtc, VyberCasu } from "./VyberCasu";
+import { PolovinaPasku, tridaPasku } from "./Pasek";
+import { Udaj, Udaje } from "./Udaje";
+import { PIC_NAZEV, VolbaOsoby, VolbaPoctu, VolbaUlohy } from "./Volby";
+import { denUtc, minutyUtc, VolbaCasu } from "./VyberCasu";
 import { VyberMista } from "./VyberMista";
 import "./Detail.css";
-import "./Volby.css";
 
-// Detail letu přes celou obrazovku (docs/modul-lety.md 3.5): bloky Posádka · Let · Časy
-// a místa · Platba · Poznámka · Evidence. Ťuknutí na údaj ho upraví na místě.
+// Detail letu přes celou obrazovku (docs/modul-lety.md 3.5, maketa lety-mobil-v4.html):
+// nahoře pásek letu jako v přehledu, pod ním bloky Posádka a let · Časy a místa · Platba
+// a poznámka · Evidence s poli ve dvou sloupcích. Ťuknutí na pole ho upraví pod ním.
 
 const STAV: Record<Stav, [string, BarvaStitku | undefined]> = {
   VE_VZDUCHU: ["Ve vzduchu", "zeleny"],
@@ -28,39 +30,8 @@ const STAV: Record<Stav, [string, BarvaStitku | undefined]> = {
   ZRUSEN: ["Zrušený", undefined],
 };
 
-/** Údaj „popisek – hodnota“; s úpravou je to tlačítko a pod ním se otevře úprava. */
-function Udaj({
-  popisek,
-  hodnota,
-  upravit,
-  otevreno,
-  children,
-}: {
-  popisek: string;
-  hodnota: ReactNode;
-  upravit?: () => void;
-  otevreno?: boolean;
-  children?: ReactNode;
-}) {
-  const obsah = (
-    <>
-      <span className="udaj-popisek">{popisek}</span>
-      <span>{hodnota ?? <span className="seda">—</span>}</span>
-    </>
-  );
-  return (
-    <>
-      {upravit ? (
-        <button type="button" className="udaj" aria-expanded={otevreno} onClick={upravit}>
-          {obsah}
-        </button>
-      ) : (
-        <div className="udaj">{obsah}</div>
-      )}
-      {otevreno && <div className="uprava">{children}</div>}
-    </>
-  );
-}
+/** 1 úprava, 2 úpravy, 5 úprav */
+const uprav = (n: number) => `${n} ${n === 1 ? "úprava" : n < 5 ? "úpravy" : "úprav"}`;
 
 export function Detail() {
   const letId = Number(useParams().id);
@@ -92,6 +63,7 @@ function DetailLetuObrazovka({
   const qc = useQueryClient();
   const oznamit = useOznamit();
   const [upravuji, setUpravuji] = useState<string | null>(null);
+  const [historie, setHistorie] = useState(false);
   const prepnout = (klic: string) => () => setUpravuji(upravuji === klic ? null : klic);
 
   const upravit = useMutation({
@@ -113,20 +85,16 @@ function DetailLetuObrazovka({
   const pristal = l.stav === "UKONCEN";
   const u = (klic: string, povoleno = true) =>
     lzeUpravit && povoleno ? { upravit: prepnout(klic), otevreno: upravuji === klic } : {};
-
   const posadkaIds = l.posadka.map((c) => c.osoba_id);
-  /** Výběr osoby: Já, pak všichni (kromě vyloučených). */
-  const vyberOsoby = (vyloucit: number[], vybrat: (id: number) => void) => (
-    <div className="navrhy">
-      {[...nabidky.osoby]
-        .sort((a, b) => Number(b.id === ja.osoba_id) - Number(a.id === ja.osoba_id))
-        .filter((o) => !vyloucit.includes(o.id))
-        .map((o) => (
-          <Tlacitko key={o.id} varianta="obrys" onClick={() => vybrat(o.id)}>
-            {o.id === ja.osoba_id ? `Já (${jmeno(o)})` : jmeno(o)}
-          </Tlacitko>
-        ))}
-    </div>
+  const volbaOsoby = (vybrana: number | undefined, vybrat: (id: number) => void) => (
+    <VolbaOsoby
+      osoby={nabidky.osoby}
+      jaId={ja.osoba_id}
+      rychle={[ja.osoba_id]}
+      vybrana={vybrana}
+      vyloucit={posadkaIds.filter((id) => id !== vybrana)}
+      vybrat={vybrat}
+    />
   );
 
   // Časy: den letu (UTC) – úprava času nemění den.
@@ -138,6 +106,7 @@ function DetailLetuObrazovka({
   );
   const nyni = ted();
   const dnes = zacatekDne === Date.UTC(nyni.getUTCFullYear(), nyni.getUTCMonth(), nyni.getUTCDate());
+  const limit = dnes ? minutyUtc(nyni) : 1439;
 
   const ulohy = nabidky.ulohy.filter(
     (x) =>
@@ -148,135 +117,138 @@ function DetailLetuObrazovka({
     ? "Aeroklub"
     : l.platce_jmeno && `${l.platce_jmeno} ${l.platce_prijmeni}`;
   const [stav, barva] = l.varovani ? (["Ve vzduchu", "cerveny"] as const) : STAV[l.stav];
+  const upravy = l.historie.slice(1);
 
   return (
     <Obrazovka
       zpet={zpet}
       zpetPopis="Zpět"
-      nadpis={
-        <>
-          {l.rejstrik}{" "}
-          <span className="male seda">
-            {l.typ} · {l.kategorie}
-          </span>
-        </>
-      }
+      nadpis="Let"
       vpravo={<Stitek barva={barva}>{stav}</Stitek>}
       akce={<AkceDetailu let_={l} nabidky={nabidky} />}
     >
-      {l.varovani && <p className="text-chyby">{l.varovani}</p>}
+      <div className={`let ${tridaPasku([l])}`}>
+        <PolovinaPasku let={l} />
+      </div>
 
-      <Blok nadpis="Posádka">
-        {l.posadka.map((c) => (
-          <Udaj
-            key={c.funkce_id}
-            popisek={c.funkce_kod === "PIC" ? (PIC_NAZEV[l.ucel_kod ?? ""] ?? "PIC") : c.funkce}
-            hodnota={`${c.jmeno} ${c.prijmeni}`}
-            {...u(`f${c.funkce_id}`)}
-          >
-            {vyberOsoby(posadkaIds, (id) =>
-              ulozit({
-                posadka: l.posadka.map((x) => ({
-                  osoba_id: x.funkce_id === c.funkce_id ? id : x.osoba_id,
-                  funkce_id: x.funkce_id,
-                })),
-              }),
-            )}
-          </Udaj>
-        ))}
-        {l.pob_zadany !== null ? (
-          <Udaj popisek="POB" hodnota={l.pob} {...u("pob", l.pocet_mist > 1)}>
-            <VolbaPoctu pocet={l.pocet_mist} vybrano={l.pob} vybrat={(n) => ulozit({ pob: n })} />
-          </Udaj>
-        ) : (
-          <Udaj popisek="POB" hodnota={`${l.pob} (z posádky)`} />
-        )}
+      <Blok nadpis="Posádka a let">
+        <Udaje>
+          {l.posadka.map((c) => (
+            <Udaj
+              key={c.funkce_id}
+              popisek={c.funkce_kod === "PIC" ? (PIC_NAZEV[l.ucel_kod ?? ""] ?? "PIC") : c.funkce}
+              hodnota={`${c.jmeno} ${c.prijmeni}`}
+              {...u(`f${c.funkce_id}`)}
+            >
+              {volbaOsoby(c.osoba_id, (id) =>
+                ulozit({
+                  posadka: l.posadka.map((x) => ({
+                    osoba_id: x.funkce_id === c.funkce_id ? id : x.osoba_id,
+                    funkce_id: x.funkce_id,
+                  })),
+                }),
+              )}
+            </Udaj>
+          ))}
+          {l.pob_zadany !== null ? (
+            <Udaj popisek="POB" hodnota={l.pob} {...u("pob", l.pocet_mist > 1)}>
+              <VolbaPoctu pocet={l.pocet_mist} vybrano={l.pob} vybrat={(n) => ulozit({ pob: n })} />
+            </Udaj>
+          ) : (
+            <Udaj popisek="POB" hodnota={`${l.pob} (z posádky)`} />
+          )}
+          <Udaj popisek="Účel" hodnota={l.je_vlecny ? "vlek" : l.ucel} />
+          <Udaj popisek="Způsob vzletu" hodnota={l.zpusob_vzletu} />
+          {!l.je_vlecny && ulohy.length > 0 && (
+            <Udaj popisek="Úloha" hodnota={l.uloha} cely {...u("uloha")}>
+              <VolbaUlohy
+                ulohy={ulohy}
+                povinna={!!ucel?.uloha_povinna}
+                vybrana={ulohy.find((x) => x.id === l.uloha_id)}
+                vybrat={(id) => ulozit({ uloha_id: id ?? null })}
+                menit
+              />
+            </Udaj>
+          )}
+          {l.vlek && (
+            <Udaj
+              popisek={l.je_vlecny ? "Vleče" : "Vlečná"}
+              hodnota={`${l.vlek.rejstrik} · ${l.vlek.pilot}`}
+              cely
+              odkaz
+              upravit={() => navigate(`/let/${l.vlek!.let_id}`)}
+            />
+          )}
+        </Udaje>
       </Blok>
 
-      <Blok nadpis="Let">
-        <Udaj popisek="Účel" hodnota={l.je_vlecny ? "vlek" : l.ucel} />
-        {!l.je_vlecny && ulohy.length > 0 && (
-          <Udaj popisek="Úloha" hodnota={l.uloha} {...u("uloha")}>
-            <VolbaUlohy
-              ulohy={ulohy}
-              povinna={!!ucel?.uloha_povinna}
-              vybrana={ulohy.find((x) => x.id === l.uloha_id)}
-              vybrat={(id) => ulozit({ uloha_id: id ?? null })}
-              menit
-            />
-          </Udaj>
-        )}
-        <Udaj popisek="Způsob vzletu" hodnota={l.zpusob_vzletu} />
-        {l.vlek && (
-          <Udaj
-            popisek={l.je_vlecny ? "Vleče" : "Vlečná"}
-            hodnota={`${l.vlek.rejstrik} · ${l.vlek.pilot}`}
-            upravit={() => navigate(`/let/${l.vlek!.let_id}`)}
-          />
-        )}
-      </Blok>
-
-      <Blok nadpis="Časy a místa">
-        <Udaj popisek="Místo vzletu" hodnota={l.misto_vzletu} {...u("misto_vzletu")}>
-          <VyberMista
-            nabidky={nabidky}
-            ulozit={(id, popis) => ulozit({ misto_vzletu_id: id, misto_vzletu_popis: popis })}
-          />
-        </Udaj>
-        {l.cas_vzletu && (
-          <Udaj
-            popisek="Vzlet"
-            hodnota={<span className="cisla">{hodinyMinutySekundy(new Date(l.cas_vzletu))}</span>}
-            {...u("cas_vzletu")}
-          >
-            <UpravaCasu
-              nadpis="Vzlet"
-              puvodni={minutyUtc(l.cas_vzletu)}
-              zacatekDne={zacatekDne}
-              limit={dnes ? minutyUtc(nyni) : 1439}
-              ulozit={(iso) => ulozit({ cas_vzletu: iso })}
-            />
-          </Udaj>
-        )}
-        {l.tg.length > 0 && (
-          <Udaj
-            popisek="T&G"
-            hodnota={
-              <span className="cisla">
-                {l.tg.length} · {l.tg.map((c) => hodinyMinuty(c)).join(", ")}
-              </span>
-            }
-          />
-        )}
-        {pristal && l.cas_pristani && (
-          <>
+      <Blok nadpis="Časy a místa (UTC)">
+        <Udaje>
+          {l.cas_vzletu && (
+            <Udaj
+              popisek="Vzlet"
+              hodnota={<span className="cisla">{hodinyMinutySekundy(new Date(l.cas_vzletu))}</span>}
+              zvyraznit
+              {...u("cas_vzletu")}
+            >
+              <UpravaCasu
+                nazev="Vzlet"
+                puvodni={minutyUtc(l.cas_vzletu)}
+                zacatekDne={zacatekDne}
+                limit={limit}
+                ulozit={(iso) => ulozit({ cas_vzletu: iso })}
+              />
+            </Udaj>
+          )}
+          {pristal && l.cas_pristani && (
             <Udaj
               popisek="Přistání"
-              hodnota={
-                <span className="cisla">{hodinyMinutySekundy(new Date(l.cas_pristani))}</span>
-              }
+              hodnota={<span className="cisla">{hodinyMinutySekundy(new Date(l.cas_pristani))}</span>}
+              zvyraznit
               {...u("cas_pristani")}
             >
               <UpravaCasu
-                nadpis="Přistání"
+                nazev="Přistání"
                 puvodni={minutyUtc(l.cas_pristani)}
                 zacatekDne={zacatekDne}
-                limit={dnes ? minutyUtc(nyni) : 1439}
+                limit={limit}
                 ulozit={(iso) => ulozit({ cas_pristani: iso })}
               />
             </Udaj>
+          )}
+          <Udaj popisek="Místo vzletu" hodnota={l.misto_vzletu} {...u("misto_vzletu")}>
+            <VyberMista
+              nabidky={nabidky}
+              ulozit={(id, popis) => ulozit({ misto_vzletu_id: id, misto_vzletu_popis: popis })}
+            />
+          </Udaj>
+          {pristal && (
             <Udaj popisek="Místo přistání" hodnota={l.misto_pristani} {...u("misto_pristani")}>
               <VyberMista
                 nabidky={nabidky}
-                ulozit={(id, popis) =>
-                  ulozit({ misto_pristani_id: id, misto_pristani_popis: popis })
-                }
+                ulozit={(id, popis) => ulozit({ misto_pristani_id: id, misto_pristani_popis: popis })}
               />
             </Udaj>
+          )}
+          {l.tg.length > 0 && (
+            <Udaj
+              popisek="T&G"
+              hodnota={
+                <span className="cisla">
+                  {l.tg.length} · {l.tg.map((c) => hodinyMinuty(c)).join(", ")}
+                </span>
+              }
+              cely
+            />
+          )}
+          {pristal && (
             <Udaj
               popisek="Doba"
-              hodnota={<b className="cisla">{doba(l.doba_uctovana_min ?? 0)}</b>}
+              hodnota={<span className="cisla">{doba(l.doba_uctovana_min ?? 0)}</span>}
+              zvyraznit
             />
+          )}
+          {pristal && (
             <Udaj popisek="Přistání celkem" hodnota={l.pocet_pristani} {...u("pocet_pristani")}>
               <VolbaPoctu
                 pocet={5}
@@ -284,56 +256,71 @@ function DetailLetuObrazovka({
                 vybrat={(n) => ulozit({ pocet_pristani: n })}
               />
             </Udaj>
-          </>
-        )}
-      </Blok>
-
-      <Blok nadpis="Platba">
-        <Udaj popisek="Platí" hodnota={platce} {...u("platce")}>
-          <div className="navrhy">
-            <Tlacitko varianta="obrys" onClick={() => ulozit({ plati_aeroklub: true })}>
-              Aeroklub
-            </Tlacitko>
-          </div>
-          {vyberOsoby(l.plati_aeroklub ? [] : [l.platce_id ?? -1], (id) =>
-            ulozit({ platce_id: id }),
           )}
-        </Udaj>
+        </Udaje>
       </Blok>
 
-      <Blok nadpis="Poznámka">
-        <Udaj
-          popisek="Poznámka"
-          hodnota={l.poznamka ?? <span className="seda">ťuknutím přidat</span>}
-          {...u("poznamka")}
-        >
-          <UpravaPoznamky puvodni={l.poznamka ?? ""} ulozit={(p) => ulozit({ poznamka: p })} />
-        </Udaj>
+      <Blok nadpis="Platba a poznámka">
+        <Udaje>
+          <Udaj popisek="Platí" hodnota={platce} cely {...u("platce")}>
+            <VolbaOsoby
+              osoby={nabidky.osoby}
+              jaId={ja.osoba_id}
+              rychle={posadkaIds}
+              vybrana={l.plati_aeroklub ? undefined : (l.platce_id ?? undefined)}
+              vybrat={(id) => ulozit({ platce_id: id })}
+              pred={
+                <Tlacitko
+                  varianta="obrys"
+                  aria-pressed={l.plati_aeroklub}
+                  onClick={() => ulozit({ plati_aeroklub: true })}
+                >
+                  Aeroklub
+                </Tlacitko>
+              }
+            />
+          </Udaj>
+          <Udaj
+            popisek="Poznámka"
+            hodnota={l.poznamka ?? <span className="seda">ťuknutím přidat</span>}
+            cely
+            {...u("poznamka")}
+          >
+            <UpravaPoznamky puvodni={l.poznamka ?? ""} ulozit={(p) => ulozit({ poznamka: p })} />
+          </Udaj>
+        </Udaje>
       </Blok>
 
       <Blok nadpis="Evidence">
-        <Udaj
-          popisek="Založil"
-          hodnota={`${l.zalozil} · ${hodinyMinuty(l.zalozeno)}${l.dodatecne ? " (dodatečně)" : ""}`}
-        />
-        {l.zruseno && (
+        <Udaje>
           <Udaj
-            popisek="Zrušil"
-            hodnota={`${l.zrusil ?? "—"} · ${hodinyMinuty(l.zruseno)} · ${l.duvod_zruseni}`}
+            popisek="Založil"
+            hodnota={`${l.zalozil} · ${hodinyMinuty(l.zalozeno)}${l.dodatecne ? " (dodatečně)" : ""}`}
           />
-        )}
-        {l.historie.slice(1).map((h, i) => (
-          <Udaj
-            key={i}
-            popisek={hodinyMinutySekundy(new Date(h.kdy))}
-            hodnota={
-              <>
-                {h.akce} · {h.kdo}
-                {h.popis && <span className="udaj-pod">{h.popis}</span>}
-              </>
-            }
-          />
-        ))}
+          {upravy.length > 0 && (
+            <Udaj
+              popisek="Historie"
+              hodnota={uprav(upravy.length)}
+              upravit={() => setHistorie(!historie)}
+              otevreno={historie}
+            >
+              {upravy.map((h, i) => (
+                <p key={i}>
+                  <span className="cisla">{hodinyMinutySekundy(new Date(h.kdy))}</span> · {h.akce} ·{" "}
+                  {h.kdo}
+                  {h.popis && <span className="udaj-pod">{h.popis}</span>}
+                </p>
+              ))}
+            </Udaj>
+          )}
+          {l.zruseno && (
+            <Udaj
+              popisek="Zrušil"
+              hodnota={`${l.zrusil ?? "—"} · ${hodinyMinuty(l.zruseno)} · ${l.duvod_zruseni}`}
+              cely
+            />
+          )}
+        </Udaje>
       </Blok>
     </Obrazovka>
   );
@@ -342,34 +329,33 @@ function DetailLetuObrazovka({
 // --- úpravy na místě -------------------------------------------------------------------------
 
 function UpravaCasu({
-  nadpis,
+  nazev,
   puvodni,
   zacatekDne,
   limit,
   ulozit,
 }: {
-  nadpis: string;
+  nazev: string;
   puvodni: number;
   zacatekDne: number;
   limit: number;
   ulozit: (iso: string) => void;
 }) {
   const [min, setMin] = useState(puvodni);
-  const [otevreno, setOtevreno] = useState(false);
+  const [aktivni, setAktivni] = useState<"cas" | null>("cas");
   const { iso, mistni } = denUtc(zacatekDne);
   return (
     <>
-      <VyberCasu
-        nadpis={nadpis}
-        min={min}
-        otevreno={otevreno}
-        prepnout={() => setOtevreno(!otevreno)}
-        nastavit={(m) => {
+      <VolbaCasu
+        pole={[{ klic: "cas", nazev, min }]}
+        aktivni={aktivni}
+        aktivovat={setAktivni}
+        nastavit={(_, m, vybrano) => {
           setMin(m);
-          setOtevreno(false);
+          if (vybrano) setAktivni(null);
         }}
         limit={limit}
-        mistni={mistni}
+        doplnek={<span className="male seda">místní {mistni(min)}</span>}
       />
       <Tlacitko varianta="modre" disabled={min === puvodni} onClick={() => ulozit(iso(min))}>
         Uložit čas
@@ -428,7 +414,7 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
     return (
       <>
         <span className="nadpisek">Důvod zrušení</span>
-        <div className="navrhy">
+        <div className="cipy">
           {nabidky.duvody_zruseni.map((d) => (
             <Tlacitko
               key={d.id}
@@ -447,6 +433,11 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
     );
   }
 
+  const zrusit = (
+    <Tlacitko varianta="cervene" onClick={() => setRusim(true)}>
+      Zrušit let
+    </Tlacitko>
+  );
   return (
     <>
       {dialog}
@@ -458,33 +449,14 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
               T&amp;G <span className="cisla">{l.tg.length}</span>
             </Tlacitko>
           )}
-          <Tlacitko
-            varianta="zelene"
-            hlavni
-            disabled={zaneprazdnen}
-            onClick={() => pristat(l)}
-          >
+          <Tlacitko varianta="zelene" hlavni disabled={zaneprazdnen} onClick={() => pristat(l)}>
             Přistál
           </Tlacitko>
         </div>
       )}
       {l.stav === "NAPLANOVAN" && (
-        <Tlacitko
-          varianta="modre"
-          hlavni
-          disabled={zaneprazdnen}
-          onClick={() => provest(l.id, "vzlet")}
-        >
+        <Tlacitko varianta="modre" hlavni disabled={zaneprazdnen} onClick={() => provest(l.id, "vzlet")}>
           Vzlet
-        </Tlacitko>
-      )}
-      {l.stav === "UKONCEN" && !l.je_vlecny && (
-        <Tlacitko
-          varianta="obrys"
-          disabled={prikaz.isPending}
-          onClick={() => prikaz.mutate({ cesta: "dalsi" })}
-        >
-          Další let odsud
         </Tlacitko>
       )}
       {l.stav === "ZRUSEN" ? (
@@ -495,10 +467,19 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
         >
           Obnovit let
         </Tlacitko>
+      ) : l.stav === "UKONCEN" && !l.je_vlecny ? (
+        <div className="akce-vedle">
+          <Tlacitko
+            varianta="obrys"
+            disabled={prikaz.isPending}
+            onClick={() => prikaz.mutate({ cesta: "dalsi" })}
+          >
+            Další let odsud
+          </Tlacitko>
+          {zrusit}
+        </div>
       ) : (
-        <Tlacitko varianta="cervene" onClick={() => setRusim(true)}>
-          Zrušit let
-        </Tlacitko>
+        zrusit
       )}
     </>
   );

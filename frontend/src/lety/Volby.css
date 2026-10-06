@@ -1,79 +1,160 @@
-/* Volby ťuknutím (průvodce i detail letu): mřížka voleb, rychlá volba, počet, čas prstem. */
+/* Volby ťuknutím (průvodce i detail letu) podle makety docs/navrhy/pruvodce-mobil-v4.html:
+   segmenty, čipy osob, seznam úloh, počet, výběr času prstem. Vybraná volba plně modře. */
 
-/* Volba z několika možností (účel, způsob vzletu, den): mřížka tlačítek, vybrané modře */
-.volby {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--mezera-2);
-  padding: var(--mezera-2) 0;
-}
-
-.volby .tl[aria-pressed="true"],
-.navrhy .tl[aria-pressed="true"],
+.segmenty .tl[aria-pressed="true"],
+.cipy .tl[aria-pressed="true"],
+.seznam-voleb .tl[aria-pressed="true"],
 .volby-pocet .tl[aria-pressed="true"],
-.cas-pole .tl[aria-pressed="true"] {
-  --tl-okraj: var(--barva-modra);
+.mrizka-casu .tl[aria-pressed="true"] {
+  --tl-vypln: var(--barva-akce-modra);
+  --tl-barva: var(--barva-na-akci);
+  --tl-okraj: var(--barva-akce-modra);
 }
 
-/* Rychlá volba osoby a úlohy jedním ťuknutím */
-.navrhy {
+/* Segmenty (účel, způsob vzletu, den): jeden řádek stejně širokých dílů */
+.segmenty {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  overflow: hidden;
+  border: var(--ramecek-sirka) solid var(--barva-prepazka);
+  border-radius: var(--zaobleni);
+}
+
+.segmenty .tl {
+  padding: 0 var(--mezera-1);
+  border: 0;
+  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.segmenty > :first-child {
+  border-left: 0;
+}
+
+/* Čipy (osoby, plátce, vlečná, osnova): vybraný s ✓; Hledat… čárkovaně */
+.cipy {
   display: flex;
   flex-wrap: wrap;
   gap: var(--mezera-2);
-  padding: var(--mezera-2) 0;
 }
 
-.navrhy .tl {
+.cipy .tl {
+  --tl-okraj: var(--barva-prepazka);
+
+  padding: 0 var(--mezera-3);
   font-weight: var(--tloustka);
 }
 
-.navrhy-skupina {
-  width: 100%;
+.cipy .tl[aria-pressed="true"] {
+  font-weight: var(--tloustka-tucna);
+}
+
+.cipy .tl[aria-pressed="true"]::before {
+  content: "✓ ";
+}
+
+.cipy .tl.hledat {
+  --tl-barva: var(--barva-modra);
+
+  border-style: dashed;
+}
+
+/* Seznam voleb (úlohy osnovy): řádky „kód · název“ přes celou šířku bloku */
+.seznam-voleb {
+  display: grid;
+  margin: 0 calc(-1 * var(--mezera-3));
+}
+
+.seznam-voleb .tl {
+  display: grid;
+  grid-template-columns: 6ch minmax(0, 1fr);
+  gap: var(--mezera-2);
+  align-items: center;
+  padding: 0 var(--mezera-3);
+  border: 0;
+  border-top: var(--ramecek);
+  border-radius: 0;
+  font-weight: var(--tloustka);
+  text-align: left;
+}
+
+.seznam-voleb .tl b {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Volba počtu (POB, přistání celkem): řada tlačítek */
 .volby-pocet {
   display: flex;
   gap: var(--mezera-2);
-  padding: var(--mezera-2) 0;
 }
 
 .volby-pocet .tl {
+  --tl-okraj: var(--barva-prepazka);
+
   min-width: var(--dotyk);
   padding: 0;
 }
 
-/* Výběr času prstem: pole času s −1 / +1, mřížka hodin (6 × 4) a minut po pěti (4 × 3) */
-.cas-pole {
-  display: flex;
-  align-items: center;
+/* Výběr času prstem: pole vedle sebe (vzlet, přistání, přistání vlečné), aktivní zvýrazněné;
+   pod nimi mřížka hodin (6 × 4), pak minut po pěti (6 × 2); doladění −1 / +1 */
+.casy-pole {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: var(--mezera-2);
-  padding: var(--mezera-2) 0;
 }
 
-.cas-pole .tl.hodnota {
-  flex: 1;
-  min-height: var(--dotyk-hlavni);
+.casy-pole .tl {
+  --tl-okraj: var(--barva-prepazka);
+
+  display: grid;
+  padding: var(--mezera-1);
   font-size: var(--pismo-l);
 }
 
-.cas-pole .tl.krok {
-  min-width: var(--dotyk);
-  padding: 0;
+.casy-pole .tl span {
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka);
+  color: var(--barva-seda);
+}
+
+.casy-pole .tl[aria-pressed="true"] {
+  --tl-okraj: var(--barva-akce-modra);
+
+  box-shadow: inset 0 0 0 var(--ramecek-sirka) var(--barva-akce-modra);
+}
+
+.casy-pole .tl[aria-pressed="true"] span {
+  color: var(--barva-modra);
+  font-weight: var(--tloustka-tucna);
 }
 
 .mrizka-casu {
   display: grid;
-  grid-template-columns: repeat(var(--sloupcu, 6), minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--mezera-1);
-  padding-bottom: var(--mezera-2);
-}
-
-.mrizka-casu.minuty {
-  --sloupcu: 4;
 }
 
 .mrizka-casu .tl {
+  --tl-okraj: var(--barva-cara);
+
+  padding: 0;
+  font-weight: var(--tloustka);
+}
+
+.doladeni {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mezera-2);
+}
+
+.doladeni .tl {
+  --tl-okraj: var(--barva-prepazka);
+
+  min-width: var(--dotyk);
   padding: 0;
 }
 

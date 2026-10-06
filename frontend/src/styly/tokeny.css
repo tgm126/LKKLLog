@@ -1,7 +1,7 @@
 /* =============================================================================================
    TOKENY – jediné místo s pevnými hodnotami (barvy, písmo, mezery, rozměry). Všechny ostatní
    styly se odkazují sem; kontrola stylů (stylelint) pevnou hodnotu jinde nepustí.
-   Převzato z makety docs/navrhy/lety-mobil.html a prihlaseni-mobil.html.
+   Barvy a pásky podle makety docs/navrhy/lety-mobil-v4.html (a pruvodce-mobil-v4.html).
    ============================================================================================= */
 :root {
   color-scheme: light dark;   /* světlé / tmavé hodnoty barev; přepínač nastaví data-rezim */
@@ -17,8 +17,8 @@
   --pismo-pole: 16px;
 
   /* VÝJIMKA: rejstřík na dlaždici letadla velkým písmem, na úzkém telefonu (375 px) se zmenší
-     tak, aby se celý vešel i nejdelší (UL „OK-CUO 78“); 18cqi = 18 % šířky dlaždice. */
-  --pismo-dlazdice: min(var(--pismo-l), 18cqi);
+     tak, aby se celý vešel i nejdelší (UL „OK-CUO 78“); 16cqi = 16 % šířky dlaždice. */
+  --pismo-dlazdice: min(var(--pismo-l), 16cqi);
   --tloustka: 400;
   --tloustka-tucna: 700;
   --radkovani: 1.35;
@@ -37,6 +37,7 @@
   --zaobleni-pilulka: 999px;
   --ramecek-sirka: 1px;
   --obrys-sirka: 2px;         /* zvýraznění pole, do kterého se píše */
+  --okraj-pasku: 1.5px;       /* výrazný okraj pásku letu (panel) */
   --prechod: .15s;
 
   /* Rozměry */
@@ -44,16 +45,15 @@
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
 
-  /* Údaje letu (pásek, .udaje): čas · účel · vzlet · POB · úloha – nejdelší text ve znacích
-     písma štítku + okraje štítku – a počet přistání. Na úzkém displeji se zúží (minmax 0). */
-  --sloupce-udaju:
-    minmax(0, calc(10ch + 2 * var(--mezera-2)))
-    minmax(0, calc(5.5ch + 2 * var(--mezera-2)))
-    minmax(0, calc(7ch + 2 * var(--mezera-2)))
-    minmax(0, calc(5ch + 2 * var(--mezera-2)))
-    minmax(0, calc(4.5ch + 2 * var(--mezera-2)))
-    minmax(0, 3ch);
-  --sirka-popisku: 108px;     /* sloupec popisků v detailu letu */
+  /* Pásek letu: pravá přihrádka (stopky / vzlet nad přistáním) a pás údajů v pevných polích
+     účel · způsob vzletu · POB · úloha · přistání · doba (doba pod přihrádkou času). Šířky
+     polí s rezervou pro nejdelší text („aerovlek“, „II/12“) i pro širší písmo telefonu. */
+  --sirka-casu: 84px;
+  --pole-pasku: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, .95fr) minmax(0, .85fr) minmax(0, .4fr)
+    var(--sirka-casu);
+
+  /* Deník ukončených letů: letadlo · posádka · čas (vzlet nad přistáním) · doba · přistání */
+  --sloupce-deniku: 86px minmax(0, 1fr) 6ch 6ch 2ch;
   --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
   --vrstva-zastinu: 1;        /* zástin pod nabídkou: ťuknutí vedle ji zavře */
   --vrstva-nabidky: 2;        /* nabídka nad obsahem stránky */
@@ -63,32 +63,39 @@
   --sirka-mobilu: 480px;      /* na velké obrazovce mobilní návrh jako sloupec, než vznikne
                                  návrh pro počítač */
 
-  /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. */
-  --barva-text:           light-dark(#1d2125, #e7e9ec);
-  --barva-seda:           light-dark(#6c727a, #9aa2ab);
-  --barva-cara:           light-dark(#e1e4e8, #30353b);
-  --barva-pozadi:         light-dark(#fff, #15181c);
-  --barva-karta:          light-dark(#fff, #1c2025);
-  --barva-neutralni:      light-dark(#f1f3f5, #242930);
+  /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. Kontrast textu
+     na kartě i na barevných plochách ≥ 4,3 : 1 (výpočet v návrhu lety-mobil-v4.html). */
+  --barva-text:           light-dark(#1a1d21, #e8eaed);
+  --barva-seda:           light-dark(#5b6570, #9aa4af);
+  --barva-cara:           light-dark(#d9dde2, #2c333c);
+  --barva-pozadi:         light-dark(#eef0f3, #0d1015);   /* stránka – karty z ní vystoupí */
+  --barva-karta:          light-dark(#fff, #171b21);
+  --barva-neutralni:      light-dark(#f1f3f5, #1f252c);   /* pás údajů, hlavička bloku */
   --barva-neutralni-text: light-dark(#495057, #c3c9d0);
-  --barva-modra:          light-dark(#1c6fd1, #5ea1ff);
-  --barva-modra-vypln:    light-dark(#eaf2fd, #162a44);
-  --barva-zelena:         light-dark(#2b8a3e, #51cf66);
-  --barva-zelena-vypln:   light-dark(#e7f5ea, #173222);
-  --barva-oranzova:       light-dark(#c76a00, #ffb357);
+  --barva-obrys:          light-dark(#2b3138, #7d8894);   /* okraj pásku (v tmavém světlý) */
+  --barva-prepazka:       light-dark(#aab2bb, #3f4852);   /* přihrádky v pásku */
+  --barva-modra:          light-dark(#0a5fd0, #6aa8ff);
+  --barva-modra-vypln:    light-dark(#e3edfc, #122440);
+  --barva-modra-pas:      light-dark(#cfdff9, #1a3156);
+  --barva-zelena:         light-dark(#137a38, #4cc777);
+  --barva-zelena-vypln:   light-dark(#e3f4e8, #122a1b);
+  --barva-zelena-pas:     light-dark(#cdebd6, #1a3a26);
+  --barva-oranzova:       light-dark(#a35400, #f0a64a);
   --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
-  --barva-cervena:        light-dark(#d1343a, #ff7b7b);
-  --barva-cervena-vypln:  light-dark(#fdecec, #3d1c1f);
+  --barva-cervena:        light-dark(#c42b2b, #ff7a7a);
+  --barva-cervena-vypln:  light-dark(#fce6e6, #2f171a);
+  --barva-cervena-pas:    light-dark(#f7d2d2, #432024);
 
   /* VÝJIMKA: akční a varovné barvy jsou v obou režimech stejné – syté plochy s bílým textem
      musí být čitelné na slunci i ve tmě; tmavá varianta by ztratila kontrast. */
-  --barva-akce-modra:  #1c6fd1;
-  --barva-akce-zelena: #2b8a3e;
-  --barva-akce-cervena: #d1343a;  /* lišta s chybou (Už vzlétl…) – bílý text v obou režimech */
+  --barva-akce-modra:  #0a5fd0;
+  --barva-akce-zelena: #137a38;
+  --barva-akce-cervena: #c42b2b;  /* lišta s chybou (Už vzlétl…) – bílý text v obou režimech */
   --barva-na-akci:     #fff;
-  --barva-pruh:        #fcc419;
-  --barva-na-pruhu:    #1d2125;
-  --barva-zastin:      rgb(0 0 0 / 45%);  /* pod dialogem – ztmaví stránku v obou režimech */
+  --barva-pruh:        #f5b700;
+  --barva-na-pruhu:    #1a1d21;
+  --barva-zastin:      rgb(0 0 0 / 45%);
+  --stin-karty:        0 1px 2px rgb(0 0 0 / 8%);  /* karta se odliší od stránky */  /* pod dialogem – ztmaví stránku v obou režimech */
   --barva-oznameni:    #24292f;   /* lišta „Zpět“ – tmavá v obou režimech, aby vystoupila */
   --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
 }

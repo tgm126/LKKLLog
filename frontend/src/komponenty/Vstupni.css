@@ -6,6 +6,7 @@
   flex-direction: column;
   gap: var(--mezera-4);
   padding: var(--mezera-5) var(--mezera-4) var(--mezera-4);
+  background: var(--barva-karta);
 }
 
 .vstupni-nazev {

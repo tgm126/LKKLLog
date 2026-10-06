@@ -1,39 +1,30 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { poslat } from "../api";
 import { doba, hodinyMinuty, stopky, ted } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
-import { Blok, Obrazovka } from "../komponenty/Obrazovka";
+import { Blok, BlokTelo, Obrazovka } from "../komponenty/Obrazovka";
 import { useOznamit } from "../komponenty/Oznameni";
-import { Stitek, Stitky } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useJa } from "../uzivatel";
 import { oznamitAkci, type Provedeno } from "./akce";
-import {
-  useNabidky,
-  type LetadloNabidka,
-  type Nabidky,
-  type Osoba,
-  type Ucel,
-  type Uloha,
-} from "./api";
+import { useNabidky, type LetadloNabidka, type Nabidky, type Ucel } from "./api";
+import { PolovinaPasku, type LetPasku } from "./Pasek";
+import { Udaj, Udaje } from "./Udaje";
+import { jmeno, PIC_NAZEV, VolbaOsoby, VolbaPoctu, VolbaUlohy } from "./Volby";
+import { denUtc, hhmm, minutyUtc, VolbaCasu } from "./VyberCasu";
+import { nazevMista, VyberMista, type Misto } from "./VyberMista";
 import "./Pruvodce.css";
-import "./Volby.css";
-import { denUtc, minutyUtc, VyberCasu } from "./VyberCasu";
-import { VolbaMista, type Misto } from "./VyberMista";
 
-// Průvodce novým letem podle makety docs/navrhy/lety-mobil.html:
-// 1 letadlo → 2 posádka → 3 let (úloha, u kluzáku vzlet a vlek, plátce) → VZLET TEĎ /
-// Naplánovat / Proběhlý let (výběr časů prstem).
+// Průvodce novým letem podle makety docs/navrhy/pruvodce-mobil-v4.html:
+// 1 letadlo → 2 posádka → 3 let (u kluzáku vzlet a vlek, úloha, další údaje) → VZLET TEĎ /
+// Naplánovat / Proběhlý let (výběr časů prstem). Od kroku 2 je nahoře rozpracovaný pásek
+// letu, který se plní s každou volbou.
 
-/** Popisek PIC podle účelu (kdo je velitel letadla). */
-export const PIC_NAZEV: Record<string, string> = {
-  VYCVIK: "Instruktor (PIC)",
-  VYCVIK_SOLO: "Žák (PIC)",
-  PREZKOUSENI: "Examinátor (PIC)",
-};
+/** Krátké názvy účelů do segmentů (vejdou se čtyři vedle sebe). */
+const UCEL_SEGMENT: Record<string, string> = { VYCVIK_SOLO: "Sólo", PREZKOUSENI: "Přezk." };
 
 type Novy = {
   letadlo?: LetadloNabidka;
@@ -52,8 +43,6 @@ type Novy = {
 
 type Krok = 1 | 2 | 3 | "casy";
 
-export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
-
 export function Pruvodce() {
   const { data: nabidky, error } = useNabidky();
   const navigate = useNavigate();
@@ -68,14 +57,29 @@ export function Pruvodce() {
   return <PruvodceKroky nabidky={nabidky} zavrit={zavrit} />;
 }
 
+/** Ukazatel postupu pod horní lištou: tři díly, hotové modře. */
+function Postup({ krok }: { krok: Krok }) {
+  const hotovo = krok === "casy" ? 3 : krok;
+  return (
+    <div className="postup" aria-hidden>
+      {[1, 2, 3].map((k) => (
+        <span key={k} className={k <= hotovo ? "hotovo" : undefined} />
+      ))}
+    </div>
+  );
+}
+
+/** Nadpis bloku s povinnou volbou, která ještě chybí. */
+const chybi = (ano: boolean) => ano && <span className="text-chyby">vyberte</span>;
+
 function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => void }) {
   const ja = useJa().data!;
   const [krok, setKrok] = useState<Krok>(1);
   const [novy, setNovy] = useState<Novy>({ osoby: {}, pob: 1 });
-  const [rozbaleno, setRozbaleno] = useState<string | null>(null);
+  const [upravuji, setUpravuji] = useState<string | null>(null);
   const zmenit = (zmena: Partial<Novy>) => {
     setNovy((n) => ({ ...n, ...zmena }));
-    setRozbaleno(null);
+    setUpravuji(null);
   };
 
   const letadlo = novy.letadlo;
@@ -96,8 +100,8 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
 
   // Pole posádky podle účelu: PIC + funkce, které účel vyžaduje (žák, dozor, přezkoušený).
   const pole = [
-    { funkceId: nabidky.pic_id, nazev: PIC_NAZEV[ucel.kod] ?? "PIC" },
-    ...ucel.funkce.map((f) => ({ funkceId: f.id, nazev: f.nazev })),
+    { funkceId: nabidky.pic_id, kod: "PIC", funkce: "PIC", nazev: PIC_NAZEV[ucel.kod] ?? "PIC" },
+    ...ucel.funkce.map((f) => ({ funkceId: f.id, kod: f.kod, funkce: f.nazev, nazev: f.nazev })),
   ];
   const posadkaHotova = pole.every((p) => novy.osoby[p.funkceId]);
 
@@ -106,8 +110,19 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
   const vychoziPlatce = novy.osoby[naPalube?.id ?? nabidky.pic_id];
   const platce = novy.platce ?? vychoziPlatce;
 
+  const ulohy = letadlo
+    ? nabidky.ulohy.filter(
+        (u) =>
+          u.ucel_id === ucel.id &&
+          (u.kategorie_kod === null || u.kategorie_kod === letadlo.kategorie_kod),
+      )
+    : [];
+  // Úloha je povinná podle účelu, ale jen když pro účel a kategorii letadla nějaká existuje
+  // (stejné pravidlo hlídá databáze).
+  const ulohaPovinna = ucel.uloha_povinna && ulohy.length > 0;
+
   const zpet = () => {
-    setRozbaleno(null);
+    setUpravuji(null);
     if (krok === 1) zavrit();
     else setKrok(krok === "casy" ? 3 : ((krok - 1) as Krok));
   };
@@ -118,94 +133,111 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     casy: "Proběhlý let",
   };
   const spolecne = {
-    trida: "pruvodce",
     zpet,
     zpetPopis: krok === 1 ? ("Zavřít" as const) : ("Zpět" as const),
     nadpis: krok === 1 || !letadlo ? "Nový let" : letadlo.rejstrik,
     vpravo: <span className="nadpisek">{nadpisKroku[krok]}</span>,
+    pod: <Postup krok={krok} />,
   };
 
   // --- krok 1: letadlo -----------------------------------------------------------------------
   if (krok === 1 || !letadlo) {
+    const kategorie = [...new Map(nabidky.letadla.map((a) => [a.kategorie_kod, a.kategorie]))];
     return (
       <Obrazovka {...spolecne}>
-        <div className="dlazdice-mrizka">
-          {nabidky.letadla.map((a) => (
-            <Dlazdice
-              key={a.id}
-              letadlo={a}
-              vybrana={a.id === letadlo?.id}
-              vybrat={() => {
-                // účel, který se do letadla nevejde, se vrátí na normální (zůstane jen PIC)
-                const ucelSedi = ucelyPro(a).some((u) => u.id === novy.ucelId);
-                zmenit({
-                  letadlo: a,
-                  ...(ucelSedi
-                    ? {}
-                    : {
-                        ucelId: undefined,
-                        osoby: Object.fromEntries(
-                          Object.entries(novy.osoby).filter(([f]) => Number(f) === nabidky.pic_id),
-                        ),
-                        platce: undefined,
-                      }),
-                  pob: Math.min(novy.pob, a.pocet_mist),
-                  zpusob: novy.zpusob ?? (nabidky.zpusob_kluzaku === "VLEK" ? "VLEK" : "NAVIJAK"),
-                  uloha: undefined,
-                });
-                setKrok(2);
-              }}
-            />
-          ))}
-        </div>
+        {kategorie.map(([kod, nazev]) => (
+          <section key={kod} className="skupina-letadel">
+            <h2 className="nadpisek">{nazev}</h2>
+            <div className="dlazdice-mrizka">
+              {nabidky.letadla
+                .filter((a) => a.kategorie_kod === kod)
+                .map((a) => (
+                  <Dlazdice
+                    key={a.id}
+                    letadlo={a}
+                    vybrana={a.id === letadlo?.id}
+                    vybrat={() => {
+                      // účel, který se do letadla nevejde, se vrátí na normální (zůstane PIC)
+                      const ucelSedi = ucelyPro(a).some((u) => u.id === novy.ucelId);
+                      zmenit({
+                        letadlo: a,
+                        ...(ucelSedi
+                          ? {}
+                          : {
+                              ucelId: undefined,
+                              osoby: Object.fromEntries(
+                                Object.entries(novy.osoby).filter(
+                                  ([f]) => Number(f) === nabidky.pic_id,
+                                ),
+                              ),
+                              platce: undefined,
+                            }),
+                        pob: Math.min(novy.pob, a.pocet_mist),
+                        zpusob:
+                          novy.zpusob ?? (nabidky.zpusob_kluzaku === "VLEK" ? "VLEK" : "NAVIJAK"),
+                        uloha: undefined,
+                      });
+                      setKrok(2);
+                    }}
+                  />
+                ))}
+            </div>
+          </section>
+        ))}
       </Obrazovka>
     );
   }
 
-  // Osoba: rychlá volba (Já, nedávní / vlekaři, Všichni…); vybraná je modře jako ostatní
-  // volby v průvodci, ťuknutím na jinou se změní. Stejná osoba nemůže mít dvě funkce.
-  const obsazene = (krome: string) =>
-    [
-      ...pole.filter((p) => `f${p.funkceId}` !== krome).map((p) => novy.osoby[p.funkceId]),
-      krome === "vlekar" ? undefined : aerovlek ? novy.vlekar : undefined,
-    ].filter(Boolean);
-  const volbaOsoby = (
-    klic: string,
-    nazev: string,
-    vybrana: number | undefined,
-    rychle: number[],
-    vybrat: (id: number | undefined) => void,
-  ) => {
-    const vsichni = rozbaleno === klic;
-    const nabidka = (
-      vsichni
-        ? nabidky.osoby
-        : [...new Set([...rychle, ...(vybrana ? [vybrana] : [])])]
-            .map(osoba)
-            .filter((o): o is Osoba => o !== undefined)
-    ).filter((o) => !obsazene(klic).includes(o.id));
-    return (
-      <Blok key={klic} nadpis={nazev}>
-        <div className="navrhy">
-          {nabidka.map((o) => (
-            <Tlacitko
-              key={o.id}
-              varianta="obrys"
-              aria-pressed={o.id === vybrana}
-              onClick={() => vybrat(o.id)}
-            >
-              {o.id === ja.osoba_id ? `Já (${jmeno(o)})` : jmeno(o)}
-            </Tlacitko>
-          ))}
-          {!vsichni && (
-            <Tlacitko varianta="bez-ramu" onClick={() => setRozbaleno(klic)}>
-              Všichni…
-            </Tlacitko>
-          )}
-        </div>
-      </Blok>
-    );
+  // Rozpracovaný let do pásku nahoře: co je zatím vybrané.
+  const zpusobKod = kluzak ? (novy.zpusob ?? "NAVIJAK") : "VLASTNI";
+  const rozpracovany: LetPasku = {
+    stav: "ROZPRACOVANY",
+    rejstrik: letadlo.rejstrik,
+    typ: letadlo.typ,
+    je_vlecny: false,
+    ucel: ucel.nazev,
+    ucel_kod: ucel.kod,
+    zpusob_vzletu: nabidky.zpusoby.find((z) => z.kod === zpusobKod)?.nazev ?? "",
+    zpusob_vzletu_kod: zpusobKod,
+    cas_vzletu: null,
+    cas_pristani: null,
+    doba_uctovana_min: null,
+    pocet_pristani: null,
+    uloha: nabidky.ulohy.find((u) => u.id === novy.uloha)?.nazev ?? null,
+    varovani: null,
+    pob:
+      ucel.funkce.length === 0
+        ? Math.min(novy.pob, letadlo.pocet_mist)
+        : 1 + ucel.funkce.filter((f) => f.na_palube).length,
+    posadka: pole.flatMap((p) => {
+      const o = osoba(novy.osoby[p.funkceId]);
+      return o ? [{ jmeno: o.jmeno, prijmeni: o.prijmeni, funkce: p.funkce, funkce_kod: p.kod }] : [];
+    }),
   };
+  const pasek = (cas?: ReactNode) => (
+    <div className="let rozpracovany">
+      <PolovinaPasku
+        let={rozpracovany}
+        cas={
+          cas ??
+          (aerovlek && novy.vlecna ? (
+            <>
+              <span className="male seda">vlečná</span>
+              <b>{novy.vlecna.rejstrik}</b>
+            </>
+          ) : (
+            <span className="male seda">nový</span>
+          ))
+        }
+      />
+    </div>
+  );
+
+  // Osoba ve funkci: stejná osoba nemůže mít dvě funkce (ani být vlekařem vlastního vleku).
+  const obsazene = (krome: string) => [
+    ...pole.filter((p) => `f${p.funkceId}` !== krome).map((p) => novy.osoby[p.funkceId]),
+    krome !== "vlekar" && aerovlek ? novy.vlekar : undefined,
+  ];
 
   // --- krok 2: posádka -----------------------------------------------------------------------
   if (krok === 2) {
@@ -219,7 +251,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
             hlavni
             disabled={!posadkaHotova}
             onClick={() => {
-              setRozbaleno(null);
+              setUpravuji(null);
               setKrok(3);
             }}
           >
@@ -227,51 +259,56 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
           </Tlacitko>
         }
       >
+        {pasek()}
         <Blok nadpis="Účel">
-          <div className="volby">
-            {ucely.map((u) => (
-              <Tlacitko
-                key={u.id}
-                varianta="obrys"
-                aria-pressed={u.id === ucel.id}
-                onClick={() =>
-                  zmenit({
-                    ucelId: u.id,
-                    // PIC zůstane, ostatní funkce závisí na účelu
-                    osoby: Object.fromEntries(
-                      Object.entries(novy.osoby).filter(([f]) => Number(f) === nabidky.pic_id),
-                    ),
-                    uloha: undefined,
-                    platce: undefined,
-                  })
-                }
-              >
-                {u.nazev}
-              </Tlacitko>
-            ))}
-          </div>
+          <BlokTelo>
+            <div className="segmenty">
+              {ucely.map((u) => (
+                <Tlacitko
+                  key={u.id}
+                  varianta="obrys"
+                  aria-pressed={u.id === ucel.id}
+                  onClick={() =>
+                    zmenit({
+                      ucelId: u.id,
+                      // PIC zůstane, ostatní funkce závisí na účelu
+                      osoby: Object.fromEntries(
+                        Object.entries(novy.osoby).filter(([f]) => Number(f) === nabidky.pic_id),
+                      ),
+                      uloha: undefined,
+                      platce: undefined,
+                    })
+                  }
+                >
+                  {UCEL_SEGMENT[u.kod] ?? u.nazev}
+                </Tlacitko>
+              ))}
+            </div>
+          </BlokTelo>
         </Blok>
-        {pole.map((p) =>
-          volbaOsoby(
-            `f${p.funkceId}`,
-            p.nazev,
-            novy.osoby[p.funkceId],
-            [ja.osoba_id, ...letadlo.nedavni],
-            (id) => {
-              const osoby = { ...novy.osoby };
-              if (id) osoby[p.funkceId] = id;
-              else delete osoby[p.funkceId];
-              zmenit({ osoby, platce: undefined });
-            },
-          ),
-        )}
+        {pole.map((p) => (
+          <Blok key={p.funkceId} nadpis={p.nazev} vpravo={chybi(!novy.osoby[p.funkceId])}>
+            <BlokTelo>
+              <VolbaOsoby
+                osoby={nabidky.osoby}
+                jaId={ja.osoba_id}
+                rychle={[ja.osoba_id, ...letadlo.nedavni]}
+                vybrana={novy.osoby[p.funkceId]}
+                vyloucit={obsazene(`f${p.funkceId}`)}
+                vybrat={(id) => zmenit({ osoby: { ...novy.osoby, [p.funkceId]: id }, platce: undefined })}
+              />
+            </BlokTelo>
+          </Blok>
+        ))}
         {pob && (
           <Blok nadpis="POB">
-            <VolbaPoctu
-              pocet={letadlo.pocet_mist}
-              vybrano={novy.pob}
-              vybrat={(n) => zmenit({ pob: n })}
-            />
+            <BlokTelo>
+              <VolbaPoctu
+                pocet={letadlo.pocet_mist}
+                vybrano={novy.pob}
+                vybrat={(n) => zmenit({ pob: n })}
+              />
+            </BlokTelo>
           </Blok>
         )}
       </Obrazovka>
@@ -279,33 +316,23 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
   }
 
   // --- krok 3: let a proběhlý let ------------------------------------------------------------
-  const ulohy = nabidky.ulohy.filter(
-    (u) =>
-      u.ucel_id === ucel.id && (u.kategorie_kod === null || u.kategorie_kod === letadlo.kategorie_kod),
-  );
-  // Úloha je povinná podle účelu, ale jen když pro účel a kategorii letadla nějaká existuje
-  // (stejné pravidlo hlídá databáze).
-  const ulohaPovinna = ucel.uloha_povinna && ulohy.length > 0;
   const hotovo =
     posadkaHotova &&
     (!ulohaPovinna || novy.uloha !== undefined) &&
     (!aerovlek || (novy.vlecna !== undefined && novy.vlekar !== undefined));
   const muzeVzlet = !letadlo.leti_od && !(aerovlek && novy.vlecna?.leti_od);
   const vlecne = nabidky.letadla.filter((a) => a.vlecne && !a.mimo_provoz);
-
-  const props = {
-    nabidky,
-    novy,
-    ucel,
-    letadlo,
-    aerovlek,
-    platce,
-    zavrit,
-  };
+  const props = { nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit };
 
   if (krok === "casy") {
-    return <ProbehlyLet {...props} spolecne={spolecne} />;
+    return <ProbehlyLet {...props} spolecne={spolecne} pasek={pasek} />;
   }
+
+  const upravit = (klic: string) => ({
+    upravit: () => setUpravuji(upravuji === klic ? null : klic),
+    otevreno: upravuji === klic,
+  });
+  const platceNazev = platce === "aeroklub" ? "Aeroklub" : platce && jmeno(osoba(platce)!);
 
   return (
     <Obrazovka
@@ -319,90 +346,107 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
         />
       }
     >
+      {pasek()}
       {kluzak && (
         <Blok nadpis="Způsob vzletu">
-          <div className="volby">
-            {(["NAVIJAK", "VLEK"] as const).map((z) => (
-              <Tlacitko
-                key={z}
-                varianta="obrys"
-                aria-pressed={novy.zpusob === z}
-                onClick={() => zmenit({ zpusob: z })}
-              >
-                {nabidky.zpusoby.find((zp) => zp.kod === z)?.nazev}
-              </Tlacitko>
-            ))}
-          </div>
+          <BlokTelo>
+            <div className="segmenty">
+              {(["NAVIJAK", "VLEK"] as const).map((z) => (
+                <Tlacitko
+                  key={z}
+                  varianta="obrys"
+                  aria-pressed={novy.zpusob === z}
+                  onClick={() => zmenit({ zpusob: z })}
+                >
+                  {nabidky.zpusoby.find((zp) => zp.kod === z)?.nazev}
+                </Tlacitko>
+              ))}
+            </div>
+          </BlokTelo>
         </Blok>
       )}
       {aerovlek && (
-        <>
-          <Blok nadpis="Vlečná">
-            <div className="dlazdice-mrizka">
+        <Blok
+          nadpis="Vlečná a vlekař"
+          vpravo={chybi(novy.vlecna === undefined || novy.vlekar === undefined)}
+        >
+          <BlokTelo>
+            <div className="cipy">
               {vlecne.map((a) => (
-                <Dlazdice
+                <Tlacitko
                   key={a.id}
-                  letadlo={a}
-                  vybrana={a.id === novy.vlecna?.id}
-                  vybrat={() => {
+                  varianta="obrys"
+                  aria-pressed={a.id === novy.vlecna?.id}
+                  onClick={() => {
                     // vlekař posledního vleku – jen když není v posádce kluzáku
                     const posledni = a.posledni_vlekar ?? undefined;
                     const vPosadce = Object.values(novy.osoby).includes(posledni ?? -1);
                     zmenit({ vlecna: a, vlekar: novy.vlekar ?? (vPosadce ? undefined : posledni) });
                   }}
-                />
+                >
+                  {a.rejstrik}
+                  {a.leti_od && <span className="male"> · letí</span>}
+                </Tlacitko>
               ))}
             </div>
-          </Blok>
-          {volbaOsoby(
-            "vlekar",
-            "Vlekař",
-            novy.vlekar,
-            nabidky.osoby.filter((o) => o.vlekar).map((o) => o.id),
-            (id) => zmenit({ vlekar: id }),
-          )}
-        </>
+            <VolbaOsoby
+              osoby={nabidky.osoby}
+              jaId={ja.osoba_id}
+              rychle={nabidky.osoby.filter((o) => o.vlekar).map((o) => o.id)}
+              vybrana={novy.vlekar}
+              vyloucit={obsazene("vlekar")}
+              vybrat={(id) => zmenit({ vlekar: id })}
+            />
+          </BlokTelo>
+        </Blok>
       )}
-      <VolbaUlohy
-        key={ucel.id}
-        ulohy={ulohy}
-        povinna={ulohaPovinna}
-        vybrana={ulohy.find((u) => u.id === novy.uloha)}
-        vybrat={(id) => zmenit({ uloha: id })}
-      />
-      <Blok nadpis="Místo vzletu">
-        <VolbaMista
-          nabidky={nabidky}
-          misto={novy.mistoVzletu}
-          zmenit={(m) => zmenit({ mistoVzletu: m })}
-        />
-      </Blok>
-      <Blok nadpis="Platí">
-        {/* Předvyplněný podle účelu (modře); jiná osoba z posádky, Aeroklub, nebo kdokoli. */}
-        <div className="navrhy">
-          {[
-            ...new Set([
-              ...pole.map((p) => novy.osoby[p.funkceId]).filter((id): id is number => !!id),
-              "aeroklub" as const,
-              ...(typeof platce === "number" ? [platce] : []),
-              ...(rozbaleno === "platce" ? nabidky.osoby.map((o) => o.id) : []),
-            ]),
-          ].map((id) => (
-            <Tlacitko
-              key={id}
-              varianta="obrys"
-              aria-pressed={id === platce}
-              onClick={() => zmenit({ platce: id })}
-            >
-              {id === "aeroklub" ? "Aeroklub" : jmeno(osoba(id)!)}
-            </Tlacitko>
-          ))}
-          {rozbaleno !== "platce" && (
-            <Tlacitko varianta="bez-ramu" onClick={() => setRozbaleno("platce")}>
-              Všichni…
-            </Tlacitko>
-          )}
-        </div>
+      {ulohy.length > 0 && (
+        <Blok
+          nadpis="Úloha"
+          vpravo={ulohaPovinna ? chybi(novy.uloha === undefined) : <span>nepovinná</span>}
+        >
+          <BlokTelo>
+            <VolbaUlohy
+              key={ucel.id}
+              ulohy={ulohy}
+              povinna={ulohaPovinna}
+              vybrana={ulohy.find((u) => u.id === novy.uloha)}
+              vybrat={(id) => zmenit({ uloha: id })}
+            />
+          </BlokTelo>
+        </Blok>
+      )}
+      <Blok nadpis="Další údaje">
+        <Udaje>
+          <Udaj popisek="Místo vzletu" hodnota={nazevMista(nabidky, novy.mistoVzletu)} {...upravit("misto")}>
+            <VyberMista
+              nabidky={nabidky}
+              ulozit={(id, popis) =>
+                zmenit({
+                  mistoVzletu: id === nabidky.letiste.find((l) => l.domovske)?.id ? undefined : { id, popis },
+                })
+              }
+            />
+          </Udaj>
+          <Udaj popisek="Platí" hodnota={platceNazev} {...upravit("platce")}>
+            <VolbaOsoby
+              osoby={nabidky.osoby}
+              jaId={ja.osoba_id}
+              rychle={pole.map((p) => novy.osoby[p.funkceId]).filter((id): id is number => !!id)}
+              vybrana={typeof platce === "number" ? platce : undefined}
+              vybrat={(id) => zmenit({ platce: id })}
+              pred={
+                <Tlacitko
+                  varianta="obrys"
+                  aria-pressed={platce === "aeroklub"}
+                  onClick={() => zmenit({ platce: "aeroklub" })}
+                >
+                  Aeroklub
+                </Tlacitko>
+              }
+            />
+          </Udaj>
+        </Udaje>
       </Blok>
     </Obrazovka>
   );
@@ -419,126 +463,24 @@ function Dlazdice({
   vybrana: boolean;
   vybrat: () => void;
 }) {
-  const trida = ["dlazdice", a.mimo_provoz ? "mimo" : a.leti_od ? "leti" : "", vybrana && "vybrana"];
+  const stav = a.mimo_provoz ? "mimo" : a.leti_od ? "leti" : a.naplanovan ? "planovan" : "";
+  const typ = [a.typ, a.vlecne && "vlečná", a.soukrome && "soukromé"].filter(Boolean).join(" · ");
   return (
     <button
       type="button"
-      className={trida.filter(Boolean).join(" ")}
+      className={["dlazdice", stav, vybrana && "vybrana"].filter(Boolean).join(" ")}
       disabled={a.mimo_provoz}
       aria-pressed={vybrana}
       onClick={vybrat}
     >
       <span className="dlazdice-rejstrik">{a.rejstrik}</span>
-      <span className="male seda">{a.typ}</span>
-      <span className="male seda">{a.kategorie}</span>
-      <Stitky>
-        {[
-          a.leti_od && (
-            <Stitek key="leti" barva="zeleny">
-              letí {stopky(a.leti_od, ted()).slice(0, -3)}
-            </Stitek>
-          ),
-          a.naplanovan && <Stitek key="plan">naplánován</Stitek>,
-          a.mimo_provoz && (
-            <Stitek key="mimo" barva="oranzovy">
-              mimo provoz
-            </Stitek>
-          ),
-          a.vlecne && <Stitek key="vlecne">vlečná</Stitek>,
-          a.soukrome && <Stitek key="soukrome">soukromé</Stitek>,
-        ]}
-      </Stitky>
-    </button>
-  );
-}
-
-// --- úloha ---------------------------------------------------------------------------------
-
-/** Úloha ve dvou krocích: osnova (IU, IA, II…), pak úloha v ní (vzestupně podle osnovy).
- *  Co je vybrané, zůstane samo (ostatní se skryjí); ťuknutím na vybrané se nabídka znovu
- *  otevře, změní se až výběrem jiné. Je-li úloha povinná a osnova jen jedna, je rovnou
- *  otevřená. Nepovinnou úlohu jde zrušit volbou „Bez úlohy“. */
-export function VolbaUlohy({
-  ulohy,
-  povinna,
-  vybrana,
-  vybrat,
-  menit = false,
-}: {
-  ulohy: Uloha[];
-  povinna: boolean;
-  vybrana: Uloha | undefined;
-  vybrat: (id: number | undefined) => void;
-  /** Rovnou nabídka úloh vybrané osnovy (úprava v detailu letu). */
-  menit?: boolean;
-}) {
-  const osnovy = [...new Map(ulohy.map((u) => [u.osnova_id, u.osnova])).entries()];
-  const [osnovaId, setOsnovaId] = useState<number | undefined>(
-    vybrana?.osnova_id ?? (povinna && osnovy.length === 1 ? osnovy[0]![0] : undefined),
-  );
-  // Která nabídka je otevřená: výběr osnovy, výběr úlohy v osnově, nebo žádná (vybráno).
-  const [otevreno, setOtevreno] = useState<"osnova" | "uloha" | null>(
-    vybrana && !menit ? null : osnovaId === undefined ? "osnova" : "uloha",
-  );
-  if (ulohy.length === 0) return null;
-  const osnova = osnovy.find(([id]) => id === osnovaId);
-  const vybrat_ = (id: number | undefined) => {
-    vybrat(id);
-    setOtevreno(null);
-  };
-  return (
-    <Blok nadpis={povinna ? "Úloha" : "Úloha (nepovinná)"}>
-      <div className="navrhy">
-        {otevreno === "osnova" || !osnova
-          ? osnovy.map(([id, nazev]) => (
-              <Tlacitko
-                key={id}
-                varianta="obrys"
-                aria-pressed={id === osnovaId}
-                onClick={() => {
-                  setOsnovaId(id);
-                  setOtevreno("uloha");
-                }}
-              >
-                {nazev}
-              </Tlacitko>
-            ))
-          : (
-            <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevreno("osnova")}>
-              {osnova[1]}
-            </Tlacitko>
-          )}
-      </div>
-      {osnova && otevreno !== "osnova" && (
-        <div className="navrhy">
-          {otevreno === "uloha" || !vybrana || vybrana.osnova_id !== osnovaId ? (
-            <>
-              {ulohy
-                .filter((u) => u.osnova_id === osnovaId)
-                .map((u) => (
-                  <Tlacitko
-                    key={u.id}
-                    varianta="obrys"
-                    aria-pressed={u.id === vybrana?.id}
-                    onClick={() => vybrat_(u.id)}
-                  >
-                    {u.nazev}
-                  </Tlacitko>
-                ))}
-              {!povinna && vybrana && (
-                <Tlacitko varianta="bez-ramu" onClick={() => vybrat_(undefined)}>
-                  Bez úlohy
-                </Tlacitko>
-              )}
-            </>
-          ) : (
-            <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevreno("uloha")}>
-              {vybrana.nazev}
-            </Tlacitko>
-          )}
-        </div>
+      <span className="male seda">{typ}</span>
+      {a.leti_od && (
+        <span className="dlazdice-stav cisla">letí {stopky(a.leti_od, ted()).slice(0, -3)}</span>
       )}
-    </Blok>
+      {!a.leti_od && a.naplanovan && <span className="dlazdice-stav">naplánován</span>}
+      {a.mimo_provoz && <span className="dlazdice-stav">mimo provoz</span>}
+    </button>
   );
 }
 
@@ -653,9 +595,10 @@ type PoleCasu = "vzlet" | "pristani" | "vlecna";
 function ProbehlyLet(
   props: Spolecne & {
     spolecne: Omit<Parameters<typeof Obrazovka>[0], "children" | "akce">;
+    pasek: (cas?: ReactNode) => ReactNode;
   },
 ) {
-  const { letadlo, aerovlek } = props;
+  const { letadlo, aerovlek, nabidky } = props;
   const ulozit = useUlozit(props);
   const [den, setDen] = useState<"dnes" | "vcera">("dnes");
   const [casy, setCasy] = useState<Record<PoleCasu, number | null>>({
@@ -666,6 +609,7 @@ function ProbehlyLet(
   const [aktivni, setAktivni] = useState<PoleCasu | null>("vzlet");
   const [pocet, setPocet] = useState(1);
   const [mistoPristani, setMistoPristani] = useState<Misto | undefined>();
+  const [upravuji, setUpravuji] = useState(false);
 
   // Minuty od půlnoci UTC zvoleného dne. Dnes nejde vybrat budoucnost.
   const nyni = ted();
@@ -676,11 +620,7 @@ function ProbehlyLet(
   const limit = den === "dnes" ? minutyUtc(nyni) : 1439;
 
   const poradi: PoleCasu[] = aerovlek ? ["vzlet", "pristani", "vlecna"] : ["vzlet", "pristani"];
-  const nazvy: Record<PoleCasu, string> = {
-    vzlet: "Vzlet",
-    pristani: "Přistání",
-    vlecna: "Přistání vlečné",
-  };
+  const nazvy: Record<PoleCasu, string> = { vzlet: "Vzlet", pristani: "Přistání", vlecna: "Vlečná" };
   const nastavit = (pole: PoleCasu, min: number, vybrano: boolean) => {
     setCasy((c) => ({ ...c, [pole]: min }));
     // Po výběru z mřížky se samo otevře další nevyplněné pole (přistání, přistání vlečné).
@@ -693,6 +633,7 @@ function ProbehlyLet(
     (dobaLetu !== null && dobaLetu < 0) || (vlecna !== null && vzlet !== null && vlecna < vzlet);
   const hotovo =
     poradi.every((p) => casy[p] !== null) && !chyba && poradi.every((p) => casy[p]! <= limit);
+  const mistniCas = aktivni && casy[aktivni] !== null ? `místní ${mistni(casy[aktivni]!)}` : null;
 
   return (
     <Obrazovka
@@ -723,68 +664,71 @@ function ProbehlyLet(
         </>
       }
     >
-      <Blok nadpis="Den">
-        <div className="volby">
-          {(["dnes", "vcera"] as const).map((d) => (
-            <Tlacitko key={d} varianta="obrys" aria-pressed={den === d} onClick={() => setDen(d)}>
-              {d === "dnes" ? "Dnes" : "Včera"}
-            </Tlacitko>
-          ))}
-        </div>
-      </Blok>
-      {poradi.map((p) => (
-        <VyberCasu
-          key={p}
-          nadpis={nazvy[p]}
-          min={casy[p]}
-          otevreno={aktivni === p}
-          prepnout={() => setAktivni(aktivni === p ? null : p)}
-          nastavit={(min, vybrano) => nastavit(p, min, vybrano)}
-          limit={limit}
-          mistni={mistni}
-        />
-      ))}
-      {dobaLetu !== null && !chyba && (
-        <p>
-          Doba letu <b className="cisla">{doba(dobaLetu)}</b>
-        </p>
+      {props.pasek(
+        <>
+          <b>{vzlet === null ? "—:—" : hhmm(vzlet)}</b>
+          <span className="seda">{pristani === null ? "—:—" : hhmm(pristani)}</span>
+        </>,
       )}
-      {chyba && <p className="text-chyby">Přistání je dřív než vzlet.</p>}
-      <Blok nadpis="Místo přistání">
-        <VolbaMista nabidky={props.nabidky} misto={mistoPristani} zmenit={setMistoPristani} />
+      <Blok nadpis="Den">
+        <BlokTelo>
+          <div className="segmenty">
+            {(["dnes", "vcera"] as const).map((d) => (
+              <Tlacitko key={d} varianta="obrys" aria-pressed={den === d} onClick={() => setDen(d)}>
+                {d === "dnes" ? "Dnes" : "Včera"}
+              </Tlacitko>
+            ))}
+          </div>
+        </BlokTelo>
+      </Blok>
+      <Blok nadpis="Časy (UTC)" vpravo={mistniCas}>
+        <BlokTelo>
+          <VolbaCasu
+            pole={poradi.map((p) => ({ klic: p, nazev: nazvy[p], min: casy[p] }))}
+            aktivni={aktivni}
+            aktivovat={setAktivni}
+            nastavit={nastavit}
+            limit={limit}
+            doplnek={
+              chyba ? (
+                <span className="text-chyby">Přistání je dřív než vzlet.</span>
+              ) : (
+                dobaLetu !== null && (
+                  <>
+                    Doba letu <b className="cisla">{doba(dobaLetu)}</b>
+                  </>
+                )
+              )
+            }
+          />
+        </BlokTelo>
+      </Blok>
+      <Blok nadpis="Další údaje">
+        <Udaje>
+          <Udaj
+            popisek="Místo přistání"
+            hodnota={nazevMista(nabidky, mistoPristani)}
+            upravit={() => setUpravuji(!upravuji)}
+            otevreno={upravuji}
+          >
+            <VyberMista
+              nabidky={nabidky}
+              ulozit={(id, popis) => {
+                const domovske = nabidky.letiste.find((l) => l.domovske)?.id;
+                setMistoPristani(id === domovske ? undefined : { id, popis });
+                setUpravuji(false);
+              }}
+            />
+          </Udaj>
+        </Udaje>
       </Blok>
       {letadlo.kategorie_kod !== "KLUZAK" && (
         <Blok nadpis="Přistání celkem">
-          <VolbaPoctu pocet={5} vybrano={pocet} vybrat={setPocet} />
+          <BlokTelo>
+            <VolbaPoctu pocet={5} vybrano={pocet} vybrat={setPocet} />
+          </BlokTelo>
         </Blok>
       )}
     </Obrazovka>
-  );
-}
-
-/** Řada tlačítek 1 … počet (POB, přistání celkem). */
-export function VolbaPoctu({
-  pocet,
-  vybrano,
-  vybrat,
-}: {
-  pocet: number;
-  vybrano: number | null;
-  vybrat: (n: number) => void;
-}) {
-  return (
-    <div className="volby-pocet">
-      {Array.from({ length: pocet }, (_, k) => k + 1).map((n) => (
-        <Tlacitko
-          key={n}
-          varianta="obrys"
-          className="cisla"
-          aria-pressed={n === vybrano}
-          onClick={() => vybrat(n)}
-        >
-          {n}
-        </Tlacitko>
-      ))}
-    </div>
   );
 }

@@ -7,7 +7,7 @@ import { Sekce } from "../komponenty/Sekce";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useAkceLetu } from "../lety/akce";
 import { useLety, type Pasek, type Stav } from "../lety/api";
-import { PasekNaplanovany, PasekUkonceny, PasekVeVzduchu, PasekZruseny } from "../lety/Pasek";
+import { Denik, PasekNaplanovany, PasekVeVzduchu } from "../lety/Pasek";
 
 const podle =
   (klic: (l: Pasek) => string | null, sestupne = false) =>
@@ -28,7 +28,8 @@ function dvojice(lety: Pasek[]): Pasek[][] {
     });
 }
 
-/** Přehled letů dne: ve vzduchu, naplánované, ukončené, zrušené (maketa lety-mobil.html). */
+/** Přehled letů dne: ve vzduchu, naplánované (pásky), ukončené a zrušené (deník) –
+ *  maketa docs/navrhy/lety-mobil-v4.html. */
 export function Lety() {
   const { data: lety, error, dataUpdatedAt } = useLety();
   const { provest, pristat, dialog, probiha } = useAkceLetu();
@@ -86,16 +87,12 @@ export function Lety() {
       )}
       {ukoncene.length > 0 && (
         <Sekce nadpis={`Ukončené ${ukoncene.length}`} vpravo={`celkem ${doba(celkem)}`}>
-          {ukoncene.map((l) => (
-            <PasekUkonceny key={l.id} let={l} />
-          ))}
+          <Denik lety={ukoncene} />
         </Sekce>
       )}
       {zrusene.length > 0 && (
         <Sekce nadpis={`Zrušené ${zrusene.length}`} sbalena>
-          {zrusene.map((l) => (
-            <PasekZruseny key={l.id} let={l} />
-          ))}
+          <Denik lety={zrusene} zahlavi={false} />
         </Sekce>
       )}
     </main>

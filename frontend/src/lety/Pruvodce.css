@@ -1,25 +1,52 @@
-/* Průvodce novým letem: dlaždice letadel, volby, rychlá volba osoby, výběr času prstem. */
+/* Průvodce novým letem (maketa docs/navrhy/pruvodce-mobil-v4.html): ukazatel postupu,
+   dlaždice letadel ve skupinách podle kategorie. Volby: Volby.css, bloky: Obrazovka.css. */
+
+/* Ukazatel postupu pod horní lištou: tři díly, hotové modře */
+.postup {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mezera-1);
+  padding: 0 var(--mezera-3) var(--mezera-2);
+}
+
+.postup span {
+  height: var(--mezera-1);
+  border-radius: var(--zaobleni-pilulka);
+  background: var(--barva-cara);
+}
+
+.postup span.hotovo {
+  background: var(--barva-akce-modra);
+}
+
+/* Skupina letadel (Kluzák, Letoun…) */
+.skupina-letadel > .nadpisek {
+  display: block;
+  margin: var(--mezera-2) var(--mezera-1);
+}
+
+.skupina-letadel:first-child > .nadpisek {
+  margin-top: 0;
+}
 
 /* Dlaždice letadel ve třech stejně velkých sloupcích */
 .dlazdice-mrizka {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-auto-rows: 1fr;
-  gap: var(--mezera-1);
-  padding: var(--mezera-2) 0;
+  gap: var(--mezera-2);
 }
 
-/* Dlaždice letadla: rejstřík dominantní; výplň podle stavu jako u pásků */
+/* Dlaždice letadla: panel s okrajem jako pásek, výplň podle stavu */
 .dlazdice {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
   min-height: var(--dotyk-hlavni);
-  padding: var(--mezera-2);
-  border: var(--ramecek-sirka) solid var(--dlazdice-okraj, transparent);
+  padding: var(--mezera-1) var(--mezera-2);
+  border: var(--okraj-pasku) solid var(--barva-obrys);
   border-radius: var(--zaobleni);
-  background: var(--dlazdice-vypln, var(--barva-neutralni));
+  background: var(--dlazdice-vypln, var(--barva-karta));
   text-align: left;
   container-type: inline-size; /* písmo rejstříku podle šířky dlaždice */
 }
@@ -30,28 +57,32 @@
   white-space: nowrap;
 }
 
-.dlazdice .stitek {
-  --stitek-vypln: var(--barva-karta);
+.dlazdice-stav {
+  color: var(--dlazdice-stav, var(--barva-seda));
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
 }
 
 .dlazdice.leti {
   --dlazdice-vypln: var(--barva-zelena-vypln);
+  --dlazdice-stav: var(--barva-zelena);
+}
+
+.dlazdice.planovan {
+  --dlazdice-vypln: var(--barva-modra-vypln);
+  --dlazdice-stav: var(--barva-modra);
 }
 
 .dlazdice.mimo {
   --dlazdice-vypln: var(--barva-oranzova-vypln);
+  --dlazdice-stav: var(--barva-oranzova);
 }
 
 .dlazdice.vybrana {
-  --dlazdice-okraj: var(--barva-modra);
+  outline: calc(2 * var(--obrys-sirka)) solid var(--barva-akce-modra);
+  outline-offset: var(--ramecek-sirka);
 }
 
 .dlazdice:disabled {
   cursor: not-allowed;
-}
-
-/* Sekce průvodce oddělené čarou (účel, PIC, POB…) */
-.pruvodce .blok + .blok {
-  margin-top: var(--mezera-2);
-  border-top: var(--ramecek);
 }
