@@ -1,0 +1,68 @@
+import { expect, test, type Page } from "@playwright/test";
+
+import { prihlasit, pripravitData } from "./pomocne";
+
+// Průvodce novým letem – varianty, které nepokrývá akce.spec.ts (aerovlek, místo, plátce).
+
+test.beforeAll(() => pripravitData());
+test.beforeEach(async ({ page }) => prihlasit(page));
+
+const blok = (page: Page, nadpis: string) => page.locator(".blok", { hasText: nadpis });
+
+test("průvodce: Zpět mezi kroky a Zavřít", async ({ page }) => {
+  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: /^OK-3819/ }).click();
+  await expect(page.getByText("2 / 3 · Posádka")).toBeVisible();
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
+  await expect(page.getByText("1 / 3 · Letadlo")).toBeVisible();
+  await page.getByRole("button", { name: "Zavřít" }).click();
+  await expect(page.getByRole("heading", { name: "Ve vzduchu 2" })).toBeVisible();
+});
+
+test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", async ({ page }) => {
+  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: /^OK-3819/ }).click();
+  await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  await page.getByRole("button", { name: "Dál" }).click();
+
+  await page.getByRole("button", { name: "Aerovlek" }).click();
+  await blok(page, "Vlečná").getByRole("button", { name: /^OK-CRA/ }).click();
+  const vlekar = blok(page, "Vlekař");
+  await vlekar.getByRole("button", { name: "Všichni…" }).click();
+  // Pilot kluzáku nesmí vlekat – v nabídce vlekaře není.
+  await expect(vlekar.getByRole("button", { name: /Adam Admin/ })).toHaveCount(0);
+  await vlekar.getByRole("button", { name: "Nela Nová" }).click();
+
+  await blok(page, "Místo vzletu").getByRole("button", { name: "Jiné…" }).click();
+  await page.getByLabel("Hledat letiště (kód nebo název)").fill("LKLT");
+  await page.getByRole("button", { name: "LKLT Letňany" }).click();
+  await expect(
+    blok(page, "Místo vzletu").getByRole("button", { name: "LKLT Letňany" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await blok(page, "Platí").getByRole("button", { name: "Aeroklub" }).click();
+  await expect(blok(page, "Platí").getByRole("button", { name: "Aeroklub" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  await page.getByRole("button", { name: "Proběhlý let" }).click();
+  await page.getByRole("button", { name: "Včera" }).click();
+  // Vzlet, přistání kluzáku a přistání vlečné – další pole se po výběru otevře samo.
+  for (const cas of ["10:00", "10:45", "10:10"]) {
+    await page.getByRole("button", { name: "10", exact: true }).click();
+    await page.getByRole("button", { name: cas }).click();
+  }
+  await expect(page.getByText('Doba letu 45"')).toBeVisible();
+  await page.getByRole("button", { name: "Uložit proběhlý let" }).click();
+  await expect(page.getByRole("status")).toHaveText(/OK-3819 proběhlý let 10:00–10:45 uložen/);
+
+  // Včerejší lety: kluzák i vlečná z Letňan, vlečná přistála na místě vzletu.
+  const vcera = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  type Let = { rejstrik: string; je_vlecny: boolean; misto_vzletu: string; misto_pristani: string };
+  const { lety }: { lety: Let[] } = await (await page.request.get(`/api/lety?den=${vcera}`)).json();
+  const kluzak = lety.find((l) => l.rejstrik === "OK-3819");
+  const vlecna = lety.find((l) => l.rejstrik === "OK-CRA" && l.je_vlecny);
+  expect(kluzak?.misto_vzletu).toBe("LKLT");
+  expect(vlecna?.misto_vzletu).toBe("LKLT");
+  expect(vlecna?.misto_pristani).toBe("LKLT");
+});

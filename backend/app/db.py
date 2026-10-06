@@ -18,7 +18,10 @@ def otevrit(url: str) -> None:
         url,
         min_size=1,
         max_size=5,
-        kwargs={"autocommit": True, "row_factory": dict_row},
+        # Bez připravených dotazů (prepared statements): jejich plán by po ruční změně pohledu
+        # nebo tabulky v databázi (a po obnově testovací databáze) skončil chybou „cached plan
+        # must not change result type“. Dotazy jsou malé, rozdíl ve výkonu není znát.
+        kwargs={"autocommit": True, "row_factory": dict_row, "prepare_threshold": None},
         open=True,
     )
 

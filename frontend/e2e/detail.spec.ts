@@ -44,3 +44,87 @@ test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page 
     .click();
   await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT/ })).toBeVisible();
 });
+
+test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa", async ({ page }) => {
+  const blok = (nadpis: string) => page.locator(".blok", { hasText: nadpis });
+  await page.locator(".let-par", { hasText: "OK-3819" }).getByText("OK-3819").click();
+  await expect(page.getByRole("heading", { name: /OK-3819/ })).toBeVisible();
+  await expect(page.getByText("Naplánovaný", { exact: true })).toBeVisible();
+
+  // Posádka: jiný PIC.
+  await blok("Posádka").getByRole("button", { name: /Nela Nová/ }).click();
+  await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  await expect(blok("Posádka").getByRole("button", { name: /PIC\s*Adam Admin/ })).toBeVisible();
+
+  // Úloha (u normálního letu nepovinná): osnova, pak úloha.
+  await page.getByRole("button", { name: /^Úloha/ }).click();
+  await page.getByRole("button", { name: /^II –/ }).click();
+  await page.getByRole("button", { name: "II/2 Let po okruhu" }).click();
+  await expect(page.getByRole("button", { name: /Úloha\s*II\/2 Let po okruhu/ })).toBeVisible();
+
+  // Místo vzletu hledáním letiště.
+  await page.getByRole("button", { name: /^Místo vzletu/ }).click();
+  await page.getByLabel("Hledat letiště (kód nebo název)").fill("letň");
+  await page.getByRole("button", { name: "LKLT Letňany" }).click();
+  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT/ })).toBeVisible();
+
+  // Platí: místo aeroklubu osoba.
+  await page.getByRole("button", { name: /Platí\s*Aeroklub/ }).click();
+  await blok("Platba").getByRole("button", { name: "Nela Nová" }).click();
+  await expect(page.getByRole("button", { name: /Platí\s*Nela Nová/ })).toBeVisible();
+
+  // VZLET z detailu, čas vzletu o dvě minuty dřív (přistání pak nepotřebuje dotaz na krátký let).
+  await page.getByRole("button", { name: "Vzlet", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText(/OK-3819 vzlet \d\d:\d\d:\d\d/);
+  await expect(page.getByText("Ve vzduchu", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /^Vzlet\s*\d/ }).click();
+  await page.getByRole("button", { name: "o minutu dřív" }).click();
+  await page.getByRole("button", { name: "o minutu dřív" }).click();
+  await page.getByRole("button", { name: "Uložit čas" }).click();
+  await expect(page.getByRole("button", { name: "Uložit čas" })).toBeHidden();
+
+  await page.getByRole("button", { name: "Přistál" }).click();
+  await expect(page.getByText("Ukončený", { exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog")).toBeHidden();
+
+  // Místo přistání v terénu popisem.
+  await page.getByRole("button", { name: /^Místo přistání/ }).click();
+  await page.getByLabel("Jiné místo (přistání do terénu)").fill("Pole u Brandýska");
+  await page.getByRole("button", { name: "Uložit místo" }).click();
+  await expect(
+    page.getByRole("button", { name: /Místo přistání\s*Pole u Brandýska/ }),
+  ).toBeVisible();
+
+  // Čas přistání o minutu dřív zkrátí dobu letu.
+  const doba = page.locator(".udaj", { hasText: "Doba" });
+  const pred = await doba.textContent();
+  await page.getByRole("button", { name: /^Přistání\s*\d/ }).click();
+  await page.getByRole("button", { name: "o minutu dřív" }).click();
+  await page.getByRole("button", { name: "Uložit čas" }).click();
+  await expect(doba).not.toHaveText(pred!);
+
+  // Zpět na přehled: let mezi ukončenými s novou posádkou a úlohou.
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
+  const ukonceny = page.locator(".let.ukoncen", { hasText: "OK-3819" }).filter({ hasText: "II/2" });
+  await expect(ukonceny).toContainText("Adam Admin");
+  await expect(ukonceny.locator(".udaje-pristani")).toHaveText("1");
+});
+
+test("zrušení naplánovaného vleku z detailu zruší kluzák i vlečnou", async ({ page }) => {
+  await expect(page.getByRole("button", { name: /Zrušené 1/ })).toBeVisible();
+  await page.locator(".let-par", { hasText: "OK-6722" }).getByText("OK-6722").click();
+  await expect(page.getByRole("heading", { name: /OK-6722/ })).toBeVisible();
+
+  // Rozmyšlení: Nerušit vrátí akce.
+  await page.getByRole("button", { name: "Zrušit let" }).click();
+  await page.getByRole("button", { name: "Nerušit" }).click();
+  await page.getByRole("button", { name: "Zrušit let" }).click();
+  await page.getByRole("button", { name: "Počasí" }).click();
+  await expect(page.getByText("Zrušený", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
+  await page.getByRole("button", { name: /Zrušené 3/ }).click();
+  await expect(page.locator(".let.zrusen", { hasText: "OK-6722" })).toHaveCount(1);
+  await expect(page.locator(".let.zrusen", { hasText: "OK-CRA" })).toHaveCount(1);
+  await expect(page.locator(".let.naplanovan", { hasText: "OK-6722" })).toHaveCount(0);
+});
