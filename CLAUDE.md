@@ -44,9 +44,9 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 9. **Klíče a omezení:** umělý primární klíč + jedinečné přirozené klíče; cizí klíče všude bez
    kaskádového mazání; pravidla v databázi (CHECK, UNIQUE, EXCLUDE).
 10. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
-    **Předpona `lov_` = trvalá data udržovaná uživatelem** (číselníky, osoby, letadla, osnovy
+    **Předpona `lov_` = trvalá data** (číselníky, osoby, letadla, osnovy, popisky auditu
     i vazební tabulky mezi nimi); ostatní tabulky jsou provozní data a zahájení ostrého
-    provozu je vyprázdní (mimo technické `ucet`, `audit_popisek`, `migrace`, `provoz`).
+    provozu je vyprázdní (mimo technické `ucet`, `migrace`, `provoz`).
     **Standard jednoduchého číselníku:** `id` (vazby mezi tabulkami **vždy přes id**), `kod`
     (jedinečný, jen pro program, nikde se nezobrazuje), `nazev` (text pro zobrazení – jde měnit
     a nemusí být jedinečný), `poradi`, `platny` (přepínač „používat“; nemaže se, zneplatní se;

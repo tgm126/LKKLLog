@@ -1,8 +1,8 @@
 # Tabulky nové verze (schéma `lkkl`)
 
-**Předpona `lov_` = trvalá data, která udržuje uživatel** (číselníky, osoby, letadla, osnovy
-a vazby mezi nimi); při zahájení ostrého provozu zůstávají (skript 017). Všechno ostatní kromě
-technických tabulek `ucet`, `audit_popisek`, `migrace`, `provoz` jsou **provozní data** –
+**Předpona `lov_` = trvalá data** (číselníky, osoby, letadla, osnovy, popisky auditu a vazby
+mezi nimi); při zahájení ostrého provozu zůstávají (skript 017). Všechno ostatní kromě
+technických tabulek `ucet`, `migrace`, `provoz` jsou **provozní data** –
 pohled `v_provozni_tabulky`; test hlídá, že nová tabulka je vědomě zařazená.
 
 **Jednoduché číselníky** mají jednotný standard: `id`, `kod` (jedinečný, jen pro program),
@@ -48,7 +48,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
 | `audit` (na let, posadka, let_tg, lov_osoba, ucet, lov_letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
 | `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit | 012, 017 |
-| `audit_popisek` | pravidlo | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012 |
+| `lov_audit_popisek` | číselník | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012, 017 |
 | `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |
 | `v_historie_letu` | pohled | historie letu: jedna akce (let + posádka + T&G v jedné transakci) = jeden řádek | 012 |
 | `provoz` | technická | fáze provozu (jediný řádek): `testovani` → `pilot` → `ostry`; řídí žlutý pruh v aplikaci | 017 |

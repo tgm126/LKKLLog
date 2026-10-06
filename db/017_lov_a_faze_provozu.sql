@@ -1,9 +1,9 @@
 -- 017: předpona lov_ pro všechna trvalá data a fáze provozu (testování → pilot → ostrý).
 --
--- lov_ = trvalá data, která udržuje uživatel (číselníky, osoby, letadla, osnovy a jejich
--- vazby); při zahájení ostrého provozu zůstávají. Provozní data (lety, audit, relace…) se
--- tehdy jednorázově vyprázdní – funkce lkkl.zahajit_ostry_provoz(). Mimo lov_ zůstávají jen
--- technické tabulky ucet, audit_popisek, migrace a provoz.
+-- lov_ = trvalá data (číselníky, osoby, letadla, osnovy, popisky auditu a vazby mezi nimi);
+-- při zahájení ostrého provozu zůstávají. Provozní data (lety, audit, relace…) se tehdy
+-- jednorázově vyprázdní – funkce lkkl.zahajit_ostry_provoz(). Mimo lov_ zůstávají jen
+-- technické tabulky ucet, migrace a provoz.
 
 -- --- přejmenování tabulek --------------------------------------------------------------------
 -- Pohledy a cizí klíče se odkazují na tabulku, ne na její jméno – přejmenování přežijí.
@@ -12,6 +12,7 @@ ALTER TABLE lkkl.letadlo     RENAME TO lov_letadlo;
 ALTER TABLE lkkl.osoba       RENAME TO lov_osoba;
 ALTER TABLE lkkl.ucel_funkce RENAME TO lov_ucel_funkce;
 ALTER TABLE lkkl.osnova_ucel RENAME TO lov_osnova_ucel;
+ALTER TABLE lkkl.audit_popisek RENAME TO lov_audit_popisek;
 
 -- Omezení, indexy a sekvence těchto tabulek s předponou starého jména (jako by tak byly od
 -- začátku); letadlo_bez_prekryvu patří tabulce let a zůstává.
@@ -22,16 +23,18 @@ BEGIN
     FOR r IN
         SELECT c.conrelid::regclass AS tabulka, c.conname AS jmeno
         FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
-        WHERE n.nspname = 'lkkl' AND c.conname ~ '^(letadlo|osoba|ucel_funkce|osnova_ucel)_'
+        WHERE n.nspname = 'lkkl' AND c.conname ~ '^(letadlo|osoba|ucel_funkce|osnova_ucel|audit_popisek)_'
           AND c.conrelid IN ('lkkl.lov_letadlo'::regclass, 'lkkl.lov_osoba'::regclass,
-                             'lkkl.lov_ucel_funkce'::regclass, 'lkkl.lov_osnova_ucel'::regclass)
+                             'lkkl.lov_ucel_funkce'::regclass, 'lkkl.lov_osnova_ucel'::regclass,
+                             'lkkl.lov_audit_popisek'::regclass)
     LOOP
         EXECUTE format('ALTER TABLE %s RENAME CONSTRAINT %I TO %I', r.tabulka, r.jmeno, 'lov_' || r.jmeno);
     END LOOP;
     FOR r IN
         SELECT indexname AS jmeno FROM pg_indexes
-        WHERE schemaname = 'lkkl' AND indexname ~ '^(letadlo|osoba|ucel_funkce|osnova_ucel)_'
-          AND tablename IN ('lov_letadlo', 'lov_osoba', 'lov_ucel_funkce', 'lov_osnova_ucel')
+        WHERE schemaname = 'lkkl' AND indexname ~ '^(letadlo|osoba|ucel_funkce|osnova_ucel|audit_popisek)_'
+          AND tablename IN ('lov_letadlo', 'lov_osoba', 'lov_ucel_funkce', 'lov_osnova_ucel',
+                            'lov_audit_popisek')
     LOOP
         EXECUTE format('ALTER INDEX lkkl.%I RENAME TO %I', r.jmeno, 'lov_' || r.jmeno);
     END LOOP;
@@ -54,16 +57,16 @@ DECLARE
 BEGIN
     FOR r IN
         SELECT p.oid FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-        WHERE n.nspname = 'lkkl' AND p.prosrc ~ 'lkkl\.(letadlo|osoba|ucel_funkce|osnova_ucel)\M'
+        WHERE n.nspname = 'lkkl' AND p.prosrc ~ 'lkkl\.(letadlo|osoba|ucel_funkce|osnova_ucel|audit_popisek)\M'
     LOOP
         EXECUTE regexp_replace(pg_get_functiondef(r.oid),
-                               'lkkl\.(letadlo|osoba|ucel_funkce|osnova_ucel)\M', 'lkkl.lov_\1', 'g');
+                               'lkkl\.(letadlo|osoba|ucel_funkce|osnova_ucel|audit_popisek)\M', 'lkkl.lov_\1', 'g');
     END LOOP;
 END $$;
 
 -- Audit zapisuje jméno tabulky: popisky, názvy akcí a dosavadní záznamy na nová jména.
 -- (Úprava historie jen kvůli přejmenování; ochranu auditu vypne jen tato transakce.)
-UPDATE lkkl.audit_popisek SET tabulka = 'lov_' || tabulka WHERE tabulka IN ('letadlo', 'osoba');
+UPDATE lkkl.lov_audit_popisek SET tabulka = 'lov_' || tabulka WHERE tabulka IN ('letadlo', 'osoba');
 ALTER TABLE lkkl.audit DISABLE TRIGGER audit_jen_doplnovat;
 UPDATE lkkl.audit SET tabulka = 'lov_' || tabulka WHERE tabulka IN ('letadlo', 'osoba');
 ALTER TABLE lkkl.audit ENABLE TRIGGER audit_jen_doplnovat;
@@ -104,7 +107,7 @@ SELECT tablename::text AS tabulka
 FROM pg_tables
 WHERE schemaname = 'lkkl'
   AND tablename !~ '^lov_'
-  AND tablename NOT IN ('ucet', 'audit_popisek', 'migrace', 'provoz')
+  AND tablename NOT IN ('ucet', 'migrace', 'provoz')
 ORDER BY 1;
 COMMENT ON VIEW lkkl.v_provozni_tabulky IS
     'Provozní tabulky – vyprázdní je zahájení ostrého provozu (testovací a pilotní záznamy).';
