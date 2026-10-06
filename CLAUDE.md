@@ -43,6 +43,12 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 9. **Klíče a omezení:** umělý primární klíč + jedinečné přirozené klíče; cizí klíče všude bez
    kaskádového mazání; pravidla v databázi (CHECK, UNIQUE, EXCLUDE).
 10. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
+    **Standard číselníku `lov_*`:** `id` (vazby mezi tabulkami **vždy přes id**), `kod`
+    (jedinečný, jen pro program, nikde se nezobrazuje), `nazev` (text pro zobrazení – jde měnit
+    a nemusí být jedinečný), `poradi`, `platny` (přepínač „používat“; nemaže se, zneplatní se;
+    nepoužitou položku jde smazat). Pravidla sloupců jsou v doménách `lkkl.kod`, `lkkl.nazev`,
+    `lkkl.poradi`, `lkkl.platny` – definovaná jednou. Hodnoty, podle jejichž kódu program
+    uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
     **Nové tabulky ve schématu databáze `lkkl`**; staré tabulky
     první verze zůstávají ve schématu `public`, dokud je nesmažeme.
