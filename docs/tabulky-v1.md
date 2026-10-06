@@ -1,5 +1,8 @@
 # Inventura tabulek první verze
 
+> **Smazáno 6. 10. 2026** na serveru i lokálně (zálohy v `C:\GIT\LKKLLog-zalohy`). Dokument
+> zůstává jako podklad.
+
 Stav k 5. 10. 2026 (verze v0.14.3, větev `v1`). Všechny tabulky jsou ve schématu `public`
 databáze `lkkllog`. Výpis je z lokální vývojové databáze; struktura na serveru je stejná
 (stejné migrace), **počty řádků se liší** (lokální jsou jen testovací data).

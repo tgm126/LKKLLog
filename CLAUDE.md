@@ -34,8 +34,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    `C:\GIT\LKKLLog-zalohy`, mimo git – budou tam i osobní údaje).
 6. Skripty v `db/` se před první migrací na server mohou sloučit do čistého celku (data
    se přitom vezmou z databáze).
-7. **Tabulky:** stará verze je zinventarizovaná v `docs/tabulky-v1.md` (po spuštění nové
-   verze se smažou), nová se vede v `docs/tabulky.md`.
+7. **Tabulky:** seznam se vede v `docs/tabulky.md` (`docs/tabulky-v1.md` je jen podklad –
+   tabulky první verze jsou smazané).
 
 ## Datový model
 8. **Normální formy:** každý údaj uložený jednou; odvozené hodnoty generovaným sloupcem
@@ -51,8 +51,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     `lkkl.poradi`, `lkkl.platny` – definovaná jednou. Hodnoty, podle jejichž kódu program
     uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
-    **Nové tabulky ve schématu databáze `lkkl`**; tabulky první verze ve schématu `public` se
-    s prvním nasazením nové verze smažou (zůstává jen rozšíření `btree_gist`).
+    **Tabulky ve schématu databáze `lkkl`**; tabulky první verze byly 6. 10. 2026 smazány
+    (ve `public` zůstává jen rozšíření `btree_gist`).
 12. **Zdrojem pravdy o schématu jsou SQL skripty** v `db/`, číslované `NNN_nazev.sql` (DDL)
     a `NNN_nazev_data.sql` (data zadaná uživatelem). Vznikají a zkouší se v lokální databázi
     (Docker, `127.0.0.1:5432`, databáze `lkkllog`), na server se zmigrují později.

@@ -72,9 +72,13 @@ Rozchodit celý řetězec **hned s tím, co máme** (server + přihlašování, 
 na `https://lety.lkkl.cz/api/zdravi` (nový endpoint: verze a spojení s databází). Do té doby,
 než přijde přihlašovací obrazovka s modulem lety, bude na adrese jen rozhraní.
 
-## 8. Stav
+## 8. Stav (6. 10. 2026)
 
-- Hotovo v kódu: čtení databáze z `DB_*`, spouštěč migrací `app/migrace.py` (lokální databáze
-  má evidenci migrací), `GET /api/zdravi`, `Dockerfile`, `.github/workflows/ci.yml`.
-- Zbývá: proměnné ve VPS Centru (uživatel), úklid po první verzi a přenos dat (SSH relace po
-  odsouhlasení), první značka `v2.1.0`.
+- **Nová verze běží** na `https://lety.lkkl.cz` (značka `v2.1.1`; `v2.1.0` padala – VPS Centrum
+  spouští kontejner z `/app`, oprava: `PYTHONPATH` v Dockerfile).
+- **Úklid po první verzi hotový:** úplná záloha serverové databáze
+  (`C:\GIT\LKKLLog-zalohy\server-lkkllog-v1-2026-10-06.dump`), cron první verze odstraněn,
+  tabulky první verze na serveru i lokálně smazané (lokální záloha
+  `lokalni-lkkllog-cela-2026-10-06-113111.dump`); `btree_gist` zůstává.
+- **Data přenesena** z lokální databáze do schématu `lkkl` na serveru (jedna transakce).
+- Zbývá: smazat proměnné první verze ve VPS Centru (uživatel), cron nové verze (úklid relací).
