@@ -90,18 +90,3 @@
   flex: 2;
 }
 
-/* Naplánovaný let: údaje vlevo, VZLET vpravo */
-.let-vedle {
-  display: flex;
-  align-items: center;
-  gap: var(--mezera-2);
-}
-
-.let-vedle > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.let-vedle .tl {
-  min-width: var(--sirka-akce-vpravo);
-}

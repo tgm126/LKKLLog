@@ -64,6 +64,13 @@ volně, dozor na zemi se nepočítá. **Vlek** je dvojitý pásek, dokud je napl
 ve vzduchu; jednotlivě (po přistání vlečné) má vlečná štítek „vlek“. Ťuknutí na polovinu
 dvojice otevře detail jejího letu.
 
+**Štítky na páscích** (rozhodnuto při testování 6. 10. 2026, nahrazuje „štítky jen při
+odchylce“ z makety): pod posádkou jeden řádek štítků ve **stálém pořadí** – 1 čas (a letiště,
+není-li domovské; u naplánovaného letiště vzletu), 2 účel (u vlečné „vlek“), 3 způsob vzletu,
+4 POB (u výcviku z posádky), 5 označení úlohy (IU/4). Za nimi doplňky jen s rámečkem (počet
+přistání, dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
+páskem přes celou šířku (jako PŘISTÁL).
+
 ### 3.2 Souběh (víc lidí najednou)
 - **Stisk platí jen jednou:** VZLET u letadla, které už vzlétlo, vrátí 409 a zprávu
   „Už vzlétl v 12:05:13 (Eva Časoměřič)“ (kdo a kdy z auditu); stejně PŘISTÁL.

@@ -43,7 +43,6 @@
   --dotyk: 44px;              /* nejmenší tlačítko ovládané palcem */
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
-  --sirka-akce-vpravo: 96px;  /* VZLET vedle údajů naplánovaného letu */
   --sirka-popisku: 108px;     /* sloupec popisků v detailu letu */
   --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
   --vrstva-nabidky: 1;        /* nabídka nad obsahem stránky */

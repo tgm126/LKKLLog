@@ -74,8 +74,9 @@ class Pasek(BaseModel):
     cas_pristani: datetime | None
     doba_uctovana_min: int | None
     pocet_pristani: int | None
-    pob: int | None
-    """Jen zadaný počet (u výcviku, sóla a přezkoušení se odvozuje z posádky a neukazuje)."""
+    pob: int
+    """Počet osob na palubě (u výcviku, sóla a přezkoušení spočítaný z posádky)."""
+    uloha: str | None
     pocet_tg: int
     posadka: list[Clen]
     duvod_zruseni: str | None
@@ -162,7 +163,8 @@ def lety(
                   nullif(v.misto_vzletu, %(domovske)s) AS misto_vzletu,
                   nullif(v.misto_pristani, %(domovske)s) AS misto_pristani,
                   v.cas_vzletu, v.cas_pristani, v.doba_uctovana_min, v.pocet_pristani,
-                  l.pob, a.max_doba_min, v.duvod_zruseni, v.zruseno, v.dodatecne, v.zalozeno,
+                  v.pob, v.uloha, a.max_doba_min, v.duvod_zruseni, v.zruseno, v.dodatecne,
+                  v.zalozeno,
                   (SELECT count(*) FROM lkkl.let_tg t WHERE t.let_id = v.id) AS pocet_tg,
                   coalesce((SELECT json_agg(json_build_object(
                                 'jmeno', o.jmeno, 'prijmeni', o.prijmeni,

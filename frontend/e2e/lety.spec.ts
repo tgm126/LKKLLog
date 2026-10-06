@@ -22,6 +22,14 @@ test("přehled letů dne", async ({ page }) => {
   const pred = await stopky.textContent();
   await expect(stopky).not.toHaveText(pred!, { timeout: 3000 });
 
+  // Štítky ve stálém pořadí: čas · účel · způsob vzletu · POB (· úloha).
+  await expect(page.locator(".let.vzduch", { hasText: "OK-2817" }).locator(".stitek")).toHaveText([
+    /^\d\d:\d\d$/,
+    "normální",
+    "naviják",
+    "POB 2",
+  ]);
+
   // Naplánované: vlek jako jeden dvojitý pásek.
   await expect(page.getByRole("heading", { name: "Naplánované 2" })).toBeVisible();
   const vlek = page.locator(".let", { hasText: "OK-6722" });

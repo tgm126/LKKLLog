@@ -49,7 +49,7 @@ def test_lety_dne(prihlasit, osoba, let):
     v = pasky[vzduch]
     posadka = [(c["prijmeni"], c["funkce_kod"]) for c in v["posadka"]]
     assert posadka == [("Pilot", "PIC"), ("Zak", "ZAK")]
-    assert v["pob"] is None  # u výcviku z posádky, na pásku se neukazuje
+    assert v["pob"] == 2  # u výcviku spočítaný z posádky (PIC + žák)
     assert v["ucel_kod"] == "VYCVIK" and v["zpusob_vzletu_kod"] == "NAVIJAK"
     assert v["misto_vzletu"] is None  # domovské se neuvádí
     assert v["varovani"] is None

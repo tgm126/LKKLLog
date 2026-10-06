@@ -35,7 +35,9 @@ export type Pasek = {
   cas_pristani: string | null;
   doba_uctovana_min: number | null;
   pocet_pristani: number | null;
-  pob: number | null;
+  /** Na palubě (u výcviku spočítaný z posádky). */
+  pob: number;
+  uloha: string | null;
   pocet_tg: number;
   posadka: Clen[];
   duvod_zruseni: string | null;

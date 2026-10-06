@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 
 import "./Stitek.css";
 
-export type BarvaStitku = "modry" | "zeleny" | "oranzovy" | "cerveny";
+/** obrys = doplňující údaj mimo stálé pořadí (bez výplně, jen rámeček) */
+export type BarvaStitku = "modry" | "zeleny" | "oranzovy" | "cerveny" | "obrys";
 
 export function Stitek({ barva, children }: { barva?: BarvaStitku; children: ReactNode }) {
   return <span className={["stitek", "cisla", barva].filter(Boolean).join(" ")}>{children}</span>;

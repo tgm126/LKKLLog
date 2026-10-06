@@ -38,5 +38,6 @@ test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page 
   // Další let odsud: naplánovaný, místo vzletu = místo přistání.
   await page.getByRole("button", { name: "Další let odsud" }).click();
   await expect(page.getByRole("status")).toHaveText(/OK-CRA naplánován/);
-  await expect(page.locator(".let.naplanovan", { hasText: "z LKLT" })).toContainText("OK-CRA");
+  const dalsi = page.locator(".let-par", { hasText: "OK-CRA" }).filter({ hasText: "LKLT" });
+  await expect(dalsi.locator(".stitek").first()).toHaveText("LKLT");
 });

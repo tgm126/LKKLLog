@@ -45,7 +45,8 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
   await expect(page.locator(".let.vzduch", { hasText: "OK-6722" }).locator(".let-par")).toHaveCount(1);
   await expect(page.locator(".let.ukoncen", { hasText: "OK-CRA" }).first()).toBeVisible();
   await page.locator(".let.vzduch", { hasText: "OK-6722" }).getByRole("button", { name: "Přistál" }).click();
-  await expect(page.locator(".let.ukoncen", { hasText: "vlek" })).toHaveCount(1);
+  // vlečná má na místě účelu štítek „vlek“
+  await expect(page.locator(".let.ukoncen .stitek", { hasText: /^vlek$/ })).toHaveCount(1);
 });
 
 test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
