@@ -64,6 +64,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
   žádné ORM ani tabulky frameworku, schéma se nepopisuje podruhé v Pythonu. Přihlašování,
   relace, ochrana formulářů a omezení pokusů jsou vlastní (tabulky `ucet`, `relace`), pokryté
   testy. Hesla argon2id.
+- **Audit:** každý požadavek nastaví databázi, kdo jedná (`db.s_kontextem` / `nastavit_kontext`);
+  zapisuje trigger v databázi, čitelně pohledy `v_audit` a `v_historie_letu`.
 - Přihlášení e-mailem a heslem, platí 30 dní od poslední aktivity; admin se smí přihlásit
   jako jiná osoba (relace si pamatuje skutečného admina). Passkey zatím ne.
 

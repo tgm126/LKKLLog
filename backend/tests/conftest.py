@@ -19,7 +19,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from psycopg.rows import dict_row  # noqa: E402
 
 from app import bezpecnost  # noqa: E402
-from app.db import spojeni  # noqa: E402
+from app.db import s_kontextem, spojeni  # noqa: E402
 from app.main import app  # noqa: E402
 
 SKRIPTY = Path(__file__).resolve().parents[2] / "db"
@@ -54,7 +54,11 @@ def conn(databaze):
 @pytest.fixture
 def klient(conn):
     """Továrna na klienty (každý má vlastní cookie = vlastní zařízení)."""
-    app.dependency_overrides[spojeni] = lambda: conn
+
+    def _spojeni():
+        yield from s_kontextem(conn)
+
+    app.dependency_overrides[spojeni] = _spojeni
 
     def novy(origin: str | None = ADRESA) -> TestClient:
         return TestClient(app, base_url=ADRESA, headers={"Origin": origin} if origin else {})

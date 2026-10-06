@@ -8,7 +8,7 @@ from psycopg import Connection, errors
 from pydantic import BaseModel
 
 from . import bezpecnost
-from .db import spojeni
+from .db import nastavit_kontext, spojeni
 from .nastaveni import nastaveni
 
 router = APIRouter(prefix="/api")
@@ -171,6 +171,7 @@ def prihlaseny(
             (PLATNOST_RELACE, otisk),
         )
         _nastavit_cookie(response, klic)
+    nastavit_kontext(conn, r["osoba_id"], r["puvodni_osoba_id"])  # pro audit
     return Prihlaseny(
         relace_id=otisk,
         osoba_id=r["osoba_id"],
@@ -262,7 +263,7 @@ def prihlaseni(
                 )
             conn.execute(
                 """UPDATE lkkl.ucet
-                   SET neuspesne_pokusy = 0, zablokovano_do = NULL, posledni_prihlaseni = now()
+                   SET neuspesne_pokusy = 0, posledni_prihlaseni = now()
                    WHERE osoba_id = %s""",
                 (osoba_id,),
             )
@@ -340,11 +341,12 @@ def _osoba_z_platneho_odkazu(conn: Connection, klic: str) -> dict | None:
 
 
 def _ulozit_heslo(conn: Connection, osoba_id: int, heslo: str) -> None:
-    """Nové heslo zneplatní dřívější odkazy (heslo_zmeneno) a vynuluje pokusy."""
+    """Nové heslo zneplatní dřívější odkazy (heslo_zmeneno), vynuluje pokusy a zruší
+    platné zablokování (prošlé nechá být, aby v auditu nevzniklo falešné odblokování)."""
     conn.execute(
         """UPDATE lkkl.ucet
-           SET heslo_hash = %s, heslo_zmeneno = clock_timestamp(),
-               neuspesne_pokusy = 0, zablokovano_do = NULL
+           SET heslo_hash = %s, heslo_zmeneno = clock_timestamp(), neuspesne_pokusy = 0,
+               zablokovano_do = CASE WHEN zablokovano_do > now() THEN NULL ELSE zablokovano_do END
            WHERE osoba_id = %s""",
         (bezpecnost.otisk_hesla(heslo), osoba_id),
     )
@@ -376,6 +378,7 @@ def heslo_nastavit(
         u = _osoba_z_platneho_odkazu(conn, data.klic)
         if u is not None:
             osoba_id = u["osoba_id"]
+            nastavit_kontext(conn, osoba_id)  # heslo si nastavuje sama osoba (pro audit)
             _ulozit_heslo(conn, osoba_id, data.heslo)
             conn.execute(
                 "DELETE FROM lkkl.relace WHERE osoba_id = %s OR puvodni_osoba_id = %s",

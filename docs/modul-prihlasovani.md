@@ -107,6 +107,15 @@ aby cizí stránka poslala požadavek s cookie přihlášeného uživatele.
 - `GET /api/ja` vrací i skutečného admina (obrazovka ukáže pruh „Jste přihlášen jako …“).
 - `konec` vrátí relaci adminovi. *audit* (zapisuje se skutečný admin).
 
+### 4.8 Audit (kdo jedná)
+Každý požadavek nastaví databázi kontext auditu (`db.s_kontextem`, proměnné relace
+`lkkl.zdroj`, `lkkl.osoba_id`, `lkkl.puvodni_osoba_id`), který čte trigger auditu
+(`db/012_audit.sql`). Bez přihlášení jde o „aplikaci“ (např. zablokování po neúspěšných
+pokusech); po ověření relace se doplní přihlášená osoba a při „přihlásit se jako“ i skutečný
+admin; při nastavení hesla odkazem osoba z odkazu. Po požadavku se kontext zruší (spojení se
+vrací do poolu). Úspěšné přihlášení do auditu nic nepíše (poslední přihlášení a počet pokusů
+se nesledují, prošlé zablokování zůstane).
+
 ## 5. Struktura kódu
 
 ```
