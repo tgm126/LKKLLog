@@ -70,7 +70,9 @@ stejném místě, i když chybí: 1 čas vzletu (→ přistání), 2 účel (u v
 „přezk.“ zkráceně), 3 způsob vzletu, 4 POB (u výcviku z posádky), 5 označení úlohy (IU/4)
 a vpravo pod dobou letu **počet přistání** jen číslem (u ukončeného letu vždy). Letiště
 vzletu a přistání se na pásku neukazují, jen v detailu letu. Šířky sloupců s rezervou (token
-`--sloupce-udaju`). Pod nimi doplněk s rámečkem (dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
+`--sloupce-udaju`). Běžné hodnoty se nevypisují (sloupec zůstane prázdný): účel „normální“
+a způsob vzletu „vlastní“ (ten aplikace sama přiřadí každému letu, který není kluzák – i vlečné).
+Pod nimi doplněk s rámečkem (dodatečně). Ukončený let ukazuje celou posádku. VZLET u naplánovaného letu je pod
 páskem přes celou šířku (jako PŘISTÁL).
 
 **Průvodce:** sekce oddělené čarou; **místo vzletu** (a u proběhlého letu **místo přistání**)

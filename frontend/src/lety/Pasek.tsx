@@ -11,7 +11,8 @@ import "./Pasek.css";
 
 // Pásky podle makety docs/navrhy/lety-mobil.html. Pod posádkou řádek údajů v pevných
 // sloupcích (stejný údaj vždy na stejném místě, i když chybí):
-//   1 čas · 2 účel · 3 způsob vzletu · 4 POB · 5 úloha · vpravo počet přistání;
+//   1 čas · 2 účel · 3 způsob vzletu · 4 POB · 5 úloha · vpravo počet přistání
+//   (účel normální a vzlet vlastní se nevypisují);
 // pod nimi doplněk s rámečkem (dodatečně). Letiště jen v detailu letu.
 
 const malymi = (text: string) => text.toLocaleLowerCase("cs-CZ");
@@ -24,10 +25,14 @@ function UdajeLetu({ let: l }: { let: PasekLetu }) {
   const cas =
     l.cas_vzletu &&
     [l.cas_vzletu, l.cas_pristani].filter((c) => c !== null).map(hodinyMinuty).join(" → ");
+  // Běžné hodnoty (účel normální, vzlet vlastní) se nevypisují – sloupec zůstane prázdný.
   const ucel = l.je_vlecny
     ? "vlek"
-    : l.ucel_kod && (UCEL_KRATCE[l.ucel_kod] ?? (l.ucel && malymi(l.ucel)));
-  const sloupce = [cas, ucel, kratce(l.zpusob_vzletu), `POB ${l.pob}`, l.uloha?.split(" ")[0]];
+    : l.ucel_kod !== "NORMALNI" &&
+      l.ucel_kod &&
+      (UCEL_KRATCE[l.ucel_kod] ?? (l.ucel && malymi(l.ucel)));
+  const zpusob = l.zpusob_vzletu_kod !== "VLASTNI" && kratce(l.zpusob_vzletu);
+  const sloupce = [cas, ucel, zpusob, `POB ${l.pob}`, l.uloha?.split(" ")[0]];
   return (
     <>
       <div className="udaje">
