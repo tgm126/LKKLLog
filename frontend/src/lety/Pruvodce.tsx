@@ -75,11 +75,18 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     setRozbaleno(null);
   };
 
-  const ucel: Ucel =
-    nabidky.ucely.find((u) => u.id === novy.ucelId) ??
-    nabidky.ucely.find((u) => u.kod === "NORMALNI") ??
-    nabidky.ucely[0]!;
   const letadlo = novy.letadlo;
+  // Jen účely, u kterých se posádka na palubě (PIC + žák / přezkoušený) vejde do letadla –
+  // u jednomístného normální let a sólo (dozor je na zemi).
+  const ucelyPro = (a: LetadloNabidka | undefined) =>
+    nabidky.ucely.filter(
+      (u) => !a || 1 + u.funkce.filter((f) => f.na_palube).length <= a.pocet_mist,
+    );
+  const ucely = ucelyPro(letadlo);
+  const ucel: Ucel =
+    ucely.find((u) => u.id === novy.ucelId) ??
+    ucely.find((u) => u.kod === "NORMALNI") ??
+    ucely[0]!;
   const kluzak = letadlo?.kategorie_kod === "KLUZAK";
   const aerovlek = kluzak && novy.zpusob === "VLEK";
   const osoba = (id: number | undefined) => nabidky.osoby.find((o) => o.id === id);
@@ -125,8 +132,19 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               letadlo={a}
               vybrana={a.id === letadlo?.id}
               vybrat={() => {
+                // účel, který se do letadla nevejde, se vrátí na normální (zůstane jen PIC)
+                const ucelSedi = ucelyPro(a).some((u) => u.id === novy.ucelId);
                 zmenit({
                   letadlo: a,
+                  ...(ucelSedi
+                    ? {}
+                    : {
+                        ucelId: undefined,
+                        osoby: Object.fromEntries(
+                          Object.entries(novy.osoby).filter(([f]) => Number(f) === nabidky.pic_id),
+                        ),
+                        platce: undefined,
+                      }),
                   pob: Math.min(novy.pob, a.pocet_mist),
                   zpusob: novy.zpusob ?? (nabidky.zpusob_kluzaku === "VLEK" ? "VLEK" : "NAVIJAK"),
                   uloha: undefined,
@@ -207,7 +225,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
       >
         <Blok nadpis="Účel">
           <div className="volby">
-            {nabidky.ucely.map((u) => (
+            {ucely.map((u) => (
               <Tlacitko
                 key={u.id}
                 varianta="obrys"

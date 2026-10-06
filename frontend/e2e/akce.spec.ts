@@ -69,6 +69,9 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
   await page.getByRole("button", { name: /^OK-6722/ }).click();
 
   await expect(page.getByText("2 / 3 · Posádka")).toBeVisible();
+  // Jednomístný kluzák: jen normální let a sólo (výcvik a přezkoušení mají na palubě dva).
+  const ucely = page.locator(".blok", { hasText: "Účel" }).getByRole("button");
+  await expect(ucely).toHaveText(["Normální", "Výcvik sólo"]);
   const dal = page.getByRole("button", { name: "Dál" });
   await expect(dal).toBeDisabled();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
