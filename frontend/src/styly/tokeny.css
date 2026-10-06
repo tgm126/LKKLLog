@@ -43,7 +43,16 @@
   --dotyk: 44px;              /* nejmenší tlačítko ovládané palcem */
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
-  --sloupce-udaju: 2.8fr 2fr 2fr 1.5fr 1.5fr 2ch; /* údaje letu: čas · účel · vzlet · POB · úloha · přistání */
+
+  /* Údaje letu (pásek, .udaje): čas · účel · vzlet · POB · úloha – nejdelší text ve znacích
+     písma štítku + okraje štítku – a počet přistání. Na úzkém displeji se zúží (minmax 0). */
+  --sloupce-udaju:
+    minmax(0, calc(10ch + 2 * var(--mezera-2)))
+    minmax(0, calc(5.5ch + 2 * var(--mezera-2)))
+    minmax(0, calc(7ch + 2 * var(--mezera-2)))
+    minmax(0, calc(5ch + 2 * var(--mezera-2)))
+    minmax(0, calc(4.5ch + 2 * var(--mezera-2)))
+    minmax(0, 3ch);
   --sirka-popisku: 108px;     /* sloupec popisků v detailu letu */
   --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
   --vrstva-zastinu: 1;        /* zástin pod nabídkou: ťuknutí vedle ji zavře */

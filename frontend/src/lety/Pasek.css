@@ -91,13 +91,17 @@
 }
 
 
-/* Údaje letu v pevných sloupcích: čas · účel · způsob vzletu · POB · úloha · přistání. Šířky sloupců
-   s rezervou pro nejdelší obsah (tokeny); delší text se zkrátí třemi tečkami. */
+/* Údaje letu v pevných sloupcích: čas · účel · způsob vzletu · POB · úloha · přistání.
+   Sloupec je široký na nejdelší text (token v písmu štítku + okraje štítku), zbylé místo
+   se rozdělí rovnoměrně mezi sloupce; na úzkém displeji se sloupce zúží a delší text
+   se zkrátí třemi tečkami. */
 .udaje {
   display: grid;
   grid-template-columns: var(--sloupce-udaju);
-  gap: var(--mezera-1);
+  justify-content: space-between;
   margin-top: var(--mezera-1);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
 }
 
 .udaje .stitek {
@@ -107,7 +111,9 @@
   vertical-align: top;
 }
 
-/* Počet přistání vpravo pod dobou letu */
+/* Počet přistání vpravo pod dobou letu, písmem obsahu */
 .udaje-pristani {
+  font-size: var(--pismo-m);
+  font-weight: var(--tloustka);
   text-align: right;
 }

@@ -24,7 +24,7 @@ const UCEL_KRATCE: Record<string, string> = { VYCVIK_SOLO: "sólo", PREZKOUSENI:
 function UdajeLetu({ let: l }: { let: PasekLetu }) {
   const cas =
     l.cas_vzletu &&
-    [l.cas_vzletu, l.cas_pristani].filter((c) => c !== null).map(hodinyMinuty).join(" → ");
+    [l.cas_vzletu, l.cas_pristani].filter((c) => c !== null).map(hodinyMinuty).join("–");
   // Běžné hodnoty (účel normální, vzlet vlastní) se nevypisují – sloupec zůstane prázdný.
   const ucel = l.je_vlecny
     ? "vlek"
