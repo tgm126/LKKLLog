@@ -15,7 +15,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_typ` | číselník | typy letadel → kategorie, počet míst | 001, 002, 008 |
 | `letadlo` | tabulka | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz | 001, 002, 013 |
 | `v_letadlo` | pohled | letadla s názvem typu, kategorií a počtem míst | 001, 002, 013 |
-| `v_letadlo_nabidka` | pohled | nabídka letadel pro nový let: jen v provozu, pořadí kategorie → typ → rejstřík | 013 |
+| `v_letadlo_nabidka` | pohled | nabídka letadel pro nový let: pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 013, 014 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft] | 003, 008 |
 | `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby) | 008 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
@@ -25,7 +25,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB), doba 0 u krátkého letu, počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
-| `v_let` | pohled | lety s odvozeným stavem, dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011 |
+| `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
 | `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G | 009 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat` | trigger | verze záznamu se zvyšuje; let nejde smazat | 009 |
@@ -44,7 +44,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 
 ## Rozhodnutí pro další tabulky
 
-- **Let:** stav se neukládá – odvodí se (připravený = bez vzletu, ve vzduchu = vzlet bez
+- **Let:** stav se neukládá – odvodí se (naplánovaný = bez vzletu, ve vzduchu = vzlet bez
   přistání, ukončený = obojí, zrušený = důvod zrušení). **POB** (počet osob na palubě) je
   jediný údaj o počtu lidí; pojem host se nezavádí. Kdo má funkci (žák, dozor, přezkoušený),
   je uveden jménem; jinak jen PIC + POB. U výcviku, sóla a přezkoušení se POB nezadává –
