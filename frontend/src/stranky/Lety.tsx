@@ -14,11 +14,13 @@ const podle =
   (a: Pasek, b: Pasek) =>
     (klic(a) ?? "").localeCompare(klic(b) ?? "") * (sestupne ? -1 : 1);
 
-/** Naplánované: vlek (kluzák + jeho naplánovaná vlečná) jako jedna dvojice. */
-function dvojice(naplanovane: Pasek[]): Pasek[][] {
-  const podleId = new Map(naplanovane.map((l) => [l.id, l]));
-  const vlecne = new Set(naplanovane.flatMap((l) => (l.vlecny_let_id ? [l.vlecny_let_id] : [])));
-  return naplanovane
+/** Vlek (kluzák + jeho vlečná ve stejném stavu) jako jedna dvojice – naplánovaný i ve vzduchu. */
+function dvojice(lety: Pasek[]): Pasek[][] {
+  const podleId = new Map(lety.map((l) => [l.id, l]));
+  const vlecne = new Set(
+    lety.flatMap((l) => (l.vlecny_let_id && podleId.has(l.vlecny_let_id) ? [l.vlecny_let_id] : [])),
+  );
+  return lety
     .filter((l) => !vlecne.has(l.id))
     .map((l) => {
       const vlecna = l.vlecny_let_id ? podleId.get(l.vlecny_let_id) : undefined;
@@ -52,7 +54,7 @@ export function Lety() {
     zaneprazdnen: lety.some((l) => l.id === probiha?.letId),
   });
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
-  const veVzduchu = ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu));
+  const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu)));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
   const ukoncene = ve("UKONCEN").sort(podle((l) => l.cas_pristani, true));
   const zrusene = ve("ZRUSEN").sort(podle((l) => l.zruseno, true));
@@ -69,8 +71,8 @@ export function Lety() {
       {lety.length === 0 && <p className="seda">Dnes zatím žádné lety.</p>}
       {veVzduchu.length > 0 && (
         <Sekce nadpis={`Ve vzduchu ${veVzduchu.length}`}>
-          {veVzduchu.map((l) => (
-            <PasekVeVzduchu key={l.id} let={l} {...akce([l])} />
+          {veVzduchu.map((d) => (
+            <PasekVeVzduchu key={d[0]!.id} lety={d} {...akce(d)} />
           ))}
         </Sekce>
       )}

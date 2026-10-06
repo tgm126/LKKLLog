@@ -28,11 +28,19 @@ export function zmenitUzivatele(qc: QueryClient, ja: Ja | null): void {
   qc.setQueryData(KLIC_JA, ja);
 }
 
+// Verze serveru při načtení stránky: když se po nasazení změní, otevřená aplikace (běží
+// třeba celý den v telefonu) nabídne načtení nové verze.
+let verzePriNacteni: string | undefined;
+
 export function useAplikace() {
   return useQuery({
     queryKey: ["aplikace"],
-    queryFn: () => ziskat<Aplikace>("/aplikace"),
-    staleTime: Infinity,
+    queryFn: async () => {
+      const aplikace = await ziskat<Aplikace>("/aplikace");
+      verzePriNacteni ??= aplikace.verze;
+      return { ...aplikace, novaVerze: aplikace.verze !== verzePriNacteni };
+    },
+    refetchInterval: 60_000,
   }).data;
 }
 

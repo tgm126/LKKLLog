@@ -26,6 +26,43 @@ test("vzlet a Zpět, T&G a přistání z pásku", async ({ page }) => {
   await expect(page.locator(".let.ukoncen", { hasText: "OK-MFV" })).toContainText("3 přistání");
 });
 
+test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ page }) => {
+  const par = page.locator(".let.naplanovan", { hasText: "OK-6722" });
+  await par.getByRole("button", { name: "Vzlet" }).click();
+  const veVzduchu = page.locator(".let.vzduch", { hasText: "OK-6722" });
+  await expect(veVzduchu.locator(".let-par")).toHaveCount(2);
+  await expect(veVzduchu).toContainText("Z 526 · vlečná");
+  await expect(veVzduchu).not.toContainText("vleče");
+
+  // Ťuknutí na polovinu vlečné otevře její detail.
+  await veVzduchu.locator(".let-par", { hasText: "OK-CRA" }).getByText("Adam Admin").click();
+  await expect(page.getByRole("heading", { name: /OK-CRA/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Vleče/ })).toContainText("OK-6722");
+  await page.getByRole("button", { name: "Přistál" }).click();
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
+
+  // Vlečná přistála – kluzák zůstal ve vzduchu sám; vlečná mezi ukončenými se štítkem „vlek“.
+  await expect(page.locator(".let.vzduch", { hasText: "OK-6722" }).locator(".let-par")).toHaveCount(1);
+  await expect(page.locator(".let.ukoncen", { hasText: "OK-CRA" }).first()).toBeVisible();
+  await page.locator(".let.vzduch", { hasText: "OK-6722" }).getByRole("button", { name: "Přistál" }).click();
+  await expect(page.locator(".let.ukoncen", { hasText: "vlek" })).toHaveCount(1);
+});
+
+test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
+  // Petr Pilot letí na OK-2817 – jako PIC dalšího letu ho server při vzletu odmítne.
+  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: /^OK-3819/ }).click();
+  await page.getByRole("button", { name: "Všichni…" }).click();
+  await page.getByRole("button", { name: "Petr Pilot" }).click();
+  await page.getByRole("button", { name: "Dál" }).click();
+  // (výchozí způsob vzletu je podle posledního dnešního – po předchozím testu aerovlek)
+  await page.getByRole("button", { name: "Naviják" }).click();
+  await page.getByRole("button", { name: "Vzlet teď" }).click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Petr Pilot je v tu dobu na palubě jiného letu (OK-2817).",
+  );
+});
+
 test("průvodce: VZLET TEĎ", async ({ page }) => {
   await page.getByRole("button", { name: "+ Nový let" }).click();
   await expect(page.getByRole("heading", { name: "Nový let" })).toBeVisible();
@@ -38,7 +75,9 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
   await dal.click();
 
   await expect(page.getByText("3 / 3 · Let")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Naviják" })).toHaveAttribute("aria-pressed", "true");
+  // Výchozí způsob vzletu = jak se dnes naposledy vzlétalo s kluzákem (předchozí test: aerovlek).
+  await expect(page.getByRole("button", { name: "Aerovlek" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Naviják" }).click();
   await expect(page.getByText("předvyplněno")).toBeVisible(); // platí PIC
   await page.getByRole("button", { name: "Vzlet teď" }).click();
 

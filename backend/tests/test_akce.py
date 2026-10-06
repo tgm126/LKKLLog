@@ -200,3 +200,51 @@ def test_nabidky(conn, pilot, let):
     assert [f["kod"] for f in ucely["VYCVIK"]["funkce"]] == ["ZAK"]
     assert ucely["NORMALNI"]["funkce"] == []
     assert nabidky["zpusob_kluzaku"] == "NAVIJAK"
+
+
+def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):
+    """Kdo je na palubě ve vzduchu, nemůže zároveň vzlétnout jinde; plánovat jde."""
+    pilot_id, k = pilot
+    k.post("/api/lety", json=_novy(conn, rejstrik="OK-2817", posadka={"PIC": pilot_id}, pob=1,
+                                   akce="vzlet"))  # fmt: skip
+    planovany = k.post(
+        "/api/lety",
+        json=_novy(conn, rejstrik="OK-3819", posadka={"PIC": pilot_id}, pob=1, akce="naplanovat"),
+    )
+    assert planovany.status_code == 200
+    odpoved = k.post(f"/api/lety/{planovany.json()['let_id']}/vzlet")
+    assert odpoved.status_code == 400
+    assert odpoved.json()["detail"] == "Jan Pilot je v tu dobu na palubě jiného letu (OK-2817)."
+
+    # Dozor je na zemi – ten se nepočítá.
+    zak = osoba("Zak")
+    solo = _novy(
+        conn, rejstrik="OK-CRA", ucel="VYCVIK_SOLO", posadka={"PIC": zak, "DOZOR": pilot_id},
+        zpusob="VLASTNI", akce="vzlet",
+    )  # fmt: skip
+    conn.execute(
+        """INSERT INTO lkkl.lov_osnova (kod, nazev, poradi) VALUES ('O', 'Osnova', 1);
+           INSERT INTO lkkl.lov_osnova_ucel (osnova_id, ucel_id)
+           SELECT o.id, u.id FROM lkkl.lov_osnova o, lkkl.lov_ucel u
+           WHERE o.kod = 'O' AND u.kod = 'VYCVIK_SOLO';
+           INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, osnova_id)
+           SELECT 'U', 'Úloha', 1, id FROM lkkl.lov_osnova WHERE kod = 'O'"""
+    )
+    solo["uloha_id"] = _id(conn, "lov_uloha", "U")
+    assert k.post("/api/lety", json=solo).status_code == 200
+
+
+def test_probehly_let_se_prekryva(conn, pilot, let, flotila):
+    pilot_id, k = pilot
+    let("OK-2817", {"PIC": pilot_id}, vzlet="now() - interval '2 hours'",
+        pristani="now() - interval '1 hour'")  # fmt: skip
+    casy = conn.execute(
+        "SELECT now() - interval '90 minutes' AS v, now() - interval '30 minutes' AS p"
+    ).fetchone()
+    data = _novy(
+        conn, rejstrik="OK-3819", posadka={"PIC": pilot_id}, pob=1, akce="probehly",
+        cas_vzletu=casy["v"].isoformat(), cas_pristani=casy["p"].isoformat(),
+    )  # fmt: skip
+    odpoved = k.post("/api/lety", json=data)
+    # (hláška jmenuje druhý z letů, které se překrývají – podle toho, který se kontroloval první)
+    assert odpoved.status_code == 400 and "na palubě jiného letu" in odpoved.json()["detail"]

@@ -1,4 +1,4 @@
-import { Fragment, type MouseEvent } from "react";
+import { Fragment, type MouseEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
@@ -14,12 +14,13 @@ import "./Pasek.css";
 
 const malymi = (text: string) => text.toLocaleLowerCase("cs-CZ");
 
-/** Odchylky od běžného letu: účel, způsob vzletu, vlečení. */
-function odchylky(l: PasekLetu): string[] {
+/** Odchylky od běžného letu: účel, způsob vzletu, vlek. Ve dvojici (kluzák + vlečná na
+ *  jednom pásku) je vlek vidět – štítek „vlek“ se vynechá. */
+function odchylky(l: PasekLetu, veDvojici = false): string[] {
   return [
     l.ucel && l.ucel_kod !== "NORMALNI" ? malymi(l.ucel) : "",
     l.zpusob_vzletu_kod !== "VLASTNI" ? malymi(l.zpusob_vzletu) : "",
-    l.je_vlecny && l.vlek_rejstrik ? `vleče ${l.vlek_rejstrik}` : "",
+    l.je_vlecny && !veDvojici ? "vlek" : "",
   ].filter(Boolean);
 }
 
@@ -44,51 +45,70 @@ function useOtevrit(letId: number) {
   };
 }
 
+/** Polovina dvojitého pásku (kluzák / vlečná) – ťuknutí otevře detail svého letu. */
+function Polovina({ letId, children }: { letId: number; children: ReactNode }) {
+  return (
+    <div className="let-par" onClick={useOtevrit(letId)}>
+      {children}
+    </div>
+  );
+}
+
 /** Akce z pásku: provést (letId, akce); zaneprázdněn = akce tohoto letu právě běží. */
 type AkcePasku = { provest: (letId: number, akce: Akce) => void; zaneprazdnen: boolean };
 
 const misto = (kod: string | null, cas: string | null) =>
   [kod, cas && hodinyMinuty(cas)].filter(Boolean).join(" ");
 
-export function PasekVeVzduchu({ let: l, provest, zaneprazdnen }: { let: PasekLetu } & AkcePasku) {
+/** Let ve vzduchu; vlek jako dvojitý pásek, dokud jsou ve vzduchu kluzák i vlečná
+ *  (každý má své stopky a PŘISTÁL). */
+export function PasekVeVzduchu({ lety, provest, zaneprazdnen }: { lety: PasekLetu[] } & AkcePasku) {
   const ted = useTik();
-  const otevrit = useOtevrit(l.id);
+  const veDvojici = lety.length > 1;
   return (
-    <div className={`let ${l.varovani ? "problem" : "vzduch"}`} onClick={otevrit}>
-      <div className="let-radek">
-        <span className="velke tucne">{l.rejstrik}</span>
-        <span className="let-typ">{typ(l)}</span>
-        <span className="let-vpravo let-cas cisla">
-          {l.cas_vzletu && stopky(l.cas_vzletu, ted)}
-        </span>
-      </div>
-      <div className="let-radek">
-        <Posadka clenove={l.posadka} />
-      </div>
-      <Stitky>
-        {[
-          <Stitek key="vzlet">vzlet {misto(l.misto_vzletu, l.cas_vzletu)}</Stitek>,
-          l.pob && <Stitek key="pob">POB {l.pob}</Stitek>,
-          ...odchylky(l).map((o) => <Stitek key={o}>{o}</Stitek>),
-        ]}
-      </Stitky>
-      {l.varovani && <div className="let-duvod">{l.varovani}</div>}
-      <div className="let-akce">
-        {/* T&G jen motorová letadla, TMG a UL; počet přímo na tlačítku */}
-        {l.kategorie_kod !== "KLUZAK" && (
-          <Tlacitko varianta="svetle" disabled={zaneprazdnen} onClick={() => provest(l.id, "tg")}>
-            T&amp;G <span className="cisla">{l.pocet_tg}</span>
-          </Tlacitko>
-        )}
-        <Tlacitko
-          varianta="zelene"
-          hlavni
-          disabled={zaneprazdnen}
-          onClick={() => provest(l.id, "pristani")}
-        >
-          Přistál
-        </Tlacitko>
-      </div>
+    <div className={`let ${lety.some((l) => l.varovani) ? "problem" : "vzduch"}`}>
+      {lety.map((l) => (
+        <Polovina key={l.id} letId={l.id}>
+          <div className="let-radek">
+            <span className="velke tucne">{l.rejstrik}</span>
+            <span className="let-typ">{typ(l)}</span>
+            <span className="let-vpravo let-cas cisla">
+              {l.cas_vzletu && stopky(l.cas_vzletu, ted)}
+            </span>
+          </div>
+          <div className="let-radek">
+            <Posadka clenove={l.posadka} />
+          </div>
+          <Stitky>
+            {[
+              <Stitek key="vzlet">vzlet {misto(l.misto_vzletu, l.cas_vzletu)}</Stitek>,
+              l.pob && <Stitek key="pob">POB {l.pob}</Stitek>,
+              ...odchylky(l, veDvojici).map((o) => <Stitek key={o}>{o}</Stitek>),
+            ]}
+          </Stitky>
+          {l.varovani && <div className="let-duvod">{l.varovani}</div>}
+          <div className="let-akce">
+            {/* T&G jen motorová letadla, TMG a UL; počet přímo na tlačítku */}
+            {l.kategorie_kod !== "KLUZAK" && (
+              <Tlacitko
+                varianta="svetle"
+                disabled={zaneprazdnen}
+                onClick={() => provest(l.id, "tg")}
+              >
+                T&amp;G <span className="cisla">{l.pocet_tg}</span>
+              </Tlacitko>
+            )}
+            <Tlacitko
+              varianta="zelene"
+              hlavni
+              disabled={zaneprazdnen}
+              onClick={() => provest(l.id, "pristani")}
+            >
+              Přistál
+            </Tlacitko>
+          </div>
+        </Polovina>
+      ))}
     </div>
   );
 }
@@ -99,21 +119,19 @@ export function PasekNaplanovany({
   provest,
   zaneprazdnen,
 }: { lety: PasekLetu[] } & AkcePasku) {
-  const vlek = lety.length > 1;
-  const otevrit = useOtevrit(lety[0]!.id);
+  const veDvojici = lety.length > 1;
   return (
-    <div className="let naplanovan" onClick={otevrit}>
+    <div className="let naplanovan">
       <div className="let-vedle">
         <div>
       {lety.map((l) => {
         const udaje = [
           l.pob ? `POB ${l.pob}` : "",
           l.misto_vzletu ? `z ${l.misto_vzletu}` : "",
-          // Ve dvojici je vidět, koho vlečná vleče – štítek „vleče“ by se opakoval.
-          ...odchylky(l).filter((o) => !(vlek && o.startsWith("vleče"))),
+          ...odchylky(l, veDvojici),
         ].filter(Boolean);
         return (
-          <div key={l.id} className="let-par">
+          <Polovina key={l.id} letId={l.id}>
             <div className="let-radek">
               <span className="velke tucne">{l.rejstrik}</span>
               <span className="let-typ">{typ(l)}</span>
@@ -122,7 +140,7 @@ export function PasekNaplanovany({
               <Posadka clenove={l.posadka} />
               {udaje.length > 0 && <span className="funkce">· {udaje.join(" · ")}</span>}
             </div>
-          </div>
+          </Polovina>
         );
       })}
         </div>

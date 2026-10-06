@@ -77,13 +77,20 @@ def _let(c, zalozil: int, posadka: dict[str, int], **udaje) -> int:
 
 
 def lety(c, admin: int, nova: int) -> None:
-    """Dnešní lety ve všech stavech (pásky v přehledu)."""
-    _let(c, admin, {"PIC": admin}, rejstrik="OK-2817", pob=2,
+    """Dnešní lety ve všech stavech (pásky v přehledu). Ve vzduchu létají piloti bez účtu,
+    aby admin a Nela mohli v testech vzlétnout (osoba nesmí letět ve dvou letech zároveň)."""
+    petr, olga = (
+        c.execute(
+            "INSERT INTO lkkl.lov_osoba (jmeno, prijmeni) VALUES (%s, %s) RETURNING id", jmeno
+        ).fetchone()[0]
+        for jmeno in (("Petr", "Pilot"), ("Olga", "Pilotka"))
+    )
+    _let(c, admin, {"PIC": petr}, rejstrik="OK-2817", pob=2,
          vzlet="now() - interval '12 minutes'")  # fmt: skip
     mfv = _let(
         c,
         admin,
-        {"PIC": nova},
+        {"PIC": olga},
         rejstrik="OK-MFV",
         zpusob="VLASTNI",
         vzlet="now() - interval '2 hours'",

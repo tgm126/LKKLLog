@@ -36,6 +36,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
 | `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
 | `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G, úloha (povinnost, účel, kategorie) | 009, 011, 016 |
+| `let_osoby_bez_prekryvu()` | funkce (v `let_kontrola`) | osoba na palubě nemůže být ve vzduchu ve dvou letech zároveň (plánování volné, dozor na zemi se nepočítá) | 018 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat ani vyprázdnit | 009, 017 |
 | `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní, vlekař | 004, 015, 017 |

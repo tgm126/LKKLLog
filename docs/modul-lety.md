@@ -58,11 +58,19 @@ transakci (vlečný let bez účelu, plátce = plátce kluzáku).
 s vlastní dobou); vzlet je u obou stejný. **Vlekař** nemůže být zároveň v posádce kluzáku
 (předvyplní se vlekař posledního vleku vlečné, jen když v posádce není).
 
+**Osoba na palubě** (PIC, žák, přezkoušený) nemůže být ve vzduchu ve dvou letech zároveň –
+hlídá databáze při vzletu, proběhlém letu i úpravě časů a posádky (`db/018`); plánovat jde
+volně, dozor na zemi se nepočítá. **Vlek** je dvojitý pásek, dokud je naplánovaný nebo
+ve vzduchu; jednotlivě (po přistání vlečné) má vlečná štítek „vlek“. Ťuknutí na polovinu
+dvojice otevře detail jejího letu.
+
 ### 3.2 Souběh (víc lidí najednou)
 - **Stisk platí jen jednou:** VZLET u letadla, které už vzlétlo, vrátí 409 a zprávu
   „Už vzlétl v 12:05:13 (Eva Časoměřič)“ (kdo a kdy z auditu); stejně PŘISTÁL.
 - **Úprava v detailu** nese číslo verze; změnil-li let mezitím někdo jiný, server ji odmítne
   a obrazovka ukáže aktuální stav.
+- **Nová verze aplikace:** otevřená aplikace se jednou za minutu ptá na verzi serveru; po
+  nasazení ukáže pruh „Je k dispozici nová verze aplikace · Načíst“.
 - **Přehled se obnovuje sám** (dotaz každých 10 s a hned po návratu do aplikace nebo
   odemčení telefonu), aby pilot i časoměřič viděli totéž.
 
