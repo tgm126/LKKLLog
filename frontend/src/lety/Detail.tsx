@@ -459,8 +459,10 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
   const prikaz = useMutation({
     mutationFn: (a: { cesta: string; data?: unknown }) =>
       poslat<Provedeno>(`/lety/${l.id}/${a.cesta}`, a.data),
-    onSuccess: (p, a) => {
-      qc.invalidateQueries({ queryKey: ["lety"] });
+    onSuccess: async (p, a) => {
+      // Přehled letů se načte hned (i když teď není na obrazovce), aby po návratu na něj
+      // nebyl vidět starý stav.
+      await qc.invalidateQueries({ queryKey: ["lety"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["let"] });
       setRusim(false);
       if (a.cesta === "dalsi") {

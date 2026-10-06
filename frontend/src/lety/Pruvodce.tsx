@@ -569,8 +569,9 @@ function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: S
         ...a.casy,
       });
     },
-    onSuccess: (p, a) => {
-      qc.invalidateQueries({ queryKey: ["lety"] });
+    onSuccess: async (p, a) => {
+      // Přehled letů se načte dřív, než se na něj průvodce vrátí (jinak by ukázal starý stav).
+      await qc.invalidateQueries({ queryKey: ["lety"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["nabidky"] });
       if (a.akce === "vzlet") {
         oznamitAkci(oznamit, p, "vzlet", () =>
