@@ -18,6 +18,14 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK, PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
+| `ucel_funkce` | pravidlo | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009 |
+| `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB), doba 0 u krátkého letu, počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
+| `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
+| `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
+| `v_let` | pohled | lety s odvozeným stavem, dnem, vlekem, účtovanou dobou, PIC, plátcem a příznakem „dodatečně“ | 009 |
+| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G | 009 |
+| `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
+| `let_verze`, `let_nemazat` | trigger | verze záznamu se zvyšuje; let nejde smazat | 009 |
 | `osoba` | tabulka | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní | 004 |
 | `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
