@@ -200,9 +200,11 @@ b { font-weight: var(--tloustka-tucna); }
 
 /* Průvodce novým letem */
 .pruvodce-krok { margin-left: auto; }
-.dlazdice-mrizka { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--mezera-2); padding: var(--mezera-3); }
+.dlazdice-mrizka { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: var(--mezera-1); padding: var(--mezera-2); }  /* všechny panely stejně velké */
 /* Dlaždice letadla: rejstřík dominantní; výplň podle stavu jako u pásků */
-.dlazdice { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%; min-height: var(--dotyk-hlavni); padding: var(--mezera-2); border: var(--ramecek-sirka) solid var(--dlazdice-okraj, var(--barva-cara)); border-radius: var(--zaobleni); background: var(--dlazdice-vypln, var(--barva-karta)); text-align: left; }
+.dlazdice { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%; min-height: var(--dotyk-hlavni); padding: var(--mezera-2); border: var(--ramecek-sirka) solid var(--dlazdice-okraj, transparent); border-radius: var(--zaobleni); background: var(--dlazdice-vypln, var(--barva-neutralni)); text-align: left; }
+.dlazdice .velke { white-space: nowrap; }   /* rejstřík vždy na jednom řádku */
+.dlazdice .stitek { --stitek-vypln: var(--barva-karta); }   /* štítek musí vystoupit z výplně panelu */
 .dlazdice.leti     { --dlazdice-vypln: var(--barva-modra-vypln); --dlazdice-okraj: transparent; }
 .dlazdice.vybrana  { --dlazdice-okraj: var(--barva-modra); }
 .dlazdice .stitky  { min-height: 0; }
@@ -491,11 +493,12 @@ b { font-weight: var(--tloustka-tucna); }
     const stitky = [
       stav.leti ? `<span class="stitek modry cisla">letí ${dobaLetu(stav.leti)}</span>` : '',
       stav.pripraven ? '<span class="stitek">připraven</span>' : '',
-      stav.vlecne ? '<span class="stitek">vlečná</span>' : '',
-      stav.soukrome ? '<span class="stitek">soukromé</span>' : '',
     ].join('');
+    // Trvalé vlastnosti letadla textem, štítek jen pro stav (letí, připraven).
+    const vlastnosti = [stav.vlecne && 'vlečná', stav.soukrome && 'soukromé'].filter(Boolean).join(' · ');
     return `<button class="dlazdice${stav.leti ? ' leti' : ''}" data-rejstrik="${rejstrik}" data-leti="${stav.leti ? 1 : ''}">
       <div class="velke tucne">${rejstrik}</div><div class="male seda">${typ}</div><div class="male seda">${kategorie}</div>
+      ${vlastnosti ? `<div class="male tucne seda">${vlastnosti}</div>` : ''}
       ${stitky ? `<div class="stitky">${stitky}</div>` : ''}</button>`;
   }
   function krokLetadlo() {
