@@ -493,12 +493,11 @@ b { font-weight: var(--tloustka-tucna); }
     const stitky = [
       stav.leti ? `<span class="stitek modry cisla">letí ${dobaLetu(stav.leti)}</span>` : '',
       stav.pripraven ? '<span class="stitek">připraven</span>' : '',
+      stav.vlecne ? '<span class="stitek">vlečná</span>' : '',
+      stav.soukrome ? '<span class="stitek">soukromé</span>' : '',
     ].join('');
-    // Trvalé vlastnosti letadla textem, štítek jen pro stav (letí, připraven).
-    const vlastnosti = [stav.vlecne && 'vlečná', stav.soukrome && 'soukromé'].filter(Boolean).join(' · ');
     return `<button class="dlazdice${stav.leti ? ' leti' : ''}" data-rejstrik="${rejstrik}" data-leti="${stav.leti ? 1 : ''}">
       <div class="velke tucne">${rejstrik}</div><div class="male seda">${typ}</div><div class="male seda">${kategorie}</div>
-      ${vlastnosti ? `<div class="male tucne seda">${vlastnosti}</div>` : ''}
       ${stitky ? `<div class="stitky">${stitky}</div>` : ''}</button>`;
   }
   function krokLetadlo() {
