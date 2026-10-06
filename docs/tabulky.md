@@ -29,7 +29,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G | 009 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat` | trigger | verze záznamu se zvyšuje; let nejde smazat | 009 |
-| `osoba` | tabulka | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní | 004 |
+| `osoba` | tabulka | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní, vlekař | 004, 015 |
 | `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
 | `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
@@ -60,6 +60,12 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
   každý přihlášený, příznak nemá. Novou potřebu řeší nový příznak (stejně vyžaduje nový kód).
   Změny práv zachytí auditní log. Seznam práv až s tabulkou `ucet` a přihlašováním.
 - Datum narození se neeviduje (sloupec jde kdykoli přidat).
+- **Úlohy:** u výcviku a sóla z osnovy pro kategorii letadla, u přezkoušení typ přezkoušení,
+  u normálního letu úlohy z osnov i obecné (let do prostoru, okruhy, navigační let…).
+  Osnovy a úlohy dodá uživatel.
+- **Průvodce novým letem** nezadává poznámku ani místo vzletu (jen v detailu, editovatelné
+  později). Plánovaný čas vzletu se zatím neeviduje.
+- **Vlekař** je zatím příznak u osoby (015); s doklady se rozhodne, zda ho odvodit z kvalifikace.
 
 **Záloha** lokálních dat: `bash db/zaloha.sh` → `C:\GIT\LKKLLog-zalohy` (mimo git; obnova
 je popsaná v hlavičce skriptu).
