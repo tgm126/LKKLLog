@@ -52,7 +52,8 @@ def test_lety_dne(prihlasit, osoba, let):
     assert v["pob"] == 2  # u výcviku spočítaný z posádky (PIC + žák)
     assert v["ucel_kod"] == "VYCVIK" and v["zpusob_vzletu_kod"] == "NAVIJAK"
     assert v["misto_vzletu"] is None  # domovské se neuvádí
-    assert v["varovani"] is None
+    # (po konci občanského soumraku má každý let ve vzduchu varování – podle času spuštění testu)
+    assert v["varovani"] is None or v["varovani"].startswith("Po konci občanského soumraku")
 
     assert pasky[kluzak]["vlek_rejstrik"] == "OK-CRA" and pasky[kluzak]["vlecny_let_id"] == vlecna
     assert pasky[vlecna]["je_vlecny"] and pasky[vlecna]["vlek_rejstrik"] == "OK-3819"
@@ -64,7 +65,7 @@ def test_ve_vzduchu_od_vcerejska(prihlasit, osoba, let):
     pilot = osoba("Pilot")
     nocni = let("OK-3819", {"PIC": pilot}, vzlet="now() - interval '30 hours'")
     pasek = prihlasit("pilot@example.cz").get("/api/lety").json()["lety"][0]
-    assert pasek["id"] == nocni and pasek["varovani"].startswith("Přes maximální dobu letu (1°00")
+    assert pasek["id"] == nocni and "Přes maximální dobu letu (1°00" in pasek["varovani"]
 
 
 def test_varovani():
