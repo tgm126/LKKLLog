@@ -34,6 +34,12 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
 | `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
 | `osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005 |
+| `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
+| `audit` (na let, posadka, let_tg, osoba, ucet, letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
+| `audit_jen_doplnovat`, `audit_bez_vyprazdneni` | trigger | audit nejde upravit, smazat ani vyprázdnit | 012 |
+| `audit_popisek` | pravidlo | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012 |
+| `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |
+| `v_historie_letu` | pohled | historie letu: jedna akce (let + posádka + T&G v jedné transakci) = jeden řádek | 012 |
 
 ## Rozhodnutí pro další tabulky
 
