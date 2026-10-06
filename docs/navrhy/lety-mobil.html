@@ -399,7 +399,7 @@ b { font-weight: var(--tloustka-tucna); }
   <p class="male">Panel pro každé letadlo ve třech sloupcích: rejstřík dominantní, pod ním typ a kategorie; štítky letí (s časem), naplánován, vlečná, soukromé. Pořadí stálé (kategorie, typ, rejstřík). Letadlo mimo provoz má oranžovou výplň a nejde vybrat (v maketě OK-6512 jen pro ukázku). U letícího letadla v posledním kroku chybí VZLET TEĎ.</p>
 
   <h3 class="nadpisek">Nový let – krok 2: posádka</h3>
-  <p class="male">Účel jako 4 tlačítka (Normální předvybrané). Pole podle účelu; osoba jedním ťuknutím: Já, naposledy létající na letadle, Všichni…. Stejná osoba nemůže mít dvě funkce. POB jen u normálního letu: bez volby 1 (PIC je vždy), tlačítka 2 … počet míst, druhé ťuknutí vrátí 1; jednomístné bez volby. Vlevo nahoře ← o krok zpět (na kroku 1 ✕ zavřít), vybrané letadlo v nadpisu.</p>
+  <p class="male">Účel jako 4 tlačítka (Normální předvybrané). Pole podle účelu; osoba jedním ťuknutím: Já, naposledy létající na letadle, Všichni…. Stejná osoba nemůže mít dvě funkce. POB jen u normálního letu: tlačítka 1 … počet míst, předvybraná 1; jednomístné bez volby. Vlevo nahoře ← o krok zpět (na kroku 1 ✕ zavřít), vybrané letadlo v nadpisu.</p>
   <p class="male"><b>Motorové, TMG, UL:</b> posádka je poslední krok – dole Platí a VZLET TEĎ / Naplánovat / Proběhlý let.</p>
 
   <h3 class="nadpisek">Nový let – krok 3: vzlet kluzáku</h3>
@@ -591,7 +591,7 @@ b { font-weight: var(--tloustka-tucna); }
       novy.ucel = b.dataset.ucel; novy.druha = null; vsichniPro = null; krokPosadka();
     }));
     o.querySelectorAll('[data-pob]').forEach((b) => b.addEventListener('click', () => {
-      novy.pob = novy.pob === Number(b.dataset.pob) ? 1 : Number(b.dataset.pob); krokPosadka();
+      novy.pob = Number(b.dataset.pob); krokPosadka();
     }));
     o.querySelectorAll('[data-zpusob]').forEach((b) => b.addEventListener('click', () => { novy.zpusob = b.dataset.zpusob; krokVzlet(); }));
     o.querySelectorAll('[data-vlecna]').forEach((d) => d.addEventListener('click', () => {
@@ -629,8 +629,8 @@ b { font-weight: var(--tloustka-tucna); }
     const hotovo = pole.every(([klic]) => novy[klic]);
     // POB jen u normálního letu; nabídka 1 … počet míst (jednomístné = vždy 1, nevybírá se).
     const pob = novy.ucel !== 'NORMALNI' || mist === 1 ? '' :
-      `<div class="blok"><span class="nadpisek">POB – víc osob na palubě (bez volby = jen PIC)</span><div class="volby-pocet">${
-        Array.from({ length: mist - 1 }, (_, k) => k + 2).map((n) =>
+      `<div class="blok"><span class="nadpisek">POB</span><div class="volby-pocet">${
+        Array.from({ length: mist }, (_, k) => k + 1).map((n) =>
           `<button class="tl obrys cisla" data-pob="${n}" aria-pressed="${n === novy.pob}">${n}</button>`).join('')}</div></div>`;
     obsah().innerHTML = `
       <div class="blok"><span class="nadpisek">Účel</span><div class="volby">${UCELY.map(([kod, nazev]) =>
