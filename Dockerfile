@@ -18,8 +18,11 @@ COPY backend/ ./
 # Skripty databáze vedle serveru: spouštěč migrací je hledá v ../db.
 COPY db/ /srv/lkkl/db/
 
-# VPS Centrum spouští kontejner pod uživatelem domény – domovská složka musí být zapisovatelná.
+# VPS Centrum spouští kontejner pod uživatelem domény a s pracovní složkou /app (připojený
+# zdrojový kód) – proto domovská složka v /tmp a balíček serveru na PYTHONPATH (cesty nezávislé
+# na pracovní složce).
 ENV HOME=/tmp
+ENV PYTHONPATH=/srv/lkkl/backend
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/zdravi', timeout=3)"
