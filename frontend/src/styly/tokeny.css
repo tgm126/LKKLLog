@@ -15,6 +15,10 @@
   /* VÝJIMKA: textová pole mají 16 px. iPhone při ťuknutí do pole s menším písmem přiblíží celou
      stránku (a zpět ji neoddálí); rozdíl 1 px proti --pismo-m není vidět. */
   --pismo-pole: 16px;
+
+  /* VÝJIMKA: rejstřík na dlaždici letadla velkým písmem, na úzkém telefonu (375 px) se zmenší
+     tak, aby se celý vešel i nejdelší (UL „OK-CUO 78“); 18cqi = 18 % šířky dlaždice. */
+  --pismo-dlazdice: min(var(--pismo-l), 18cqi);
   --tloustka: 400;
   --tloustka-tucna: 700;
   --radkovani: 1.35;

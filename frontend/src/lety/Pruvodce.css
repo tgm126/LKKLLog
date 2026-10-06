@@ -21,9 +21,11 @@
   border-radius: var(--zaobleni);
   background: var(--dlazdice-vypln, var(--barva-neutralni));
   text-align: left;
+  container-type: inline-size; /* písmo rejstříku podle šířky dlaždice */
 }
 
 .dlazdice-rejstrik {
+  font-size: var(--pismo-dlazdice);
   font-weight: var(--tloustka-tucna);
   white-space: nowrap;
 }
