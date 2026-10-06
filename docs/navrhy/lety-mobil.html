@@ -218,9 +218,9 @@ b { font-weight: var(--tloustka-tucna); }
 /* Rychlá volba osoby jedním ťuknutím */
 .navrhy { display: flex; flex-wrap: wrap; gap: var(--mezera-2); padding: var(--mezera-2) 0; }
 .navrhy .tl { font-weight: var(--tloustka); }
-/* Počítadlo − hodnota + */
-.pocitadlo { display: flex; align-items: center; gap: var(--mezera-3); padding: var(--mezera-2) 0; }
-.pocitadlo .tl { min-width: var(--dotyk); padding: 0; }
+/* Volba počtu (POB): řada tlačítek 1 … počet míst */
+.volby-pocet { display: flex; gap: var(--mezera-2); padding: var(--mezera-2) 0; }
+.volby-pocet .tl { min-width: var(--dotyk); padding: 0; }
 .dlazdice .stitky  { min-height: 0; }
 
 /* =============================================================================================
@@ -399,7 +399,11 @@ b { font-weight: var(--tloustka-tucna); }
   <p class="male">Panel pro každé letadlo ve třech sloupcích: rejstřík dominantní, pod ním typ a kategorie; štítky letí (s časem), naplánován, vlečná, soukromé. Pořadí stálé (kategorie, typ, rejstřík). Letadlo mimo provoz má oranžovou výplň a nejde vybrat (v maketě OK-6512 jen pro ukázku). U letícího letadla v posledním kroku chybí VZLET TEĎ.</p>
 
   <h3 class="nadpisek">Nový let – krok 2: posádka</h3>
-  <p class="male">Účel jako 4 tlačítka (Normální předvybrané). Pole podle účelu; osoba jedním ťuknutím: Já, naposledy létající na letadle, Všichni…. Stejná osoba nemůže mít dvě funkce. POB (− / +) jen u normálního letu. Dál až po vyplnění.</p>
+  <p class="male">Účel jako 4 tlačítka (Normální předvybrané). Pole podle účelu; osoba jedním ťuknutím: Já, naposledy létající na letadle, Všichni…. Stejná osoba nemůže mít dvě funkce. POB (včetně PIC) jen u normálního letu, tlačítka 1 … počet míst; jednomístné bez volby.</p>
+  <p class="male"><b>Motorové, TMG, UL:</b> posádka je poslední krok – dole Platí a VZLET TEĎ / Naplánovat / Proběhlý let.</p>
+
+  <h3 class="nadpisek">Nový let – krok 3: vzlet kluzáku</h3>
+  <p class="male">Naviják / Aerovlek (výchozí podle toho, jak se dnes naposledy vzlétalo). Aerovlek: vlečná jako panely, vlekař předvyplněný podle posledního letu vlečné. Pak Platí a tři akce. VZLET TEĎ chybí, když letí letadlo nebo vlečná.</p>
 
   <h3 class="nadpisek">Zpět</h3>
   <p class="male">Po VZLET, PŘISTÁL a T&amp;G se nad tlačítkem Nový let na 6 s objeví lišta s časem a tlačítkem ZPĚT.</p>
@@ -496,44 +500,25 @@ b { font-weight: var(--tloustka-tucna); }
   );
   document.getElementById('zpet').addEventListener('click', () => document.getElementById('detail').classList.remove('otevrena'));
 
-  // ---- průvodce novým letem: krok 1 – letadlo ---------------------------------------------
-  // Pořadí jako v_letadlo_nabidka: kategorie, typ, rejstřík (jen letadla v provozu).
+  // ---- průvodce novým letem -------------------------------------------------------------
+  // Pořadí jako v_letadlo_nabidka (kategorie, typ, rejstřík). [rejstřík, typ, kategorie, míst, stav]
   const FLOTILA = [
-    ['OK-0914', 'ASW 15', 'Kluzák'], ['OK-8656', 'ASW 15', 'Kluzák'], ['OK-6722', 'ASW 20', 'Kluzák', { naplanovan: true }],
-    ['OK-2728', 'L 13', 'Kluzák'], ['OK-2817', 'L 13', 'Kluzák', { leti: 754 }], ['OK-3819', 'L 13', 'Kluzák', { naplanovan: true }],
-    ['OK-5626', 'VSO 10', 'Kluzák'], ['OK-6512', 'VSO 10', 'Kluzák', { mimo: true }], ['OK-7114', 'L 13 Vivat', 'Motorový kluzák'],
-    ['OK-CWF', 'Cessna F 172', 'Letoun', { leti: 2135 }], ['OK-MFV', 'Z 126', 'Letoun'],
-    ['OK-CRA', 'Z 526', 'Letoun', { naplanovan: true, soukrome: true, vlecne: true }],
-    ['OK-CUO 78', 'AirLony Skylane', 'Ultralehký letoun', { vlecne: true }],
+    ['OK-0914', 'ASW 15', 'Kluzák', 1], ['OK-8656', 'ASW 15', 'Kluzák', 1],
+    ['OK-6722', 'ASW 20', 'Kluzák', 1, { naplanovan: true }],
+    ['OK-2728', 'L 13', 'Kluzák', 2], ['OK-2817', 'L 13', 'Kluzák', 2, { leti: 754 }],
+    ['OK-3819', 'L 13', 'Kluzák', 2, { naplanovan: true }],
+    ['OK-5626', 'VSO 10', 'Kluzák', 1], ['OK-6512', 'VSO 10', 'Kluzák', 1, { mimo: true }],
+    ['OK-7114', 'L 13 Vivat', 'Motorový kluzák', 2],
+    ['OK-CWF', 'Cessna F 172', 'Letoun', 4, { leti: 2135 }], ['OK-MFV', 'Z 126', 'Letoun', 2],
+    ['OK-CRA', 'Z 526', 'Letoun', 2, { naplanovan: true, soukrome: true, vlecne: true }],
+    ['OK-CUO 78', 'AirLony Skylane', 'Ultralehký letoun', 2, { vlecne: true }],
   ];
-  const dobaLetu = (s) => `${Math.floor(s / 3600)}:${dve(Math.floor(s / 60) % 60)}`;
-  function dlazdice([rejstrik, typ, kategorie, stav = {}]) {
-    const stitky = [
-      stav.leti ? `<span class="stitek modry cisla">letí ${dobaLetu(stav.leti)}</span>` : '',
-      stav.naplanovan ? '<span class="stitek">naplánován</span>' : '',
-      stav.mimo ? '<span class="stitek oranzovy">mimo provoz</span>' : '',
-      stav.vlecne ? '<span class="stitek">vlečná</span>' : '',
-      stav.soukrome ? '<span class="stitek">soukromé</span>' : '',
-    ].join('');
-    const trida = stav.mimo ? ' mimo' : stav.leti ? ' leti' : '';
-    return `<button class="dlazdice${trida}" ${stav.mimo ? 'disabled' : ''} data-rejstrik="${rejstrik}" data-typ="${typ}" data-leti="${stav.leti ? 1 : ''}">
-      <div class="velke tucne">${rejstrik}</div><div class="male seda">${typ}</div><div class="male seda">${kategorie}</div>
-      ${stitky ? `<div class="stitky">${stitky}</div>` : ''}</button>`;
-  }
-  function krokLetadlo() {
-    document.getElementById('pruvodce-krok').textContent = '1 / 3 · Letadlo';
-    document.getElementById('pruvodce-obsah').innerHTML = `<div class="dlazdice-mrizka">${FLOTILA.map(dlazdice).join('')}</div>`;
-    document.getElementById('pruvodce-akce').innerHTML = '';
-    document.querySelectorAll('#pruvodce-obsah .dlazdice').forEach((d) => d.addEventListener('click', () => {
-      novy = { letadlo: d.dataset.rejstrik, typ: d.dataset.typ, leti: !!d.dataset.leti,
-               ucel: novy.ucel || 'NORMALNI', pic: novy.pic || null, druha: novy.druha || null, pob: novy.pob || 1 };
-      krokPosadka();
-    }));
-  }
-  // ---- krok 2: posádka ------------------------------------------------------------------
   const JA = 'Tomáš Mandlík';
   const VSICHNI = ['Adam Pilot', 'Bára Žák', 'Eva Časoměřič', 'Gustav Vlekař', 'Ivan Pilot', 'Pavel Pačes', 'Tomáš Mandlík'];
-  const NEDAVNO = ['Adam Pilot', 'Ivan Pilot', 'Pavel Pačes'];   // naposledy létající na tomto letadle
+  const NEDAVNO = ['Adam Pilot', 'Ivan Pilot', 'Pavel Pačes'];       // naposledy létající na letadle
+  const NEDAVNO_VLEKARI = ['Gustav Vlekař', 'Adam Pilot'];           // naposledy vlekající
+  const POSLEDNI_VLEKAR = { 'OK-CRA': 'Gustav Vlekař', 'OK-CUO 78': 'Pavel Pačes' };
+  const DNES_NAPOSLEDY = 'NAVIJAK';                                  // jak se dnes naposledy vzlétalo
   const UCELY = [['NORMALNI', 'Normální'], ['VYCVIK', 'Výcvik'], ['VYCVIK_SOLO', 'Výcvik sólo'], ['PREZKOUSENI', 'Přezkoušení']];
   const POLE = {
     NORMALNI: [['pic', 'PIC']],
@@ -541,64 +526,140 @@ b { font-weight: var(--tloustka-tucna); }
     VYCVIK_SOLO: [['pic', 'Žák (PIC)'], ['druha', 'Dozor (na zemi)']],
     PREZKOUSENI: [['pic', 'Examinátor (PIC)'], ['druha', 'Přezkoušený']],
   };
+  // Výchozí plátce podle účelu: normální → PIC, výcvik → žák, sólo → žák (je PIC), přezkoušení → přezkoušený.
+  const PLATCE = { NORMALNI: 'pic', VYCVIK: 'druha', VYCVIK_SOLO: 'pic', PREZKOUSENI: 'druha' };
+
   let novy = {};
   let vsichniPro = null;   // pole, u kterého je rozbalený celý seznam osob
+  const letadlo = (i = novy.i) => FLOTILA[i];
+  const jeKluzak = () => letadlo()[2] === 'Kluzák';
+  const obsah = () => document.getElementById('pruvodce-obsah');
+  const akce = () => document.getElementById('pruvodce-akce');
+  const krok = (text) => { document.getElementById('pruvodce-krok').textContent = text; };
+  const dobaLetu = (s) => `${Math.floor(s / 3600)}:${dve(Math.floor(s / 60) % 60)}`;
 
-  function polePosadky([klic, nazev]) {
-    const jine = klic === 'pic' ? novy.druha : novy.pic;   // stejná osoba nemůže mít dvě funkce
+  function dlazdice([rejstrik, typ, kategorie, , stav = {}], i, vybrany) {
+    const stitky = [
+      stav.leti ? `<span class="stitek modry cisla">letí ${dobaLetu(stav.leti)}</span>` : '',
+      stav.naplanovan ? '<span class="stitek">naplánován</span>' : '',
+      stav.mimo ? '<span class="stitek oranzovy">mimo provoz</span>' : '',
+      stav.vlecne ? '<span class="stitek">vlečná</span>' : '',
+      stav.soukrome ? '<span class="stitek">soukromé</span>' : '',
+    ].join('');
+    const trida = (stav.mimo ? ' mimo' : stav.leti ? ' leti' : '') + (i === vybrany ? ' vybrana' : '');
+    return `<button class="dlazdice${trida}" ${stav.mimo ? 'disabled' : ''} data-i="${i}">
+      <div class="velke tucne">${rejstrik}</div><div class="male seda">${typ}</div><div class="male seda">${kategorie}</div>
+      ${stitky ? `<div class="stitky">${stitky}</div>` : ''}</button>`;
+  }
+
+  // Osoba: vybraná jako řádek „změnit“, jinak rychlá volba (Já, nedávní, Všichni…).
+  function poleOsoby(klic, nazev, nedavno) {
     if (novy[klic]) {
       return `<div class="blok"><span class="nadpisek">${nazev}</span>
         <div class="udaj" data-zrusit="${klic}"><span class="udaj-popisek">vybráno</span><span>${novy[klic]} · změnit</span></div></div>`;
     }
-    const nabidka = vsichniPro === klic ? VSICHNI : [...new Set([JA, ...NEDAVNO])];
-    const tlacitka = nabidka.filter((o) => o !== jine).map((o) =>
+    const obsazeni = ['pic', 'druha', 'vlekar'].filter((k) => k !== klic).map((k) => novy[k]);
+    const nabidka = (vsichniPro === klic ? VSICHNI : [...new Set([JA, ...nedavno])]).filter((o) => !obsazeni.includes(o));
+    const tlacitka = nabidka.map((o) =>
       `<button class="tl obrys" data-vybrat="${klic}" data-osoba="${o}">${o === JA ? `Já (${o})` : o}</button>`).join('');
     const vsichni = vsichniPro === klic ? '' : `<button class="tl bez-ramu" data-vsichni="${klic}">Všichni…</button>`;
     return `<div class="blok"><span class="nadpisek">${nazev}</span><div class="navrhy">${tlacitka}${vsichni}</div></div>`;
   }
 
-  function krokPosadka() {
-    document.getElementById('pruvodce-krok').textContent = '2 / 3 · Posádka';
-    const pole = POLE[novy.ucel];
-    const hotovo = pole.every(([klic]) => novy[klic]);
-    const pob = novy.ucel === 'NORMALNI'
-      ? `<div class="blok"><span class="nadpisek">POB – osob na palubě</span>
-         <div class="pocitadlo"><button class="tl obrys" data-pob="-1" ${novy.pob <= 1 ? 'disabled' : ''}>−</button>
-         <span class="velke tucne cisla">${novy.pob}</span><button class="tl obrys" data-pob="1">+</button></div></div>` : '';
-    document.getElementById('pruvodce-obsah').innerHTML = `
-      <div class="blok"><span class="nadpisek">Letadlo</span>
-        <div class="udaj" id="zmenit-letadlo"><span class="udaj-popisek">${novy.typ}</span><span><b>${novy.letadlo}</b> · změnit</span></div></div>
-      <div class="blok"><span class="nadpisek">Účel</span><div class="volby">${UCELY.map(([kod, nazev]) =>
-        `<button class="tl obrys" data-ucel="${kod}" aria-pressed="${kod === novy.ucel}">${nazev}</button>`).join('')}</div></div>
-      ${pole.map(polePosadky).join('')}${pob}`;
-    document.getElementById('pruvodce-akce').innerHTML =
-      `<button class="tl modre hlavni" id="pruvodce-dal" ${hotovo ? '' : 'disabled'}>Dál</button>`;
-
-    const obsah = document.getElementById('pruvodce-obsah');
-    document.getElementById('zmenit-letadlo').addEventListener('click', krokLetadlo);
-    obsah.querySelectorAll('[data-ucel]').forEach((b) => b.addEventListener('click', () => {
-      novy.ucel = b.dataset.ucel; novy.druha = null; vsichniPro = null; krokPosadka();
-    }));
-    obsah.querySelectorAll('[data-vybrat]').forEach((b) => b.addEventListener('click', () => {
-      novy[b.dataset.vybrat] = b.dataset.osoba; vsichniPro = null; krokPosadka();
-    }));
-    obsah.querySelectorAll('[data-zrusit]').forEach((u) => u.addEventListener('click', () => {
-      novy[u.dataset.zrusit] = null; krokPosadka();
-    }));
-    obsah.querySelectorAll('[data-vsichni]').forEach((b) => b.addEventListener('click', () => {
-      vsichniPro = b.dataset.vsichni; krokPosadka();
-    }));
-    obsah.querySelectorAll('[data-pob]').forEach((b) => b.addEventListener('click', () => {
-      novy.pob = Math.max(1, novy.pob + Number(b.dataset.pob)); krokPosadka();
-    }));
-    document.getElementById('pruvodce-dal').addEventListener('click', krokVzlet);
+  // Závěr průvodce: kdo platí a tři akce. VZLET TEĎ chybí, když letadlo (nebo vlečná) letí.
+  function zaver(hotovo, muzeVzlet) {
+    const platce = novy[PLATCE[novy.ucel]];
+    return `<div class="udaj"><span class="udaj-popisek">Platí</span><span>${platce || '—'} · změnit</span></div>
+      ${muzeVzlet ? `<button class="tl modre hlavni" data-konec="vzlet" ${hotovo ? '' : 'disabled'}>Vzlet teď</button>` : ''}
+      <div class="detail-akce-hlavni">
+        <button class="tl obrys" data-konec="naplanovat" ${hotovo ? '' : 'disabled'}>Naplánovat</button>
+        <button class="tl obrys" data-konec="probehly" ${hotovo ? '' : 'disabled'}>Proběhlý let</button>
+      </div>`;
   }
 
+  function napojit() {
+    const o = obsah();
+    o.querySelectorAll('[data-zmenit-letadlo]').forEach((u) => u.addEventListener('click', krokLetadlo));
+    o.querySelectorAll('[data-ucel]').forEach((b) => b.addEventListener('click', () => {
+      novy.ucel = b.dataset.ucel; novy.druha = null; vsichniPro = null; krokPosadka();
+    }));
+    o.querySelectorAll('[data-pob]').forEach((b) => b.addEventListener('click', () => { novy.pob = Number(b.dataset.pob); krokPosadka(); }));
+    o.querySelectorAll('[data-zpusob]').forEach((b) => b.addEventListener('click', () => { novy.zpusob = b.dataset.zpusob; krokVzlet(); }));
+    o.querySelectorAll('[data-vlecna]').forEach((d) => d.addEventListener('click', () => {
+      novy.vlecna = Number(d.dataset.i);
+      novy.vlekar = novy.vlekar || POSLEDNI_VLEKAR[letadlo(novy.vlecna)[0]] || null;
+      krokVzlet();
+    }));
+    const znovu = () => (document.getElementById('pruvodce-krok').textContent.startsWith('3') ? krokVzlet() : krokPosadka());
+    o.querySelectorAll('[data-vybrat]').forEach((b) => b.addEventListener('click', () => {
+      novy[b.dataset.vybrat] = b.dataset.osoba; vsichniPro = null; znovu();
+    }));
+    o.querySelectorAll('[data-zrusit]').forEach((u) => u.addEventListener('click', () => { novy[u.dataset.zrusit] = null; znovu(); }));
+    o.querySelectorAll('[data-vsichni]').forEach((b) => b.addEventListener('click', () => { vsichniPro = b.dataset.vsichni; znovu(); }));
+    akce().querySelectorAll('[data-dal]').forEach((b) => b.addEventListener('click', krokVzlet));
+    akce().querySelectorAll('[data-konec]').forEach((b) => b.addEventListener('click', () => dokoncit(b.dataset.konec)));
+  }
+
+  const souhrnLetadla = () => `<div class="blok"><span class="nadpisek">Letadlo</span>
+    <div class="udaj" data-zmenit-letadlo><span class="udaj-popisek">${letadlo()[1]}</span><span><b>${letadlo()[0]}</b> · změnit</span></div></div>`;
+
+  // ---- krok 1: letadlo -------------------------------------------------------------------
+  function krokLetadlo() {
+    krok('1 / 3 · Letadlo');
+    obsah().innerHTML = `<div class="dlazdice-mrizka">${FLOTILA.map((l, i) => dlazdice(l, i, novy.i)).join('')}</div>`;
+    akce().innerHTML = '';
+    obsah().querySelectorAll('.dlazdice').forEach((d) => d.addEventListener('click', () => {
+      novy = { ucel: 'NORMALNI', pob: 1, zpusob: DNES_NAPOSLEDY, ...novy, i: Number(d.dataset.i), vlecna: null };
+      novy.pob = Math.min(novy.pob, letadlo()[3]);
+      krokPosadka();
+    }));
+  }
+
+  // ---- krok 2: posádka (u motorových zároveň poslední krok) ------------------------------
+  function krokPosadka() {
+    const mist = letadlo()[3];
+    krok(jeKluzak() ? '2 / 3 · Posádka' : '2 / 2 · Posádka a vzlet');
+    const pole = POLE[novy.ucel];
+    const hotovo = pole.every(([klic]) => novy[klic]);
+    // POB jen u normálního letu; nabídka 1 … počet míst (jednomístné = vždy 1, nevybírá se).
+    const pob = novy.ucel !== 'NORMALNI' || mist === 1 ? '' :
+      `<div class="blok"><span class="nadpisek">POB – osob na palubě včetně PIC</span><div class="volby-pocet">${
+        Array.from({ length: mist }, (_, k) => k + 1).map((n) =>
+          `<button class="tl obrys cisla" data-pob="${n}" aria-pressed="${n === novy.pob}">${n}</button>`).join('')}</div></div>`;
+    obsah().innerHTML = `${souhrnLetadla()}
+      <div class="blok"><span class="nadpisek">Účel</span><div class="volby">${UCELY.map(([kod, nazev]) =>
+        `<button class="tl obrys" data-ucel="${kod}" aria-pressed="${kod === novy.ucel}">${nazev}</button>`).join('')}</div></div>
+      ${pole.map(([klic, nazev]) => poleOsoby(klic, nazev, NEDAVNO)).join('')}${pob}`;
+    akce().innerHTML = jeKluzak()
+      ? `<button class="tl modre hlavni" data-dal ${hotovo ? '' : 'disabled'}>Dál</button>`
+      : zaver(hotovo, !letadlo()[4]?.leti);
+    napojit();
+  }
+
+  // ---- krok 3: vzlet kluzáku (naviják / aerovlek) ----------------------------------------
   function krokVzlet() {
-    document.getElementById('pruvodce-krok').textContent = '3 / 3 · Vzlet';
-    document.getElementById('pruvodce-obsah').innerHTML =
-      `<div class="blok"><p class="male seda">Krok 3 (vzlet a potvrzení) navrhneme v další části.</p></div>`;
-    document.getElementById('pruvodce-akce').innerHTML = '';
+    krok('3 / 3 · Vzlet');
+    const vlecne = FLOTILA.map((l, i) => [l, i]).filter(([l]) => l[4]?.vlecne && !l[4]?.mimo);
+    const aerovlek = novy.zpusob === 'VLEK';
+    const hotovo = !aerovlek || (novy.vlecna !== null && novy.vlekar);
+    const vlecnaLeti = aerovlek && novy.vlecna !== null && letadlo(novy.vlecna)[4]?.leti;
+    obsah().innerHTML = `${souhrnLetadla()}
+      <div class="blok"><span class="nadpisek">Způsob vzletu</span><div class="volby">
+        <button class="tl obrys" data-zpusob="NAVIJAK" aria-pressed="${!aerovlek}">Naviják</button>
+        <button class="tl obrys" data-zpusob="VLEK" aria-pressed="${aerovlek}">Aerovlek</button></div></div>
+      ${aerovlek ? `<div class="blok"><span class="nadpisek">Vlečná</span>
+        <div class="dlazdice-mrizka">${vlecne.map(([l, i]) => dlazdice(l, i, novy.vlecna).replace('<button ', '<button data-vlecna ')).join('')}</div></div>
+        ${poleOsoby('vlekar', 'Vlekař', NEDAVNO_VLEKARI)}` : ''}`;
+    akce().innerHTML = zaver(hotovo, !letadlo()[4]?.leti && !vlecnaLeti);
+    napojit();
+  }
+
+  function dokoncit(jak) {
+    document.getElementById('pruvodce').classList.remove('otevrena');
+    const r = letadlo()[0];
+    if (jak === 'vzlet') oznamit(`${r} vzlet ${cas()}`);
+    else if (jak === 'naplanovat') oznamit(`${r} naplánován`);
+    else oznamit(`${r}: výběr časů proběhlého letu navrhneme`);
   }
 
   document.getElementById('novy-let').addEventListener('click', () => {
