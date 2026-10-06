@@ -1,0 +1,28 @@
+/* Obrazovka bez přihlášení: název nahoře, formulář hned pod ním (ne uprostřed – klávesnice
+   zakryje spodní polovinu displeje), verze dole. */
+.vstupni {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--mezera-4);
+  padding: var(--mezera-5) var(--mezera-4) var(--mezera-4);
+}
+
+.vstupni-nazev {
+  display: grid;
+  gap: var(--mezera-1);
+}
+
+.vstupni-pata {
+  margin-top: auto;
+  text-align: center;
+}
+
+.formular {
+  display: grid;
+  gap: var(--mezera-3);
+}
+
+.formular .tl.hlavni {
+  min-height: var(--dotyk-hlavni);
+}

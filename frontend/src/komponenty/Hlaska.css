@@ -1,0 +1,8 @@
+/* Hláška o chybě (červená výplň jako problémový pásek). */
+.hlaska {
+  padding: var(--mezera-2) var(--mezera-3);
+  border-radius: var(--zaobleni);
+  background: var(--barva-cervena-vypln);
+  color: var(--barva-cervena);
+  font-weight: var(--tloustka-tucna);
+}

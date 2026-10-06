@@ -29,7 +29,7 @@ Stejný princip jako u první verze (osvědčil se). Značky `v2.*` se nepletou 
 | Aplikace | stávající Docker aplikace `lkkllog` na `lety.lkkl.cz` (proxy a HTTPS už nastavené) |
 | Repozitář | stávající `…/lkkllog-lkkl.cz.git`, klíč `VPSC_SSH_KEY` v GitHubu už je |
 | Databáze | stávající **`lkkllog`**, schéma **`lkkl`**; připojení unixovým socketem a `DB_*` jako dosud |
-| Proměnné | uživatel ve VPS Centru: smazat `DJANGO_*` a další proměnné první verze, přidat `LKKL_PROSTREDI=produkce`, `LKKL_TAJNY_KLIC` (nový), `LKKL_ADRESA=https://lety.lkkl.cz` |
+| Proměnné | uživatel ve VPS Centru: smazat `DJANGO_*` a další proměnné první verze, přidat `LKKL_PROSTREDI=produkce`, `LKKL_TAJNY_KLIC` (nový), `LKKL_ADRESA=https://lety.lkkl.cz`; volitelně `LKKL_PRUH` (text žlutého pruhu nahoře, např. `TESTOVACÍ PROVOZ`; prázdný = bez pruhu) |
 
 Server čte `DB_*` (socket) i `LKKL_DATABAZE` (lokální vývoj) – úprava `app/nastaveni.py`.
 
@@ -81,4 +81,5 @@ než přijde přihlašovací obrazovka s modulem lety, bude na adrese jen rozhra
   tabulky první verze na serveru i lokálně smazané (lokální záloha
   `lokalni-lkkllog-cela-2026-10-06-113111.dump`); `btree_gist` zůstává.
 - **Data přenesena** z lokální databáze do schématu `lkkl` na serveru (jedna transakce).
-- Zbývá: smazat proměnné první verze ve VPS Centru (uživatel), cron nové verze (úklid relací).
+- Proměnné první verze ve VPS Centru smazané (uživatel).
+- Zbývá: cron nové verze (úklid relací).

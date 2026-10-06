@@ -116,7 +116,26 @@ admin; při nastavení hesla odkazem osoba z odkazu. Po požadavku se kontext zr
 vrací do poolu). Úspěšné přihlášení do auditu nic nepíše (poslední přihlášení a počet pokusů
 se nesledují, prošlé zablokování zůstane).
 
-## 5. Struktura kódu
+## 5. Obrazovky (schváleno 6. 10. 2026)
+
+Maketa `docs/navrhy/prihlaseni-mobil.html`; kód `frontend/src/stranky/Prihlaseni.tsx`,
+`NastaveniHesla.tsx`, klikací testy `frontend/e2e/prihlaseni.spec.ts`.
+
+1. **Přihlášení:** e-mail, heslo (Ukázat), Přihlásit; formulář nahoře (klávesnice zakryje
+   spodek displeje). Při chybě hláška nad tlačítkem, heslo se smaže, kurzor do hesla.
+   Nepřihlášený jde na přihlášení a po něm zpět, kam mířil.
+2. **Nastavení hesla** (`/heslo?klic=…`): jméno osoby, heslo jen jednou s Ukázat, průběžná
+   nápověda délky, tlačítko až od 10 znaků; po uložení přihlášen. Neplatný odkaz = hláška
+   a „Na přihlášení“. `GET /api/heslo/odkaz` vrací i e-mail (správce hesel uloží heslo
+   ke správnému účtu).
+3. Písmo textových polí 16 px (token `--pismo-pole`, VÝJIMKA kvůli přibližování na iPhonu).
+4. **Pruh** nahoře na všech obrazovkách s textem z proměnné `LKKL_PRUH` (fáze provozu;
+   prázdná = bez pruhu); **verze** dole na přihlášení. Obojí z `GET /api/aplikace`.
+5. Po přihlášení hlavička s menu a nabídkou uživatele (jméno, režim zobrazení, odhlásit);
+   „přihlášen jako“ = pruh s návratem na vlastní účet.
+6. Změna hesla a přehled zařízení v nabídce uživatele později (samostatný krok).
+
+## 6. Struktura kódu
 
 ```
 backend/

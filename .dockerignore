@@ -11,3 +11,8 @@ docs
 backend/.venv
 backend/tests
 db/*_data.sql
+frontend/node_modules
+frontend/dist
+frontend/e2e
+frontend/test-results
+frontend/playwright-report

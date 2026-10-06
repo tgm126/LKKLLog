@@ -1,0 +1,70 @@
+/* Základ: písmo, barvy stránky a pomocné třídy pro text. Jen tokeny. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--barva-pozadi);
+  color: var(--barva-text);
+  font-family: var(--pismo);
+  font-size: var(--pismo-m);
+  font-weight: var(--tloustka);
+  line-height: var(--radkovani);
+}
+
+/* Na velké obrazovce mobilní návrh jako sloupec uprostřed (návrh pro počítač přijde později). */
+#aplikace {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--vyska-okna);
+  max-width: var(--sirka-mobilu);
+  margin: 0 auto;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+  font-size: inherit;
+}
+
+b,
+.tucne {
+  font-weight: var(--tloustka-tucna);
+}
+
+.cisla {
+  font-variant-numeric: tabular-nums;
+}
+
+.seda {
+  color: var(--barva-seda);
+}
+
+.male {
+  font-size: var(--pismo-s);
+}
+
+.velke {
+  font-size: var(--pismo-l);
+}
+
+.nadpisek {
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  text-transform: uppercase;
+  letter-spacing: var(--proklad-verzalky);
+  color: var(--nadpisek-barva, var(--barva-seda));
+}
+
+.obsah {
+  flex: 1;
+  padding: var(--mezera-3) var(--mezera-3) var(--mezera-2);
+}

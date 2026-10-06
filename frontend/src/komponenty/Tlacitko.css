@@ -1,0 +1,56 @@
+/* Tlačítko: varianty mění jen své proměnné (výplň, barva, okraj). */
+.tl {
+  min-height: var(--dotyk);
+  padding: 0 var(--mezera-4);
+  border: var(--ramecek-sirka) solid var(--tl-okraj, transparent);
+  border-radius: var(--zaobleni);
+  background: var(--tl-vypln, var(--barva-karta));
+  color: var(--tl-barva, var(--barva-text));
+  font-size: var(--pismo-m);
+  font-weight: var(--tloustka-tucna);
+}
+
+.tl.hlavni {
+  text-transform: uppercase;
+  letter-spacing: var(--proklad-verzalky);
+}
+
+.tl.modre {
+  --tl-vypln: var(--barva-akce-modra);
+  --tl-barva: var(--barva-na-akci);
+}
+
+.tl.zelene {
+  --tl-vypln: var(--barva-akce-zelena);
+  --tl-barva: var(--barva-na-akci);
+}
+
+.tl.svetle {
+  --tl-barva: var(--barva-modra);
+}
+
+.tl.obrys {
+  --tl-okraj: var(--barva-cara);
+}
+
+.tl.cervene {
+  --tl-barva: var(--barva-cervena);
+  --tl-okraj: var(--barva-cara);
+}
+
+.tl.bez-ramu {
+  --tl-vypln: transparent;
+
+  padding: 0 var(--mezera-2);
+}
+
+/* Vybraná volba (např. režim zobrazení) */
+.tl[aria-pressed="true"] {
+  --tl-vypln: var(--barva-modra-vypln);
+  --tl-barva: var(--barva-modra);
+}
+
+.tl:disabled {
+  opacity: var(--pruhlednost-neaktivni);
+  cursor: not-allowed;
+}

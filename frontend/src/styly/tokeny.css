@@ -1,0 +1,79 @@
+/* =============================================================================================
+   TOKENY – jediné místo s pevnými hodnotami (barvy, písmo, mezery, rozměry). Všechny ostatní
+   styly se odkazují sem; kontrola stylů (stylelint) pevnou hodnotu jinde nepustí.
+   Převzato z makety docs/navrhy/lety-mobil.html a prihlaseni-mobil.html.
+   ============================================================================================= */
+:root {
+  color-scheme: light dark;   /* světlé / tmavé hodnoty barev; přepínač nastaví data-rezim */
+
+  /* Písmo: bezpatkové, 3 velikosti, 2 tloušťky */
+  --pismo: system-ui, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+  --pismo-s: 12px;            /* popisky, štítky, hlavička, nadpisy sekcí */
+  --pismo-m: 15px;            /* obsah, tlačítka */
+  --pismo-l: 20px;            /* imatrikulace, časomíra, název aplikace */
+
+  /* VÝJIMKA: textová pole mají 16 px. iPhone při ťuknutí do pole s menším písmem přiblíží celou
+     stránku (a zpět ji neoddálí); rozdíl 1 px proti --pismo-m není vidět. */
+  --pismo-pole: 16px;
+  --tloustka: 400;
+  --tloustka-tucna: 700;
+  --radkovani: 1.35;
+  --radkovani-tesne: 1;       /* štítky (pilulky) */
+  --proklad-verzalky: .04em;
+
+  /* Mezery: stupnice */
+  --mezera-1: 4px;
+  --mezera-2: 8px;
+  --mezera-3: 12px;
+  --mezera-4: 16px;
+  --mezera-5: 32px;           /* odsazení názvu aplikace na přihlášení od horního okraje */
+
+  /* Tvary */
+  --zaobleni: 12px;
+  --zaobleni-pilulka: 999px;
+  --ramecek-sirka: 1px;
+  --obrys-sirka: 2px;         /* zvýraznění pole, do kterého se píše */
+  --prechod: .15s;
+
+  /* Rozměry */
+  --dotyk: 44px;              /* nejmenší tlačítko ovládané palcem */
+  --dotyk-hlavni: 52px;       /* hlavní akce stránky */
+  --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
+  --sirka-akce-vpravo: 96px;  /* VZLET vedle údajů naplánovaného letu */
+  --sirka-popisku: 108px;     /* sloupec popisků v detailu letu */
+  --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
+  --vrstva-nabidky: 1;        /* nabídka nad obsahem stránky */
+  --pruhlednost-neaktivni: .4; /* tlačítko, které zatím nejde použít */
+  --vyska-okna: 100dvh;       /* celá výška displeje (bez lišty prohlížeče na mobilu) */
+  --sirka-mobilu: 480px;      /* na velké obrazovce mobilní návrh jako sloupec, než vznikne
+                                 návrh pro počítač */
+
+  /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. */
+  --barva-text:           light-dark(#1d2125, #e7e9ec);
+  --barva-seda:           light-dark(#6c727a, #9aa2ab);
+  --barva-cara:           light-dark(#e1e4e8, #30353b);
+  --barva-pozadi:         light-dark(#fff, #15181c);
+  --barva-karta:          light-dark(#fff, #1c2025);
+  --barva-neutralni:      light-dark(#f1f3f5, #242930);
+  --barva-neutralni-text: light-dark(#495057, #c3c9d0);
+  --barva-modra:          light-dark(#1c6fd1, #5ea1ff);
+  --barva-modra-vypln:    light-dark(#eaf2fd, #162a44);
+  --barva-zelena:         light-dark(#2b8a3e, #51cf66);
+  --barva-zelena-vypln:   light-dark(#e7f5ea, #173222);
+  --barva-oranzova:       light-dark(#c76a00, #ffb357);
+  --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
+  --barva-cervena:        light-dark(#d1343a, #ff7b7b);
+  --barva-cervena-vypln:  light-dark(#fdecec, #3d1c1f);
+
+  /* VÝJIMKA: akční a varovné barvy jsou v obou režimech stejné – syté plochy s bílým textem
+     musí být čitelné na slunci i ve tmě; tmavá varianta by ztratila kontrast. */
+  --barva-akce-modra:  #1c6fd1;
+  --barva-akce-zelena: #2b8a3e;
+  --barva-na-akci:     #fff;
+  --barva-pruh:        #fcc419;
+  --barva-na-pruhu:    #1d2125;
+  --barva-oznameni:    #24292f;   /* lišta „Zpět“ – tmavá v obou režimech, aby vystoupila */
+  --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
+}
+:root[data-rezim="svetly"] { color-scheme: light; }
+:root[data-rezim="tmavy"]  { color-scheme: dark; }

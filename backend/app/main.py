@@ -1,15 +1,28 @@
 """Aplikace FastAPI. Spuštění pro vývoj: uv run uvicorn app.main:app --reload"""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from psycopg import Connection
 
 from . import db, prihlasovani
 from .nastaveni import nastaveni
 
 BEZPECNE_METODY = {"GET", "HEAD", "OPTIONS"}
+# Prohlížeč smí načítat jen z vlastní adresy; stránku nejde vložit do cizí (rámeček).
+# Referrer jen v rámci aplikace – adresa s klíčem pro nastavení hesla nesmí odejít jinam.
+HLAVICKY = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "same-origin",
+    "X-Frame-Options": "DENY",
+}
+CSP = (
+    "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; "
+    "form-action 'self'"
+)
 
 
 @asynccontextmanager
@@ -39,6 +52,20 @@ async def kontrola_puvodu(request: Request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def bezpecnostni_hlavicky(request: Request, call_next):
+    odpoved = await call_next(request)
+    odpoved.headers.update(HLAVICKY)
+    cesta = request.url.path
+    if not cesta.startswith("/api/docs"):  # dokumentace rozhraní (jen vývoj) načítá skripty z CDN
+        odpoved.headers["Content-Security-Policy"] = CSP
+    if not nastaveni.vyvoj:
+        odpoved.headers["Strict-Transport-Security"] = "max-age=31536000"
+    if cesta.startswith("/assets/"):  # soubory s otiskem obsahu v názvu se nemění
+        odpoved.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return odpoved
+
+
 app.include_router(prihlasovani.router)
 
 
@@ -47,3 +74,36 @@ def health(conn: Connection = Depends(db.spojeni)):
     """Kontrola stavu pro nasazení a hlídání dostupnosti: verze a spojení s databází."""
     conn.execute("SELECT 1")
     return {"stav": "ok", "verze": nastaveni.verze}
+
+
+@app.get("/api/aplikace")
+def aplikace():
+    """Co obrazovky ukazují i bez přihlášení: verze a text pruhu (fáze provozu)."""
+    return {"verze": nastaveni.verze, "pruh": nastaveni.pruh}
+
+
+def pripojit_frontend(aplikace: FastAPI, slozka: Path) -> None:
+    """Server vrací i sestavený frontend (jedna adresa pro obrazovky i rozhraní).
+
+    Adresy obrazovek (/, /prihlaseni, /heslo…) dostanou index.html a cestu vyřeší frontend;
+    neexistující soubor (s příponou) a neznámá adresa pod /api vrátí 404.
+    """
+    index = slozka / "index.html"
+    if not index.is_file():
+        return
+    koren = slozka.resolve()
+    aplikace.mount("/assets", StaticFiles(directory=slozka / "assets"), name="assets")
+
+    @aplikace.api_route("/{cesta:path}", methods=["GET", "HEAD"], include_in_schema=False)
+    def frontend(cesta: str):
+        if cesta == "api" or cesta.startswith("api/"):
+            raise HTTPException(404, "Neexistuje.")
+        soubor = (koren / cesta).resolve()
+        if cesta and soubor.is_relative_to(koren) and soubor.is_file():
+            return FileResponse(soubor)
+        if "." in cesta.rsplit("/", 1)[-1]:
+            raise HTTPException(404, "Neexistuje.")
+        return FileResponse(index, headers={"Cache-Control": "no-cache"})
+
+
+pripojit_frontend(app, nastaveni.frontend)

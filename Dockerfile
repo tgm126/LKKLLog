@@ -1,5 +1,12 @@
-# Jeden image s celou aplikací: server FastAPI a SQL skripty databáze.
-# (Frontend přibude s modulem lety – sestaví se v samostatném kroku a server ho bude vracet.)
+# Jeden image s celou aplikací: server FastAPI, sestavený frontend a SQL skripty databáze.
+
+# Frontend se sestaví zvlášť (Node je potřeba jen pro sestavení, do výsledného image nejde).
+FROM node:24-slim AS frontend
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
 
 FROM python:3.14-slim
 COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /usr/local/bin/uv
@@ -17,6 +24,8 @@ RUN uv sync --frozen --no-dev
 COPY backend/ ./
 # Skripty databáze vedle serveru: spouštěč migrací je hledá v ../db.
 COPY db/ /srv/lkkl/db/
+# Sestavený frontend: server ho vrací na všech adresách mimo /api.
+COPY --from=frontend /frontend/dist /srv/lkkl/frontend/dist
 
 # VPS Centrum spouští kontejner pod uživatelem domény a s pracovní složkou /app (připojený
 # zdrojový kód) – proto domovská složka v /tmp a balíček serveru na PYTHONPATH (cesty nezávislé

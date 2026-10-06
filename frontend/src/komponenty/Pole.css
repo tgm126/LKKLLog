@@ -1,0 +1,37 @@
+/* Pole formuláře: popisek nad rámečkem; v rámečku vstup a případně tlačítko (Ukázat). */
+.pole {
+  display: grid;
+  gap: var(--mezera-1);
+}
+
+.pole-popisek,
+.pole-napoveda {
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}
+
+.pole-ram {
+  display: flex;
+  align-items: center;
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+}
+
+.pole-ram:focus-within {
+  border-color: var(--barva-modra);
+  box-shadow: 0 0 0 calc(var(--obrys-sirka) - var(--ramecek-sirka)) var(--barva-modra);
+}
+
+.pole-ram input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--dotyk);
+  padding: 0 var(--mezera-3);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--pismo-pole);
+}

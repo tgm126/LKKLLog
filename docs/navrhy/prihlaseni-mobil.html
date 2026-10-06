@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="cs" data-rezim="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Přihlášení – návrh pro mobil</title>
+<style>
+/* =============================================================================================
+   1. TOKENY – převzaté z makety letů (docs/navrhy/lety-mobil.html); nové jsou označené NOVÉ.
+   ============================================================================================= */
+:root {
+  color-scheme: light dark;
+
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px;
+  --pismo-m: 15px;
+  --pismo-l: 20px;
+  /* NOVÉ – VÝJIMKA: textová pole mají 16 px. iPhone při ťuknutí do pole s menším písmem
+     přiblíží celou stránku (a zpět ji neoddálí); rozdíl 1 px proti --pismo-m není vidět. */
+  --pismo-pole: 16px;
+  --tloustka: 400;
+  --tloustka-tucna: 700;
+  --radkovani: 1.35;
+  --proklad-verzalky: .04em;
+
+  --mezera-1: 4px;
+  --mezera-2: 8px;
+  --mezera-3: 12px;
+  --mezera-4: 16px;
+  --mezera-5: 32px;           /* NOVÉ – odsazení názvu aplikace od horního okraje */
+
+  --zaobleni: 12px;
+  --ramecek-sirka: 1px;
+  --obrys-sirka: 2px;         /* NOVÉ – zvýraznění pole, do kterého se píše */
+
+  --dotyk: 44px;
+  --dotyk-hlavni: 52px;
+  --pruhlednost-neaktivni: .4;
+
+  --barva-text:           light-dark(#1d2125, #e7e9ec);
+  --barva-seda:           light-dark(#6c727a, #9aa2ab);
+  --barva-cara:           light-dark(#e1e4e8, #30353b);
+  --barva-pozadi:         light-dark(#ffffff, #15181c);
+  --barva-karta:          light-dark(#ffffff, #1c2025);
+  --barva-modra:          light-dark(#1c6fd1, #5ea1ff);
+  --barva-cervena:        light-dark(#d1343a, #ff7b7b);
+  --barva-cervena-vypln:  light-dark(#fdecec, #3d1c1f);
+
+  --barva-akce-modra:  #1c6fd1;
+  --barva-na-akci:     #ffffff;
+  --barva-pruh:        #fcc419;
+  --barva-na-pruhu:    #1d2125;
+
+  --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
+}
+:root[data-rezim="svetly"] { color-scheme: light; }
+:root[data-rezim="tmavy"]  { color-scheme: dark; }
+
+/* =============================================================================================
+   2. ZÁKLAD (jako v maketě letů)
+   ============================================================================================= */
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--pismo); font-size: var(--pismo-m); font-weight: var(--tloustka); line-height: var(--radkovani); color: var(--barva-text); }
+button { font: inherit; color: inherit; cursor: pointer; }
+h1, p { margin: 0; }
+.seda  { color: var(--barva-seda); }
+.male  { font-size: var(--pismo-s); }
+.velke { font-size: var(--pismo-l); }
+.tucne { font-weight: var(--tloustka-tucna); }
+
+/* =============================================================================================
+   3. KOMPONENTY – pruh a tlačítko beze změny z makety letů; nové: pole, hláška, formulář.
+   ============================================================================================= */
+.pruh { background: var(--barva-pruh); color: var(--barva-na-pruhu); text-align: center; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); padding: var(--mezera-1); }
+
+.tl { min-height: var(--dotyk); padding: 0 var(--mezera-4); border: var(--ramecek-sirka) solid var(--tl-okraj, transparent); border-radius: var(--zaobleni); background: var(--tl-vypln, var(--barva-karta)); color: var(--tl-barva, var(--barva-text)); font-size: var(--pismo-m); font-weight: var(--tloustka-tucna); }
+.tl.hlavni  { text-transform: uppercase; letter-spacing: var(--proklad-verzalky); }
+.tl.modre   { --tl-vypln: var(--barva-akce-modra); --tl-barva: var(--barva-na-akci); }
+.tl.svetle  { --tl-barva: var(--barva-modra); }
+.tl.obrys   { --tl-okraj: var(--barva-cara); }
+.tl.bez-ramu { --tl-vypln: transparent; padding: 0 var(--mezera-2); }
+.tl:disabled { opacity: var(--pruhlednost-neaktivni); cursor: not-allowed; }
+
+/* NOVÉ – Pole formuláře: popisek nad rámečkem; v rámečku vstup a případně tlačítko (Ukázat) */
+.pole { display: grid; gap: var(--mezera-1); }
+.pole-popisek { font-size: var(--pismo-s); color: var(--barva-seda); }
+.pole-ram { display: flex; align-items: center; border: var(--ramecek); border-radius: var(--zaobleni); background: var(--barva-karta); }
+.pole-ram:focus-within { border-color: var(--barva-modra); box-shadow: 0 0 0 calc(var(--obrys-sirka) - var(--ramecek-sirka)) var(--barva-modra); }
+.pole-ram input { flex: 1; min-width: 0; min-height: var(--dotyk); padding: 0 var(--mezera-3); border: 0; background: transparent; color: inherit; font: inherit; font-size: var(--pismo-pole); outline: none; }
+.pole-napoveda { font-size: var(--pismo-s); color: var(--barva-seda); }
+
+/* NOVÉ – Hláška o chybě nad tlačítkem (červená výplň jako problémový pásek) */
+.hlaska { padding: var(--mezera-2) var(--mezera-3); border-radius: var(--zaobleni); background: var(--barva-cervena-vypln); color: var(--barva-cervena); font-weight: var(--tloustka-tucna); }
+.hlaska[hidden] { display: none; }
+
+/* NOVÉ – Obrazovka bez přihlášení: název nahoře, formulář hned pod ním (ne uprostřed –
+   klávesnice zakryje spodní polovinu displeje), verze dole */
+.vstupni { flex: 1; display: flex; flex-direction: column; gap: var(--mezera-4); padding: var(--mezera-5) var(--mezera-4) var(--mezera-4); }
+.vstupni-nazev { display: grid; gap: var(--mezera-1); }
+.formular { display: grid; gap: var(--mezera-3); }
+.formular .tl.hlavni { min-height: var(--dotyk-hlavni); }
+.vstupni-pata { margin-top: auto; text-align: center; }
+
+/* =============================================================================================
+   4. RÁM MAKETY – není součástí aplikace, proto vlastní rozměry.
+   ============================================================================================= */
+.maketa { --okoli: light-dark(#d9dde2, #0b0d0f); background: var(--okoli); display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; padding: 24px 16px; }
+.telefon { position: relative; width: 390px; min-height: 700px; display: flex; flex-direction: column; overflow: hidden; border-radius: 28px; background: var(--barva-pozadi); box-shadow: 0 8px 30px rgba(0, 0, 0, .25); }
+.telefon-titul { text-align: center; margin-bottom: 8px; font-weight: 700; }
+.legenda { width: 360px; padding: 20px; border-radius: 16px; background: var(--barva-pozadi); }
+.legenda h3 { font-size: var(--pismo-s); text-transform: uppercase; letter-spacing: var(--proklad-verzalky); color: var(--barva-seda); margin: 18px 0 8px; }
+.legenda h3:first-child { margin-top: 0; }
+.legenda p { margin: 0 0 6px; }
+.legenda .tl { margin: 0 6px 6px 0; }
+@media (max-width: 820px) { .maketa { padding: 0; } .telefon { border-radius: 0; box-shadow: none; } }
+</style>
+</head>
+<body class="maketa">
+
+<!-- A. Přihlášení -->
+<div>
+  <div class="telefon-titul male seda">A · lety.lkkl.cz</div>
+  <div class="telefon">
+    <div class="pruh">TESTOVACÍ PROVOZ – data nejsou skutečná</div>
+    <main class="vstupni">
+      <div class="vstupni-nazev">
+        <h1 class="velke tucne">LKKL Log</h1>
+        <p class="seda">Evidence letů · Aeroklub Kladno</p>
+      </div>
+      <form class="formular" id="f-prihlaseni" novalidate>
+        <label class="pole">
+          <span class="pole-popisek">E-mail</span>
+          <span class="pole-ram"><input type="email" id="a-email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false"></span>
+        </label>
+        <label class="pole">
+          <span class="pole-popisek">Heslo</span>
+          <span class="pole-ram">
+            <input type="password" id="a-heslo" autocomplete="current-password">
+            <button type="button" class="tl bez-ramu svetle" data-ukazat="a-heslo">Ukázat</button>
+          </span>
+        </label>
+        <p class="hlaska" id="a-hlaska" role="alert" hidden></p>
+        <button class="tl modre hlavni" id="a-odeslat">Přihlásit</button>
+        <p class="male seda">První přihlášení nebo zapomenuté heslo: odkaz pro nastavení hesla vám dá správce aplikace.</p>
+      </form>
+      <p class="vstupni-pata male seda">v2.2.0</p>
+    </main>
+  </div>
+</div>
+
+<!-- B. Nastavení hesla odkazem -->
+<div>
+  <div class="telefon-titul male seda">B · lety.lkkl.cz/heslo?klic=…</div>
+  <div class="telefon">
+    <div class="pruh">TESTOVACÍ PROVOZ – data nejsou skutečná</div>
+    <main class="vstupni">
+      <div class="vstupni-nazev">
+        <h1 class="velke tucne">Nastavení hesla</h1>
+        <p class="seda">Tomáš Mandlík</p>
+      </div>
+      <form class="formular" id="f-heslo" novalidate>
+        <!-- skryté pro správce hesel: uloží heslo ke správnému e-mailu -->
+        <input type="email" autocomplete="username" value="tomas@example.cz" hidden readonly>
+        <label class="pole">
+          <span class="pole-popisek">Nové heslo</span>
+          <span class="pole-ram">
+            <input type="password" id="b-heslo" autocomplete="new-password">
+            <button type="button" class="tl bez-ramu svetle" data-ukazat="b-heslo">Ukázat</button>
+          </span>
+          <span class="pole-napoveda" id="b-napoveda">10 až 128 znaků. Delší heslo je bezpečnější než složité – třeba několik slov.</span>
+        </label>
+        <p class="hlaska" id="b-hlaska" role="alert" hidden></p>
+        <button class="tl modre hlavni" id="b-odeslat" disabled>Uložit a přihlásit</button>
+        <p class="male seda">Po uložení se odhlásí ostatní zařízení a odkaz přestane platit.</p>
+      </form>
+      <p class="vstupni-pata male seda">v2.2.0</p>
+    </main>
+  </div>
+</div>
+
+<!-- C. Odkaz neplatí -->
+<div>
+  <div class="telefon-titul male seda">C · prošlý nebo použitý odkaz</div>
+  <div class="telefon">
+    <div class="pruh">TESTOVACÍ PROVOZ – data nejsou skutečná</div>
+    <main class="vstupni">
+      <div class="vstupni-nazev">
+        <h1 class="velke tucne">Nastavení hesla</h1>
+      </div>
+      <p class="hlaska">Odkaz neplatí nebo vypršel. Požádejte admina o nový.</p>
+      <button class="tl obrys">Na přihlášení</button>
+      <p class="vstupni-pata male seda">v2.2.0</p>
+    </main>
+  </div>
+</div>
+
+<aside class="legenda">
+  <h3>Přihlášení (A)</h3>
+  <p class="male">Jen e-mail, heslo a Přihlásit. Prohlížeč a správce hesel pole poznají a nabídnou uložené údaje (Face ID, otisk prstu). Odeslat jde i klávesou Enter / Přejít.</p>
+  <p class="male">Formulář je nahoře, ne uprostřed: po ťuknutí do pole vyjede klávesnice a zakryje spodní polovinu displeje – tlačítko musí zůstat vidět.</p>
+  <p class="male">Při chybě: hláška nad tlačítkem, heslo se smaže, kurzor skočí do hesla. Během odesílání tlačítko „Přihlašuji…“ a nejde stisknout dvakrát.</p>
+  <button class="tl obrys" id="demo-chyba">Ukázat chybu</button>
+  <button class="tl obrys" id="demo-blokace">Ukázat zablokování</button>
+
+  <h3>Nastavení hesla (B, C)</h3>
+  <p class="male">Odkaz od admina otevře obrazovku se jménem osoby. Heslo jen jednou (bez opakování) s tlačítkem Ukázat – kontrolu překlepu nahrazuje možnost si heslo zobrazit. Tlačítko je aktivní až od 10 znaků. Po uložení rovnou přihlášen.</p>
+
+  <h3>Po přihlášení</h3>
+  <p class="male">Přehled letů (zatím jen hlavička s menu a nabídkou uživatele: režim zobrazení, odhlásit – vzhled podle makety letů). Kdo není přihlášen a otevře jakoukoli adresu, dostane přihlášení a po něm se vrátí, kam mířil.</p>
+
+  <h3>Vzhled</h3>
+  <p class="male">Režim zobrazení podle zařízení (přepínač je až v nabídce uživatele). Nové komponenty: pole formuláře, chybová hláška. Nový token: písmo polí 16 px (VÝJIMKA, viz otázka 1).</p>
+</aside>
+
+<script>
+  document.querySelectorAll('[data-ukazat]').forEach((tl) => tl.addEventListener('click', () => {
+    const pole = document.getElementById(tl.dataset.ukazat);
+    const ukazat = pole.type === 'password';
+    pole.type = ukazat ? 'text' : 'password';
+    tl.textContent = ukazat ? 'Skrýt' : 'Ukázat';
+  }));
+
+  function hlaska(id, text) {
+    const h = document.getElementById(id);
+    h.textContent = text;
+    h.hidden = !text;
+  }
+  const aHeslo = document.getElementById('a-heslo');
+  function chybaPrihlaseni(text) {
+    hlaska('a-hlaska', text);
+    aHeslo.value = '';
+    aHeslo.focus();
+  }
+  document.getElementById('f-prihlaseni').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const tl = document.getElementById('a-odeslat');
+    tl.disabled = true;
+    tl.textContent = 'Přihlašuji…';
+    setTimeout(() => {
+      tl.disabled = false;
+      tl.textContent = 'Přihlásit';
+      chybaPrihlaseni('Nesprávný e-mail nebo heslo.');
+    }, 600);
+  });
+  document.getElementById('demo-chyba').addEventListener('click', () => chybaPrihlaseni('Nesprávný e-mail nebo heslo.'));
+  document.getElementById('demo-blokace').addEventListener('click', () =>
+    chybaPrihlaseni('Příliš mnoho neúspěšných pokusů. Zkuste to za 15 min, nebo požádejte o odblokování.'));
+
+  const bHeslo = document.getElementById('b-heslo');
+  bHeslo.addEventListener('input', () => {
+    const n = bHeslo.value.length;
+    document.getElementById('b-odeslat').disabled = n < 10 || n > 128;
+    document.getElementById('b-napoveda').textContent = n === 0
+      ? '10 až 128 znaků. Delší heslo je bezpečnější než složité – třeba několik slov.'
+      : n < 10 ? `Ještě ${10 - n} ${10 - n === 1 ? 'znak' : 10 - n < 5 ? 'znaky' : 'znaků'}.` : `${n} znaků – v pořádku.`;
+  });
+  document.getElementById('f-heslo').addEventListener('submit', (e) => e.preventDefault());
+</script>
+</body>
+</html>

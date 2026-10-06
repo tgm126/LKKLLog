@@ -70,12 +70,14 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 - Přihlášení e-mailem a heslem, platí 30 dní od poslední aktivity; admin se smí přihlásit
   jako jiná osoba (relace si pamatuje skutečného admina). Passkey zatím ne.
 
-## Příkazy (ve složce `backend/`)
+## Příkazy (ve složce `backend/`, frontend ve složce `frontend/`)
 - Server pro vývoj: `uv run uvicorn app.main:app --reload` → rozhraní na
-  `http://localhost:8000/api/docs`.
-- **Před commitem:** `uv run ruff check . && uv run ruff format --check . && uv run pytest`.
-  Testy si samy sestaví databázi `lkkllog_test` ze skriptů `db/` (bez `_data`) – data
-  uživatele v `lkkllog` nikdy nepoužívají.
+  `http://localhost:8000/api/docs`. Frontend pro vývoj: `npm run dev` → obrazovky na
+  `http://localhost:5173` (rozhraní `/api` přeposílá serveru).
+- **Před commitem:** `uv run ruff check . && uv run ruff format --check . && uv run pytest`,
+  ve `frontend/` `npm run kontrola` (typy, eslint, stylelint) a `npm run e2e` (sestavení
+  a klikací testy v rozměru mobilu). Testy si samy sestaví databáze `lkkllog_test`
+  a `lkkllog_e2e` ze skriptů `db/` (bez `_data`) – data uživatele v `lkkllog` nikdy nepoužívají.
 - Odkaz pro nastavení hesla: `uv run python -m app.prikazy odkaz <e-mail>`; úklid prošlých
   relací: `uv run python -m app.prikazy uklid`.
 - **Migrace:** `uv run python -m app.migrace` provede nové skripty `db/` (evidence v
@@ -89,8 +91,9 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 14. **Jednotný vizuální systém** definovaný dřív než první obrazovka: **tři velikosti písma**
     (12 / 15 / 20 px), bezpatkové; pevná sada mezer; barvy jen pro význam; štítky (badge);
     lety jako zaoblené pásky (připomínají stripy ŘLP); světlý i tmavý režim s přepínačem
-    v aplikaci (podle zařízení / světlý / tmavý); hustě, ale čitelně. Maketa:
-    `docs/navrhy/lety-mobil.html`.
+    v aplikaci (podle zařízení / světlý / tmavý); hustě, ale čitelně. Makety:
+    `docs/navrhy/lety-mobil.html`, `prihlaseni-mobil.html`; tokeny v aplikaci
+    `frontend/src/styly/tokeny.css`.
     **Normalizace stylů – každá vlastnost definovaná právě jednou:**
     - **Tokeny** na jednom místě: barvy (každá se světlou i tmavou hodnotou v jedné definici,
       `light-dark()`), velikosti a tloušťky písma, stupnice mezer, zaoblení, rámeček, rozměry

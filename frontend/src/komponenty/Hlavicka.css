@@ -1,0 +1,88 @@
+/* Hlavička: název aplikace, čas UTC, iniciály s nabídkou uživatele; pod ní menu. */
+.hlavicka {
+  position: relative;
+  padding: var(--mezera-2) var(--mezera-4);
+  border-bottom: var(--ramecek);
+}
+
+.hlavicka-radek {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mezera-2);
+}
+
+.hlavicka-vpravo {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-3);
+}
+
+/* VÝJIMKA: kulaté tlačítko v hlavičce je menší než --dotyk – šetří místo, není součástí
+   provozního ovládání a používá se zřídka. */
+.kulate {
+  display: grid;
+  place-items: center;
+  width: var(--kulate);
+  height: var(--kulate);
+  border: 0;
+  border-radius: var(--zaobleni-pilulka);
+  background: var(--barva-neutralni);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Nabídka uživatele pod iniciálami: kdo je přihlášen, režim zobrazení, odhlášení */
+.nabidka {
+  position: absolute;
+  top: 100%;
+  right: var(--mezera-4);
+  z-index: var(--vrstva-nabidky);
+  display: grid;
+  gap: var(--mezera-1);
+  min-width: var(--sirka-nabidky);
+  padding: var(--mezera-2);
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-pozadi);
+}
+
+.nabidka-kdo {
+  padding: var(--mezera-1) var(--mezera-2) var(--mezera-2);
+  border-bottom: var(--ramecek);
+}
+
+.nabidka .nadpisek {
+  padding: var(--mezera-2) var(--mezera-2) 0;
+}
+
+.nabidka .tl.bez-ramu {
+  font-weight: var(--tloustka);
+  text-align: left;
+}
+
+.nabidka .tl[aria-pressed="true"] {
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Menu: záložky v řádku, při nedostatku místa se posouvá do strany */
+.menu {
+  display: flex;
+  gap: var(--mezera-4);
+  padding: 0 var(--mezera-4);
+  border-bottom: var(--ramecek);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.menu a {
+  padding: var(--mezera-2) 0;
+  border-bottom: calc(2 * var(--ramecek-sirka)) solid var(--zalozka-cara, transparent);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.menu a.active {
+  --nadpisek-barva: var(--barva-modra);
+  --zalozka-cara: var(--barva-modra);
+}

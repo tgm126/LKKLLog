@@ -17,7 +17,46 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
+        frontend:
+    # Kontroly (typy, eslint, stylelint), sestavení a klikací testy v rozměru mobilu proti
+    # skutečnému serveru nad vlastní testovací databází.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
         image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lkkllog
+          POSTGRES_USER: lkkllog
+          POSTGRES_PASSWORD: lkkllog
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lkkllog" --health-interval 5s --health-timeout 3s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --frozen
+        working-directory: backend
+      - run: npm ci
+      - run: npm run kontrola
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright
+          path: frontend/test-results
+          retention-days: 7
+
+  image: postgres:18-alpine
         env:
           POSTGRES_DB: lkkllog
           POSTGRES_USER: lkkllog
@@ -37,9 +76,48 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run pytest -q
 
+  frontend:
+    # Kontroly (typy, eslint, stylelint), sestavení a klikací testy v rozměru mobilu proti
+    # skutečnému serveru nad vlastní testovací databází.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lkkllog
+          POSTGRES_USER: lkkllog
+          POSTGRES_PASSWORD: lkkllog
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lkkllog" --health-interval 5s --health-timeout 3s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --frozen
+        working-directory: backend
+      - run: npm ci
+      - run: npm run kontrola
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright
+          path: frontend/test-results
+          retention-days: 7
+
   image:
     if: startsWith(github.ref, 'refs/tags/v2.') || github.event_name == 'workflow_dispatch'
-    needs: [server]
+    needs: [server, frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -55,7 +133,7 @@ jobs:
     # Otestovaná verze se pošle do git repozitáře aplikace ve VPS Centru, které ji samo sestaví
     # a restartuje (migrace proběhnou při startu kontejneru).
     if: startsWith(github.ref, 'refs/tags/v2.') || github.event_name == 'workflow_dispatch'
-    needs: [server, image]
+    needs: [server, frontend, image]
     runs-on: ubuntu-latest
     concurrency:
       group: deploy

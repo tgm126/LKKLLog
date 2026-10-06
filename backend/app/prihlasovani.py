@@ -37,8 +37,11 @@ class OsobaKratce(BaseModel):
     prijmeni: str
 
 
-class Ja(OsobaKratce):
+class OsobaSEmailem(OsobaKratce):
     email: str
+
+
+class Ja(OsobaSEmailem):
     prava: Prava
     puvodni: OsobaKratce | None
     """Skutečný admin, pokud je přihlášen jako jiná osoba."""
@@ -78,8 +81,7 @@ class UcetZmenaIn(BaseModel):
     smi_odblokovat: bool | None = None
 
 
-class Ucet(OsobaKratce):
-    email: str
+class Ucet(OsobaSEmailem):
     ma_heslo: bool
     smi_se_prihlasit: bool
     admin: bool
@@ -325,7 +327,7 @@ def _osoba_z_platneho_odkazu(conn: Connection, klic: str) -> dict | None:
     if osoba_id is None:
         return None
     u = conn.execute(
-        """SELECT u.osoba_id, u.heslo_zmeneno, v.jmeno, v.prijmeni, v.smi_se_prihlasit
+        """SELECT u.osoba_id, u.heslo_zmeneno, v.jmeno, v.prijmeni, v.email, v.smi_se_prihlasit
            FROM lkkl.ucet u JOIN lkkl.v_ucet v ON v.osoba_id = u.osoba_id
            WHERE u.osoba_id = %s
            FOR UPDATE OF u""",
@@ -358,7 +360,7 @@ def _zkontrolovat_delku(heslo: str) -> None:
         raise HTTPException(400, f"Heslo musí mít {od} až {do} znaků.")
 
 
-@router.get("/heslo/odkaz", response_model=OsobaKratce)
+@router.get("/heslo/odkaz", response_model=OsobaSEmailem)
 def heslo_odkaz(klic: str, conn: Connection = Depends(spojeni)):
     u = _osoba_z_platneho_odkazu(conn, klic)
     if u is None:

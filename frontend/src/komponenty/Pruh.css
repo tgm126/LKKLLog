@@ -1,0 +1,23 @@
+/* Pruh přes celou šířku nahoře: fáze provozu, „přihlášen jako“. */
+.pruh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mezera-2);
+  padding: var(--mezera-1);
+  background: var(--barva-pruh);
+  color: var(--barva-na-pruhu);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  text-align: center;
+}
+
+.pruh .tl {
+  --tl-vypln: transparent;
+  --tl-barva: var(--barva-na-pruhu);
+
+  min-height: 0;
+  padding: 0 var(--mezera-2);
+  font-size: var(--pismo-s);
+  text-decoration: underline;
+}

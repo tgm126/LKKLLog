@@ -24,7 +24,9 @@ def test_pozvanka_nastaveni_hesla_a_jednorazovost(klient, osoba, prihlasit, conn
     odkaz = odpoved.json()["odkaz"]
     assert odkaz.startswith("https://lety.test/heslo?klic=")
     k = klient()
-    assert k.get("/api/heslo/odkaz", params={"klic": _klic(odkaz)}).json()["prijmeni"] == "Novak"
+    osoba_z_odkazu = k.get("/api/heslo/odkaz", params={"klic": _klic(odkaz)}).json()
+    # E-mail kvůli správci hesel (uloží nové heslo ke správnému účtu).
+    assert (osoba_z_odkazu["prijmeni"], osoba_z_odkazu["email"]) == ("Novak", "novak@example.cz")
     assert (
         k.post("/api/heslo/nastavit", json={"klic": _klic(odkaz), "heslo": "kratke"}).status_code
         == 400
