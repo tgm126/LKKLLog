@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pásek v5 – návrh</title>
+<style>
+/* =============================================================================================
+   NÁVRH v5 (7. 10. 2026) – jen panel letadla (pásek). Spodní řádek místo tabulky jako štítky
+   v pevných pozicích: účel · způsob vzletu · POB · úloha. Každý typ má své místo a šířku podle
+   potřeby; chybí-li údaj, místo zůstane prázdné a nic se neposune. Bez prázdných přihrádek
+   (přistání, doba) u letu ve vzduchu – ty má jen ukončený let. Osoby jsou smyšlené.
+   ============================================================================================= */
+:root {
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px;
+  --pismo-m: 15px;
+  --pismo-l: 20px;
+  --tloustka-tucna: 700;
+  --mezera-1: 4px;
+  --mezera-2: 8px;
+  --mezera-3: 12px;
+  --zaobleni: 10px;
+  --zaobleni-pilulka: 999px;
+  --dotyk: 44px;
+  --sirka-casu: 96px;          /* vejdou se i stopky přes 10 hodin (10:59:59) */
+  /* Pozice štítků: šířka podle nejdelšího textu ve znacích písma štítku + okraje štítku */
+  --mista-stitku:
+    calc(6ch + 2 * var(--mezera-2))     /* účel: výcvik, sólo, přezk., vlek */
+    calc(8ch + 2 * var(--mezera-2))     /* způsob: naviják, aerovlek */
+    calc(5ch + 2 * var(--mezera-2))     /* POB 2 */
+    calc(5ch + 2 * var(--mezera-2));    /* úloha: IU/4, II/12, II/9P */
+
+  --barva-pozadi:   light-dark(#eef0f3, #0d1015);
+  --barva-karta:    light-dark(#ffffff, #171b21);
+  --barva-text:     light-dark(#1a1d21, #e8eaed);
+  --barva-seda:     light-dark(#5b6570, #9aa4af);
+  --barva-zelena:   light-dark(#137a38, #4cc777);
+  --barva-cervena:  light-dark(#c42b2b, #ff7a7a);
+  --barva-obrys:    light-dark(#2b3138, #7d8894);
+  --barva-prepazka: light-dark(#aab2bb, #3f4852);
+  --vypln-vzduch:   light-dark(#e3f4e8, #122a1b);
+  --vypln-plan:     light-dark(#e3edfc, #122440);
+  --vypln-problem:  light-dark(#fce6e6, #2f171a);
+  --vypln-ukoncen:  light-dark(#ffffff, #171b21);
+  /* štítek: bílý (v tmavém tmavý) s tenkým okrajem – vystoupí z barevného panelu */
+  --stitek-vypln:   light-dark(#ffffff, #0d1015);
+  --akce-modra: #0a5fd0;
+  --akce-zelena: #137a38;
+  --na-akci: #fff;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--pismo); font-size: var(--pismo-m); line-height: 1.3; background: #8a9099; padding: 16px; }
+.cisla { font-variant-numeric: tabular-nums; }
+h1 { color: #fff; font-size: 22px; }
+.uvod { color: #fff; opacity: .9; max-width: 860px; margin: 4px 0 16px; }
+.rada { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.sloupec { width: 375px; padding: 12px; border-radius: 16px; background: var(--barva-pozadi); color: var(--barva-text); }
+.sloupec.svetly { color-scheme: light; }
+.sloupec.tmavy { color-scheme: dark; }
+.popis { color: #fff; font-size: 13px; margin-bottom: 6px; }
+.nadpis { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); margin: 4px 4px 8px; }
+
+/* --- pásek -------------------------------------------------------------------------------- */
+.let { background: var(--vypln-ukoncen); border: 1.5px solid var(--barva-obrys); border-radius: var(--zaobleni); overflow: hidden; margin-bottom: var(--mezera-2); }
+.let.vzduch { background: var(--vypln-vzduch); --stopky: var(--barva-zelena); }
+.let.problem { background: var(--vypln-problem); --stopky: var(--barva-cervena); }
+.let.plan { background: var(--vypln-plan); }
+.par { display: grid; grid-template-columns: minmax(0, 1fr) var(--sirka-casu); grid-template-areas: "hlava cas" "posadka cas" "stitky stitky" "varovani varovani" "akce akce"; }
+.hlava { grid-area: hlava; display: flex; align-items: baseline; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3) 0; white-space: nowrap; }
+.rejstrik { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); }
+.typ { font-size: var(--pismo-s); color: var(--barva-seda); }
+.posadka { grid-area: posadka; display: grid; padding: 0 var(--mezera-3) var(--mezera-2); }  /* každá osoba na vlastním řádku */
+.funkce { font-size: var(--pismo-s); color: var(--barva-seda); }
+.cas { grid-area: cas; display: grid; align-content: center; justify-items: end; padding: var(--mezera-2) var(--mezera-3); }
+.stopky { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); color: var(--stopky); }
+.male { font-size: var(--pismo-s); }
+.seda { color: var(--barva-seda); }
+
+/* Štítky v pevných pozicích: mřížka se sloupci pro každý typ; prázdná pozice zůstane prázdná */
+.stitky {
+  grid-area: stitky;
+  display: grid;
+  grid-template-columns: var(--mista-stitku) 1fr;
+  gap: var(--mezera-1);
+  align-items: center;
+  padding: 0 var(--mezera-3) var(--mezera-2);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+.stitek {
+  justify-self: start;
+  padding: 3px var(--mezera-2);
+  border: 1px solid var(--barva-prepazka);
+  border-radius: var(--zaobleni-pilulka);
+  background: var(--stitek-vypln);
+  white-space: nowrap;
+}
+/* ukončený let: vpravo v řádku štítků doba a počet přistání (pod přihrádkou času) */
+.stitky .vysledek { justify-self: end; font-size: var(--pismo-m); }
+.stitky .vysledek .prist { font-size: var(--pismo-s); color: var(--barva-seda); font-weight: 400; margin-left: var(--mezera-1); }
+
+.varovani { grid-area: varovani; padding: 6px var(--mezera-3); border-top: 1px solid var(--barva-prepazka); color: var(--barva-cervena); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.akce { grid-area: akce; display: flex; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); border-top: 1px solid var(--barva-prepazka); }
+.tl { flex: 1; height: var(--dotyk); display: grid; place-items: center; border-radius: var(--zaobleni); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; }
+.tl.zelene { flex: 2; background: var(--akce-zelena); color: var(--na-akci); }
+.tl.modre { background: var(--akce-modra); color: var(--na-akci); }
+.tl.svetle { background: var(--barva-karta); color: light-dark(#0a5fd0, #6aa8ff); border: 1px solid var(--barva-prepazka); }
+
+.panel { background: #fff; color: #111; border-radius: 12px; padding: 16px; max-width: 800px; margin-top: 24px; }
+.panel h2 { font-size: 17px; margin-bottom: 8px; }
+.panel ul { padding-left: 20px; }
+.panel li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<h1>Pásek v5 – štítky v pevných pozicích místo tabulky</h1>
+<p class="uvod">Spodní řádek pásku: štítky účel · způsob vzletu · POB · úloha. Každý typ má stále
+  stejné místo a šířku jen podle potřeby; když údaj chybí, místo zůstane prázdné (nic se
+  neposune). Prázdné přihrádky „přistání“ a „doba“ zmizely – doba a počet přistání jsou jen
+  u ukončeného letu (nahoře v detailu), vpravo pod časem.</p>
+
+<template id="pasky">
+  <div class="nadpis">Všechny štítky najednou – nejdelší texty (nereálné)</div>
+  <div class="let"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-CUO 78</span><span class="typ">AirLony Skylane</span></div>
+    <div class="posadka"><span class="osoba">Marek Novotný <span class="funkce">examinátor</span></span><span class="osoba">Jiří Vlk <span class="funkce">přezkoušený</span></span></div>
+    <div class="cas cisla"><b>19:04</b><span class="seda">20:28</span></div>
+    <div class="stitky cisla"><span class="stitek">přezk.</span><span class="stitek">aerovlek</span><span class="stitek">POB 2</span><span class="stitek">II/9P</span><b class="vysledek">1°24″<span class="prist">3×</span></b></div>
+  </div></div>
+  <div class="let vzduch"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-2728</span><span class="typ">L 13</span></div>
+    <div class="posadka"><span class="osoba">Marek Novotný <span class="funkce">PIC</span></span><span class="osoba">Jiří Vlk <span class="funkce">žák</span></span></div>
+    <div class="cas cisla"><span class="stopky">10:59:59</span><span class="male seda">↑ 09:01</span></div>
+    <div class="stitky"><span class="stitek">výcvik</span><span class="stitek">naviják</span><span class="stitek">POB 2</span><span class="stitek">II/12</span></div>
+  </div></div>
+
+  <div class="nadpis">Ve vzduchu – všechny štítky</div>
+  <div class="let vzduch"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-2728</span><span class="typ">L 13</span></div>
+    <div class="posadka"><span class="osoba">Marek Novotný <span class="funkce">PIC</span></span><span class="osoba">Jiří Vlk <span class="funkce">žák</span></span></div>
+    <div class="cas cisla"><span class="stopky">1:10:36</span><span class="male seda">↑ 19:59</span></div>
+    <div class="stitky"><span class="stitek">výcvik</span><span class="stitek">aerovlek</span><span class="stitek">POB 2</span><span class="stitek">IU/6</span></div>
+    <div class="akce"><span class="tl zelene">Přistál</span></div>
+  </div></div>
+
+  <div class="nadpis">Ve vzduchu – normální let (účel a vzlet se nevypisují), varování</div>
+  <div class="let problem"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-MFV</span><span class="typ">Z 126</span></div>
+    <div class="posadka"><span class="osoba">Jan Kovář <span class="funkce">PIC</span></span></div>
+    <div class="cas cisla"><span class="stopky">1:11:37</span><span class="male seda">↑ 19:58</span></div>
+    <div class="stitky"><span></span><span></span><span class="stitek">POB 1</span><span></span></div>
+    <div class="varovani">Po konci občanského soumraku (TE 17:04)</div>
+    <div class="akce"><span class="tl svetle">T&amp;G 0</span><span class="tl zelene">Přistál</span></div>
+  </div></div>
+
+  <div class="nadpis">Naplánovaný – bez úlohy a bez způsobu vzletu</div>
+  <div class="let plan"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-CWF</span><span class="typ">Cessna 172</span></div>
+    <div class="posadka"><span class="osoba">Petr Hora <span class="funkce">PIC</span></span><span class="osoba">David Malý <span class="funkce">žák</span></span></div>
+    <div class="cas"><span class="male seda">plán</span></div>
+    <div class="stitky"><span class="stitek">výcvik</span><span></span><span class="stitek">POB 2</span><span></span></div>
+    <div class="akce"><span class="tl modre">Vzlet</span></div>
+  </div></div>
+
+  <div class="nadpis">Ukončený (nahoře v detailu) – vpravo doba a počet přistání</div>
+  <div class="let"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-0914</span><span class="typ">ASW 15</span></div>
+    <div class="posadka"><span class="osoba">Tomáš Bílek <span class="funkce">PIC</span></span></div>
+    <div class="cas cisla"><b>19:04</b><span class="seda">19:11</span></div>
+    <div class="stitky cisla"><span></span><span class="stitek">naviják</span><span class="stitek">POB 1</span><span class="stitek">II/3</span><b class="vysledek">7″<span class="prist">1×</span></b></div>
+  </div></div>
+</template>
+
+<div class="rada">
+  <div><div class="popis">Světlý režim</div><div class="sloupec svetly" data-sablona="pasky"></div></div>
+  <div><div class="popis">Tmavý režim</div><div class="sloupec tmavy" data-sablona="pasky"></div></div>
+</div>
+
+<div class="panel">
+  <h2>Co se mění proti v4</h2>
+  <ul>
+    <li>Spodní řádek už není tabulka s přepážkami a podbarvením, ale <b>štítky</b> (pilulky
+      s tenkým okrajem) na pozicích účel · způsob vzletu · POB · úloha.</li>
+    <li>Pozice mají <b>pevnou šířku podle nejdelšího textu</b> svého typu (např. „aerovlek“),
+      takže stejný typ je u všech pásků pod sebou; chybějící štítek nechá místo prázdné.</li>
+    <li><b>Zmizely prázdné přihrádky</b> „přistání“ a „doba“ – u letu ve vzduchu a naplánovaného
+      neměly co ukazovat. U ukončeného letu (pásek nahoře v detailu) je vpravo v řádku štítků
+      doba tučně a počet přistání („1×“).</li>
+    <li><b>Posádka po osobách</b>: dvě osoby (PIC a žák, examinátor a přezkoušený) každá na
+      vlastním řádku, bez svislé čáry.</li>
+    <li><b>Přihrádka času bez svislé čáry</b> – stopky a časy jsou jen zarovnané vpravo.</li>
+    <li>Šířka pozic je v tokenech ve znacích písma (ch), takže se přizpůsobí i širšímu písmu
+      telefonu.</li>
+  </ul>
+</div>
+
+<script>
+for (const s of document.querySelectorAll(".sloupec")) {
+  s.append(document.getElementById(s.dataset.sablona).content.cloneNode(true));
+}
+</script>
+</body>
+</html>

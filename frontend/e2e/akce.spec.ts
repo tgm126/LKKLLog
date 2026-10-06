@@ -113,7 +113,7 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
     "true",
   );
   await page.getByRole("button", { name: "Naviják", exact: true }).click();
-  await expect(page.locator(".let.rozpracovany .udaje")).toContainText("naviják");
+  await expect(page.locator(".let.rozpracovany .stitky-pasku")).toContainText("naviják");
   // Platí předvyplněný PIC.
   await expect(page.getByRole("button", { name: /Platí\s*Adam Admin/ })).toBeVisible();
   await page.getByRole("button", { name: "Vzlet teď" }).click();

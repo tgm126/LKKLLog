@@ -2,7 +2,8 @@
 
 > **NÁVRH ke schválení.** Po schválení se podle něj napíše kód; změny nejdřív sem.
 
-Vzhled podle maket `docs/navrhy/lety-mobil-v4.html` (přehled a detail) a
+Vzhled podle maket `docs/navrhy/lety-mobil-v4.html` (přehled a detail; pásek podle
+`pasek-mobil-v5.html`) a
 `docs/navrhy/pruvodce-mobil-v4.html` (nový let) – mobil, světlý i tmavý režim. Data v tabulkách
 `let`, `posadka`, `let_tg` a pohledech `v_let`, `v_historie_letu`, `v_lov_letadlo`,
 `v_lov_*` (skripty `db/009`–`015`). Obrazovka pro počítač zatím ne.
@@ -68,20 +69,23 @@ dvojice otevře detail jejího letu.
 **Vzhled přehledu** (návrh v4, odsouhlaseno 7. 10. 2026, nahrazuje štítky z 6. 10.):
 - **Ve vzduchu a naplánované = pásek** jako papírový strip: barevný panel podle stavu (zelený
   ve vzduchu, modrý naplánovaný, červený problém) s výrazným okrajem (ve světlém režimu téměř
-  černým, v tmavém světle šedým) rozdělený na **přihrádky**: rejstřík a typ · posádka (osoby
-  oddělené svislou čarou) · vpravo **přihrádka času** (stopky a čas vzletu) · dole **pás
-  údajů v pevných polích** účel · způsob vzletu · POB · úloha · přistání · doba. Prázdné pole
-  zůstane prázdné, takže stejný údaj je u všech pásků pod sebou. Běžné hodnoty se nevypisují:
-  účel „normální“ a způsob vzletu „vlastní“ (ten aplikace sama přiřadí každému letu, který
-  není kluzák – i vlečné). Varování má v pásku vlastní červený řádek. Akce pod páskem
-  (T&G a PŘISTÁL, u naplánovaného VZLET přes celou šířku).
+  černým, v tmavém světle šedým): rejstřík a typ · posádka (**každá osoba na vlastním
+  řádku**) · vpravo čas (stopky a čas vzletu) · dole **štítky v pevných pozicích** účel ·
+  způsob vzletu · POB · úloha (maketa `pasek-mobil-v5.html`, 7. 10. 2026). Každý typ má stálé
+  místo a šířku podle nejdelšího textu; chybí-li údaj, místo zůstane prázdné a nic se
+  neposune. Běžné hodnoty se nevypisují: účel „normální“ a způsob vzletu „vlastní“ (ten
+  aplikace sama přiřadí každému letu, který není kluzák – i vlečné). U ukončeného letu
+  (pásek nahoře v detailu) je vpravo v řádku štítků doba tučně a počet přistání („3×“).
+  Varování má v pásku vlastní červený řádek. Akce pod páskem (T&G a PŘISTÁL, u naplánovaného
+  VZLET přes celou šířku).
 - **Ukončené a zrušené = deník**: řádky v jedné kartě, sloupce Letadlo · Posádka · Čas (vzlet
   nad přistáním) · Doba · P (počet přistání); pod posádkou šedě jen odchylky od běžného letu
   (účel, způsob vzletu, úloha, POB 2, dodatečně), u zrušeného důvod. Jméno se nezalomí
   uprostřed, řádek může mít až tři řádky.
 - **Letiště** vzletu a přistání se v přehledu neukazují, jen v detailu letu.
-- Šířky polí pásku a sloupců deníku (tokeny `--pole-pasku`, `--sloupce-deniku`) mají rezervu
-  pro nejdelší text i širší písmo telefonu.
+- Šířky pozic štítků a sloupců deníku (tokeny `--mista-stitku`, `--sloupce-deniku`) jsou ve
+  znacích písma s rezervou pro nejdelší text i širší písmo telefonu; čas vpravo pobere i
+  stopky přes 10 hodin.
 
 **Průvodce:** nahoře ukazatel postupu (tři díly) a od kroku 2 **rozpracovaný pásek** letu
 (čárkovaný okraj = ještě neuložený), který se plní s každou volbou. Krok 1: dlaždice letadel

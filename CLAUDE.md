@@ -95,7 +95,7 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     (12 / 15 / 20 px), bezpatkové; pevná sada mezer; barvy jen pro význam; štítky (badge);
     lety jako zaoblené pásky (připomínají stripy ŘLP); světlý i tmavý režim s přepínačem
     v aplikaci (podle zařízení / světlý / tmavý); hustě, ale čitelně. Makety:
-    `docs/navrhy/lety-mobil-v4.html`, `pruvodce-mobil-v4.html`, `prihlaseni-mobil.html`;
+    `docs/navrhy/lety-mobil-v4.html`, `pasek-mobil-v5.html`, `pruvodce-mobil-v4.html`, `prihlaseni-mobil.html`;
     tokeny v aplikaci `frontend/src/styly/tokeny.css`.
     **Normalizace stylů – každá vlastnost definovaná právě jednou:**
     - **Tokeny** na jednom místě: barvy (každá se světlou i tmavou hodnotou v jedné definici,

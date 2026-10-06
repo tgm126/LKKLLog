@@ -22,12 +22,12 @@ test("přehled letů dne", async ({ page }) => {
   const pred = await stopky.textContent();
   await expect(stopky).not.toHaveText(pred!, { timeout: 3000 });
 
-  // Pás údajů v pevných polích: účel · způsob vzletu · POB · úloha · přistání · doba;
-  // účel normální a vzlet vlastní se nevypisují (pole zůstane prázdné).
+  // Štítky v pevných pozicích: účel · způsob vzletu · POB · úloha; účel normální a vzlet
+  // vlastní se nevypisují (pozice zůstane prázdná).
   await expect(
-    page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-2817" }).locator(".udaje > span"),
-  ).toHaveText(["", "naviják", "POB 2", "", "", ""]);
-  await expect(mfv.locator(".udaje > span")).toHaveText(["", "", "POB 1", "", "", ""]);
+    page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-2817" }).locator(".stitky-pasku > span"),
+  ).toHaveText(["", "naviják", "POB 2", ""]);
+  await expect(mfv.locator(".stitky-pasku > span")).toHaveText(["", "", "POB 1", ""]);
   await expect(mfv.locator(".let-cas")).toContainText(/↑ \d\d:\d\d/);
 
   // Naplánované: vlek jako jeden dvojitý pásek.

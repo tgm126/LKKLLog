@@ -45,12 +45,15 @@
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
 
-  /* Pásek letu: pravá přihrádka (stopky / vzlet nad přistáním) a pás údajů v pevných polích
-     účel · způsob vzletu · POB · úloha · přistání · doba (doba pod přihrádkou času). Šířky
-     polí s rezervou pro nejdelší text („aerovlek“, „II/12“) i pro širší písmo telefonu. */
-  --sirka-casu: 84px;
-  --pole-pasku: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, .95fr) minmax(0, .85fr) minmax(0, .4fr)
-    var(--sirka-casu);
+  /* Pásek letu: čas vpravo (vejdou se i stopky přes 10 hodin, 10:59:59) a pozice štítků
+     účel · způsob vzletu · POB · úloha – šířka podle nejdelšího textu ve znacích písma štítku
+     (výcvik/přezk., aerovlek, POB 2, II/9P) a okraje štítku (pasek-mobil-v5.html). */
+  --sirka-casu: 96px;
+  --mista-stitku:
+    calc(6ch + 2 * var(--mezera-2))
+    calc(8ch + 2 * var(--mezera-2))
+    calc(5ch + 2 * var(--mezera-2))
+    calc(5ch + 2 * var(--mezera-2));
 
   /* Deník ukončených letů: letadlo · posádka · čas (vzlet nad přistáním) · doba · přistání */
   --sloupce-deniku: 86px minmax(0, 1fr) 6ch 6ch 2ch;
@@ -73,18 +76,16 @@
   --barva-neutralni:      light-dark(#f1f3f5, #1f252c);   /* pás údajů, hlavička bloku */
   --barva-neutralni-text: light-dark(#495057, #c3c9d0);
   --barva-obrys:          light-dark(#2b3138, #7d8894);   /* okraj pásku (v tmavém světlý) */
-  --barva-prepazka:       light-dark(#aab2bb, #3f4852);   /* přihrádky v pásku */
+  --barva-prepazka:       light-dark(#aab2bb, #3f4852);   /* přepážky, okraj štítku v pásku */
+  --barva-stitek-pasku:   light-dark(#fff, #0d1015);      /* štítek vystoupí z barevného pásku */
   --barva-modra:          light-dark(#0a5fd0, #6aa8ff);
   --barva-modra-vypln:    light-dark(#e3edfc, #122440);
-  --barva-modra-pas:      light-dark(#cfdff9, #1a3156);
   --barva-zelena:         light-dark(#137a38, #4cc777);
   --barva-zelena-vypln:   light-dark(#e3f4e8, #122a1b);
-  --barva-zelena-pas:     light-dark(#cdebd6, #1a3a26);
   --barva-oranzova:       light-dark(#a35400, #f0a64a);
   --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
   --barva-cervena:        light-dark(#c42b2b, #ff7a7a);
   --barva-cervena-vypln:  light-dark(#fce6e6, #2f171a);
-  --barva-cervena-pas:    light-dark(#f7d2d2, #432024);
 
   /* VÝJIMKA: akční a varovné barvy jsou v obou režimech stejné – syté plochy s bílým textem
      musí být čitelné na slunci i ve tmě; tmavá varianta by ztratila kontrast. */

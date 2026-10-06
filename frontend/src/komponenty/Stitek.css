@@ -2,6 +2,7 @@
 .stitek {
   display: inline-block;
   padding: var(--mezera-1) var(--mezera-2);
+  border: var(--ramecek-sirka) solid var(--stitek-okraj, transparent);
   border-radius: var(--zaobleni-pilulka);
   background: var(--stitek-vypln, var(--barva-neutralni));
   color: var(--stitek-barva, var(--barva-neutralni-text));
@@ -29,4 +30,10 @@
 .stitek.cerveny {
   --stitek-vypln: var(--barva-cervena-vypln);
   --stitek-barva: var(--barva-cervena);
+}
+
+.stitek.pasek {
+  --stitek-vypln: var(--barva-stitek-pasku);
+  --stitek-barva: var(--barva-text);
+  --stitek-okraj: var(--barva-prepazka);
 }

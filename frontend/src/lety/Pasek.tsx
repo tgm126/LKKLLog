@@ -1,19 +1,21 @@
-import { Fragment, type MouseEvent, type ReactNode } from "react";
+import { type MouseEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
+import { Stitek } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useTik } from "../tik";
 import type { Akce, LetKPristani } from "./akce";
 import type { Pasek as PasekLetu, Stav } from "./api";
 import "./Pasek.css";
 
-// Pásky letů podle makety docs/navrhy/lety-mobil-v4.html.
-// Ve vzduchu a naplánované: barevný panel s výrazným okrajem rozdělený na přihrádky jako
-// papírový strip – rejstřík a typ · posádka · vpravo přihrádka času · dole pás údajů
-// v pevných polích (účel · způsob vzletu · POB · úloha · přistání · doba). Stejný pásek je
-// nahoře v detailu letu a rozpracovaný v průvodci. Ukončené a zrušené: deník – řádky
-// v jedné kartě (letadlo · posádka · čas · doba · přistání).
+// Pásky letů podle maket docs/navrhy/lety-mobil-v4.html a pasek-mobil-v5.html.
+// Ve vzduchu a naplánované: barevný panel s výrazným okrajem jako papírový strip – rejstřík
+// a typ · posádka (každá osoba na vlastním řádku) · vpravo čas · dole štítky v pevných
+// pozicích (účel · způsob vzletu · POB · úloha); chybí-li údaj, místo zůstane prázdné.
+// U ukončeného letu vpravo v řádku štítků doba a počet přistání. Stejný pásek je nahoře
+// v detailu letu a rozpracovaný v průvodci. Ukončené a zrušené: deník – řádky v jedné kartě
+// (letadlo · posádka · čas · doba · přistání).
 
 const malymi = (text: string) => text.toLocaleLowerCase("cs-CZ");
 /** „Vlastní (motorem)“ → „vlastní“ – v poli pásku jen krátce. */
@@ -57,15 +59,18 @@ const zpusobKratce = (l: LetPasku) =>
 /** Označení úlohy (IU/4) z názvu „IU/4 Navijákové vzlety…“. */
 const ulohaKratce = (uloha: string | null) => uloha?.split(" ")[0] ?? null;
 
+/** Posádka: každá osoba na vlastním řádku, funkce malým šedým písmem. */
 function Posadka({ clenove }: { clenove: LetPasku["posadka"] }) {
-  return clenove.map((c, i) => (
-    <Fragment key={c.funkce_kod}>
-      {i > 0 && <span className="oddelovac">|</span>}
+  return clenove.map((c) => (
+    <span key={c.funkce_kod}>
       {c.jmeno} {c.prijmeni}{" "}
       <span className="funkce">{c.funkce_kod === "PIC" ? "PIC" : malymi(c.funkce)}</span>
-    </Fragment>
+    </span>
   ));
 }
+
+/** Štítek na své pozici; bez údaje zůstane pozice prázdná. */
+const pozice = (text: ReactNode) => <span>{text && <Stitek barva="pasek">{text}</Stitek>}</span>;
 
 /** Přihrádka času vpravo podle stavu: stopky a vzlet / vzlet nad přistáním / plán. */
 function CasLetu({ let: l }: { let: LetPasku }) {
@@ -122,13 +127,17 @@ export function PolovinaPasku({
         <Posadka clenove={l.posadka} />
       </div>
       <div className="let-cas cisla">{cas ?? <CasLetu let={l} />}</div>
-      <div className="udaje">
-        <span>{ucelKratce(l)}</span>
-        <span>{zpusobKratce(l)}</span>
-        <span>{l.pob !== null && `POB ${l.pob}`}</span>
-        <span>{ulohaKratce(l.uloha)}</span>
-        <span className="udaje-pristani cisla">{ukoncen && l.pocet_pristani}</span>
-        <span className="udaje-doba cisla">{ukoncen && doba(l.doba_uctovana_min ?? 0)}</span>
+      <div className="stitky-pasku">
+        {pozice(ucelKratce(l))}
+        {pozice(zpusobKratce(l))}
+        {pozice(l.pob !== null && `POB ${l.pob}`)}
+        {pozice(ulohaKratce(l.uloha))}
+        {ukoncen && (
+          <b className="vysledek-letu cisla">
+            {doba(l.doba_uctovana_min ?? 0)}
+            <span className="pocet-pristani">{l.pocet_pristani}×</span>
+          </b>
+        )}
       </div>
       {l.varovani && <div className="let-varovani">{l.varovani}</div>}
       {children && <div className="let-akce">{children}</div>}
