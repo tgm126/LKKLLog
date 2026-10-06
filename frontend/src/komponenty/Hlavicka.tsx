@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router";
 
 import { poslat, type Ja } from "../api";
+import { denSlovy, hodinyMinuty, hodinyMinutySekundy } from "../cas";
+import { useDen } from "../lety/api";
+import { useTik } from "../tik";
 import { nacistRezim, nastavitRezim, REZIMY, type Rezim } from "../rezim";
 import { inicialy, zmenitUzivatele } from "../uzivatel";
 import { Tlacitko } from "./Tlacitko";
@@ -19,6 +22,7 @@ export function Hlavicka({ ja }: { ja: Ja }) {
             <NabidkaUzivatele ja={ja} />
           </span>
         </div>
+        <DenASlunce />
       </header>
       <nav className="menu">
         <NavLink className="nadpisek" to="/" end>
@@ -30,16 +34,35 @@ export function Hlavicka({ ja }: { ja: Ja }) {
 }
 
 function CasUtc() {
-  const [ted, setTed] = useState(() => new Date());
-  useEffect(() => {
-    const casovac = setInterval(() => setTed(new Date()), 1000);
-    return () => clearInterval(casovac);
-  }, []);
+  const ted = useTik();
   return (
     <span>
-      <span className="velke tucne cisla">{ted.toISOString().slice(11, 19)}</span>{" "}
+      <span className="velke tucne cisla">{hodinyMinutySekundy(ted)}</span>{" "}
       <span className="male seda">UTC</span>
     </span>
+  );
+}
+
+/** Den a sluneční časy domovského letiště (TB začátek a TE konec občanského soumraku). */
+function DenASlunce() {
+  const den = useDen().data;
+  if (!den) return null;
+  const { tb, sr, ss, te } = den.slunce;
+  const casy: [string, string | null][] = [["TB", tb], ["SR", sr], ["SS", ss], ["TE", te]];
+  return (
+    <div className="hlavicka-radek cisla">
+      <span>{denSlovy(den.den)}</span>
+      {tb && (
+        <span>
+          {casy.map(([zkratka, cas], i) => (
+            <span key={zkratka}>
+              {i > 0 && " · "}
+              <b>{zkratka}</b> {cas && hodinyMinuty(cas)}
+            </span>
+          ))}
+        </span>
+      )}
+    </div>
   );
 }
 

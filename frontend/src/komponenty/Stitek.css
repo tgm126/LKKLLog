@@ -1,0 +1,39 @@
+/* Štítek (pilulka): barevné varianty mění jen výplň a barvu textu. */
+.stitek {
+  display: inline-block;
+  padding: var(--mezera-1) var(--mezera-2);
+  border-radius: var(--zaobleni-pilulka);
+  background: var(--stitek-vypln, var(--barva-neutralni));
+  color: var(--stitek-barva, var(--barva-neutralni-text));
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  line-height: var(--radkovani-tesne);
+  white-space: nowrap;
+}
+
+.stitek.modry {
+  --stitek-vypln: var(--barva-modra-vypln);
+  --stitek-barva: var(--barva-modra);
+}
+
+.stitek.zeleny {
+  --stitek-vypln: var(--barva-zelena-vypln);
+  --stitek-barva: var(--barva-zelena);
+}
+
+.stitek.oranzovy {
+  --stitek-vypln: var(--barva-oranzova-vypln);
+  --stitek-barva: var(--barva-oranzova);
+}
+
+.stitek.cerveny {
+  --stitek-vypln: var(--barva-cervena-vypln);
+  --stitek-barva: var(--barva-cervena);
+}
+
+.stitky {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mezera-1);
+  margin-top: var(--mezera-1);
+}

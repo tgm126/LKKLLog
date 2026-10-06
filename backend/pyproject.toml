@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "argon2-cffi>=25.1.0",
+    "astral>=3.2",
     "fastapi>=0.142.2",
     "psycopg-pool>=3.3.3",
     "psycopg[binary]>=3.3.6",

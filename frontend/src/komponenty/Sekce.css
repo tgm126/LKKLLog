@@ -1,0 +1,31 @@
+/* Sekce: nadpis sbalí / rozbalí následující tělo. */
+.sekce {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mezera-2);
+  width: 100%;
+  margin: var(--mezera-3) 0 var(--mezera-2);
+  padding: 0 var(--mezera-1);
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.sekce:first-child {
+  margin-top: 0;
+}
+
+.sekce-sipka {
+  display: inline-block;
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+  transition: transform var(--prechod);
+}
+
+.sekce[aria-expanded="false"] .sekce-sipka {
+  transform: rotate(-90deg);
+}
+
+.sekce-vpravo {
+  margin-left: auto;
+}

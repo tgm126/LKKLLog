@@ -12,6 +12,11 @@
   gap: var(--mezera-2);
 }
 
+.hlavicka-radek + .hlavicka-radek {
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}
+
 .hlavicka-vpravo {
   display: flex;
   align-items: center;
