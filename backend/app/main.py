@@ -2,8 +2,9 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from psycopg import Connection
 
 from . import db, prihlasovani
 from .nastaveni import nastaveni
@@ -39,3 +40,10 @@ async def kontrola_puvodu(request: Request, call_next):
 
 
 app.include_router(prihlasovani.router)
+
+
+@app.get("/api/zdravi")
+def zdravi(conn: Connection = Depends(db.spojeni)):
+    """Kontrola stavu pro nasazení a hlídání dostupnosti: verze a spojení s databází."""
+    conn.execute("SELECT 1")
+    return {"stav": "ok", "verze": nastaveni.verze}

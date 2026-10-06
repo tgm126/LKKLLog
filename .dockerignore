@@ -1,0 +1,13 @@
+.git
+.github
+.claude
+.idea
+docs
+**/.env
+**/.dev-prihlaseni.txt
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+backend/.venv
+backend/tests
+db/*_data.sql

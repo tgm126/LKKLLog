@@ -1,6 +1,7 @@
 # Nasazení nové verze
 
-> **NÁVRH ke schválení.** Po schválení se podle něj připraví CI a server.
+> **Schváleno 6. 10. 2026.** Data první verze se po úplné záloze smažou; značky `v2.*`;
+> skripty 001–016 zůstávají, jak vznikaly; po prvním nasazení se data zadávají na serveru.
 
 Nová verze **nahradí** první verzi: převezme její Docker aplikaci na `lety.lkkl.cz`, repozitář
 ve VPS Centru i databázi `lkkllog`. Po první verzi na serveru nic nezůstane; její kód je jen
@@ -71,10 +72,9 @@ Rozchodit celý řetězec **hned s tím, co máme** (server + přihlašování, 
 na `https://lety.lkkl.cz/api/zdravi` (nový endpoint: verze a spojení s databází). Do té doby,
 než přijde přihlašovací obrazovka s modulem lety, bude na adrese jen rozhraní.
 
-## 8. Otázky
+## 8. Stav
 
-1. **Smazání dat první verze** na serveru (po úplné záloze) – souhlasíte?
-2. **Značky** `v2.<modul>.<oprava>` – souhlasíte?
-3. **Skripty 001–016** nechat, jak vznikaly (doporučuji), nebo sloučit?
-4. **Data po prvním nasazení** se zadávají na serveru (ruční úpravy přes správce databází
-   ve VPS Centru) – souhlasíte?
+- Hotovo v kódu: čtení databáze z `DB_*`, spouštěč migrací `app/migrace.py` (lokální databáze
+  má evidenci migrací), `GET /api/zdravi`, `Dockerfile`, `.github/workflows/ci.yml`.
+- Zbývá: proměnné ve VPS Centru (uživatel), úklid po první verzi a přenos dat (SSH relace po
+  odsouhlasení), první značka `v2.1.0`.

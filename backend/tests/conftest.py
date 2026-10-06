@@ -1,9 +1,8 @@
 """Testy běží proti samostatné databázi lkkllog_test (nikdy proti datům uživatele).
-Schéma se sestaví ze skriptů db/NNN_*.sql (bez _data); každý test běží v transakci,
-která se na konci vrátí."""
+Schéma sestaví spouštěč migrací ze skriptů db/NNN_*.sql (bez _data); každý test běží
+v transakci, která se na konci vrátí."""
 
 import os
-from pathlib import Path
 
 ZAKLAD = "postgresql://lkkllog:lkkllog@127.0.0.1:5432"
 TESTOVACI_DB = "lkkllog_test"
@@ -18,11 +17,10 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from psycopg.rows import dict_row  # noqa: E402
 
-from app import bezpecnost  # noqa: E402
+from app import bezpecnost, migrace  # noqa: E402
 from app.db import s_kontextem, spojeni  # noqa: E402
 from app.main import app  # noqa: E402
 
-SKRIPTY = Path(__file__).resolve().parents[2] / "db"
 HESLO = "spravne-heslo-123"
 
 
@@ -36,9 +34,7 @@ def databaze() -> str:
     url = f"{ZAKLAD}/{TESTOVACI_DB}"
     with psycopg.connect(url, autocommit=True) as c:
         c.execute("DROP SCHEMA IF EXISTS lkkl CASCADE")
-        for skript in sorted(SKRIPTY.glob("[0-9][0-9][0-9]_*.sql")):
-            if not skript.stem.endswith("_data"):
-                c.execute(skript.read_text(encoding="utf-8"))
+        migrace.provest(c)
     return url
 
 

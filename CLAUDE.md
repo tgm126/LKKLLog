@@ -51,8 +51,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     `lkkl.poradi`, `lkkl.platny` – definovaná jednou. Hodnoty, podle jejichž kódu program
     uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
-    **Nové tabulky ve schématu databáze `lkkl`**; staré tabulky
-    první verze zůstávají ve schématu `public`, dokud je nesmažeme.
+    **Nové tabulky ve schématu databáze `lkkl`**; tabulky první verze ve schématu `public` se
+    s prvním nasazením nové verze smažou (zůstává jen rozšíření `btree_gist`).
 12. **Zdrojem pravdy o schématu jsou SQL skripty** v `db/`, číslované `NNN_nazev.sql` (DDL)
     a `NNN_nazev_data.sql` (data zadaná uživatelem). Vznikají a zkouší se v lokální databázi
     (Docker, `127.0.0.1:5432`, databáze `lkkllog`), na server se zmigrují později.
@@ -77,6 +77,9 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
   uživatele v `lkkllog` nikdy nepoužívají.
 - Odkaz pro nastavení hesla: `uv run python -m app.prikazy odkaz <e-mail>`; úklid prošlých
   relací: `uv run python -m app.prikazy uklid`.
+- **Migrace:** `uv run python -m app.migrace` provede nové skripty `db/` (evidence v
+  `lkkl.migrace`, změněný provedený skript = chyba). Na serveru běží při startu kontejneru.
+  Nový skript: zálohovat, napsat `NNN_nazev.sql`, spustit migraci (ne ručně přes psql).
 
 ## Obrazovky
 13. **Samostatný design pro mobil a pro desktop** – ne jedna stránka, která se jen roztáhne.
@@ -115,11 +118,13 @@ Projdeme jednotlivě, aby se nezanesl starý problém:
 - telefon osoby jen na vyžádání;
 - hesla a klíče mimo git (proměnné prostředí);
 - na server jedno SSH spojení (`ssh one12`, fail2ban banuje rychlá opakovaná spojení);
-- nasazení jen značkou verze – pozor: archivní značky nesmí odpovídat vzoru nasazovacích;
 - soubory uživatele nepřepisovat ani nemazat (nové verze pod novým jménem);
 - frontend (React?) a hosting (Docker ve VPS Centru).
 
-## Stav
-- Server `https://lety.lkkl.cz` dál provozuje první verzi (větev `v1`). Případná oprava staré
-  verze se dělá ve větvi `v1` a nasazuje značkou `v0.14.x` jako dosud.
-- Hlavní větev zatím nemá nasazovací workflow – nic se z ní nenasazuje.
+## Nasazení
+- **Nová verze nahrazuje první** na `https://lety.lkkl.cz` (stejná Docker aplikace ve VPS
+  Centru, repozitář i databáze `lkkllog`); první verze je už jen kód ve větvi `v1`.
+- Commit do main = jen kontroly a testy v CI. **Nasazení jen značkou `v2.<modul>.<oprava>`**
+  (`git tag v2.1.0 && git push origin v2.1.0`) nebo ručním spuštěním workflow; značka
+  se připíná až na pokyn uživatele. Návod a úklid po první verzi: `docs/nasazeni.md`.
+- Kontrola stavu: `GET /api/zdravi` (verze a spojení s databází).

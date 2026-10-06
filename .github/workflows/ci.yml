@@ -1,0 +1,84 @@
+# Kontroly a testy při každém commitu do main; nasazení jen značkou v2.* (nebo ručně).
+# Značky první verze (v0.*) a archivní v1-final tento workflow nespouštějí.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v2.*"]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lkkllog
+          POSTGRES_USER: lkkllog
+          POSTGRES_PASSWORD: lkkllog
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lkkllog" --health-interval 5s --health-timeout 3s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  image:
+    if: startsWith(github.ref, 'refs/tags/v2.') || github.event_name == 'workflow_dispatch'
+    needs: [server]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    # Otestovaná verze se pošle do git repozitáře aplikace ve VPS Centru, které ji samo sestaví
+    # a restartuje (migrace proběhnou při startu kontejneru).
+    if: startsWith(github.ref, 'refs/tags/v2.') || github.event_name == 'workflow_dispatch'
+    needs: [server, image]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Nasazení do VPS Centra
+        env:
+          SSH_KEY: ${{ secrets.VPSC_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPSC_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # Číslo verze do aplikace (soubor VERZE jen v nasazeném kódu, ne na GitHubu).
+          verze=$(git describe --tags --always)
+          echo "$verze" > backend/VERZE
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -f backend/VERZE
+          git commit -q -m "Nasazení $verze"
+          # VPS Centrum je jen cíl nasazení – vždy přebírá přesně stav z GitHubu.
+          git push --force f84a5@one12.vas-server.cz:/git/f84a5/lkkllog-lkkl.cz.git HEAD:refs/heads/main
