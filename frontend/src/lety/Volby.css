@@ -9,6 +9,7 @@
 }
 
 .volby .tl[aria-pressed="true"],
+.navrhy .tl[aria-pressed="true"],
 .volby-pocet .tl[aria-pressed="true"],
 .cas-pole .tl[aria-pressed="true"] {
   --tl-okraj: var(--barva-modra);

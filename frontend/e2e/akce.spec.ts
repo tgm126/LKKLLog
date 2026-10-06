@@ -72,13 +72,19 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
   const dal = page.getByRole("button", { name: "Dál" });
   await expect(dal).toBeDisabled();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  await expect(page.getByRole("button", { name: "Já (Adam Admin)" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await dal.click();
 
   await expect(page.getByText("3 / 3 · Let")).toBeVisible();
   // Výchozí způsob vzletu = jak se dnes naposledy vzlétalo s kluzákem (předchozí test: aerovlek).
   await expect(page.getByRole("button", { name: "Aerovlek" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Naviják" }).click();
-  await expect(page.getByText("předvyplněno")).toBeVisible(); // platí PIC
+  // Platí předvyplněný PIC – vybraná volba modře jako ostatní volby.
+  const plati = page.locator(".blok", { hasText: "Platí" });
+  await expect(plati.getByRole("button", { name: "Adam Admin" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Vzlet teď" }).click();
 
   await expect(page.getByRole("status")).toContainText(/OK-6722 vzlet/);

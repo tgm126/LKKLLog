@@ -200,7 +200,7 @@ function DetailLetuObrazovka({
             <VolbaUlohy
               ulohy={ulohy}
               povinna={!!ucel?.uloha_povinna}
-              vybrana={undefined}
+              vybrana={ulohy.find((x) => x.id === l.uloha_id)}
               rozbaleno
               rozbalit={() => {}}
               vybrat={(id) => ulozit({ uloha_id: id ?? null })}

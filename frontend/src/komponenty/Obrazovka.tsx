@@ -43,23 +43,3 @@ export function Blok({ nadpis, children }: { nadpis: string; children: ReactNode
     </div>
   );
 }
-
-/** Vybraná hodnota jako řádek „popisek – hodnota · změnit“; ťuknutím se změní. */
-export function Vybrano({
-  popisek,
-  hodnota,
-  zmenit,
-}: {
-  popisek: string;
-  hodnota: ReactNode;
-  zmenit: () => void;
-}) {
-  return (
-    <button type="button" className="udaj" onClick={zmenit}>
-      <span className="udaj-popisek">{popisek}</span>
-      <span>
-        {hodnota} <span className="seda">· změnit</span>
-      </span>
-    </button>
-  );
-}

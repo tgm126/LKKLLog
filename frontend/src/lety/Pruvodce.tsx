@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import { poslat } from "../api";
 import { doba, hodinyMinuty, stopky, ted } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
-import { Blok, Obrazovka, Vybrano } from "../komponenty/Obrazovka";
+import { Blok, Obrazovka } from "../komponenty/Obrazovka";
 import { useOznamit } from "../komponenty/Oznameni";
 import { Stitek, Stitky } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
@@ -140,8 +140,8 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     );
   }
 
-  // Osoba: vybraná jako řádek „změnit“, jinak rychlá volba (Já, nedávní / vlekaři, Všichni…).
-  // Stejná osoba nemůže mít dvě funkce.
+  // Osoba: rychlá volba (Já, nedávní / vlekaři, Všichni…); vybraná je modře jako ostatní
+  // volby v průvodci, ťuknutím na jinou se změní. Stejná osoba nemůže mít dvě funkce.
   const obsazene = (krome: string) =>
     [
       ...pole.filter((p) => `f${p.funkceId}` !== krome).map((p) => novy.osoby[p.funkceId]),
@@ -154,28 +154,24 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     rychle: number[],
     vybrat: (id: number | undefined) => void,
   ) => {
-    if (vybrana) {
-      return (
-        <Blok key={klic} nadpis={nazev}>
-          <Vybrano
-            popisek="vybráno"
-            hodnota={jmeno(osoba(vybrana)!)}
-            zmenit={() => vybrat(undefined)}
-          />
-        </Blok>
-      );
-    }
     const vsichni = rozbaleno === klic;
     const nabidka = (
       vsichni
         ? nabidky.osoby
-        : [...new Set(rychle)].map(osoba).filter((o): o is Osoba => o !== undefined)
+        : [...new Set([...rychle, ...(vybrana ? [vybrana] : [])])]
+            .map(osoba)
+            .filter((o): o is Osoba => o !== undefined)
     ).filter((o) => !obsazene(klic).includes(o.id));
     return (
       <Blok key={klic} nadpis={nazev}>
         <div className="navrhy">
           {nabidka.map((o) => (
-            <Tlacitko key={o.id} varianta="obrys" onClick={() => vybrat(o.id)}>
+            <Tlacitko
+              key={o.id}
+              varianta="obrys"
+              aria-pressed={o.id === vybrana}
+              onClick={() => vybrat(o.id)}
+            >
               {o.id === ja.osoba_id ? `Já (${jmeno(o)})` : jmeno(o)}
             </Tlacitko>
           ))}
@@ -351,27 +347,31 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
         </>
       )}
       <Blok nadpis="Platí">
-        {rozbaleno === "platce" ? (
-          <div className="navrhy">
-            {[
+        {/* Předvyplněný podle účelu (modře); jiná osoba z posádky, Aeroklub, nebo kdokoli. */}
+        <div className="navrhy">
+          {[
+            ...new Set([
               ...pole.map((p) => novy.osoby[p.funkceId]).filter((id): id is number => !!id),
               "aeroklub" as const,
-              ...nabidky.osoby
-                .map((o) => o.id)
-                .filter((id) => !pole.some((p) => novy.osoby[p.funkceId] === id)),
-            ].map((id) => (
-              <Tlacitko key={id} varianta="obrys" onClick={() => zmenit({ platce: id })}>
-                {id === "aeroklub" ? "Aeroklub" : jmeno(osoba(id)!)}
-              </Tlacitko>
-            ))}
-          </div>
-        ) : (
-          <Vybrano
-            popisek={novy.platce === undefined ? "předvyplněno" : "změněno"}
-            hodnota={platce === "aeroklub" ? "Aeroklub" : platce ? jmeno(osoba(platce)!) : "—"}
-            zmenit={() => setRozbaleno("platce")}
-          />
-        )}
+              ...(typeof platce === "number" ? [platce] : []),
+              ...(rozbaleno === "platce" ? nabidky.osoby.map((o) => o.id) : []),
+            ]),
+          ].map((id) => (
+            <Tlacitko
+              key={id}
+              varianta="obrys"
+              aria-pressed={id === platce}
+              onClick={() => zmenit({ platce: id })}
+            >
+              {id === "aeroklub" ? "Aeroklub" : jmeno(osoba(id)!)}
+            </Tlacitko>
+          ))}
+          {rozbaleno !== "platce" && (
+            <Tlacitko varianta="bez-ramu" onClick={() => setRozbaleno("platce")}>
+              Všichni…
+            </Tlacitko>
+          )}
+        </div>
       </Blok>
     </Obrazovka>
   );
@@ -442,16 +442,11 @@ export function VolbaUlohy({
 }) {
   const nadpis = povinna ? "Úloha" : "Úloha (nepovinná)";
   if (ulohy.length === 0) return null;
-  if (vybrana) {
-    return (
-      <Blok nadpis={nadpis}>
-        <Vybrano popisek="vybráno" hodnota={vybrana.nazev} zmenit={() => vybrat(undefined)} />
-      </Blok>
-    );
-  }
   const obecne = ulohy.filter((u) => u.kategorie_kod === null);
   const zOsnov = ulohy.filter((u) => u.kategorie_kod !== null);
-  const ukazat = povinna || rozbaleno ? ulohy : obecne;
+  // vybraná úloha z osnovy je vidět i při sbalené nabídce
+  const vsechny = povinna || rozbaleno || (vybrana !== undefined && vybrana.kategorie_kod !== null);
+  const ukazat = vsechny ? ulohy : obecne;
   const osnovy = [...new Map(ukazat.map((u) => [u.osnova_id, u.osnova])).entries()];
   return (
     <Blok nadpis={nadpis}>
@@ -462,14 +457,20 @@ export function VolbaUlohy({
             {ukazat
               .filter((u) => u.osnova_id === id)
               .map((u) => (
-                <Tlacitko key={u.id} varianta="obrys" onClick={() => vybrat(u.id)}>
+                <Tlacitko
+                  key={u.id}
+                  varianta="obrys"
+                  aria-pressed={u.id === vybrana?.id}
+                  // nepovinnou úlohu jde druhým ťuknutím zrušit
+                  onClick={() => vybrat(u.id === vybrana?.id && !povinna ? undefined : u.id)}
+                >
                   {u.nazev}
                 </Tlacitko>
               ))}
           </div>
         </div>
       ))}
-      {!povinna && !rozbaleno && zOsnov.length > 0 && (
+      {!vsechny && zOsnov.length > 0 && (
         <Tlacitko varianta="bez-ramu" onClick={rozbalit}>
           Z osnovy…
         </Tlacitko>
