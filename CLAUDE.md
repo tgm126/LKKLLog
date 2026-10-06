@@ -46,7 +46,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     **Standard číselníku `lov_*`:** `id` (vazby mezi tabulkami **vždy přes id**), `kod`
     (jedinečný, jen pro program, nikde se nezobrazuje), `nazev` (text pro zobrazení – jde měnit
     a nemusí být jedinečný), `poradi`, `platny` (přepínač „používat“; nemaže se, zneplatní se;
-    nepoužitou položku jde smazat). Pravidla sloupců jsou v doménách `lkkl.kod`, `lkkl.nazev`,
+    nepoužitou položku jde smazat; **nabídky** aplikace bere vždy z pohledu `v_lov_<název>`
+    s platnými položkami seřazenými podle pořadí – každý číselník ho má). Pravidla sloupců jsou v doménách `lkkl.kod`, `lkkl.nazev`,
     `lkkl.poradi`, `lkkl.platny` – definovaná jednou. Hodnoty, podle jejichž kódu program
     uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.

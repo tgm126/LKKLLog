@@ -3,6 +3,8 @@
 **Číselníky (`lov_*`)** mají jednotný standard: `id`, `kod` (jedinečný, jen pro program),
 `nazev` (text pro zobrazení, nemusí být jedinečný), `poradi`, `platny`. Pravidla sloupců jsou
 v doménách `lkkl.kod`, `lkkl.nazev`, `lkkl.poradi`, `lkkl.platny` (skript 008).
+Každý číselník má **pohled pro nabídky** `v_lov_<název>`: jen platné položky, seřazené podle
+pořadí a názvu (skript 010). Vazby a stará data pracují s tabulkami, zneplatněná položka u nich zůstane.
 
 Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze viz
 `tabulky-v1.md`.
