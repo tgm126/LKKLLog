@@ -2,9 +2,10 @@
 
 > **NÁVRH ke schválení.** Po schválení se podle něj připraví CI a server.
 
-Cíl: standardní, opakovatelné nasazení nové verze **vedle** první verze. První verze dál běží
-na `lety.lkkl.cz` (větev `v1`), nová dostane vlastní adresu. Přepnutí `lety.lkkl.cz` na novou
-verzi přijde až s fází 3 (rollout na všechny).
+Nová verze **nahradí** první verzi: převezme její Docker aplikaci na `lety.lkkl.cz`, repozitář
+ve VPS Centru i databázi `lkkllog`. Po první verzi na serveru nic nezůstane; její kód je jen
+ve větvi `v1` (značka `v1-final`) jako zdroj znalostí. Fáze testování 1 běží rovnou na
+`lety.lkkl.cz` – účty se aktivují postupně, dokud je aktivní jen účet uživatele, testuje jen on.
 
 ## 1. Jak to bude fungovat
 
@@ -12,70 +13,68 @@ verzi přijde až s fází 3 (rollout na všechny).
 commit do main  → GitHub Actions: kontroly a testy (nic se nenasazuje)
 značka v2.<modul>.<oprava>
   └► GitHub Actions: kontroly, testy, zkušební sestavení Docker image
-     └► git push do repozitáře nové aplikace ve VPS Centru (+ soubor VERZE)
+     └► git push do repozitáře aplikace ve VPS Centru (+ soubor VERZE)
         └► VPS Centrum sestaví image z Dockerfile a restartuje kontejner
            └► při startu: migrace databáze (SQL skripty db/), pak server
 ```
 
-Stejný princip jako první verze (osvědčil se), ale vlastní aplikace, adresa a značky.
+Stejný princip jako u první verze (osvědčil se). Značky `v2.*` se nepletou se starými
+`v0.*` ani s archivní `v1-final`.
 
 ## 2. Server (VPS Centrum, `one12`)
 
-| Co | Návrh |
+| Co | Stav |
 |---|---|
-| Aplikace | nová **Docker aplikace** ve VPS Centru, např. `lkkl` |
-| Adresa | nová subdoména **`lety2.lkkl.cz`** (otázka 1) |
-| Databáze | stávající **`lkkllog`**, nové **schéma `lkkl`**; tabulky první verze ve `public` zůstávají nedotčené |
-| Připojení | stejně jako první verze: unixový socket a proměnné `DB_*` z VPS Centra |
-| Proměnné | `LKKL_PROSTREDI=produkce`, `LKKL_TAJNY_KLIC` (nový, jen ve VPS Centru), `LKKL_ADRESA=https://lety2.lkkl.cz`, `LKKL_POVOLENE_ADRESY` |
+| Aplikace | stávající Docker aplikace `lkkllog` na `lety.lkkl.cz` (proxy a HTTPS už nastavené) |
+| Repozitář | stávající `…/lkkllog-lkkl.cz.git`, klíč `VPSC_SSH_KEY` v GitHubu už je |
+| Databáze | stávající **`lkkllog`**, schéma **`lkkl`**; připojení unixovým socketem a `DB_*` jako dosud |
+| Proměnné | uživatel ve VPS Centru: smazat `DJANGO_*` a další proměnné první verze, přidat `LKKL_PROSTREDI=produkce`, `LKKL_TAJNY_KLIC` (nový), `LKKL_ADRESA=https://lety.lkkl.cz` |
 
 Server čte `DB_*` (socket) i `LKKL_DATABAZE` (lokální vývoj) – úprava `app/nastaveni.py`.
 
-## 3. Migrace databáze
+## 3. Úklid po první verzi
 
-- Malý spouštěč migrací (`app/migrace.py`) při startu kontejneru projde skripty
-  `db/NNN_*.sql` (bez `_data`), porovná je s tabulkou **`lkkl.migrace`** (skript, kdy, otisk
-  obsahu) a provede jen ty nové – každý ve vlastní transakci; při chybě se server nespustí.
+1. **Záloha** celé databáze `lkkllog` (`pg_dump`) a stažení mimo server (do
+   `C:\GIT\LKKLLog-zalohy`).
+2. **Smazání tabulek první verze** ve schématu `public` (seznam `docs/tabulky-v1.md`) a její
+   funkce triggeru. **Rozšíření `btree_gist` zůstává** – potřebuje ho nová verze.
+3. **Cron** první verze (`/etc/cron.d/lkkllog`, skript údržby) pryč; údržbu nové verze
+   (úklid prošlých relací) přidá její vlastní cron.
+4. Totéž lokálně: tabulky první verze z lokální databáze pryč (po záloze).
+
+Kroky 1–3 na serveru proběhnou v jedné SSH relaci, až je uživatel výslovně odsouhlasí.
+
+## 4. Migrace databáze
+
+- Spouštěč migrací (`app/migrace.py`) při startu kontejneru projde skripty `db/NNN_*.sql`
+  (bez `_data`), porovná je s tabulkou **`lkkl.migrace`** (skript, kdy, otisk obsahu)
+  a provede jen nové – každý ve vlastní transakci; při chybě se server nespustí.
 - Změna už provedeného skriptu se odhalí podle otisku (chyba místo tichého rozjetí).
 - **Lokálně** se `lkkl.migrace` jednou naplní skripty 001–016 (už provedené ručně); dál se
   i lokálně migruje spouštěčem: `uv run python -m app.migrace`.
-- Před migrací na serveru záloha schématu `lkkl` (`pg_dump`) do složky mimo web.
 
-## 4. Data
+## 5. Data
 
-Při **prvním** nasazení se data ze schématu `lkkl` lokální databáze (letadla, letiště, osoby,
-účty, číselníky…) přenesou výpisem (`pg_dump --data-only`) a nahrají na server v jedné
-SSH relaci. Potom je pravdou o datech **serverová** databáze (otázka 4).
+Při **prvním** nasazení se data schématu `lkkl` z lokální databáze (letadla, letiště, osoby,
+účty, číselníky, osnovy…) přenesou výpisem (`pg_dump --data-only`) na server v jedné SSH
+relaci. Potom je pravdou o datech **serverová** databáze; lokální slouží jen pro vývoj a testy.
 
-## 5. CI (GitHub Actions)
+## 6. CI (GitHub Actions)
 
 - **Každý commit do main:** ruff, testy serveru proti PostgreSQL ve službě CI; od modulu lety
   i lint, stylelint, sestavení frontendu a klikací testy.
-- **Značka `v2.*`:** totéž + sestavení image + nasazení. Archivní značky (`v1-final`) ani
-  značky první verze (`v0.*`) novou aplikaci nespustí – workflow reaguje jen na `v2.*`.
-- Klíč pro push do VPS Centra: stávající `VPSC_SSH_KEY` (patří uživateli VPS Centra, má přístup
-  i k novému repozitáři), adresa repozitáře nové aplikace jako nový údaj.
+- **Značka `v2.*`:** totéž + sestavení image + nasazení.
 
-## 6. První krok
+## 7. První krok
 
 Rozchodit celý řetězec **hned s tím, co máme** (server + přihlašování, bez obrazovek) a ověřit
-na `https://lety2.lkkl.cz/api/zdravi` (nový endpoint: verze a spojení s databází). Modul lety
-pak už jen přibývá dalšími značkami.
-
-## 7. Co udělá uživatel ve VPS Centru
-
-Docker aplikaci nástroje Váš Hosting neumí založit, proto ručně (krok za krokem popíšu):
-1. založit subdoménu a Docker aplikaci, přiřadit databázi `lkkllog`;
-2. zadat proměnné prostředí (tajný klíč vygeneruji, předáte ho jen do VPS Centra);
-3. poslat mi adresu git repozitáře nové aplikace.
+na `https://lety.lkkl.cz/api/zdravi` (nový endpoint: verze a spojení s databází). Do té doby,
+než přijde přihlašovací obrazovka s modulem lety, bude na adrese jen rozhraní.
 
 ## 8. Otázky
 
-1. **Adresa:** `lety2.lkkl.cz`, nebo jinak (např. `novelety.lkkl.cz`)? Nesmí obsahovat
-   `config`, `tmp`, `temp`, `log`, `logs`, `bin`, `inc` (blokuje je VPS Centrum).
+1. **Smazání dat první verze** na serveru (po úplné záloze) – souhlasíte?
 2. **Značky** `v2.<modul>.<oprava>` – souhlasíte?
-3. **Sloučit skripty 001–016** do jednoho před prvním nasazením (pravidlo 6), nebo je nechat
-   tak, jak vznikaly? Doporučuji **nechat** – spouštěč je provede po sobě a historie zůstane
-   čitelná; sloučit se dají kdykoli později.
-4. **Kde se zadávají data po prvním nasazení:** od té chvíle na serveru (lokální databáze jen
-   pro vývoj a testy), souhlasíte? Ruční úpravy pak přes správce databází ve VPS Centru.
+3. **Skripty 001–016** nechat, jak vznikaly (doporučuji), nebo sloučit?
+4. **Data po prvním nasazení** se zadávají na serveru (ruční úpravy přes správce databází
+   ve VPS Centru) – souhlasíte?
