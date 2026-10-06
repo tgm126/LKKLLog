@@ -1,0 +1,76 @@
+/* Obrazovka přes celý displej (průvodce, detail): horní lišta, obsah v blocích, akce dole. */
+.obrazovka {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.horni-lista {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3);
+  border-bottom: var(--ramecek);
+}
+
+.horni-lista-vpravo {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.obrazovka-obsah {
+  flex: 1;
+  padding: 0 var(--mezera-4) var(--mezera-3);
+}
+
+.obrazovka-akce {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: var(--mezera-2);
+  padding: var(--mezera-2) var(--mezera-3) var(--mezera-4);
+  border-top: var(--ramecek);
+  background: var(--barva-pozadi);
+}
+
+.obrazovka-akce > .tl {
+  min-height: var(--dotyk-hlavni);
+}
+
+/* Dvě akce vedle sebe (Naplánovat / Proběhlý let) */
+.akce-vedle {
+  display: flex;
+  gap: var(--mezera-2);
+}
+
+.akce-vedle .tl {
+  flex: 1;
+}
+
+/* Blok s nadpisem a údaji „popisek – hodnota“ */
+.blok {
+  padding-top: var(--mezera-3);
+}
+
+.blok > .nadpisek {
+  display: block;
+  margin-bottom: var(--mezera-1);
+}
+
+.udaj {
+  display: grid;
+  grid-template-columns: var(--sirka-popisku) 1fr;
+  gap: var(--mezera-2);
+  width: 100%;
+  padding: var(--mezera-2) 0;
+  border: 0;
+  border-bottom: var(--ramecek);
+  background: none;
+  text-align: left;
+}
+
+.udaj-popisek {
+  align-self: center;
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}

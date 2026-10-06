@@ -70,3 +70,53 @@ export function useLety() {
     refetchInterval: 10_000,
   });
 }
+
+// --- průvodce novým letem --------------------------------------------------------------------
+
+export type LetadloNabidka = {
+  id: number;
+  rejstrik: string;
+  typ: string;
+  kategorie: string;
+  kategorie_kod: string;
+  pocet_mist: number;
+  vlecne: boolean;
+  soukrome: boolean;
+  mimo_provoz: boolean;
+  leti_od: string | null;
+  naplanovan: boolean;
+  /** Naposledy létající na letadle (id osob, od posledního). */
+  nedavni: number[];
+  posledni_vlekar: number | null;
+};
+
+export type Funkce = { id: number; kod: string; nazev: string; na_palube: boolean };
+export type Ucel = { id: number; kod: string; nazev: string; uloha_povinna: boolean; funkce: Funkce[] };
+export type Osoba = { id: number; jmeno: string; prijmeni: string; vlekar: boolean };
+export type Uloha = {
+  id: number;
+  nazev: string;
+  osnova_id: number;
+  osnova: string;
+  ucel_id: number;
+  /** Prázdná = obecná úloha pro všechny kategorie. */
+  kategorie_kod: string | null;
+};
+
+export type Nabidky = {
+  letadla: LetadloNabidka[];
+  ucely: Ucel[];
+  pic_id: number;
+  zpusoby: { id: number; kod: string; nazev: string }[];
+  osoby: Osoba[];
+  ulohy: Uloha[];
+  zpusob_kluzaku: string | null;
+};
+
+export function useNabidky() {
+  return useQuery({
+    queryKey: ["nabidky"],
+    queryFn: () => ziskat<Nabidky>("/lety/nabidky"),
+    staleTime: 0,
+  });
+}

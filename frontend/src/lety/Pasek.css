@@ -73,3 +73,34 @@
   padding-top: var(--mezera-2);
   border-top: var(--ramecek);
 }
+
+/* Akce ve vzduchu: T&G a PŘISTÁL v řádku, PŘISTÁL širší */
+.let-akce {
+  display: flex;
+  gap: var(--mezera-2);
+  margin-top: var(--mezera-2);
+}
+
+.let-akce .tl {
+  flex: 1;
+}
+
+.let-akce .tl.zelene {
+  flex: 2;
+}
+
+/* Naplánovaný let: údaje vlevo, VZLET vpravo */
+.let-vedle {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-2);
+}
+
+.let-vedle > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.let-vedle .tl {
+  min-width: var(--sirka-akce-vpravo);
+}

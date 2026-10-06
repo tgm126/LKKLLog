@@ -182,6 +182,8 @@ def test_novy_probehly_aerovlek(conn, pilot, osoba, flotila):
     assert vlecna["cas_pristani"] == casy["vlecna"] and vlecna["pob"] == 1
     assert kluzak["plati_aeroklub"] and vlecna["plati_aeroklub"]
 
+    # Vlekař nemůže pilotovat i kluzák.
+    assert k.post("/api/lety", json={**data, "vlekar_id": pilot_id}).status_code == 400
     # Bez času přistání vlečné proběhlý aerovlek nejde.
     bez = {**data, "cas_pristani_vlecne": None}
     assert k.post("/api/lety", json=bez).status_code == 400

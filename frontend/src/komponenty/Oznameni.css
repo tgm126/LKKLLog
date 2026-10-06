@@ -1,0 +1,34 @@
+/* Spodní lišta s hlavní akcí stránky a oznámením „Zpět“ nad ní. */
+.dole {
+  position: sticky;
+  bottom: 0;
+  padding: var(--mezera-2) var(--mezera-3) var(--mezera-4);
+  border-top: var(--ramecek);
+  background: var(--barva-pozadi);
+}
+
+.dole > .tl {
+  width: 100%;
+  min-height: var(--dotyk-hlavni);
+}
+
+.oznameni {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mezera-2);
+  margin-bottom: var(--mezera-2);
+  padding: var(--mezera-1) var(--mezera-1) var(--mezera-1) var(--mezera-3);
+  border-radius: var(--zaobleni);
+  background: var(--oznameni-vypln, var(--barva-oznameni));
+  color: var(--barva-na-akci);
+}
+
+.oznameni.chyba {
+  --oznameni-vypln: var(--barva-cervena);
+}
+
+.oznameni .tl {
+  --tl-vypln: transparent;
+  --tl-barva: var(--barva-na-akci);
+}

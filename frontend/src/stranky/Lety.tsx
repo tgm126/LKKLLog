@@ -1,6 +1,11 @@
+import { useNavigate } from "react-router";
+
 import { doba, hodinyMinutySekundy } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
+import { Oznameni } from "../komponenty/Oznameni";
 import { Sekce } from "../komponenty/Sekce";
+import { Tlacitko } from "../komponenty/Tlacitko";
+import { useAkceLetu } from "../lety/akce";
 import { useLety, type Pasek, type Stav } from "../lety/api";
 import { PasekNaplanovany, PasekUkonceny, PasekVeVzduchu, PasekZruseny } from "../lety/Pasek";
 
@@ -24,9 +29,28 @@ function dvojice(naplanovane: Pasek[]): Pasek[][] {
 /** Přehled letů dne: ve vzduchu, naplánované, ukončené, zrušené (maketa lety-mobil.html). */
 export function Lety() {
   const { data: lety, error, dataUpdatedAt } = useLety();
+  const { provest, probiha } = useAkceLetu();
+  const navigate = useNavigate();
+  const dole = (
+    <div className="dole">
+      <Oznameni />
+      <Tlacitko varianta="modre" hlavni onClick={() => navigate("/novy-let")}>
+        + Nový let
+      </Tlacitko>
+    </div>
+  );
   if (!lety) {
-    return <main className="obsah">{error && <Hlaska>{error.message}</Hlaska>}</main>;
+    return (
+      <>
+        <main className="obsah">{error && <Hlaska>{error.message}</Hlaska>}</main>
+        {dole}
+      </>
+    );
   }
+  const akce = (lety: Pasek[]) => ({
+    provest,
+    zaneprazdnen: lety.some((l) => l.id === probiha?.letId),
+  });
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
   const veVzduchu = ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
@@ -35,6 +59,7 @@ export function Lety() {
   const celkem = ukoncene.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0);
 
   return (
+    <>
     <main className="obsah">
       {error && (
         <Hlaska>
@@ -45,14 +70,14 @@ export function Lety() {
       {veVzduchu.length > 0 && (
         <Sekce nadpis={`Ve vzduchu ${veVzduchu.length}`}>
           {veVzduchu.map((l) => (
-            <PasekVeVzduchu key={l.id} let={l} />
+            <PasekVeVzduchu key={l.id} let={l} {...akce([l])} />
           ))}
         </Sekce>
       )}
       {naplanovane.length > 0 && (
         <Sekce nadpis={`Naplánované ${naplanovane.length}`}>
           {naplanovane.map((d) => (
-            <PasekNaplanovany key={d[0]!.id} lety={d} />
+            <PasekNaplanovany key={d[0]!.id} lety={d} {...akce(d)} />
           ))}
         </Sekce>
       )}
@@ -71,5 +96,7 @@ export function Lety() {
         </Sekce>
       )}
     </main>
+    {dole}
+    </>
   );
 }

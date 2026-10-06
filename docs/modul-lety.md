@@ -54,6 +54,10 @@ srozumitelnou hlášku. Server navíc: **plátce** předvyplní podle účelu (n
 a sólo → žák, přezkoušení → přezkoušený), **vlek** založí jako dva propojené lety v jedné
 transakci (vlečný let bez účelu, plátce = plátce kluzáku).
 
+**Proběhlý aerovlek** se zadává i s časem přistání vlečné (vlečný let je samostatný let
+s vlastní dobou); vzlet je u obou stejný. **Vlekař** nemůže být zároveň v posádce kluzáku
+(předvyplní se vlekař posledního vleku vlečné, jen když v posádce není).
+
 ### 3.2 Souběh (víc lidí najednou)
 - **Stisk platí jen jednou:** VZLET u letadla, které už vzlétlo, vrátí 409 a zprávu
   „Už vzlétl v 12:05:13 (Eva Časoměřič)“ (kdo a kdy z auditu); stejně PŘISTÁL.

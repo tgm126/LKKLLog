@@ -486,6 +486,8 @@ def novy_let(
     probehly = data.akce == "probehly"
     if data.vlecna_id is not None and data.vlekar_id is None:
         raise HTTPException(400, "U aerovleku chybí vlekař.")
+    if data.vlekar_id in {c.osoba_id for c in data.posadka}:
+        raise HTTPException(400, "Vlekař nemůže být zároveň v posádce kluzáku.")
     if probehly:
         casy = [data.cas_vzletu, data.cas_pristani]
         if data.vlecna_id is not None:

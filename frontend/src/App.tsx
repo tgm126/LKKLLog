@@ -4,9 +4,11 @@ import { Navigate, Outlet, Route, Routes, useLocation } from "react-router";
 import { poslat, type Ja } from "./api";
 import { Hlaska } from "./komponenty/Hlaska";
 import { Hlavicka } from "./komponenty/Hlavicka";
+import { OznameniProvider } from "./komponenty/Oznameni";
 import { Pruh, PruhProvozu } from "./komponenty/Pruh";
 import { Tlacitko } from "./komponenty/Tlacitko";
 import { Vstupni } from "./komponenty/Vstupni";
+import { Pruvodce } from "./lety/Pruvodce";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
@@ -18,7 +20,10 @@ export function App() {
       <Route path="/prihlaseni" element={<Prihlaseni />} />
       <Route path="/heslo" element={<NastaveniHesla />} />
       <Route element={<Prihlaseny />}>
-        <Route index element={<Lety />} />
+        <Route element={<SHlavickou />}>
+          <Route index element={<Lety />} />
+        </Route>
+        <Route path="/novy-let" element={<Pruvodce />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
@@ -46,9 +51,19 @@ function Prihlaseny() {
     return <Navigate to={`/prihlaseni${dalsi}`} replace />;
   }
   return (
-    <>
+    <OznameniProvider>
       <PruhProvozu />
       {ja.puvodni && <PruhJako ja={ja} />}
+      <Outlet />
+    </OznameniProvider>
+  );
+}
+
+/** Obrazovky s hlavičkou a menu (průvodce a detail mají vlastní horní lištu). */
+function SHlavickou() {
+  const ja = useJa().data!;
+  return (
+    <>
       <Hlavicka ja={ja} />
       <Outlet />
     </>
