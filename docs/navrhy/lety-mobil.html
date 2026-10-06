@@ -201,10 +201,10 @@ b { font-weight: var(--tloustka-tucna); }
 
 /* Průvodce novým letem */
 .pruvodce-krok { margin-left: auto; white-space: nowrap; }
-.dlazdice-mrizka { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: var(--mezera-1); padding: var(--mezera-2); }  /* všechny panely stejně velké */
+.dlazdice-mrizka { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--mezera-1); padding: var(--mezera-2); }  /* všechny panely stejně velké */
 /* Dlaždice letadla: rejstřík dominantní; výplň podle stavu jako u pásků */
 .dlazdice { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%; min-height: var(--dotyk-hlavni); padding: var(--mezera-2); border: var(--ramecek-sirka) solid var(--dlazdice-okraj, transparent); border-radius: var(--zaobleni); background: var(--dlazdice-vypln, var(--barva-neutralni)); text-align: left; }
-.dlazdice .velke { white-space: nowrap; }   /* rejstřík vždy na jednom řádku */
+.dlazdice-rejstrik { font-weight: var(--tloustka-tucna); white-space: nowrap; }   /* střední písmo, aby se vešel do třetiny */
 .dlazdice .stitek { --stitek-vypln: var(--barva-karta); }   /* štítek musí vystoupit z výplně panelu */
 .dlazdice.leti     { --dlazdice-vypln: var(--barva-modra-vypln); --dlazdice-okraj: transparent; }
 .dlazdice.vybrana  { --dlazdice-okraj: var(--barva-modra); }
@@ -218,6 +218,15 @@ b { font-weight: var(--tloustka-tucna); }
 /* Rychlá volba osoby jedním ťuknutím */
 .navrhy { display: flex; flex-wrap: wrap; gap: var(--mezera-2); padding: var(--mezera-2) 0; }
 .navrhy .tl { font-weight: var(--tloustka); }
+/* Výběr času prstem: pole času, mřížka hodin (6 × 4) a minut po pěti (4 × 3), doladění ±1 min */
+.cas-pole { display: flex; align-items: center; gap: var(--mezera-2); padding: var(--mezera-2) 0; }
+.cas-pole .tl.hodnota { flex: 1; min-height: var(--dotyk-hlavni); font-size: var(--pismo-l); }
+.cas-pole .tl.krok { min-width: var(--dotyk); padding: 0; }
+.mrizka-casu { display: grid; grid-template-columns: repeat(var(--sloupcu, 6), minmax(0, 1fr)); gap: var(--mezera-1); padding-bottom: var(--mezera-2); }
+.mrizka-casu.minuty { --sloupcu: 4; }
+.mrizka-casu .tl { padding: 0; }
+.chyba { color: var(--barva-cervena); font-weight: var(--tloustka-tucna); }
+
 /* Volba počtu (POB): řada tlačítek 1 … počet míst */
 .volby-pocet { display: flex; gap: var(--mezera-2); padding: var(--mezera-2) 0; }
 .volby-pocet .tl { min-width: var(--dotyk); padding: 0; }
@@ -404,6 +413,9 @@ b { font-weight: var(--tloustka-tucna); }
   <h3 class="nadpisek">Nový let – krok 3: let</h3>
   <p class="male">Pro všechna letadla. <b>Úloha</b>: normální let – obecné (let do prostoru, okruhy, navigační let) a „Z osnovy…“, nepovinná; výcvik a sólo – z osnovy, povinná; přezkoušení – typ přezkoušení, povinný (v maketě ilustrační). <b>Kluzák</b>: naviják / aerovlek (výchozí jak se dnes naposledy vzlétalo), vlečná jako panely, vlekař z osob s příznakem vlekař, předvyplněný podle posledního letu vlečné. <b>Platí</b>: předvyplněný podle účelu, ťuknutím jiná osoba z posádky, Aeroklub nebo kdokoli. Na konci VZLET TEĎ (chybí, když letí letadlo nebo vlečná) / Naplánovat / Proběhlý let.</p>
 
+  <h3 class="nadpisek">Proběhlý let – výběr časů</h3>
+  <p class="male">Den Dnes / Včera. Čas prstem bez psaní: ťuknutí na pole → mřížka hodin (budoucí neaktivní) → mřížka minut po 5 → doladění −1 / +1. Po vzletu se samo otevře přistání. Pod nadpisem i místní čas, ukládá se UTC. Doba letu průběžně, přistání dřív než vzlet = chyba. Přistání celkem 1–5 jen u motorových.</p>
+
   <h3 class="nadpisek">Zpět</h3>
   <p class="male">Po VZLET, PŘISTÁL a T&amp;G se nad tlačítkem Nový let na 6 s objeví lišta s časem a tlačítkem ZPĚT.</p>
 
@@ -569,7 +581,7 @@ b { font-weight: var(--tloustka-tucna); }
     ].join('');
     const trida = (stav.mimo ? ' mimo' : stav.leti ? ' leti' : '') + (i === vybrany ? ' vybrana' : '');
     return `<button class="dlazdice${trida}" ${stav.mimo ? 'disabled' : ''} ${navic} data-i="${i}">
-      <div class="velke tucne">${rejstrik}</div><div class="male seda">${typ}</div><div class="male seda">${kategorie}</div>
+      <div class="dlazdice-rejstrik">${rejstrik}</div><div class="male seda">${typ}</div><div class="male seda">${kategorie}</div>
       ${stitky ? `<div class="stitky">${stitky}</div>` : ''}</button>`;
   }
 
@@ -681,12 +693,86 @@ b { font-weight: var(--tloustka-tucna); }
     napojit(krokLet);
   }
 
+  // ---- proběhlý let: výběr časů prstem ----------------------------------------------------
+  const MISTNI_POSUN = 2;   // UTC → místní čas (v říjnu do 25. 10. letní čas, +2 h)
+  const tedUtc = () => { const d = new Date(); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+  const hhmm = (min) => `${dve(Math.floor(min / 60) % 24)}:${dve(min % 60)}`;
+  let casy = {};
+
+  function poleCasu(klic, nazev) {
+    const min = casy[klic];
+    const hodnota = min === null ? '—:—' : hhmm(min);
+    const mistni = min === null ? '' : ` · místní ${hhmm((min + MISTNI_POSUN * 60) % 1440)}`;
+    return oddil(`${nazev} (UTC)${mistni}`, `<div class="cas-pole">
+      <button class="tl obrys krok" data-posun="${klic}" data-o="-1" ${min === null ? 'disabled' : ''}>−1</button>
+      <button class="tl obrys hodnota cisla" data-upravit="${klic}" aria-pressed="${casy.aktivni === klic}">${hodnota}</button>
+      <button class="tl obrys krok" data-posun="${klic}" data-o="1" ${min === null ? 'disabled' : ''}>+1</button></div>`
+      + (casy.aktivni === klic ? mrizka(klic) : ''));
+  }
+
+  // Nejdřív hodina, pak minuty po pěti. Dnes nejde vybrat budoucnost.
+  function mrizka(klic) {
+    const limit = casy.den === 'dnes' ? tedUtc() : 1439;
+    if (casy.faze === 'hodina') {
+      return `<div class="mrizka-casu">${Array.from({ length: 24 }, (_, h) =>
+        `<button class="tl obrys cisla" data-hodina="${h}" ${h * 60 > limit ? 'disabled' : ''}>${dve(h)}</button>`).join('')}</div>`;
+    }
+    return `<div class="mrizka-casu minuty">${Array.from({ length: 12 }, (_, k) => k * 5).map((m) =>
+      `<button class="tl obrys cisla" data-minuta="${m}" ${casy.hodina * 60 + m > limit ? 'disabled' : ''}>${dve(casy.hodina)}:${dve(m)}</button>`).join('')}</div>`;
+  }
+
+  function krokCasy() {
+    krok(3, 'Proběhlý let');
+    const motor = !jeKluzak();
+    const doba = casy.vzlet !== null && casy.pristani !== null ? casy.pristani - casy.vzlet : null;
+    const stav = doba === null ? '' : doba < 0
+      ? '<p class="chyba">Přistání je dřív než vzlet.</p>'
+      : `<p>Doba letu <b class="cisla">${doba >= 60 ? `${Math.floor(doba / 60)}°${dve(doba % 60)}"` : `${doba}"`}</b></p>`;   // bez 0°
+    obsah().innerHTML =
+      oddil('Den', `<div class="volby">
+        <button class="tl obrys" data-den="dnes" aria-pressed="${casy.den === 'dnes'}">Dnes</button>
+        <button class="tl obrys" data-den="vcera" aria-pressed="${casy.den === 'vcera'}">Včera</button></div>`)
+      + poleCasu('vzlet', 'Vzlet') + poleCasu('pristani', 'Přistání') + stav
+      + (motor ? oddil('Přistání celkem', `<div class="volby-pocet">${[1, 2, 3, 4, 5].map((n) =>
+          `<button class="tl obrys cisla" data-pristani="${n}" aria-pressed="${n === casy.pocet}">${n}</button>`).join('')}</div>`) : '');
+    const hotovo = doba !== null && doba >= 0;
+    akce().innerHTML = `<button class="tl modre hlavni" id="ulozit-probehly" ${hotovo ? '' : 'disabled'}>Uložit proběhlý let</button>`;
+
+    const o = obsah();
+    o.querySelectorAll('[data-den]').forEach((b) => b.addEventListener('click', () => { casy.den = b.dataset.den; krokCasy(); }));
+    o.querySelectorAll('[data-upravit]').forEach((b) => b.addEventListener('click', () => {
+      casy.aktivni = casy.aktivni === b.dataset.upravit ? null : b.dataset.upravit; casy.faze = 'hodina'; krokCasy();
+    }));
+    o.querySelectorAll('[data-hodina]').forEach((b) => b.addEventListener('click', () => {
+      casy.hodina = Number(b.dataset.hodina); casy.faze = 'minuta'; krokCasy();
+    }));
+    o.querySelectorAll('[data-minuta]').forEach((b) => b.addEventListener('click', () => {
+      casy[casy.aktivni] = casy.hodina * 60 + Number(b.dataset.minuta);
+      // po vzletu se samo otevře přistání
+      casy.aktivni = casy.aktivni === 'vzlet' && casy.pristani === null ? 'pristani' : null;
+      casy.faze = 'hodina';
+      krokCasy();
+    }));
+    o.querySelectorAll('[data-posun]').forEach((b) => b.addEventListener('click', () => {
+      casy[b.dataset.posun] = (casy[b.dataset.posun] + Number(b.dataset.o) + 1440) % 1440; krokCasy();
+    }));
+    o.querySelectorAll('[data-pristani]').forEach((b) => b.addEventListener('click', () => { casy.pocet = Number(b.dataset.pristani); krokCasy(); }));
+    document.getElementById('ulozit-probehly').addEventListener('click', () => {
+      document.getElementById('pruvodce').classList.remove('otevrena');
+      oznamit(`${letadlo()[0]} proběhlý let ${hhmm(casy.vzlet)}–${hhmm(casy.pristani)} uložen`);
+    });
+  }
+
   function dokoncit(jak) {
+    if (jak === 'probehly') {
+      casy = { den: 'dnes', vzlet: null, pristani: null, pocet: 1, aktivni: 'vzlet', faze: 'hodina' };
+      krokCasy();
+      return;
+    }
     document.getElementById('pruvodce').classList.remove('otevrena');
     const r = letadlo()[0];
     if (jak === 'vzlet') oznamit(`${r} vzlet ${cas()}`);
     else if (jak === 'naplanovat') oznamit(`${r} naplánován`);
-    else oznamit(`${r}: výběr časů proběhlého letu navrhneme`);
   }
 
   document.getElementById('novy-let').addEventListener('click', () => {
@@ -698,7 +784,8 @@ b { font-weight: var(--tloustka-tucna); }
   });
   document.getElementById('pruvodce-zpet').addEventListener('click', () => {
     rozbaleno = null;
-    if (novy.krok === 3) krokPosadka();
+    if (document.getElementById('pruvodce-krok').textContent === 'Proběhlý let') krokLet();
+    else if (novy.krok === 3) krokPosadka();
     else if (novy.krok === 2) krokLetadlo();
     else document.getElementById('pruvodce').classList.remove('otevrena');
   });
