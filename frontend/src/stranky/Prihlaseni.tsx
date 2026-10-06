@@ -34,7 +34,7 @@ export function Prihlaseni() {
   if (ja && !prihlasit.isSuccess) return <Navigate to={kam} replace />;
 
   return (
-    <Vstupni nadpis="LKKL Log" podnadpis="Evidence letů · Aeroklub Kladno">
+    <Vstupni nadpis="AK Kladno Log" podnadpis="Evidence letů">
       <form
         className="formular"
         noValidate

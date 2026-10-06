@@ -125,24 +125,41 @@ def test_novy_let_vycvik(conn, pilot, osoba, flotila):
         conn, rejstrik="OK-2817", ucel="VYCVIK", posadka={"PIC": pilot_id, "ZAK": zak},
         akce="naplanovat",
     )  # fmt: skip
-    # Bez úlohy to databáze odmítne (srozumitelně, bez „Let 12:“).
-    odpoved = k.post("/api/lety", json=data)
-    assert odpoved.status_code == 400
-    assert odpoved.json()["detail"] == "u tohoto účelu je úloha povinná."
+    # Pro kluzáky zatím žádná osnova není – úloha se nevyžaduje (let jde zapsat).
+    assert k.post("/api/lety", json=data).status_code == 200
 
     osnova = conn.execute(
-        """INSERT INTO lkkl.lov_osnova (kod, nazev, poradi) VALUES ('ZAKLAD', 'Základní', 10)
+        """INSERT INTO lkkl.lov_osnova (kod, nazev, poradi, kategorie_id)
+           SELECT 'ZAKLAD', 'Základní', 10, id FROM lkkl.lov_kategorie WHERE kod = 'KLUZAK'
            RETURNING id"""
     ).fetchone()["id"]
-    conn.execute(
-        "INSERT INTO lkkl.lov_osnova_ucel (osnova_id, ucel_id) VALUES (%s, %s)",
-        (osnova, _id(conn, "lov_ucel", "VYCVIK")),
-    )
     uloha = conn.execute(
         """INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, osnova_id)
            VALUES ('B3', 'B3 – Okruhy', 10, %s) RETURNING id""",
         (osnova,),
     ).fetchone()["id"]
+    conn.execute(
+        "INSERT INTO lkkl.lov_uloha_ucel (uloha_id, ucel_id) VALUES (%s, %s)",
+        (uloha, _id(conn, "lov_ucel", "VYCVIK")),
+    )
+    # Teď úloha pro výcvik na kluzáku existuje – bez ní to databáze odmítne (bez „Let 12:“).
+    odpoved = k.post("/api/lety", json=data)
+    assert odpoved.status_code == 400
+    assert odpoved.json()["detail"] == "u tohoto účelu je úloha povinná."
+    # Úloha jiného účelu nebo pro jinou kategorii neprojde.
+    solo_let = _novy(
+        conn, rejstrik="OK-2817", ucel="VYCVIK_SOLO", posadka={"PIC": zak, "DOZOR": pilot_id},
+        akce="naplanovat", uloha_id=uloha,
+    )  # fmt: skip
+    odpoved = k.post("/api/lety", json=solo_let)
+    assert odpoved.json()["detail"] == "úloha nepatří k účelu letu nebo ke kategorii letadla."
+    # Na letounu (kategorie bez osnovy) výcvik bez úlohy jde.
+    letoun = _novy(
+        conn, rejstrik="OK-CRA", ucel="VYCVIK", zpusob="VLASTNI",
+        posadka={"PIC": pilot_id, "ZAK": zak}, akce="naplanovat",
+    )  # fmt: skip
+    assert k.post("/api/lety", json=letoun).status_code == 200
+
     odpoved = k.post("/api/lety", json={**data, "uloha_id": uloha})
     assert odpoved.status_code == 200, odpoved.text
     stav = _stav(conn, odpoved.json()["let_id"])
@@ -224,11 +241,11 @@ def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):
     )  # fmt: skip
     conn.execute(
         """INSERT INTO lkkl.lov_osnova (kod, nazev, poradi) VALUES ('O', 'Osnova', 1);
-           INSERT INTO lkkl.lov_osnova_ucel (osnova_id, ucel_id)
-           SELECT o.id, u.id FROM lkkl.lov_osnova o, lkkl.lov_ucel u
-           WHERE o.kod = 'O' AND u.kod = 'VYCVIK_SOLO';
            INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, osnova_id)
-           SELECT 'U', 'Úloha', 1, id FROM lkkl.lov_osnova WHERE kod = 'O'"""
+           SELECT 'U', 'Úloha', 1, id FROM lkkl.lov_osnova WHERE kod = 'O';
+           INSERT INTO lkkl.lov_uloha_ucel (uloha_id, ucel_id)
+           SELECT ul.id, u.id FROM lkkl.lov_uloha ul, lkkl.lov_ucel u
+           WHERE ul.kod = 'U' AND u.kod = 'VYCVIK_SOLO'"""
     )
     solo["uloha_id"] = _id(conn, "lov_uloha", "U")
     assert k.post("/api/lety", json=solo).status_code == 200

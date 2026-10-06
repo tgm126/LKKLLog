@@ -150,11 +150,11 @@ b { font-weight: var(--tloustka-tucna); }
 
 /* Let = zaoblený pásek (strip ŘLP); varianta stavu mění jen výplň, barvu času a okraj */
 .let { margin-bottom: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); border: var(--ramecek-sirka) solid var(--let-okraj, transparent); border-radius: var(--zaobleni); background: var(--let-vypln); cursor: pointer; }
-.let.vzduch    { --let-vypln: var(--barva-modra-vypln);   --let-cas: var(--barva-modra); }
+.let.vzduch    { --let-vypln: var(--barva-zelena-vypln);  --let-cas: var(--barva-zelena); }
 .let.problem   { --let-vypln: var(--barva-cervena-vypln); --let-cas: var(--barva-cervena); }
-.let.naplanovan { --let-vypln: var(--barva-neutralni); }
-.let.ukoncen   { --let-vypln: var(--barva-zelena-vypln); }
-.let.zrusen    { --let-vypln: var(--barva-karta);         --let-okraj: var(--barva-cara); color: var(--barva-seda); }
+.let.naplanovan { --let-vypln: var(--barva-modra-vypln); }
+.let.ukoncen   { --let-vypln: var(--barva-neutralni); }
+.let.zrusen    { --let-vypln: transparent;               --let-okraj: var(--barva-cara); color: var(--barva-seda); }
 
 .let-radek { display: flex; align-items: baseline; gap: var(--mezera-2); }
 .let-radek + .let-radek { margin-top: var(--mezera-1); }
@@ -206,7 +206,7 @@ b { font-weight: var(--tloustka-tucna); }
 .dlazdice { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%; min-height: var(--dotyk-hlavni); padding: var(--mezera-2); border: var(--ramecek-sirka) solid var(--dlazdice-okraj, transparent); border-radius: var(--zaobleni); background: var(--dlazdice-vypln, var(--barva-neutralni)); text-align: left; }
 .dlazdice-rejstrik { font-weight: var(--tloustka-tucna); white-space: nowrap; }   /* střední písmo, aby se vešel do třetiny */
 .dlazdice .stitek { --stitek-vypln: var(--barva-karta); }   /* štítek musí vystoupit z výplně panelu */
-.dlazdice.leti     { --dlazdice-vypln: var(--barva-modra-vypln); --dlazdice-okraj: transparent; }
+.dlazdice.leti     { --dlazdice-vypln: var(--barva-zelena-vypln); --dlazdice-okraj: transparent; }
 .dlazdice.vybrana  { --dlazdice-okraj: var(--barva-modra); }
 .dlazdice.mimo     { --dlazdice-vypln: var(--barva-oranzova-vypln); }
 .dlazdice:disabled { cursor: not-allowed; }
@@ -251,7 +251,7 @@ b { font-weight: var(--tloustka-tucna); }
 
   <header class="hlavicka">
     <div class="hlavicka-radek">
-      <span class="velke tucne">LKKL Log</span>
+      <span class="velke tucne">AK Kladno Log</span>
       <span class="hlavicka-vpravo">
         <span><span class="velke tucne cisla" id="utc">21:29:05</span> <span class="male seda">UTC</span></span>
         <button class="kulate" id="uzivatel" aria-label="Nabídka uživatele" aria-expanded="false">TM</button>
@@ -420,7 +420,7 @@ b { font-weight: var(--tloustka-tucna); }
   <p class="male">Po VZLET, PŘISTÁL a T&amp;G se nad tlačítkem Nový let na 6 s objeví lišta s časem a tlačítkem ZPĚT.</p>
 
   <h3 class="nadpisek">Ovládání makety</h3>
-  <p class="male">Iniciály vpravo nahoře: režim zobrazení a odhlášení. Nadpis sekce sbalí / rozbalí. Ukončené lety mají zelenou výplň (hotovo).</p>
+  <p class="male">Iniciály vpravo nahoře: režim zobrazení a odhlášení. Nadpis sekce sbalí / rozbalí. Barvy skupin: ve vzduchu zelená, naplánované modrá, ukončené šedá, zrušené bez výplně.</p>
   <p class="male seda" id="rezim-text"></p>
 </aside>
 
@@ -473,8 +473,8 @@ b { font-weight: var(--tloustka-tucna); }
       evidence: [['Založil', 'Ivan Pilot · 15:02'], ['Zrušeno', 'Ivan Pilot · 15:40 – Počasí']] },
   };
   const STAV = {
-    problem: ['Ve vzduchu', 'stitek cerveny'], vzduch: ['Ve vzduchu', 'stitek modry'],
-    naplanovan: ['Naplánovaný', 'stitek'], ukoncen: ['Ukončený', 'stitek zeleny'], zrusen: ['Zrušený', 'stitek'],
+    problem: ['Ve vzduchu', 'stitek cerveny'], vzduch: ['Ve vzduchu', 'stitek zeleny'],
+    naplanovan: ['Naplánovaný', 'stitek modry'], ukoncen: ['Ukončený', 'stitek'], zrusen: ['Zrušený', 'stitek'],
   };
   const AKCE = {
     problem: [['T&G', 'tl svetle'], ['Přistál', 'tl zelene hlavni']],
@@ -573,7 +573,7 @@ b { font-weight: var(--tloustka-tucna); }
 
   function dlazdice([rejstrik, typ, kategorie, , stav = {}], i, vybrany, navic = '') {
     const stitky = [
-      stav.leti ? `<span class="stitek modry cisla">letí ${dobaLetu(stav.leti)}</span>` : '',
+      stav.leti ? `<span class="stitek zeleny cisla">letí ${dobaLetu(stav.leti)}</span>` : '',
       stav.naplanovan ? '<span class="stitek">naplánován</span>' : '',
       stav.mimo ? '<span class="stitek oranzovy">mimo provoz</span>' : '',
       stav.vlecne ? '<span class="stitek">vlečná</span>' : '',

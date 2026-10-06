@@ -261,9 +261,12 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     (u) =>
       u.ucel_id === ucel.id && (u.kategorie_kod === null || u.kategorie_kod === letadlo.kategorie_kod),
   );
+  // Úloha je povinná podle účelu, ale jen když pro účel a kategorii letadla nějaká existuje
+  // (stejné pravidlo hlídá databáze).
+  const ulohaPovinna = ucel.uloha_povinna && ulohy.length > 0;
   const hotovo =
     posadkaHotova &&
-    (!ucel.uloha_povinna || novy.uloha !== undefined) &&
+    (!ulohaPovinna || novy.uloha !== undefined) &&
     (!aerovlek || (novy.vlecna !== undefined && novy.vlekar !== undefined));
   const muzeVzlet = !letadlo.leti_od && !(aerovlek && novy.vlecna?.leti_od);
   const vlecne = nabidky.letadla.filter((a) => a.vlecne && !a.mimo_provoz);
@@ -296,7 +299,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
     >
       <VolbaUlohy
         ulohy={ulohy}
-        povinna={ucel.uloha_povinna}
+        povinna={ulohaPovinna}
         vybrana={ulohy.find((u) => u.id === novy.uloha)}
         rozbaleno={rozbaleno === "osnova"}
         rozbalit={() => setRozbaleno("osnova")}
@@ -403,7 +406,7 @@ function Dlazdice({
       <Stitky>
         {[
           a.leti_od && (
-            <Stitek key="leti" barva="modry">
+            <Stitek key="leti" barva="zeleny">
               letí {stopky(a.leti_od, ted()).slice(0, -3)}
             </Stitek>
           ),

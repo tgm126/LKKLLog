@@ -138,5 +138,7 @@ frontend/
 4. **Obnovování přehledu** každých 10 s.
 5. **Fáze testování 1** na serveru – nejdřív se rozchodí standardní nasazení (samostatný
    návrh `docs/nasazeni.md`).
-6. **Osnovy a úlohy** založené (`db/016`) s testovacími daty; úloha je u výcviku, sóla
-   a přezkoušení povinná.
+6. **Osnovy a úlohy** založené (`db/016`); úloha je u výcviku, sóla a přezkoušení povinná,
+   jen když pro účel a kategorii letadla nějaká existuje (`db/019`). Kluzáky: osnovy IU, IA
+   a II z Programu výcviku AeČR v.6 (úprava AK Kladno), nabídka úlohy podle účelu (vazba
+   úloha ↔ účel); TMG zatím ne. Obecné úlohy u kluzáků nahradil sportovní výcvik (II).

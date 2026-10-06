@@ -9,7 +9,7 @@ const poleHeslo = (page: Page) => page.getByLabel("Heslo", { exact: true });
 test("přihlášení s chybou a odhlášení", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/prihlaseni$/);
-  await expect(page.getByRole("heading", { name: "LKKL Log" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AK Kladno Log" })).toBeVisible();
 
   await page.getByLabel("E-mail").fill("admin@example.cz");
   await poleHeslo(page).fill("spatne-heslo");
@@ -34,7 +34,7 @@ test("přihlášení s chybou a odhlášení", async ({ page }) => {
   await page.getByRole("button", { name: "Tmavý" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-rezim", "tmavy");
   await page.getByRole("button", { name: "Odhlásit" }).click();
-  await expect(page.getByRole("heading", { name: "LKKL Log" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AK Kladno Log" })).toBeVisible();
   await expect(page).toHaveURL(/\/prihlaseni$/);
 });
 

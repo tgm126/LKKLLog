@@ -22,9 +22,9 @@ import "./Volby.css";
 // a místa · Platba · Poznámka · Evidence. Ťuknutí na údaj ho upraví na místě.
 
 const STAV: Record<Stav, [string, BarvaStitku | undefined]> = {
-  VE_VZDUCHU: ["Ve vzduchu", "modry"],
-  NAPLANOVAN: ["Naplánovaný", undefined],
-  UKONCEN: ["Ukončený", "zeleny"],
+  VE_VZDUCHU: ["Ve vzduchu", "zeleny"],
+  NAPLANOVAN: ["Naplánovaný", "modry"],
+  UKONCEN: ["Ukončený", undefined],
   ZRUSEN: ["Zrušený", undefined],
 };
 

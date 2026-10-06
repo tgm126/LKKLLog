@@ -39,7 +39,7 @@ function Prihlaseny() {
   if (ja === undefined) {
     if (!error) return null;
     return (
-      <Vstupni nadpis="LKKL Log">
+      <Vstupni nadpis="AK Kladno Log">
         <Hlaska>{error.message}</Hlaska>
         <Tlacitko varianta="obrys" disabled={isFetching} onClick={() => refetch()}>
           Zkusit znovu

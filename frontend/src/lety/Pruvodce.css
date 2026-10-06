@@ -35,7 +35,7 @@
 }
 
 .dlazdice.leti {
-  --dlazdice-vypln: var(--barva-modra-vypln);
+  --dlazdice-vypln: var(--barva-zelena-vypln);
 }
 
 .dlazdice.mimo {

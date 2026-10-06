@@ -9,8 +9,8 @@
 }
 
 .let.vzduch {
-  --let-vypln: var(--barva-modra-vypln);
-  --let-cas: var(--barva-modra);
+  --let-vypln: var(--barva-zelena-vypln);
+  --let-cas: var(--barva-zelena);
 }
 
 .let.problem {
@@ -19,15 +19,15 @@
 }
 
 .let.naplanovan {
-  --let-vypln: var(--barva-neutralni);
+  --let-vypln: var(--barva-modra-vypln);
 }
 
 .let.ukoncen {
-  --let-vypln: var(--barva-zelena-vypln);
+  --let-vypln: var(--barva-neutralni);
 }
 
 .let.zrusen {
-  --let-vypln: var(--barva-karta);
+  --let-vypln: transparent;
   --let-okraj: var(--barva-cara);
 
   color: var(--barva-seda);

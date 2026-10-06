@@ -16,7 +16,7 @@ export function Hlavicka({ ja }: { ja: Ja }) {
     <>
       <header className="hlavicka">
         <div className="hlavicka-radek">
-          <span className="velke tucne">LKKL Log</span>
+          <span className="velke tucne">AK Kladno Log</span>
           <span className="hlavicka-vpravo">
             <CasUtc />
             <NabidkaUzivatele ja={ja} />

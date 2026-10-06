@@ -26,10 +26,10 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK, PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
-| `lov_osnova` | číselník | osnova (skupina úloh) → kategorie letadla (prázdná = všechny) | 016 |
-| `lov_uloha` | číselník | úloha → osnova; označení (B3…) je součástí názvu | 016 |
-| `lov_osnova_ucel` | vazba | u kterých účelů se osnova nabízí | 016, 017 |
-| `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie | 016 |
+| `lov_osnova` | číselník | osnova (skupina úloh) → kategorie letadla (prázdná = všechny); kluzáky: IU, IA, II podle Programu výcviku AeČR v.6 (úprava AK Kladno) | 016, 019 |
+| `lov_uloha` | číselník | úloha (letové cvičení) → osnova; označení je součástí názvu („IU/4 Navijákové vzlety…“), pozemní přípravy se nezadávají | 016, 019 |
+| `lov_uloha_ucel` | vazba | u kterých účelů se úloha nabízí (výcvik = dvojí, sólo, normální, přezkoušení) | 019 |
+| `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie; úloha je povinná (výcvik, sólo, přezkoušení), jen když pro účel a kategorii nějaká existuje | 016, 019 |
 | `lov_ucel_funkce` | vazba | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009, 017 |
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB), doba 0 u krátkého letu, počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
