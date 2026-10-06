@@ -1,7 +1,7 @@
 -- 019 data: osnovy výcviku na kluzácích podle dokumentu „Program výcviku na kluzácích“
 -- (AeČR, v.6 z 1. 8. 2021, úprava AK Kladno). Jen letová cvičení (pozemní přípravy se
--- k letu nenabízejí); označení „IU/4“ je součástí názvu úlohy. Cvičení na TMG (II/10–12)
--- zatím ne. Nahrazuje testovací osnovy ze 016.
+-- k letu nenabízejí); označení „IU/4“ je součástí názvu úlohy. Cvičení II/10–12 (na TMG; poslední
+-- řádek osnovy II v dokumentu nemá číslo – je to 12). Nahrazuje testovací osnovy ze 016.
 --
 -- Vazba úloha ↔ účel podle sloupců „dvojí“ a „samostatně“ v osnovách:
 --   výcvik = dvojí řízení s FI(S), sólo = samostatně pod dozorem (žák), normální = držitel SPL,
@@ -69,7 +69,10 @@ INSERT INTO nove_ulohy VALUES
     ('II', '6',  'Samostatný přelet', 60, 'N'),
     ('II', '7',  'Lety v dlouhé vlně', 70, 'VN'),
     ('II', '8',  'Lety v oblačnosti', 80, 'VN'),
-    ('II', '9P', 'Přezkoušení CLOUD', 90, 'P');
+    ('II', '9P', 'Přezkoušení CLOUD', 90, 'P'),
+    ('II', '10', 'TMG – vzlet, okruh, přistání', 100, 'VN'),
+    ('II', '11', 'TMG – zvláštní případy za letu', 110, 'V'),
+    ('II', '12', 'TMG – navigační lety a lety do prostoru', 120, 'VN');
 
 INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, platny, osnova_id)
 SELECT n.osnova || '_' || n.cv, n.osnova || '/' || n.cv || ' ' || n.nazev, n.poradi, true, o.id
