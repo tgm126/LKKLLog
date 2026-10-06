@@ -128,4 +128,4 @@ Projdeme jednotlivě, aby se nezanesl starý problém:
 - Commit do main = jen kontroly a testy v CI. **Nasazení jen značkou `v2.<modul>.<oprava>`**
   (`git tag v2.1.0 && git push origin v2.1.0`) nebo ručním spuštěním workflow; značka
   se připíná až na pokyn uživatele. Návod a úklid po první verzi: `docs/nasazeni.md`.
-- Kontrola stavu: `GET /api/zdravi` (verze a spojení s databází).
+- Kontrola stavu: `GET /api/health` (verze a spojení s databází).

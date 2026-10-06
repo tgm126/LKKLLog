@@ -25,7 +25,7 @@ ENV HOME=/tmp
 ENV PYTHONPATH=/srv/lkkl/backend
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/zdravi', timeout=3)"
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
 
 # Nejdřív migrace (při chybě se server nespustí), pak server. Proxy a HTTPS dělá VPS Centrum.
 CMD ["sh", "-c", "python -m app.migrace && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]

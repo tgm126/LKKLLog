@@ -69,7 +69,7 @@ relaci. Potom je pravdou o datech **serverová** databáze; lokální slouží j
 ## 7. První krok
 
 Rozchodit celý řetězec **hned s tím, co máme** (server + přihlašování, bez obrazovek) a ověřit
-na `https://lety.lkkl.cz/api/zdravi` (nový endpoint: verze a spojení s databází). Do té doby,
+na `https://lety.lkkl.cz/api/health` (nový endpoint: verze a spojení s databází). Do té doby,
 než přijde přihlašovací obrazovka s modulem lety, bude na adrese jen rozhraní.
 
 ## 8. Stav (6. 10. 2026)

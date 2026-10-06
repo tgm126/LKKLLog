@@ -42,6 +42,6 @@ def test_jen_oznacit(cista_db, tmp_path):
     assert migrace.provest(cista_db, tmp_path, jen_oznacit=True) == ["003_nic.sql"]
 
 
-def test_zdravi(klient):
-    odpoved = klient().get("/api/zdravi")
+def test_health(klient):
+    odpoved = klient().get("/api/health")
     assert odpoved.status_code == 200 and odpoved.json() == {"stav": "ok", "verze": "vyvoj"}
