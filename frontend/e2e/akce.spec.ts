@@ -61,6 +61,15 @@ test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
   await expect(page.getByRole("alert")).toHaveText(
     "Petr Pilot je v tu dobu na palubě jiného letu (OK-2817).",
   );
+
+  // Naplánovat jde; VZLET z pásku pak ukáže stejnou hlášku v liště dole.
+  await page.getByRole("button", { name: "Naplánovat" }).click();
+  const planovany = page.locator(".let.naplanovan", { hasText: "Petr Pilot" });
+  await planovany.getByRole("button", { name: "Vzlet" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    /Petr Pilot je v tu dobu na palubě jiného letu \(OK-2817\)\./,
+  );
+  await expect(page.getByRole("status")).toHaveCSS("color", "rgb(255, 255, 255)");
 });
 
 test("průvodce: VZLET TEĎ", async ({ page }) => {
@@ -141,6 +150,11 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
   await expect(ulohyIU.first()).toHaveText("IU/1 Seznamovací let");
   await expect(ulohyIU.last()).toHaveText("IU/13 Traťový navigační let");
   await uloha.getByRole("button", { name: "IU/4 Navijákové vzlety, okruh a přistání" }).click();
+  // Vybraná osnova a úloha zůstanou samy, ostatní se skryjí.
+  await expect(uloha.getByRole("button")).toHaveText([
+    /^IU –/,
+    "IU/4 Navijákové vzlety, okruh a přistání",
+  ]);
   await page.getByRole("button", { name: "Naplánovat" }).click();
   await expect(page.getByRole("status")).toHaveText(/OK-3819 naplánován/);
 });

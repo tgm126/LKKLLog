@@ -73,6 +73,7 @@
      musí být čitelné na slunci i ve tmě; tmavá varianta by ztratila kontrast. */
   --barva-akce-modra:  #1c6fd1;
   --barva-akce-zelena: #2b8a3e;
+  --barva-akce-cervena: #d1343a;  /* lišta s chybou (Už vzlétl…) – bílý text v obou režimech */
   --barva-na-akci:     #fff;
   --barva-pruh:        #fcc419;
   --barva-na-pruhu:    #1d2125;

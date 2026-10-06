@@ -164,7 +164,7 @@ function DetailLetuObrazovka({
       vpravo={<Stitek barva={barva}>{stav}</Stitek>}
       akce={<AkceDetailu let_={l} nabidky={nabidky} />}
     >
-      {l.varovani && <p className="chyba">{l.varovani}</p>}
+      {l.varovani && <p className="text-chyby">{l.varovani}</p>}
 
       <Blok nadpis="Posádka">
         {l.posadka.map((c) => (
@@ -202,12 +202,8 @@ function DetailLetuObrazovka({
               povinna={!!ucel?.uloha_povinna}
               vybrana={ulohy.find((x) => x.id === l.uloha_id)}
               vybrat={(id) => ulozit({ uloha_id: id ?? null })}
+              menit
             />
-            {!ucel?.uloha_povinna && l.uloha_id && (
-              <Tlacitko varianta="bez-ramu" onClick={() => ulozit({ uloha_id: null })}>
-                Bez úlohy
-              </Tlacitko>
-            )}
           </Udaj>
         )}
         <Udaj popisek="Způsob vzletu" hodnota={l.zpusob_vzletu} />

@@ -138,8 +138,8 @@ export function PasekNaplanovany({
             </div>
             <div className="let-radek">
               <Posadka clenove={l.posadka} />
-              {udaje.length > 0 && <span className="funkce">· {udaje.join(" · ")}</span>}
             </div>
+            <Stitky>{udaje.map((u) => <Stitek key={u}>{u}</Stitek>)}</Stitky>
           </Polovina>
         );
       })}
@@ -164,7 +164,7 @@ export function PasekUkonceny({ let: l }: { let: PasekLetu }) {
     <div className="let ukoncen" onClick={otevrit}>
       <div className="let-radek">
         <b>{l.rejstrik}</b>
-        <Posadka clenove={pic(l)} />
+        <Posadka clenove={l.posadka} />
         <span className="let-vpravo tucne cisla">{doba(l.doba_uctovana_min ?? 0)}</span>
       </div>
       <Stitky>

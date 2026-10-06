@@ -77,7 +77,8 @@
   padding: 0;
 }
 
-.chyba {
+/* Červený text chyby přímo v obrazovce (přistání dřív než vzlet, varování letu) */
+.text-chyby {
   color: var(--barva-cervena);
   font-weight: var(--tloustka-tucna);
 }

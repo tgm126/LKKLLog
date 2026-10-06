@@ -315,13 +315,6 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
         />
       }
     >
-      <VolbaUlohy
-        key={ucel.id}
-        ulohy={ulohy}
-        povinna={ulohaPovinna}
-        vybrana={ulohy.find((u) => u.id === novy.uloha)}
-        vybrat={(id) => zmenit({ uloha: id })}
-      />
       {kluzak && (
         <Blok nadpis="Způsob vzletu">
           <div className="volby">
@@ -366,6 +359,13 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
           )}
         </>
       )}
+      <VolbaUlohy
+        key={ucel.id}
+        ulohy={ulohy}
+        povinna={ulohaPovinna}
+        vybrana={ulohy.find((u) => u.id === novy.uloha)}
+        vybrat={(id) => zmenit({ uloha: id })}
+      />
       <Blok nadpis="Platí">
         {/* Předvyplněný podle účelu (modře); jiná osoba z posádky, Aeroklub, nebo kdokoli. */}
         <div className="navrhy">
@@ -444,52 +444,87 @@ function Dlazdice({
 // --- úloha ---------------------------------------------------------------------------------
 
 /** Úloha ve dvou krocích: osnova (IU, IA, II…), pak úloha v ní (vzestupně podle osnovy).
- *  Je-li úloha povinná a osnova jen jedna, je rovnou otevřená. Nepovinnou úlohu jde druhým
- *  ťuknutím zrušit. */
+ *  Co je vybrané, zůstane samo (ostatní se skryjí); ťuknutím na vybrané se nabídka znovu
+ *  otevře, změní se až výběrem jiné. Je-li úloha povinná a osnova jen jedna, je rovnou
+ *  otevřená. Nepovinnou úlohu jde zrušit volbou „Bez úlohy“. */
 export function VolbaUlohy({
   ulohy,
   povinna,
   vybrana,
   vybrat,
+  menit = false,
 }: {
   ulohy: Uloha[];
   povinna: boolean;
   vybrana: Uloha | undefined;
   vybrat: (id: number | undefined) => void;
+  /** Rovnou nabídka úloh vybrané osnovy (úprava v detailu letu). */
+  menit?: boolean;
 }) {
   const osnovy = [...new Map(ulohy.map((u) => [u.osnova_id, u.osnova])).entries()];
   const [osnovaId, setOsnovaId] = useState<number | undefined>(
     vybrana?.osnova_id ?? (povinna && osnovy.length === 1 ? osnovy[0]![0] : undefined),
   );
+  // Která nabídka je otevřená: výběr osnovy, výběr úlohy v osnově, nebo žádná (vybráno).
+  const [otevreno, setOtevreno] = useState<"osnova" | "uloha" | null>(
+    vybrana && !menit ? null : osnovaId === undefined ? "osnova" : "uloha",
+  );
   if (ulohy.length === 0) return null;
+  const osnova = osnovy.find(([id]) => id === osnovaId);
+  const vybrat_ = (id: number | undefined) => {
+    vybrat(id);
+    setOtevreno(null);
+  };
   return (
     <Blok nadpis={povinna ? "Úloha" : "Úloha (nepovinná)"}>
       <div className="navrhy">
-        {osnovy.map(([id, nazev]) => (
-          <Tlacitko
-            key={id}
-            varianta="obrys"
-            aria-pressed={id === osnovaId}
-            onClick={() => setOsnovaId(id === osnovaId ? undefined : id)}
-          >
-            {nazev}
-          </Tlacitko>
-        ))}
-      </div>
-      {osnovaId !== undefined && (
-        <div className="navrhy">
-          {ulohy
-            .filter((u) => u.osnova_id === osnovaId)
-            .map((u) => (
+        {otevreno === "osnova" || !osnova
+          ? osnovy.map(([id, nazev]) => (
               <Tlacitko
-                key={u.id}
+                key={id}
                 varianta="obrys"
-                aria-pressed={u.id === vybrana?.id}
-                onClick={() => vybrat(u.id === vybrana?.id && !povinna ? undefined : u.id)}
+                aria-pressed={id === osnovaId}
+                onClick={() => {
+                  setOsnovaId(id);
+                  setOtevreno("uloha");
+                }}
               >
-                {u.nazev}
+                {nazev}
               </Tlacitko>
-            ))}
+            ))
+          : (
+            <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevreno("osnova")}>
+              {osnova[1]}
+            </Tlacitko>
+          )}
+      </div>
+      {osnova && otevreno !== "osnova" && (
+        <div className="navrhy">
+          {otevreno === "uloha" || !vybrana || vybrana.osnova_id !== osnovaId ? (
+            <>
+              {ulohy
+                .filter((u) => u.osnova_id === osnovaId)
+                .map((u) => (
+                  <Tlacitko
+                    key={u.id}
+                    varianta="obrys"
+                    aria-pressed={u.id === vybrana?.id}
+                    onClick={() => vybrat_(u.id)}
+                  >
+                    {u.nazev}
+                  </Tlacitko>
+                ))}
+              {!povinna && vybrana && (
+                <Tlacitko varianta="bez-ramu" onClick={() => vybrat_(undefined)}>
+                  Bez úlohy
+                </Tlacitko>
+              )}
+            </>
+          ) : (
+            <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevreno("uloha")}>
+              {vybrana.nazev}
+            </Tlacitko>
+          )}
         </div>
       )}
     </Blok>
@@ -690,7 +725,7 @@ function ProbehlyLet(
           Doba letu <b className="cisla">{doba(dobaLetu)}</b>
         </p>
       )}
-      {chyba && <p className="chyba">Přistání je dřív než vzlet.</p>}
+      {chyba && <p className="text-chyby">Přistání je dřív než vzlet.</p>}
       {letadlo.kategorie_kod !== "KLUZAK" && (
         <Blok nadpis="Přistání celkem">
           <VolbaPoctu pocet={5} vybrano={pocet} vybrat={setPocet} />

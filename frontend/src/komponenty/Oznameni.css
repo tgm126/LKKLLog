@@ -25,7 +25,7 @@
 }
 
 .oznameni.chyba {
-  --oznameni-vypln: var(--barva-cervena);
+  --oznameni-vypln: var(--barva-akce-cervena);
 }
 
 .oznameni .tl {
