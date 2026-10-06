@@ -89,7 +89,7 @@ def test_aktivace_osoby(osoba, prihlasit, conn):
     osoba("Admin", admin=True)
     bez_uctu = osoba("Novak", ucet=False)
     bez_emailu = conn.execute(
-        "INSERT INTO lkkl.osoba (jmeno, prijmeni) VALUES ('Petr', 'Bezemailu') RETURNING id"
+        "INSERT INTO lkkl.lov_osoba (jmeno, prijmeni) VALUES ('Petr', 'Bezemailu') RETURNING id"
     ).fetchone()["id"]
     admin = prihlasit("admin@example.cz")
     ucet = admin.post("/api/ucty", json={"osoba_id": bez_uctu}).json()

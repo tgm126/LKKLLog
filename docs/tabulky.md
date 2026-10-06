@@ -1,10 +1,16 @@
 # Tabulky nové verze (schéma `lkkl`)
 
-**Číselníky (`lov_*`)** mají jednotný standard: `id`, `kod` (jedinečný, jen pro program),
+**Předpona `lov_` = trvalá data, která udržuje uživatel** (číselníky, osoby, letadla, osnovy
+a vazby mezi nimi); při zahájení ostrého provozu zůstávají (skript 017). Všechno ostatní kromě
+technických tabulek `ucet`, `audit_popisek`, `migrace`, `provoz` jsou **provozní data** –
+pohled `v_provozni_tabulky`; test hlídá, že nová tabulka je vědomě zařazená.
+
+**Jednoduché číselníky** mají jednotný standard: `id`, `kod` (jedinečný, jen pro program),
 `nazev` (text pro zobrazení, nemusí být jedinečný), `poradi`, `platny`. Pravidla sloupců jsou
-v doménách `lkkl.kod`, `lkkl.nazev`, `lkkl.poradi`, `lkkl.platny` (skript 008).
-Každý číselník má **pohled pro nabídky** `v_lov_<název>`: jen platné položky, seřazené podle
-pořadí a názvu (skript 010). Vazby a stará data pracují s tabulkami, zneplatněná položka u nich zůstane.
+v doménách `lkkl.kod`, `lkkl.nazev`, `lkkl.poradi`, `lkkl.platny` (skript 008). Osoby, letadla
+a vazby mají vlastní sloupce. **Pohled pro nabídky** `v_lov_<název>`: jen platné položky,
+seřazené podle pořadí a názvu (skript 010). Vazby a stará data pracují s tabulkami,
+zneplatněná položka u nich zůstane.
 
 Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze viz
 `tabulky-v1.md`.
@@ -13,9 +19,8 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 |---|---|---|---|
 | `lov_kategorie` | číselník | kategorie letadel | 001, 008 |
 | `lov_typ` | číselník | typy letadel → kategorie, počet míst | 001, 002, 008 |
-| `letadlo` | tabulka | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz | 001, 002, 013 |
-| `v_letadlo` | pohled | letadla s názvem typu, kategorií a počtem míst | 001, 002, 013 |
-| `v_letadlo_nabidka` | pohled | nabídka letadel pro nový let: pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 013, 014 |
+| `lov_letadlo` | trvalá data | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz | 001, 002, 013, 017 |
+| `v_lov_letadlo` | pohled | letadla s typem, kategorií a počtem míst; pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft] | 003, 008 |
 | `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` | 008, 016 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
@@ -23,29 +28,32 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
 | `lov_osnova` | číselník | osnova (skupina úloh) → kategorie letadla (prázdná = všechny) | 016 |
 | `lov_uloha` | číselník | úloha → osnova; označení (B3…) je součástí názvu | 016 |
-| `osnova_ucel` | pravidlo | u kterých účelů se osnova nabízí | 016 |
+| `lov_osnova_ucel` | vazba | u kterých účelů se osnova nabízí | 016, 017 |
 | `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie | 016 |
-| `ucel_funkce` | pravidlo | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009 |
+| `lov_ucel_funkce` | vazba | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009, 017 |
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB), doba 0 u krátkého letu, počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
 | `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
 | `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G, úloha (povinnost, účel, kategorie) | 009, 011, 016 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
-| `let_verze`, `let_nemazat` | trigger | verze záznamu se zvyšuje; let nejde smazat | 009 |
-| `osoba` | tabulka | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní, vlekař | 004, 015 |
+| `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat ani vyprázdnit | 009, 017 |
+| `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní, vlekař | 004, 015, 017 |
 | `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
 | `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
 | `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
-| `osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005 |
+| `lov_osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005, 017 |
 | `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); zakládá ji spouštěč `app/migrace.py` | – |
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
-| `audit` (na let, posadka, let_tg, osoba, ucet, letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
-| `audit_jen_doplnovat`, `audit_bez_vyprazdneni` | trigger | audit nejde upravit, smazat ani vyprázdnit | 012 |
+| `audit` (na let, posadka, let_tg, lov_osoba, ucet, lov_letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
+| `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit | 012, 017 |
 | `audit_popisek` | pravidlo | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012 |
 | `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |
 | `v_historie_letu` | pohled | historie letu: jedna akce (let + posádka + T&G v jedné transakci) = jeden řádek | 012 |
+| `provoz` | technická | fáze provozu (jediný řádek): `testovani` → `pilot` → `ostry`; řídí žlutý pruh v aplikaci | 017 |
+| `v_provozni_tabulky` | pohled | tabulky, které zahájení ostrého provozu vyprázdní (vše mimo `lov_` a technické) | 017 |
+| `zahajit_ostry_provoz()` | funkce | jednorázově vyprázdní provozní tabulky (čísla od 1) a nastaví fázi `ostry`; zpět nejde | 017 |
 
 ## Rozhodnutí pro další tabulky
 

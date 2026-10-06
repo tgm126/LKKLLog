@@ -29,7 +29,7 @@ def test_chybne_prihlaseni_neprozradi_ucet(klient, osoba, conn):
     osoba("Bezhesla", heslo=None)
     osoba("Bezuctu", ucet=False)
     neaktivni = osoba("Neaktivni")
-    conn.execute("UPDATE lkkl.osoba SET aktivni = false WHERE id = %s", (neaktivni,))
+    conn.execute("UPDATE lkkl.lov_osoba SET aktivni = false WHERE id = %s", (neaktivni,))
     k = klient()
     for email, heslo in [
         ("novak@example.cz", "spatne-heslo-1"),
@@ -128,7 +128,7 @@ def test_relace_se_prodluzuje_nejvys_jednou_za_hodinu(osoba, prihlasit, conn):
 def test_zablokovani_uctu_nebo_osoby_ukonci_relaci(osoba, prihlasit, conn):
     osoba_id = osoba("Novak")
     k = prihlasit("novak@example.cz")
-    conn.execute("UPDATE lkkl.osoba SET aktivni = false WHERE id = %s", (osoba_id,))
+    conn.execute("UPDATE lkkl.lov_osoba SET aktivni = false WHERE id = %s", (osoba_id,))
     assert k.get("/api/ja").status_code == 401
 
 

@@ -76,7 +76,8 @@ def osoba(conn):
     ) -> int:
         email = email or f"{prijmeni.lower()}@example.cz"
         osoba_id = conn.execute(
-            "INSERT INTO lkkl.osoba (jmeno, prijmeni, email) VALUES ('Jan', %s, %s) RETURNING id",
+            """INSERT INTO lkkl.lov_osoba (jmeno, prijmeni, email)
+               VALUES ('Jan', %s, %s) RETURNING id""",
             (prijmeni, email),
         ).fetchone()["id"]
         if ucet:

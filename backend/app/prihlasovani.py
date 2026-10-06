@@ -233,7 +233,7 @@ def prihlaseni(
                       coalesce(u.zablokovano_do > now(), false) AS zablokovano,
                       ceil(extract(epoch FROM u.zablokovano_do - now()) / 60)::int AS minut
                FROM lkkl.ucet u
-               JOIN lkkl.osoba o ON o.id = u.osoba_id
+               JOIN lkkl.lov_osoba o ON o.id = u.osoba_id
                WHERE lower(o.email) = lower(%s)
                FOR UPDATE OF u""",
             (data.email.strip(),),

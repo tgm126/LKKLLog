@@ -129,8 +129,9 @@ Maketa `docs/navrhy/prihlaseni-mobil.html`; kód `frontend/src/stranky/Prihlasen
    a „Na přihlášení“. `GET /api/heslo/odkaz` vrací i e-mail (správce hesel uloží heslo
    ke správnému účtu).
 3. Písmo textových polí 16 px (token `--pismo-pole`, VÝJIMKA kvůli přibližování na iPhonu).
-4. **Pruh** nahoře na všech obrazovkách s textem z proměnné `LKKL_PRUH` (fáze provozu;
-   prázdná = bez pruhu); **verze** dole na přihlášení. Obojí z `GET /api/aplikace`.
+4. **Pruh** nahoře na všech obrazovkách podle fáze provozu (tabulka `provoz`: TESTOVACÍ /
+   PILOTNÍ PROVOZ, v ostrém bez pruhu; lokálně „VÝVOJ“); **verze** dole na přihlášení.
+   Obojí z `GET /api/aplikace`.
 5. Po přihlášení hlavička s menu a nabídkou uživatele (jméno, režim zobrazení, odhlásit);
    „přihlášen jako“ = pruh s návratem na vlastní účet.
 6. Změna hesla a přehled zařízení v nabídce uživatele později (samostatný krok).

@@ -3,7 +3,7 @@
 > **NÁVRH ke schválení.** Po schválení se podle něj napíše kód; změny nejdřív sem.
 
 Vzhled a chování podle makety `docs/navrhy/lety-mobil.html` (mobil). Data v tabulkách
-`let`, `posadka`, `let_tg` a pohledech `v_let`, `v_historie_letu`, `v_letadlo_nabidka`,
+`let`, `posadka`, `let_tg` a pohledech `v_let`, `v_historie_letu`, `v_lov_letadlo`,
 `v_lov_*` (skripty `db/009`–`015`). Obrazovka pro počítač zatím ne.
 
 ## 1. Rozsah
@@ -31,7 +31,7 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 | Metoda a adresa | Co dělá |
 |---|---|
 | `GET /api/lety?den=RRRR-MM-DD` | lety dne pro pásky (z `v_let` + posádka, počet T&G, varování) a sluneční časy dne (TB, SR, SS, TE pro domovské letiště) |
-| `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_letadlo_nabidka` + stav letí / naplánován), účely, způsoby vzletu, osoby, vlekaři, obecné úlohy |
+| `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_lov_letadlo` + stav letí / naplánován), účely, způsoby vzletu, osoby, vlekaři, obecné úlohy |
 | `GET /api/lety/nabidka-osob?letadlo_id=` | naposledy létající na letadle (rychlá volba) a poslední vlekař vlečné |
 | `POST /api/lety` | nový let z průvodce: letadlo, účel, posádka, POB, způsob vzletu, vlek (vlečná + vlekař), plátce, úloha, akce `vzlet` / `naplanovat` / `probehly` (s časy a počtem přistání) |
 | `GET /api/lety/{id}` | detail letu včetně historie (`v_historie_letu`) |

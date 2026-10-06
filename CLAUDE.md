@@ -44,11 +44,14 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 9. **Klíče a omezení:** umělý primární klíč + jedinečné přirozené klíče; cizí klíče všude bez
    kaskádového mazání; pravidla v databázi (CHECK, UNIQUE, EXCLUDE).
 10. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
-    **Standard číselníku `lov_*`:** `id` (vazby mezi tabulkami **vždy přes id**), `kod`
+    **Předpona `lov_` = trvalá data udržovaná uživatelem** (číselníky, osoby, letadla, osnovy
+    i vazební tabulky mezi nimi); ostatní tabulky jsou provozní data a zahájení ostrého
+    provozu je vyprázdní (mimo technické `ucet`, `audit_popisek`, `migrace`, `provoz`).
+    **Standard jednoduchého číselníku:** `id` (vazby mezi tabulkami **vždy přes id**), `kod`
     (jedinečný, jen pro program, nikde se nezobrazuje), `nazev` (text pro zobrazení – jde měnit
     a nemusí být jedinečný), `poradi`, `platny` (přepínač „používat“; nemaže se, zneplatní se;
     nepoužitou položku jde smazat; **nabídky** aplikace bere vždy z pohledu `v_lov_<název>`
-    s platnými položkami seřazenými podle pořadí – každý číselník ho má). Pravidla sloupců jsou v doménách `lkkl.kod`, `lkkl.nazev`,
+    s platnými položkami seřazenými podle pořadí). Pravidla sloupců jsou v doménách `lkkl.kod`, `lkkl.nazev`,
     `lkkl.poradi`, `lkkl.platny` – definovaná jednou. Hodnoty, podle jejichž kódu program
     uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
@@ -112,8 +115,12 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     1. **testuje jen uživatel** (správce projektu);
     2. **testují vybraní pilotní uživatelé**;
     3. **rollout na všechny**.
-    *K projednání:* jak fáze technicky oddělit (prostředí, adresa, přístup) a zda se postupuje
-    po modulech, nebo za celou aplikaci. Automatické testy u mě běží při každé změně.
+    Do ostrého spuštění běží vše v jedné databázi; fázi ukazuje tabulka `provoz` (žlutý pruh).
+    Pilot = aktivace účtů vybraných osob. **Zahájení ostrého provozu** jednorázově smaže
+    testovací a pilotní záznamy (vše mimo `lov_` a technické tabulky, i audit a přihlášení):
+    po záloze příkazem `uv run python -m app.prikazy ostry-provoz --potvrzuji`.
+    *K projednání:* jak testovat nové funkce po ostrém spuštění (např. příznak u účtu).
+    Automatické testy u mě běží při každé změně.
 
 ## K projednání (převzato z první verze, zatím neplatí)
 Projdeme jednotlivě, aby se nezanesl starý problém:

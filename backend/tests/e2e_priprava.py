@@ -25,7 +25,7 @@ def pripravit() -> None:
         migrace.provest(c)
         with c.transaction():
             admin = c.execute(
-                """INSERT INTO lkkl.osoba (jmeno, prijmeni, email)
+                """INSERT INTO lkkl.lov_osoba (jmeno, prijmeni, email)
                    VALUES ('Adam', 'Admin', 'admin@example.cz') RETURNING id"""
             ).fetchone()[0]
             c.execute(
@@ -33,7 +33,7 @@ def pripravit() -> None:
                 (admin, bezpecnost.otisk_hesla(HESLO_ADMINA)),
             )
             nova = c.execute(
-                """INSERT INTO lkkl.osoba (jmeno, prijmeni, email)
+                """INSERT INTO lkkl.lov_osoba (jmeno, prijmeni, email)
                    VALUES ('Nela', 'Nová', 'nova@example.cz') RETURNING id"""
             ).fetchone()[0]
             c.execute("INSERT INTO lkkl.ucet (osoba_id) VALUES (%s)", (nova,))

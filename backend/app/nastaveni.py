@@ -8,7 +8,6 @@ from psycopg.conninfo import make_conninfo
 
 # Jen pro lokální vývoj; v produkci musí být LKKL_TAJNY_KLIC nastavený.
 _VYVOJOVY_KLIC = "vyvoj-tento-klic-neni-tajny-0123456789"  # noqa: S105
-_PRUH_VYVOJ = "VÝVOJ – lokální databáze"
 _LOKALNI_DATABAZE = "postgresql://lkkllog:lkkllog@127.0.0.1:5432/lkkllog"
 # Soubor VERZE zapisuje CI při nasazení (číslo značky); lokálně neexistuje.
 _SOUBOR_VERZE = Path(__file__).resolve().parents[1] / "VERZE"
@@ -28,8 +27,6 @@ class Nastaveni:
     povolene_adresy: frozenset[str]
     """Hodnoty hlavičky Origin, ze kterých smí přijít požadavek, který něco mění."""
     verze: str
-    pruh: str
-    """Text žlutého pruhu nahoře na každé obrazovce (fáze provozu); prázdný = bez pruhu."""
     frontend: Path
     """Složka se sestaveným frontendem; když neexistuje, server vrací jen rozhraní /api."""
 
@@ -82,7 +79,6 @@ def nacist() -> Nastaveni:
         adresa=adresa,
         povolene_adresy=frozenset(a.strip().rstrip("/") for a in povolene.split(",") if a.strip()),
         verze=verze,
-        pruh=os.environ.get("LKKL_PRUH", _PRUH_VYVOJ if prostredi == "vyvoj" else ""),
         frontend=Path(os.environ.get("LKKL_FRONTEND", _FRONTEND)),
     )
 
