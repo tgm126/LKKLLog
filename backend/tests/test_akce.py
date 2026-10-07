@@ -1,8 +1,8 @@
 """Akce letu (vzlet, přistání, T&G, Zpět) a nový let z průvodce (docs/modul-lety.md)."""
 
-import pytest
+import re
 
-from app.lety import PREKRYV
+import pytest
 
 from .conftest import _id
 
@@ -82,11 +82,15 @@ def test_zpet_jen_hned(pilot, let):
 
 
 def test_prekryv(pilot, let):
+    """Letadlo, které už letí, nevzlétne znovu – hláška s údaji druhého letu (db/025)."""
     pilot_id, k = pilot
     let("OK-2817", {"PIC": pilot_id}, vzlet="now() - interval '10 minutes'")
     druhy = let("OK-2817", {"PIC": pilot_id})
     odpoved = k.post(f"/api/lety/{druhy}/vzlet")
-    assert odpoved.status_code == 409 and odpoved.json()["detail"] == PREKRYV
+    assert odpoved.status_code == 400
+    assert re.fullmatch(
+        r"OK-2817 už letí \(vzlet \d\d:\d\d UTC, PIC Jan Pilot\)\.", odpoved.json()["detail"]
+    )
 
 
 # --- nový let z průvodce --------------------------------------------------------------------
@@ -279,7 +283,10 @@ def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):
     assert planovany.status_code == 200
     odpoved = k.post(f"/api/lety/{planovany.json()['let_id']}/vzlet")
     assert odpoved.status_code == 400
-    assert odpoved.json()["detail"] == "Jan Pilot je v tu dobu na palubě jiného letu (OK-2817)."
+    assert re.fullmatch(
+        r"Jan Pilot už letí na OK-2817 \(vzlet \d\d:\d\d UTC\)\.",
+        odpoved.json()["detail"],
+    )
 
     # Dozor je na zemi – ten se nepočítá.
     zak = osoba("Zak")
@@ -312,7 +319,23 @@ def test_probehly_let_se_prekryva(conn, pilot, let, flotila):
     )  # fmt: skip
     odpoved = k.post("/api/lety", json=data)
     # (hláška jmenuje druhý z letů, které se překrývají – podle toho, který se kontroloval první)
-    assert odpoved.status_code == 400 and "na palubě jiného letu" in odpoved.json()["detail"]
+    assert odpoved.status_code == 400
+    assert re.fullmatch(
+        r"Jan Pilot je v tu dobu na palubě OK-(2817|3819) "
+        r"\(\d\d:\d\d–\d\d:\d\d UTC\)\.",
+        odpoved.json()["detail"],
+    )
+
+    # Stejné letadlo: hláška jmenuje let, se kterým se překrývá.
+    data["letadlo_id"] = conn.execute(
+        "SELECT id FROM lkkl.lov_letadlo WHERE rejstrik = 'OK-2817'"
+    ).fetchone()["id"]
+    odpoved = k.post("/api/lety", json=data)
+    assert odpoved.status_code == 400
+    assert re.fullmatch(
+        r"OK-2817 má v tu dobu jiný let \(\d\d:\d\d–\d\d:\d\d UTC, PIC Jan Pilot\)\.",
+        odpoved.json()["detail"],
+    )
 
 
 def test_doba_nejmene_minuta(conn, pilot, let):

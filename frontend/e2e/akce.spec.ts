@@ -74,7 +74,7 @@ test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
   await page.getByRole("button", { name: "Naviják", exact: true }).click();
   await page.getByRole("button", { name: "Vzlet teď" }).click();
   await expect(page.getByRole("alert")).toHaveText(
-    "Petr Pilot je v tu dobu na palubě jiného letu (OK-2817).",
+    /^Petr Pilot už letí na OK-2817 \(vzlet \d\d:\d\d UTC\)\.$/,
   );
 
   // Naplánovat jde; VZLET z pásku pak ukáže stejnou hlášku v liště dole.
@@ -82,7 +82,7 @@ test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
   const planovany = page.locator(".let.naplanovan", { hasText: "Petr Pilot" });
   await planovany.getByRole("button", { name: "Vzlet" }).click();
   await expect(page.getByRole("status")).toHaveText(
-    /Petr Pilot je v tu dobu na palubě jiného letu \(OK-2817\)\./,
+    /Petr Pilot už letí na OK-2817 \(vzlet \d\d:\d\d UTC\)\./,
   );
   await expect(page.getByRole("status")).toHaveCSS("color", "rgb(255, 255, 255)");
 });
