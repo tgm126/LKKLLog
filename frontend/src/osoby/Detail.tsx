@@ -189,15 +189,20 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
     upravit.mutate(
       u ? { cesta: `/ucty/${o.id}`, data } : { cesta: "/ucty", data: { osoba_id: o.id, ...data } },
     );
-  const pravo = (klic: "admin" | "smi_odblokovat" | "spravuje_osoby", popisek: string, pod?: string) => (
-    <Zaskrtavatko
-      popisek={popisek}
-      pod={pod}
-      zaskrtnuto={!!u?.[klic]}
-      zakazano={!u || !ja.prava.admin || (klic === "admin" && o.id === ja.osoba_id)}
-      zmenit={(ano) => ucet({ [klic]: ano })}
-    />
-  );
+  // Admin má automaticky všechna práva: ostatní práva zaškrtnutá a zašedlá (uložená hodnota
+  // platí, až admin přestane být adminem).
+  const pravo = (klic: "admin" | "smi_odblokovat" | "spravuje_osoby", popisek: string, pod?: string) => {
+    const zAdmina = klic !== "admin" && !!u?.admin;
+    return (
+      <Zaskrtavatko
+        popisek={popisek}
+        pod={zAdmina ? "má jako admin" : pod}
+        zaskrtnuto={zAdmina || !!u?.[klic]}
+        zakazano={zAdmina || !u || !ja.prava.admin || (klic === "admin" && o.id === ja.osoba_id)}
+        zmenit={(ano) => ucet({ [klic]: ano })}
+      />
+    );
+  };
 
   const pozvanka = useMutation({
     mutationFn: () => poslat<{ odkaz: string }>(`/ucty/${o.id}/pozvanka`),

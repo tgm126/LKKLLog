@@ -61,3 +61,14 @@ test("osoby: bez práva záložka chybí (přihlásit se jako)", async ({ page }
   await page.getByRole("button", { name: "Zpět na svůj účet" }).click();
   await expect(page.getByRole("link", { name: "Osoby" })).toBeVisible();
 });
+
+test("osoby: admin má všechna práva zaškrtnutá a zašedlá", async ({ page }) => {
+  await page.getByRole("link", { name: "Osoby" }).click();
+  await page.getByLabel("Hledat jméno, e-mail, telefon, číslo člena").fill("admin");
+  await page.locator(".radek-osoby").first().click();
+  for (const pravo of [/^Spravuje osoby/, /^Smí odblokovat/]) {
+    const z = page.getByRole("checkbox", { name: pravo });
+    await expect(z).toHaveAttribute("aria-checked", "true");
+    await expect(z).toBeDisabled();
+  }
+});

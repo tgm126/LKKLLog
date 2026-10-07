@@ -54,7 +54,8 @@ Chyby z databáze (neplatný e-mail, telefon, číslo člena, duplicitní e-mail
   ve dvou sloupcích (popisek nad hodnotou, „›“ = upravit, úprava pod polem s Uložit / Zrušit);
   **zaškrtávátka** = dlaždice 44 px, popisek (a drobné vysvětlení) vlevo, políčko vpravo,
   zaškrtnuté modře a tučně, dvě vedle sebe; zaškrtnutí se uloží hned. Nedostupná volba
-  (právo jen pro admina) je zašedlá.
+  (právo jen pro admina) je zašedlá. U admina jsou ostatní práva zaškrtnutá a zašedlá
+  („má jako admin“); uložená hodnota platí, až mu admin odebere.
 - **Nová osoba**: formulář a Uložit → otevře detail nové osoby.
 
 ## 6. Testy
