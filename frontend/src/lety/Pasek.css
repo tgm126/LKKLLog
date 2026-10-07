@@ -213,6 +213,7 @@
    bez zalomení */
 .denik-podrobnosti {
   grid-column: 2 / -1;
+  margin-top: var(--mezera-1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
