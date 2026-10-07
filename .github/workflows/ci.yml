@@ -67,7 +67,17 @@ jobs:
         working-directory: backend
       - run: npm ci
       - run: npm run kontrola
-      - run: npx playwright install --with-deps chromium
+      # Prohlížeč pro klikací testy: bez systémových balíčků (--with-deps) – runner je má díky
+      # předinstalovanému Chromu a zrcadlo Ubuntu bývá pomalé (fonty i 6 minut); stažený
+      # prohlížeč z cache podle verze Playwrightu.
+      - id: playwright
+        run: echo "verze=$(npx playwright --version)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.verze }}
+      - run: npx playwright install chromium
+        timeout-minutes: 5
       - run: npm run e2e
       - if: failure()
         uses: actions/upload-artifact@v7
