@@ -31,7 +31,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_uloha_ucel` | vazba | u kterých účelů se úloha nabízí (výcvik = dvojí, sólo, normální, přezkoušení) | 019 |
 | `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie; úloha je povinná (výcvik, sólo, přezkoušení), jen když pro účel a kategorii nějaká existuje | 016, 019 |
 | `lov_ucel_funkce` | vazba | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009, 017 |
-| `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místa (letiště nebo popis; nezadané = domovské), časy UTC, doba (počítá DB, nejméně 1 minuta), počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
+| `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místo vzletu i přistání vždy (letiště nebo popis; místo přistání do přistání = plán), časy UTC, doba (počítá DB, nejméně 1 minuta), počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
 | `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
@@ -39,7 +39,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_osoby_bez_prekryvu()` | funkce (v `let_kontrola`) | osoba na palubě nemůže být ve vzduchu ve dvou letech zároveň (plánování volné, dozor na zemi se nepočítá); hláška s rejstříkem a časem druhého letu | 018, 025 |
 | `let_letadlo_volne` | trigger (před zápisem letu) | letadlo nemůže mít dva překrývající se lety – hláška „OK-… už letí (vzlet 10:42 UTC, PIC …)“; omezení `letadlo_bez_prekryvu` zůstává jako pojistka pro souběh | 025 |
 | `cas_hlasky()`, `let_popis_hlasky()` | funkce | čas v UTC a popis druhého letu (vzlet / doba, PIC) do chybových hlášek | 025 |
-| `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
+| `let_doplnit_misto` | trigger | nezadané místo vzletu i přistání = domovské letiště (aplikace posílá moje letiště) | 009, 027 |
 | `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat ani vyprázdnit | 009, 017 |
 | `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní (příznak vlekař převeden do oprávnění) | 004, 015, 017, 021 |
 | `lov_role` | číselník | role v letu, do které se nabízejí osoby podle oprávnění: INSTRUKTOR (výcvik · PIC), DOZOR (sólo · dozor), EXAMINATOR (přezkoušení · PIC), VLEKAR (vlečný let · PIC); kódy používá program | 024 |

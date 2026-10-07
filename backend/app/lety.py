@@ -286,19 +286,18 @@ def vzlet(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = D
 
 
 @router.post("/lety/{let_id}/pristani", response_model=Provedeno)
-def pristani(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
-    """Přistání teď; místo = moje letiště, přistání celkem = T&G + 1."""
+def pristani(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+    """Přistání teď; místo přistání zůstane, jak je u letu (plán), přistání celkem = T&G + 1."""
     let = _let(conn, let_id)
     with zmena(conn):
         cas = conn.execute(
             """UPDATE lkkl.let l
                SET cas_pristani = now(),
-                   misto_pristani_id = %s,
                    pocet_pristani = (SELECT count(*) FROM lkkl.let_tg t WHERE t.let_id = l.id) + 1
                WHERE id = %s AND cas_vzletu IS NOT NULL AND cas_pristani IS NULL
                  AND zruseni_duvod_id IS NULL
                RETURNING cas_pristani""",
-            (moje_letiste_id(conn, p.relace_id), let_id),
+            (let_id,),
         ).fetchone()
     if cas is None:
         if let["stav"] == "NAPLANOVAN":
@@ -354,8 +353,7 @@ def zpet(
         elif data.akce == "pristani":
             radky = conn.execute(
                 """UPDATE lkkl.let
-                   SET cas_pristani = NULL, misto_pristani_id = NULL,
-                       misto_pristani_popis = NULL, pocet_pristani = NULL
+                   SET cas_pristani = NULL, pocet_pristani = NULL
                    WHERE id = %s AND cas_pristani > now() - %s""",
                 (let_id, ZPET_DO),
             ).rowcount
@@ -489,7 +487,8 @@ class NovyLet(BaseModel):
     """Místo vzletu (letiště, nebo popis); nezadané = moje letiště."""
     misto_pristani_id: int | None = None
     misto_pristani_popis: str | None = None
-    """Proběhlý let: místo přistání; nezadané = moje letiště."""
+    """Místo přistání – do přistání plán (cíl); nezadané = moje letiště. U aerovleku pro
+    kluzák i vlečnou (spolu se vrací, nebo spolu přeletí)."""
 
 
 def _zalozit(conn: Connection, udaje: dict, posadka: list[ClenIn]) -> int:
@@ -504,10 +503,7 @@ def _zalozit(conn: Connection, udaje: dict, posadka: list[ClenIn]) -> int:
                         THEN %(pocet_pristani)s END,
                    %(pob)s, %(platce_id)s, %(plati_aeroklub)s, %(uloha_id)s, %(zalozil_id)s,
                    %(misto_vzletu_id)s::bigint, %(misto_vzletu_popis)s::text,
-                   CASE WHEN %(cas_pristani)s::timestamptz IS NOT NULL
-                        THEN %(misto_pristani_id)s::bigint END,
-                   CASE WHEN %(cas_pristani)s::timestamptz IS NOT NULL
-                        THEN %(misto_pristani_popis)s::text END)
+                   %(misto_pristani_id)s::bigint, %(misto_pristani_popis)s::text)
            RETURNING id""",
         udaje,
     ).fetchone()["id"]
@@ -557,7 +553,7 @@ def novy_let(
     if platce_id is None and not data.plati_aeroklub:
         platce_id = _vychozi_platce(conn, data.posadka, pic_id)
 
-    # nezadané místo = moje letiště (výslovně, ne domovské doplněné databází)
+    # nezadané místo vzletu i přistání = moje letiště (výslovně, ne domovské z databáze)
     moje = moje_letiste_id(conn, p.relace_id)
     vzlet_popis = (data.misto_vzletu_popis or "").strip() or None
     pristani_popis = (data.misto_pristani_popis or "").strip() or None
@@ -570,14 +566,9 @@ def novy_let(
         "misto_vzletu_id": data.misto_vzletu_id or (None if vzlet_popis else moje),
         "misto_vzletu_popis": vzlet_popis,
     }
-    pristani_kluzaku = {
+    pristani = {
         "misto_pristani_id": data.misto_pristani_id or (None if pristani_popis else moje),
         "misto_pristani_popis": pristani_popis,
-    }
-    # vlečná se vrací na místo vzletu
-    pristani_vlecne = {
-        "misto_pristani_id": data.misto_vzletu_id,
-        "misto_pristani_popis": spolecne["misto_vzletu_popis"],
     }
     with zmena(conn):
         vlecny_let_id = None
@@ -597,7 +588,7 @@ def novy_let(
                     "pocet_pristani": 1,
                     "pob": 1,
                     "uloha_id": None,
-                    **pristani_vlecne,
+                    **pristani,
                 },
                 [ClenIn(osoba_id=data.vlekar_id, funkce_id=pic_id)],
             )
@@ -613,7 +604,7 @@ def novy_let(
                 "pocet_pristani": data.pocet_pristani,
                 "pob": data.pob,
                 "uloha_id": data.uloha_id,
-                **pristani_kluzaku,
+                **pristani,
             },
             data.posadka,
         )
@@ -734,16 +725,13 @@ def obnovit(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection =
 
 def _kopie(conn: Connection, puvodni_id: int, vlecny_let_id: int | None, zalozil: int) -> int:
     """Naplánovaná kopie letu: letadlo, účel, posádka, POB, způsob vzletu, úloha, plátce;
-    místo vzletu = místo přistání původního letu."""
+    místo vzletu i přistání = místo přistání původního letu (letadlo tam stojí)."""
     let_id = conn.execute(
         """INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
-               misto_vzletu_id, misto_vzletu_popis, pob, platce_id, plati_aeroklub, uloha_id,
-               zalozil_id)
+               misto_vzletu_id, misto_vzletu_popis, misto_pristani_id, misto_pristani_popis,
+               pob, platce_id, plati_aeroklub, uloha_id, zalozil_id)
            SELECT letadlo_id, ucel_id, zpusob_vzletu_id, %(vlecny)s,
-                  coalesce(misto_pristani_id, CASE WHEN misto_pristani_popis IS NULL
-                                                   THEN misto_vzletu_id END),
-                  coalesce(misto_pristani_popis, CASE WHEN misto_pristani_id IS NULL
-                                                      THEN misto_vzletu_popis END),
+                  misto_pristani_id, misto_pristani_popis, misto_pristani_id, misto_pristani_popis,
                   pob, platce_id, plati_aeroklub, uloha_id, %(zalozil)s
            FROM lkkl.let WHERE id = %(id)s
            RETURNING id""",
@@ -811,13 +799,6 @@ def upravit(
     """Úprava údajů letu; změnil-li let mezitím někdo jiný (jiná verze), odmítne se."""
     let = _let(conn, let_id)
     zmeny = data.model_dump(exclude_unset=True, exclude={"verze", "posadka"})
-    # doplněné přistání bez místa = moje letiště (ne domovské doplněné databází)
-    if (
-        zmeny.get("cas_pristani") is not None
-        and let["cas_pristani"] is None
-        and not {"misto_pristani_id", "misto_pristani_popis"} & zmeny.keys()
-    ):
-        zmeny["misto_pristani_id"] = moje_letiste_id(conn, p.relace_id)
     if isinstance(zmeny.get("poznamka"), str):
         zmeny["poznamka"] = zmeny["poznamka"].strip() or None
     for pole, druhe in DRUHA_POLOVINA.items():

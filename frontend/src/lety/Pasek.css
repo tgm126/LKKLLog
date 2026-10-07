@@ -120,6 +120,13 @@
   display: grid;
 }
 
+/* Trasa (přelet) vpravo v řádku štítků; dlouhý popis místa se zkrátí na volné místo */
+.stitky-pasku > .trasa-pasku {
+  grid-template-columns: minmax(0, max-content);
+  justify-content: end;
+  min-width: 0;
+}
+
 .vysledek-letu {
   justify-self: end;
   font-size: var(--pismo-m);

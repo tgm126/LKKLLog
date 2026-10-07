@@ -46,8 +46,10 @@ type Novy = {
   vlekar?: number;
   uloha?: number;
   platce?: number | "aeroklub";
-  /** prázdné = domovské letiště */
+  /** prázdné = moje letiště */
   mistoVzletu?: Misto;
+  /** Místo přistání (plán, u aerovleku pro kluzák i vlečnou); prázdné = moje letiště. */
+  mistoPristani?: Misto;
 };
 
 type Krok = 1 | 2 | 3 | "casy";
@@ -342,7 +344,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
   const props = { nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit };
 
   if (krok === "casy") {
-    return <ProbehlyLet {...props} spolecne={spolecne} pasek={pasek} />;
+    return <ProbehlyLet {...props} zmenit={zmenit} spolecne={spolecne} pasek={pasek} />;
   }
 
   const upravit = (klic: string) => ({
@@ -449,6 +451,18 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               }
             />
           </Udaj>
+          <Udaj
+            popisek="Místo přistání"
+            hodnota={nazevMista(nabidky, novy.mistoPristani, mojeId)}
+            {...upravit("pristani")}
+          >
+            <VyberMista
+              nabidky={nabidky}
+              ulozit={(id, popis) =>
+                zmenit({ mistoPristani: id === mojeId ? undefined : { id, popis } })
+              }
+            />
+          </Udaj>
           <Udaj popisek="Platí" hodnota={platceNazev} {...upravit("platce")}>
             <VolbaOsoby
               osoby={nabidky.osoby}
@@ -522,8 +536,6 @@ type Casy = {
   cas_pristani: string;
   pocet_pristani: number;
   cas_pristani_vlecne?: string;
-  misto_pristani_id: number | null;
-  misto_pristani_popis: string | null;
 };
 
 function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: Spolecne) {
@@ -549,6 +561,8 @@ function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: S
         akce: a.akce,
         misto_vzletu_id: novy.mistoVzletu?.id ?? null,
         misto_vzletu_popis: novy.mistoVzletu?.popis ?? null,
+        misto_pristani_id: novy.mistoPristani?.id ?? null,
+        misto_pristani_popis: novy.mistoPristani?.popis ?? null,
         ...a.casy,
       });
     },
@@ -617,9 +631,10 @@ function ProbehlyLet(
   props: Spolecne & {
     spolecne: Omit<Parameters<typeof Obrazovka>[0], "children" | "akce">;
     pasek: (cas?: ReactNode) => ReactNode;
+    zmenit: (zmena: Partial<Novy>) => void;
   },
 ) {
-  const { letadlo, aerovlek, nabidky } = props;
+  const { letadlo, aerovlek, nabidky, novy } = props;
   const ulozit = useUlozit(props);
   const mojeId = useMojeLetisteId();
   const [den, setDen] = useState<"dnes" | "vcera">("dnes");
@@ -630,7 +645,6 @@ function ProbehlyLet(
   });
   const [aktivni, setAktivni] = useState<PoleCasu | null>("vzlet");
   const [pocet, setPocet] = useState(1);
-  const [mistoPristani, setMistoPristani] = useState<Misto | undefined>();
   const [upravuji, setUpravuji] = useState(false);
 
   // Minuty od půlnoci UTC zvoleného dne. Dnes nejde vybrat budoucnost.
@@ -675,8 +689,6 @@ function ProbehlyLet(
                   cas_pristani: iso(pristani!),
                   pocet_pristani: pocet,
                   ...(aerovlek ? { cas_pristani_vlecne: iso(vlecna!) } : {}),
-                  misto_pristani_id: mistoPristani?.id ?? null,
-                  misto_pristani_popis: mistoPristani?.popis ?? null,
                 },
               })
             }
@@ -729,14 +741,14 @@ function ProbehlyLet(
         <Udaje>
           <Udaj
             popisek="Místo přistání"
-            hodnota={nazevMista(nabidky, mistoPristani, mojeId)}
+            hodnota={nazevMista(nabidky, novy.mistoPristani, mojeId)}
             upravit={() => setUpravuji(!upravuji)}
             otevreno={upravuji}
           >
             <VyberMista
               nabidky={nabidky}
               ulozit={(id, popis) => {
-                setMistoPristani(id === mojeId ? undefined : { id, popis });
+                props.zmenit({ mistoPristani: id === mojeId ? undefined : { id, popis } });
                 setUpravuji(false);
               }}
             />

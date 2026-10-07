@@ -43,7 +43,18 @@ export type LetPasku = Pick<
   stav: Stav | "ROZPRACOVANY";
   pob: number | null;
   posadka: { jmeno: string; prijmeni: string; funkce: string; funkce_kod: string }[];
+  /** Místa jen tehdy, když nejsou moje letiště (server je u pásků vynechá). */
+  misto_vzletu?: string | null;
+  misto_pristani?: string | null;
 };
+
+/** Trasa na pásek (maketa mista-letu-mobil.html, varianta B): jen jedna strana – kam letí
+ *  („→ LKMB“), jinak odkud („LKMB →“); jen naplánovaný let a let ve vzduchu. */
+function trasa(l: LetPasku): string | null {
+  if (l.stav !== "VE_VZDUCHU" && l.stav !== "NAPLANOVAN") return null;
+  if (l.misto_pristani) return `→ ${l.misto_pristani}`;
+  return l.misto_vzletu ? `${l.misto_vzletu} →` : null;
+}
 
 /** Účel do pole pásku; běžný (normální) se nevypisuje, vlečná má „vlek“. */
 function ucelKratce(l: LetPasku) {
@@ -109,6 +120,7 @@ export function PolovinaPasku({
   children?: ReactNode;
 }) {
   const ukoncen = l.stav === "UKONCEN";
+  const kam = trasa(l);
   return (
     <div className={onClick ? "let-par otevira" : "let-par"} onClick={onClick}>
       <div className="let-hlava">
@@ -132,6 +144,13 @@ export function PolovinaPasku({
         {pozice(zpusobKratce(l))}
         {pozice(l.pob !== null && `POB ${l.pob}`)}
         {pozice(ulohaKratce(l.uloha))}
+        {kam && (
+          <span className="trasa-pasku">
+            <Stitek barva="pasek" zkratit>
+              {kam}
+            </Stitek>
+          </span>
+        )}
         {ukoncen && (
           <b className="vysledek-letu cisla">
             {doba(l.doba_uctovana_min ?? 0)}

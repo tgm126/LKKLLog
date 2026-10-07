@@ -45,7 +45,7 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 | `POST /api/lety/{id}/zpet` | vrátí poslední akci (vzlet, přistání, T&G) – viz 3.4 |
 | `POST /api/lety/{id}/zrusit` | zrušení s důvodem (`lov_duvod_zruseni`) |
 | `POST /api/lety/{id}/obnovit` | zrušení se vrátí |
-| `POST /api/lety/{id}/dalsi` | další let odsud: stejné letadlo, účel, posádka; místo vzletu = místo přistání |
+| `POST /api/lety/{id}/dalsi` | další let odsud: stejné letadlo, účel, posádka; místo vzletu i přistání = místo přistání původního letu |
 
 ## 3. Chování
 
@@ -94,9 +94,10 @@ ve skupinách podle kategorie (barva podle stavu jako v přehledu). Volby v bloc
 s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
 („Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
 a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má
-v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. **Místo vzletu**
-(u proběhlého letu **místo přistání**) a **plátce** jsou předvyplněné řádky v bloku Další
-údaje, ťuknutím se změní (místo: hledání letiště nebo popis místa). Proběhlý let: časy vzletu,
+v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. **Místo vzletu**,
+**místo přistání** a **plátce** jsou předvyplněné řádky v bloku Další údaje (místa = moje
+letiště), ťuknutím se změní (místo: hledání letiště nebo popis místa); u aerovleku platí
+místo přistání pro kluzák i vlečnou. Proběhlý let: časy vzletu,
 přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin a minut,
 −1 / +1 a doba letu.
 **Nabídka osob podle oprávnění** (db/021, 022, 024; model `docs/navrh-opravneni.md`):
@@ -141,7 +142,8 @@ z `v_historie_letu` je v Evidenci sbalená („3 úpravy“), ťuknutím se rozb
 (u ukončeného letu „Další let odsud“ a „Zrušit let“ vedle sebe).
 
 Upravit jde: posádka (jiná osoba ve funkci), POB (je-li zadaný), úloha, místo a čas vzletu,
-po přistání čas a místo přistání (letiště, nebo popis místa v terénu), přistání celkem,
+**místo přistání vždy** (do přistání plán, pak skutečnost; letiště, nebo popis místa
+v terénu), po přistání čas přistání a přistání celkem,
 plátce a poznámka. **Neupravuje se** letadlo, účel ani způsob vzletu –
 takový let se zruší s důvodem „Založeno omylem“ a založí znovu (mění se s nimi pravidla
 posádky, úlohy i vleku). Zrušení a obnovení vleku platí pro oba lety dvojice. Zrušený let
@@ -202,8 +204,17 @@ frontend/
    aktualizuje). Zkuste to za chvíli.“ Přehled letů při neúspěšném obnovení ukazuje „Bez
    spojení se serverem – údaje z … UTC“.
 
-## 7. K projednání
-- **Cíl letu u naplánovaného letu a letu ve vzduchu** (7. 10. 2026): dnes jde místo přistání
-  upravit až po přistání – omezení `pristani_ma_misto_a_pocet` (`db/009`) nedovolí místo
-  přistání bez času přistání. Návrh: `misto_pristani` do přistání = cíl, přistání z pásku cíl
-  zachová. Otevřené: má to databáze hlídat (uvolnit omezení), nebo cíl vést jinak?
+8. **Místa vzletu a přistání** (7. 10. 2026, `db/027`, maketa
+   `docs/navrhy/mista-letu-mobil.html`): obě místa jsou nepovinná a má je každý let **od
+   založení** – nezadané = výchozí letiště (moje letiště z mého provozu, jinak domovské;
+   databáze doplní domovské u zápisu přímo v databázi). Místo přistání je do přistání
+   **plán**, po přistání skutečnost; obě místa jdou upravit u naplánovaného, letícího
+   i ukončeného letu. Přistání z pásku místo nemění (přistání do terénu se opraví v detailu,
+   plán zůstane v historii letu). Zpět u přistání místo nechá. Aerovlek: místo přistání
+   v průvodci platí pro kluzák i vlečnou (spolu se vrací, nebo spolu přeletí), v detailu má
+   každý let své. Další let odsud: obě místa = místo přistání původního letu. Stávající lety
+   bez místa přistání dostaly domovské (převod bez zápisu do historie).
+9. **Trasa na pásku** (varianta B): u naplánovaného letu a letu ve vzduchu štítek vpravo
+   v řádku štítků, jen jedna strana – kam letí („→ LKMB“), jinak odkud („LKMB →“); jen když
+   místo není moje letiště. Dlouhý popis místa se zkrátí („→ pole …“). Ukončený let trasu
+   nemá (vpravo doba letu).

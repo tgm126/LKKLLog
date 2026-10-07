@@ -6,6 +6,19 @@ import "./Stitek.css";
  *  vystoupí z barevného panelu); „oranzovy“ = upozornění (jiné letiště než domovské). */
 export type BarvaStitku = "modry" | "zeleny" | "cerveny" | "oranzovy" | "pasek";
 
-export function Stitek({ barva, children }: { barva?: BarvaStitku; children: ReactNode }) {
-  return <span className={["stitek", "cisla", barva].filter(Boolean).join(" ")}>{children}</span>;
+export function Stitek({
+  barva,
+  zkratit = false,
+  children,
+}: {
+  barva?: BarvaStitku;
+  /** Text se při nedostatku místa zkrátí „…“ (štítek nepřesáhne své místo). */
+  zkratit?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <span className={["stitek", "cisla", barva].filter(Boolean).join(" ")}>
+      {zkratit ? <span className="stitek-zkratit">{children}</span> : children}
+    </span>
+  );
 }

@@ -15,6 +15,17 @@
   white-space: nowrap;
 }
 
+/* Zkrácený text (dlouhý popis místa): štítek nepřesáhne své místo, konec textu „…“ */
+.stitek:has(> .stitek-zkratit) {
+  max-width: 100%;
+}
+
+.stitek-zkratit {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .stitek.modry {
   --stitek-vypln: var(--barva-modra-vypln);
   --stitek-barva: var(--barva-modra);

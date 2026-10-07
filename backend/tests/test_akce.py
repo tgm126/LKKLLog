@@ -55,8 +55,24 @@ def test_tg_pristani_a_zpet(conn, pilot, let):
     znovu = k.post(f"/api/lety/{let_id}/pristani")
     assert znovu.status_code == 409 and "Už přistál" in znovu.json()["detail"]
     assert k.post(f"/api/lety/{let_id}/zpet", json={"akce": "pristani"}).status_code == 200
-    stav = _stav(conn, let_id)
-    assert stav["stav"] == "VE_VZDUCHU" and stav["misto_pristani"] is None
+    stav = _stav(conn, let_id)  # místo přistání zůstane jako plán
+    assert stav["stav"] == "VE_VZDUCHU" and stav["misto_pristani"] == "LKKL"
+
+
+def test_misto_pristani_predem(conn, pilot, let):
+    """Místo přistání je od založení (plán); přistání ho zachová, jde upravit i ve vzduchu
+    (db/027)."""
+    pilot_id, k = pilot
+    let_id = let("OK-CRA", {"PIC": pilot_id}, zpusob="VLASTNI", misto_pristani="LKLT")
+    assert _stav(conn, let_id)["misto_pristani"] == "LKLT"
+    assert k.post(f"/api/lety/{let_id}/vzlet").status_code == 200
+    verze = k.get(f"/api/lety/{let_id}").json()["verze"]
+    upraveny = k.post(
+        f"/api/lety/{let_id}", json={"verze": verze, "misto_pristani_popis": "pole u Slaného"}
+    )
+    assert upraveny.status_code == 200 and upraveny.json()["misto_pristani"] == "pole u Slaného"
+    assert k.post(f"/api/lety/{let_id}/pristani").status_code == 200
+    assert _stav(conn, let_id)["misto_pristani"] == "pole u Slaného"
 
 
 def test_tg_jen_motorove(pilot, let):
@@ -193,6 +209,16 @@ def test_novy_probehly_aerovlek(conn, pilot, osoba, flotila):
     assert kluzak["cas_vzletu"] == vlecna["cas_vzletu"] == casy["vzlet"]
     assert vlecna["cas_pristani"] == casy["vlecna"] and vlecna["pob"] == 1
     assert kluzak["plati_aeroklub"] and vlecna["plati_aeroklub"]
+    # nezadané místo přistání = moje letiště pro oba lety vleku
+    assert kluzak["misto_pristani"] == vlecna["misto_pristani"] == "LKKL"
+
+    # Přelet vleku: zadané místo přistání platí pro kluzák i vlečnou.
+    letnany = conn.execute("SELECT id FROM lkkl.lov_letiste WHERE kod = 'LKLT'").fetchone()["id"]
+    prelet = k.post("/api/lety", json={**data, "akce": "naplanovat", "misto_pristani_id": letnany})
+    assert prelet.status_code == 200, prelet.text
+    kluzak = _stav(conn, prelet.json()["let_id"])
+    vlecna = _stav(conn, kluzak["vlecny_let_id"])
+    assert kluzak["misto_pristani"] == vlecna["misto_pristani"] == "LKLT"
 
     # Vlekař nemůže pilotovat i kluzák.
     assert k.post("/api/lety", json={**data, "vlekar_id": pilot_id}).status_code == 400

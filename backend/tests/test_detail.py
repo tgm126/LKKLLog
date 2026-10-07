@@ -45,7 +45,8 @@ def test_dalsi_let_odsud(conn, osoba, prihlasit, let):
     odpoved = k.post(f"/api/lety/{kluzak}/dalsi")
     assert odpoved.status_code == 200, odpoved.text
     novy = k.get(f"/api/lety/{odpoved.json()['let_id']}").json()
-    assert novy["stav"] == "NAPLANOVAN" and novy["misto_vzletu"] == "LKLT"
+    assert novy["stav"] == "NAPLANOVAN"
+    assert novy["misto_vzletu"] == novy["misto_pristani"] == "LKLT"  # letadlo stojí v LKLT
     assert [c["osoba_id"] for c in novy["posadka"]] == [pilot]
     assert novy["vlek"]["rejstrik"] == "OK-CRA" and novy["vlek"]["pilot"] == "Jan Vlekar"
 

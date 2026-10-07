@@ -67,6 +67,7 @@ function DetailLetuObrazovka({
 }) {
   const ja = useJa().data!;
   const provoz = useMujProvoz().data;
+  const mojeKod = provoz?.letiste?.kod;
   const vProvozu = { osoby: provoz?.osoby ?? [], jaId: ja.osoba_id };
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -148,7 +149,14 @@ function DetailLetuObrazovka({
       akce={<AkceDetailu let_={l} nabidky={nabidky} />}
     >
       <div className={`let ${tridaPasku([l])}`}>
-        <PolovinaPasku let={l} />
+        {/* trasa na pásku jen tam, kde místo není moje letiště (jako v přehledu) */}
+        <PolovinaPasku
+          let={{
+            ...l,
+            misto_vzletu: l.misto_vzletu === mojeKod ? null : l.misto_vzletu,
+            misto_pristani: l.misto_pristani === mojeKod ? null : l.misto_pristani,
+          }}
+        />
       </div>
 
       <Blok nadpis="Posádka a let">
@@ -242,14 +250,13 @@ function DetailLetuObrazovka({
               ulozit={(id, popis) => ulozit({ misto_vzletu_id: id, misto_vzletu_popis: popis })}
             />
           </Udaj>
-          {pristal && (
-            <Udaj popisek="Místo přistání" hodnota={l.misto_pristani} {...u("misto_pristani")}>
-              <VyberMista
-                nabidky={nabidky}
-                ulozit={(id, popis) => ulozit({ misto_pristani_id: id, misto_pristani_popis: popis })}
-              />
-            </Udaj>
-          )}
+          {/* do přistání plán (cíl), po přistání skutečnost; jde upravit vždy (db/027) */}
+          <Udaj popisek="Místo přistání" hodnota={l.misto_pristani} {...u("misto_pristani")}>
+            <VyberMista
+              nabidky={nabidky}
+              ulozit={(id, popis) => ulozit({ misto_pristani_id: id, misto_pristani_popis: popis })}
+            />
+          </Udaj>
           {l.tg.length > 0 && (
             <Udaj
               popisek="T&G"

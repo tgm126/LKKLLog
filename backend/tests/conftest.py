@@ -177,8 +177,7 @@ def let(conn, osoba, flotila):
                         (SELECT id FROM lkkl.lov_ucel WHERE kod = %(ucel)s),
                         (SELECT id FROM lkkl.lov_zpusob_vzletu WHERE kod = %(zpusob)s),
                         %(vlecny)s, {vzlet or "NULL"}, {pristani or "NULL"},
-                        CASE WHEN {pristani or "NULL"} IS NOT NULL
-                             THEN (SELECT id FROM lkkl.lov_letiste WHERE kod = %(misto)s) END,
+                        (SELECT id FROM lkkl.lov_letiste WHERE kod = %(misto)s),
                         CASE WHEN {pristani or "NULL"} IS NOT NULL THEN 1 END,
                         %(pob)s, true, %(zalozil)s)
                 RETURNING id""",  # noqa: S608 – jen pevné výrazy z testu
