@@ -27,8 +27,14 @@ export function Obrazovka({
     <section className="obrazovka">
       <div className="horni-lista">
         <div className="horni-lista-radek">
-          <Tlacitko varianta="bez-ramu" aria-label={zpetPopis} onClick={zpet}>
-            {zpetPopis === "Zavřít" ? "✕" : "←"}
+          <Tlacitko varianta="bez-ramu" className="zpet" aria-label={zpetPopis} onClick={zpet}>
+            <svg className="ikona" viewBox="0 0 24 24" aria-hidden>
+              {zpetPopis === "Zavřít" ? (
+                <path d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path d="M20 12H5M11 5l-7 7 7 7" />
+              )}
+            </svg>
           </Tlacitko>
           <h1 className="velke tucne">{nadpis}</h1>
           {vpravo && <span className="horni-lista-vpravo">{vpravo}</span>}

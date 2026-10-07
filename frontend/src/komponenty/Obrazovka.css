@@ -18,6 +18,24 @@
   padding: var(--mezera-2) var(--okraj-stranky);
 }
 
+/* Zpět / Zavřít: výrazná ikona (tlustá čára) na dotykové ploše vlevo nahoře */
+.horni-lista-radek > .tl.zpet {
+  --tl-min-sirka: var(--dotyk);
+  --tl-odsazeni: 0;
+
+  margin-left: calc(-1 * var(--mezera-2));
+}
+
+.ikona {
+  width: var(--velikost-ikony);
+  height: var(--velikost-ikony);
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: var(--tloustka-ikony);
+}
+
 .horni-lista-vpravo {
   margin-left: auto;
   white-space: nowrap;

@@ -45,6 +45,8 @@
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
   --velikost-policka: 22px;   /* políčko zaškrtávátka (dlaždice je 44 px) */
+  --velikost-ikony: 24px;     /* ikona v tlačítku (Zpět, Zavřít) */
+  --tloustka-ikony: 2.5;      /* tloušťka čáry ikony (jednotky obrázku 24 × 24) */
   --zaobleni-policka: 6px;
 
   /* Pásek letu: čas vpravo (vejdou se i stopky přes 10 hodin, 10:59:59) a pozice štítků
