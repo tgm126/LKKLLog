@@ -6,7 +6,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--mezera-1);
-  padding: 0 var(--mezera-3) var(--mezera-2);
+  padding: 0 var(--okraj-stranky) var(--mezera-2);
 }
 
 .postup span {

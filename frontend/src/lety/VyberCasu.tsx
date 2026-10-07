@@ -59,7 +59,6 @@ export function VolbaCasu<K extends string>({
         {pole.map((p) => (
           <Tlacitko
             key={p.klic}
-            varianta="obrys"
             className="cisla"
             aria-pressed={aktivni === p.klic}
             onClick={() => {
@@ -75,7 +74,7 @@ export function VolbaCasu<K extends string>({
         (hodina === null ? (
           <div className="mrizka-casu cisla">
             {Array.from({ length: 24 }, (_, h) => (
-              <Tlacitko key={h} varianta="obrys" disabled={h * 60 > limit} onClick={() => setHodina(h)}>
+              <Tlacitko key={h} disabled={h * 60 > limit} onClick={() => setHodina(h)}>
                 {dve(h)}
               </Tlacitko>
             ))}
@@ -85,7 +84,6 @@ export function VolbaCasu<K extends string>({
             {Array.from({ length: 12 }, (_, k) => hodina * 60 + k * 5).map((m) => (
               <Tlacitko
                 key={m}
-                varianta="obrys"
                 aria-pressed={m === min}
                 disabled={m > limit}
                 onClick={() => {
@@ -101,7 +99,6 @@ export function VolbaCasu<K extends string>({
       {(aktivni !== null || doplnek) && (
         <div className="doladeni">
           <Tlacitko
-            varianta="obrys"
             disabled={aktivni === null || min === null || min === 0}
             aria-label="o minutu dřív"
             onClick={() => nastavit(aktivni!, min! - 1, false)}
@@ -110,7 +107,6 @@ export function VolbaCasu<K extends string>({
           </Tlacitko>
           <span>{doplnek}</span>
           <Tlacitko
-            varianta="obrys"
             disabled={aktivni === null || min === null || min >= limit}
             aria-label="o minutu později"
             onClick={() => nastavit(aktivni!, min! + 1, false)}

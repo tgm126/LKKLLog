@@ -25,5 +25,5 @@
 }
 
 .formular .tl.hlavni {
-  min-height: var(--dotyk-hlavni);
+  --tl-vyska: var(--dotyk-hlavni);
 }

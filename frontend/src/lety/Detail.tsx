@@ -287,7 +287,6 @@ function DetailLetuObrazovka({
               menit
               pred={
                 <Tlacitko
-                  varianta="obrys"
                   aria-pressed={l.plati_aeroklub}
                   onClick={() => ulozit({ plati_aeroklub: true })}
                 >

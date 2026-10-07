@@ -1,0 +1,65 @@
+/* Volby ťuknutím sdílené moduly (lety, osoby): segmenty, čipy, počet. Vybraná volba plně
+   modře. Mění jen proměnné tlačítka (Tlacitko.css). Volby jen pro lety (seznam úloh, výběr
+   času) jsou v lety/Volby.css. */
+
+.segmenty .tl[aria-pressed="true"],
+.cipy .tl[aria-pressed="true"],
+.volby-pocet .tl[aria-pressed="true"] {
+  --tl-vypln: var(--barva-akce-modra);
+  --tl-barva: var(--barva-na-akci);
+  --tl-okraj: var(--barva-akce-modra);
+}
+
+/* Segmenty (účel, způsob vzletu, den, filtr osob): jeden řádek stejně širokých dílů;
+   přepážky = mezera 1 px nad barvou přepážky */
+.segmenty {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--ramecek-sirka);
+  overflow: hidden;
+  border: var(--ramecek-sirka) solid var(--barva-prepazka);
+  border-radius: var(--zaobleni);
+  background: var(--barva-prepazka);
+}
+
+.segmenty .tl {
+  --tl-zaobleni: 0;
+  --tl-odsazeni: 0 var(--mezera-1);
+
+  white-space: nowrap;
+}
+
+/* Čipy (osoby, plátce, vlečná, osnova, letiště): vybraný plně modře; Hledat… čárkovaně */
+.cipy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mezera-2);
+}
+
+.cipy .tl {
+  --tl-okraj: var(--barva-prepazka);
+  --tl-odsazeni: 0 var(--mezera-3);
+  --tl-tloustka: var(--tloustka);
+}
+
+.cipy .tl[aria-pressed="true"] {
+  --tl-tloustka: var(--tloustka-tucna);
+}
+
+.cipy .tl.hledat {
+  --tl-barva: var(--barva-modra);
+  --tl-styl-okraje: dashed;
+}
+
+/* Volba počtu (POB, přistání celkem): řada tlačítek */
+.volby-pocet {
+  display: flex;
+  gap: var(--mezera-2);
+}
+
+.volby-pocet .tl {
+  --tl-okraj: var(--barva-prepazka);
+  --tl-min-sirka: var(--dotyk);
+  --tl-odsazeni: 0;
+}

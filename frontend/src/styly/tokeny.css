@@ -30,6 +30,7 @@
   --mezera-3: 12px;
   --mezera-4: 16px;
   --mezera-5: 32px;           /* odsazení názvu aplikace na přihlášení od horního okraje */
+  --okraj-stranky: var(--mezera-3); /* vodorovný okraj stránky: hlavička, menu, obsah, lišty */
 
   /* Tvary */
   --zaobleni: 12px;

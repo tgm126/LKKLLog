@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   gap: var(--mezera-2);
-  padding: var(--mezera-2) var(--mezera-3);
+  padding: var(--mezera-2) var(--okraj-stranky);
 }
 
 .horni-lista-vpravo {
@@ -25,7 +25,7 @@
 
 .obrazovka-obsah {
   flex: 1;
-  padding: var(--mezera-3) var(--mezera-3) var(--mezera-3);
+  padding: var(--mezera-3) var(--okraj-stranky);
 }
 
 .obrazovka-akce {
@@ -33,13 +33,13 @@
   bottom: 0;
   display: grid;
   gap: var(--mezera-2);
-  padding: var(--mezera-2) var(--mezera-3) var(--mezera-4);
+  padding: var(--mezera-2) var(--okraj-stranky) var(--mezera-4);
   border-top: var(--ramecek);
   background: var(--barva-karta);
 }
 
 .obrazovka-akce > .tl.hlavni {
-  min-height: var(--dotyk-hlavni);
+  --tl-vyska: var(--dotyk-hlavni);
 }
 
 /* Dvě akce vedle sebe (Naplánovat / Proběhlý let, Další let odsud / Zrušit let) */

@@ -25,11 +25,6 @@
   --stitek-barva: var(--barva-zelena);
 }
 
-.stitek.oranzovy {
-  --stitek-vypln: var(--barva-oranzova-vypln);
-  --stitek-barva: var(--barva-oranzova);
-}
-
 .stitek.cerveny {
   --stitek-vypln: var(--barva-cervena-vypln);
   --stitek-barva: var(--barva-cervena);

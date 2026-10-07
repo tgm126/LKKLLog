@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import type { Nabidky } from "./api";
-import "./Volby.css";
+import "../komponenty/Volby.css";
 
 /** Místo: letiště, nebo popis místa v terénu; prázdné = domovské letiště. */
 export type Misto = { id: number | null; popis: string | null };
@@ -40,7 +40,7 @@ export function VyberMista({
       />
       <div className="cipy">
         {letiste.map((x) => (
-          <Tlacitko key={x.id} varianta="obrys" onClick={() => ulozit(x.id, null)}>
+          <Tlacitko key={x.id} onClick={() => ulozit(x.id, null)}>
             {x.kod} {x.nazev}
           </Tlacitko>
         ))}

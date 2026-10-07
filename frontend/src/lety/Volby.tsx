@@ -2,7 +2,9 @@ import { useState, type ReactNode } from "react";
 
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
+import { proHledani } from "../text";
 import type { Osoba, Uloha } from "./api";
+import "../komponenty/Volby.css";
 import "./Volby.css";
 
 // Volby sdílené průvodcem a detailem letu (maketa docs/navrhy/pruvodce-mobil-v4.html):
@@ -37,10 +39,6 @@ export function rychlaVolba(osoby: Osoba[], hledana: Hledana, zaloha: number[]):
   const smiji = osoby.filter((o) => smi(o, hledana)).map((o) => o.id);
   return smiji.length > 0 ? smiji : zaloha;
 }
-
-/** Bez diakritiky a malými (hledání „cacky“ najde „Čacký“). */
-const proHledani = (text: string) =>
-  text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("cs-CZ");
 
 /** Osoba: rychlá volba (Já, nedávní…) a „Hledat…“ (hledání podle jména ve všech osobách).
  *  Po výběru zůstane jen vybraná osoba (plně modře) a „Hledat…“, ostatní se skryjí; ťuknutím
@@ -93,7 +91,7 @@ export function VolbaOsoby({
       )}
       <div className="cipy">
         {!hledam && !otevrena && vybranaOsoba ? (
-          <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevrena(true)}>
+          <Tlacitko aria-pressed onClick={() => setOtevrena(true)}>
             {popis(vybranaOsoba)}
           </Tlacitko>
         ) : (
@@ -102,7 +100,6 @@ export function VolbaOsoby({
             {nabidka.map((o) => (
               <Tlacitko
                 key={o.id}
-                varianta="obrys"
                 aria-pressed={o.id === vybrana}
                 onClick={() => {
                   // po výběru zůstane jen vybraná osoba a Hledat…
@@ -118,7 +115,7 @@ export function VolbaOsoby({
           </>
         )}
         {!hledam && (
-          <Tlacitko varianta="obrys" className="hledat" onClick={() => setHledam(true)}>
+          <Tlacitko className="hledat" onClick={() => setHledam(true)}>
             Hledat…
           </Tlacitko>
         )}
@@ -161,7 +158,7 @@ export function VolbaUlohy({
   const radek = (u: Uloha, onClick: () => void) => {
     const [kod, ...nazev] = u.nazev.split(" ");
     return (
-      <Tlacitko key={u.id} varianta="obrys" aria-pressed={u.id === vybrana?.id} onClick={onClick}>
+      <Tlacitko key={u.id} aria-pressed={u.id === vybrana?.id} onClick={onClick}>
         <b>{kod}</b> <span>{nazev.join(" ")}</span>
       </Tlacitko>
     );
@@ -174,7 +171,6 @@ export function VolbaUlohy({
           osnovy.map(([id, nazev]) => (
             <Tlacitko
               key={id}
-              varianta="obrys"
               aria-pressed={id === osnovaId}
               onClick={() => {
                 setOsnovaId(id);
@@ -185,7 +181,7 @@ export function VolbaUlohy({
             </Tlacitko>
           ))
         ) : (
-          <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevreno("osnova")}>
+          <Tlacitko aria-pressed onClick={() => setOtevreno("osnova")}>
             {osnova[1]}
           </Tlacitko>
         )}
@@ -196,7 +192,7 @@ export function VolbaUlohy({
             <>
               {ulohy.filter((u) => u.osnova_id === osnovaId).map((u) => radek(u, () => vybrat_(u.id)))}
               {!povinna && vybrana && (
-                <Tlacitko varianta="obrys" onClick={() => vybrat_(undefined)}>
+                <Tlacitko onClick={() => vybrat_(undefined)}>
                   <span />
                   <span>Bez úlohy</span>
                 </Tlacitko>
@@ -226,7 +222,6 @@ export function VolbaPoctu({
       {Array.from({ length: pocet }, (_, k) => k + 1).map((n) => (
         <Tlacitko
           key={n}
-          varianta="obrys"
           className="cisla"
           aria-pressed={n === vybrano}
           onClick={() => vybrat(n)}

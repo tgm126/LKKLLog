@@ -1,96 +1,38 @@
-/* Volby ťuknutím (průvodce i detail letu) podle makety docs/navrhy/pruvodce-mobil-v4.html:
-   segmenty, čipy osob, seznam úloh, počet, výběr času prstem. Vybraná volba plně modře. */
+/* Volby jen pro lety (maketa docs/navrhy/pruvodce-mobil-v4.html): seznam úloh a výběr času
+   prstem. Mění jen proměnné tlačítka; společné volby (segmenty, čipy, počet) jsou
+   v komponenty/Volby.css. */
 
-.segmenty .tl[aria-pressed="true"],
-.cipy .tl[aria-pressed="true"],
 .seznam-voleb .tl[aria-pressed="true"],
-.volby-pocet .tl[aria-pressed="true"],
 .mrizka-casu .tl[aria-pressed="true"] {
   --tl-vypln: var(--barva-akce-modra);
   --tl-barva: var(--barva-na-akci);
   --tl-okraj: var(--barva-akce-modra);
 }
 
-/* Segmenty (účel, způsob vzletu, den): jeden řádek stejně širokých dílů */
-.segmenty {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  overflow: hidden;
-  border: var(--ramecek-sirka) solid var(--barva-prepazka);
-  border-radius: var(--zaobleni);
-}
-
-.segmenty .tl {
-  padding: 0 var(--mezera-1);
-  border: 0;
-  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
-  border-radius: 0;
-  white-space: nowrap;
-}
-
-.segmenty > :first-child {
-  border-left: 0;
-}
-
-/* Čipy (osoby, plátce, vlečná, osnova): vybraný plně modře; Hledat… čárkovaně */
-.cipy {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mezera-2);
-}
-
-.cipy .tl {
-  --tl-okraj: var(--barva-prepazka);
-
-  padding: 0 var(--mezera-3);
-  font-weight: var(--tloustka);
-}
-
-.cipy .tl[aria-pressed="true"] {
-  font-weight: var(--tloustka-tucna);
-}
-
-.cipy .tl.hledat {
-  --tl-barva: var(--barva-modra);
-
-  border-style: dashed;
-}
-
-/* Seznam voleb (úlohy osnovy): řádky „kód · název“ přes celou šířku bloku */
+/* Seznam voleb (úlohy osnovy): řádky „kód · název“ přes celou šířku bloku, přepážky =
+   mezera 1 px nad barvou čáry */
 .seznam-voleb {
   display: grid;
+  gap: var(--ramecek-sirka);
   margin: 0 calc(-1 * var(--mezera-3));
+  border-top: var(--ramecek);
+  background: var(--barva-cara);
 }
 
 .seznam-voleb .tl {
+  --tl-zaobleni: 0;
+  --tl-odsazeni: 0 var(--mezera-3);
+  --tl-tloustka: var(--tloustka);
+
   display: grid;
   grid-template-columns: 6ch minmax(0, 1fr);
   gap: var(--mezera-2);
   align-items: center;
-  padding: 0 var(--mezera-3);
-  border: 0;
-  border-top: var(--ramecek);
-  border-radius: 0;
-  font-weight: var(--tloustka);
   text-align: left;
 }
 
 .seznam-voleb .tl b {
   font-variant-numeric: tabular-nums;
-}
-
-/* Volba počtu (POB, přistání celkem): řada tlačítek */
-.volby-pocet {
-  display: flex;
-  gap: var(--mezera-2);
-}
-
-.volby-pocet .tl {
-  --tl-okraj: var(--barva-prepazka);
-
-  min-width: var(--dotyk);
-  padding: 0;
 }
 
 /* Výběr času prstem: pole vedle sebe (vzlet, přistání, přistání vlečné), aktivní zvýrazněné;
@@ -104,10 +46,10 @@
 
 .casy-pole .tl {
   --tl-okraj: var(--barva-prepazka);
+  --tl-odsazeni: var(--mezera-1);
+  --tl-pismo: var(--pismo-l);
 
   display: grid;
-  padding: var(--mezera-1);
-  font-size: var(--pismo-l);
 }
 
 .casy-pole .tl span {
@@ -118,8 +60,8 @@
 
 .casy-pole .tl[aria-pressed="true"] {
   --tl-okraj: var(--barva-akce-modra);
-
-  box-shadow: inset 0 0 0 var(--ramecek-sirka) var(--barva-akce-modra);
+  --tl-vypln: var(--barva-modra-vypln);
+  --tl-barva: var(--barva-text);
 }
 
 .casy-pole .tl[aria-pressed="true"] span {
@@ -135,9 +77,8 @@
 
 .mrizka-casu .tl {
   --tl-okraj: var(--barva-cara);
-
-  padding: 0;
-  font-weight: var(--tloustka);
+  --tl-odsazeni: 0;
+  --tl-tloustka: var(--tloustka);
 }
 
 .doladeni {
@@ -149,9 +90,8 @@
 
 .doladeni .tl {
   --tl-okraj: var(--barva-prepazka);
-
-  min-width: var(--dotyk);
-  padding: 0;
+  --tl-min-sirka: var(--dotyk);
+  --tl-odsazeni: 0;
 }
 
 /* Červený text chyby přímo v obrazovce (přistání dřív než vzlet, varování letu) */

@@ -1,13 +1,16 @@
-/* Tlačítko: varianty mění jen své proměnné (výplň, barva, okraj). */
+/* Tlačítko: varianty i okolí (volby, lišty) mění jen jeho proměnné – výplň, barvu, okraj
+   a styl okraje, výšku, odsazení, zaoblení, písmo a tloušťku; vlastnosti se jinde
+   nepřepisují. */
 .tl {
-  min-height: var(--dotyk);
-  padding: 0 var(--mezera-4);
-  border: var(--ramecek-sirka) solid var(--tl-okraj, transparent);
-  border-radius: var(--zaobleni);
+  min-width: var(--tl-min-sirka, auto);
+  min-height: var(--tl-vyska, var(--dotyk));
+  padding: var(--tl-odsazeni, 0 var(--mezera-4));
+  border: var(--ramecek-sirka) var(--tl-styl-okraje, solid) var(--tl-okraj, transparent);
+  border-radius: var(--tl-zaobleni, var(--zaobleni));
   background: var(--tl-vypln, var(--barva-karta));
   color: var(--tl-barva, var(--barva-text));
-  font-size: var(--pismo-m);
-  font-weight: var(--tloustka-tucna);
+  font-size: var(--tl-pismo, var(--pismo-m));
+  font-weight: var(--tl-tloustka, var(--tloustka-tucna));
 }
 
 .tl.hlavni {
@@ -40,8 +43,7 @@
 
 .tl.bez-ramu {
   --tl-vypln: transparent;
-
-  padding: 0 var(--mezera-2);
+  --tl-odsazeni: 0 var(--mezera-2);
 }
 
 /* Vybraná volba (např. režim zobrazení) */

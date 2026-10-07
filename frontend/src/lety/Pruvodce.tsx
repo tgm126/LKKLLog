@@ -23,6 +23,7 @@ import {
 } from "./Volby";
 import { denUtc, hhmm, minutyUtc, VolbaCasu } from "./VyberCasu";
 import { nazevMista, VyberMista, type Misto } from "./VyberMista";
+import "../komponenty/Volby.css";
 import "./Pruvodce.css";
 
 // Průvodce novým letem podle makety docs/navrhy/pruvodce-mobil-v4.html:
@@ -273,7 +274,6 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               {ucely.map((u) => (
                 <Tlacitko
                   key={u.id}
-                  varianta="obrys"
                   aria-pressed={u.id === ucel.id}
                   onClick={() =>
                     zmenit({
@@ -365,7 +365,6 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               {(["NAVIJAK", "VLEK"] as const).map((z) => (
                 <Tlacitko
                   key={z}
-                  varianta="obrys"
                   aria-pressed={novy.zpusob === z}
                   onClick={() => zmenit({ zpusob: z })}
                 >
@@ -386,7 +385,6 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               {vlecne.map((a) => (
                 <Tlacitko
                   key={a.id}
-                  varianta="obrys"
                   aria-pressed={a.id === novy.vlecna?.id}
                   onClick={() => {
                     // vlekař posledního vleku – jen když není v posádce kluzáku
@@ -453,7 +451,6 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               menit
               pred={
                 <Tlacitko
-                  varianta="obrys"
                   aria-pressed={platce === "aeroklub"}
                   onClick={() => zmenit({ platce: "aeroklub" })}
                 >
@@ -690,7 +687,7 @@ function ProbehlyLet(
         <BlokTelo>
           <div className="segmenty">
             {(["dnes", "vcera"] as const).map((d) => (
-              <Tlacitko key={d} varianta="obrys" aria-pressed={den === d} onClick={() => setDen(d)}>
+              <Tlacitko key={d} aria-pressed={den === d} onClick={() => setDen(d)}>
                 {d === "dnes" ? "Dnes" : "Včera"}
               </Tlacitko>
             ))}

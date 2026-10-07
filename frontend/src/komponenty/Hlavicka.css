@@ -2,7 +2,7 @@
 .hlavicka {
   position: relative;
   background: var(--barva-karta);
-  padding: var(--mezera-2) var(--mezera-4);
+  padding: var(--mezera-2) var(--okraj-stranky);
   border-bottom: var(--ramecek);
 }
 
@@ -49,7 +49,7 @@
 .nabidka {
   position: absolute;
   top: 100%;
-  right: var(--mezera-4);
+  right: var(--okraj-stranky);
   z-index: var(--vrstva-nabidky);
   display: grid;
   gap: var(--mezera-1);
@@ -70,19 +70,20 @@
 }
 
 .nabidka .tl.bez-ramu {
-  font-weight: var(--tloustka);
+  --tl-tloustka: var(--tloustka);
+
   text-align: left;
 }
 
 .nabidka .tl[aria-pressed="true"] {
-  font-weight: var(--tloustka-tucna);
+  --tl-tloustka: var(--tloustka-tucna);
 }
 
 /* Menu: záložky v řádku, při nedostatku místa se posouvá do strany */
 .menu {
   display: flex;
   gap: var(--mezera-4);
-  padding: 0 var(--mezera-4);
+  padding: 0 var(--okraj-stranky);
   border-bottom: var(--ramecek);
   background: var(--barva-karta);
   overflow-x: auto;

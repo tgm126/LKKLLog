@@ -66,5 +66,5 @@ b,
 
 .obsah {
   flex: 1;
-  padding: var(--mezera-3) var(--mezera-3) var(--mezera-2);
+  padding: var(--mezera-3) var(--okraj-stranky) var(--mezera-2);
 }

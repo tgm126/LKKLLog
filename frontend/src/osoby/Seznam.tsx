@@ -5,7 +5,8 @@ import { Hlaska } from "../komponenty/Hlaska";
 import { Pole } from "../komponenty/Pole";
 import { Stitek } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
-import "../lety/Volby.css";
+import { proHledani } from "../text";
+import "../komponenty/Volby.css";
 import { rozdelitNazev, telefonCitelne, useOsoby, type Opravneni, type Osoba } from "./api";
 import "./Osoby.css";
 
@@ -20,10 +21,6 @@ const FILTRY: [Filtr, string, (o: Osoba) => boolean][] = [
   ["neaktivni", "Neaktivní", (o) => !o.aktivni],
   ["vse", "Vše", () => true],
 ];
-
-/** Bez diakritiky a malými (hledání „cacky“ najde „Čacký“). */
-const proHledani = (text: string) =>
-  text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("cs-CZ");
 
 export function SeznamOsob() {
   const { data, error } = useOsoby();
@@ -67,7 +64,6 @@ export function SeznamOsob() {
           {FILTRY.map(([f, nazev, test]) => (
             <Tlacitko
               key={f}
-              varianta="obrys"
               aria-pressed={filtr === f}
               onClick={() => setFiltr(f)}
             >
