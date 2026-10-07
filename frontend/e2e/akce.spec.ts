@@ -35,6 +35,8 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
   await expect(veVzduchu.locator(".let-par")).toHaveCount(2);
   await expect(veVzduchu).toContainText("Z 526 · vlečná");
   await expect(veVzduchu).not.toContainText("vleče");
+  // Vlečná nemá T&G (při vleku se nedělá).
+  await expect(veVzduchu.getByRole("button", { name: /T&G/ })).toHaveCount(0);
 
   // Ťuknutí na polovinu vlečné otevře její detail.
   await veVzduchu.locator(".let-par", { hasText: "OK-CRA" }).getByText("Adam Admin").click();

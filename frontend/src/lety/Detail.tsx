@@ -446,7 +446,7 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
       <Oznameni />
       {l.stav === "VE_VZDUCHU" && (
         <div className="akce-vedle">
-          {l.kategorie_kod !== "KLUZAK" && (
+          {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
             <Tlacitko varianta="svetle" disabled={zaneprazdnen} onClick={() => provest(l.id, "tg")}>
               T&amp;G <span className="cisla">{l.tg.length}</span>
             </Tlacitko>

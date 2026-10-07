@@ -194,8 +194,8 @@ export function PasekVeVzduchu({
     <div className={`let ${tridaPasku(lety)}`}>
       {lety.map((l) => (
         <Polovina key={l.id} let={l}>
-          {/* T&G jen motorová letadla, TMG a UL; počet přímo na tlačítku */}
-          {l.kategorie_kod !== "KLUZAK" && (
+          {/* T&G jen motorová letadla, TMG a UL, ne vlečná (při vleku nedělá); počet na tlačítku */}
+          {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
             <Tlacitko varianta="svetle" disabled={zaneprazdnen} onClick={() => provest(l.id, "tg")}>
               T&amp;G <span className="cisla">{l.pocet_tg}</span>
             </Tlacitko>

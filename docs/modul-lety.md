@@ -41,7 +41,7 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 | `POST /api/lety/{id}` | úprava údajů z detailu (jen změněná pole + číslo verze) |
 | `POST /api/lety/{id}/vzlet` | vzlet teď (u vleku oba lety najednou) |
 | `POST /api/lety/{id}/pristani` | přistání teď; místo = domovské, není-li zadáno; počet přistání = T&G + 1 |
-| `POST /api/lety/{id}/tg` | T&G teď (jen motorová, TMG, UL) |
+| `POST /api/lety/{id}/tg` | T&G teď (jen motorová, TMG, UL; vlečná tlačítko T&G nemá – při vleku se nedělá) |
 | `POST /api/lety/{id}/zpet` | vrátí poslední akci (vzlet, přistání, T&G) – viz 3.4 |
 | `POST /api/lety/{id}/zrusit` | zrušení s důvodem (`lov_duvod_zruseni`) |
 | `POST /api/lety/{id}/obnovit` | zrušení se vrátí |
