@@ -1,0 +1,9 @@
+/* Letadla (docs/modul-letadla.md): nápověda nad seznamem, zaškrtávátka v jednom sloupci. */
+
+.letadla-napoveda {
+  margin-bottom: var(--mezera-2);
+}
+
+.seznam-letadel {
+  --zaskrtavatka-sloupce: 1;
+}

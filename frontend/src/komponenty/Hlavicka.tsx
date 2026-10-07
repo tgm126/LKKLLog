@@ -31,10 +31,15 @@ export function Hlavicka({ ja }: { ja: Ja }) {
         <NavLink className="nadpisek" to="/" end>
           Lety
         </NavLink>
-        {/* správa osob jen pro toho, kdo má právo (server ho hlídá také) */}
+        {/* správa osob a letadel jen pro toho, kdo má právo (server ho hlídá také) */}
         {ja.prava.spravuje_osoby && (
           <NavLink className="nadpisek" to="/osoby">
             Osoby
+          </NavLink>
+        )}
+        {ja.prava.spravuje_letadla && (
+          <NavLink className="nadpisek" to="/letadla">
+            Letadla
           </NavLink>
         )}
       </nav>

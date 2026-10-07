@@ -32,6 +32,7 @@ class Prava(BaseModel):
     admin: bool
     smi_odblokovat: bool
     spravuje_osoby: bool
+    spravuje_letadla: bool
 
 
 class OsobaKratce(BaseModel):
@@ -77,6 +78,7 @@ class UcetIn(BaseModel):
     admin: bool = False
     smi_odblokovat: bool = False
     spravuje_osoby: bool = False
+    spravuje_letadla: bool = False
 
 
 class UcetZmenaIn(BaseModel):
@@ -84,6 +86,7 @@ class UcetZmenaIn(BaseModel):
     admin: bool | None = None
     smi_odblokovat: bool | None = None
     spravuje_osoby: bool | None = None
+    spravuje_letadla: bool | None = None
 
 
 class Ucet(OsobaSEmailem):
@@ -92,6 +95,7 @@ class Ucet(OsobaSEmailem):
     admin: bool
     smi_odblokovat: bool
     spravuje_osoby: bool
+    spravuje_letadla: bool
     zalozen: datetime
     pozvanka_odeslana: datetime | None
     posledni_prihlaseni: datetime | None
@@ -117,6 +121,7 @@ class Prihlaseny:
     admin: bool
     smi_odblokovat: bool
     spravuje_osoby: bool
+    spravuje_letadla: bool
 
 
 def _nastavit_cookie(response: Response, klic: str) -> None:
@@ -172,6 +177,7 @@ def prihlaseny(
     otisk = bezpecnost.otisk_klice(klic)
     r = conn.execute(
         """SELECT r.osoba_id, r.puvodni_osoba_id, u.admin, u.smi_odblokovat, u.spravuje_osoby,
+                  u.spravuje_letadla,
                   r.posledni_aktivita < now() - %s AS prodlouzit
            FROM lkkl.relace r
            JOIN lkkl.v_ucet u ON u.osoba_id = r.osoba_id
@@ -204,6 +210,7 @@ def prihlaseny(
         admin=r["admin"],
         smi_odblokovat=r["smi_odblokovat"],
         spravuje_osoby=r["spravuje_osoby"],
+        spravuje_letadla=r["spravuje_letadla"],
     )
 
 
@@ -225,9 +232,16 @@ def spravuje_osoby(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
     return p
 
 
+def spravuje_letadla(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
+    if not (p.admin or p.spravuje_letadla):
+        raise HTTPException(403, "Na tuto akci nemáte právo.")
+    return p
+
+
 def _ja(conn: Connection, osoba_id: int, puvodni_osoba_id: int | None) -> Ja:
     u = conn.execute(
-        """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat, spravuje_osoby
+        """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat, spravuje_osoby,
+                  spravuje_letadla
            FROM lkkl.v_ucet WHERE osoba_id = %s""",
         (osoba_id,),
     ).fetchone()
@@ -247,6 +261,7 @@ def _ja(conn: Connection, osoba_id: int, puvodni_osoba_id: int | None) -> Ja:
             admin=u["admin"],
             smi_odblokovat=u["admin"] or u["smi_odblokovat"],
             spravuje_osoby=u["admin"] or u["spravuje_osoby"],
+            spravuje_letadla=u["admin"] or u["spravuje_letadla"],
         ),
         puvodni=OsobaKratce(**puvodni) if puvodni else None,
     )
@@ -455,14 +470,15 @@ def heslo_zmenit(
 # --- účty (admin) ---------------------------------------------------------------------------
 
 _UCET_SQL = """SELECT osoba_id, jmeno, prijmeni, email, ma_heslo, smi_se_prihlasit, admin,
-                      smi_odblokovat, spravuje_osoby, zalozen, pozvanka_odeslana,
+                      smi_odblokovat, spravuje_osoby, spravuje_letadla, zalozen,
+                      pozvanka_odeslana,
                       posledni_prihlaseni,
                       coalesce(zablokovano_do > now(), false) AS zablokovano
                FROM lkkl.v_ucet"""
 
 
 def _jen_admin_prava(p: Prihlaseny, *prava: bool | None) -> None:
-    """Práva (admin, smí odblokovat, spravuje osoby) přiděluje jen admin."""
+    """Práva (admin, smí odblokovat, spravuje osoby a letadla) přiděluje jen admin."""
     if not p.admin and any(prava):
         raise HTTPException(403, "Práva přiděluje jen admin.")
 
@@ -476,13 +492,20 @@ def ucty(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spo
 def ucet_zalozit(
     data: UcetIn, p: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
 ):
-    _jen_admin_prava(p, data.admin, data.smi_odblokovat, data.spravuje_osoby)
+    _jen_admin_prava(p, data.admin, data.smi_odblokovat, data.spravuje_osoby, data.spravuje_letadla)
     try:
         with conn.transaction():
             conn.execute(
-                """INSERT INTO lkkl.ucet (osoba_id, admin, smi_odblokovat, spravuje_osoby)
-                   VALUES (%s, %s, %s, %s)""",
-                (data.osoba_id, data.admin, data.smi_odblokovat, data.spravuje_osoby),
+                """INSERT INTO lkkl.ucet
+                       (osoba_id, admin, smi_odblokovat, spravuje_osoby, spravuje_letadla)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (
+                    data.osoba_id,
+                    data.admin,
+                    data.smi_odblokovat,
+                    data.spravuje_osoby,
+                    data.spravuje_letadla,
+                ),
             )
     except errors.ForeignKeyViolation as e:
         raise HTTPException(404, "Osoba neexistuje.") from e
@@ -501,9 +524,8 @@ def ucet_zmenit(
     conn: Connection = Depends(spojeni),
 ):
     # odebrat právo je také přidělování práv – jen admin
-    _jen_admin_prava(
-        p, *(v is not None for v in (data.admin, data.smi_odblokovat, data.spravuje_osoby))
-    )
+    prava = (data.admin, data.smi_odblokovat, data.spravuje_osoby, data.spravuje_letadla)
+    _jen_admin_prava(p, *(v is not None for v in prava))
     if osoba_id == p.osoba_id and (data.aktivni is False or data.admin is False):
         raise HTTPException(400, "Sám sobě nemůžete zablokovat účet ani odebrat admina.")
     cil = conn.execute("SELECT admin FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)).fetchone()
@@ -515,9 +537,10 @@ def ucet_zmenit(
                SET aktivni = coalesce(%s, aktivni),
                    admin = coalesce(%s, admin),
                    smi_odblokovat = coalesce(%s, smi_odblokovat),
-                   spravuje_osoby = coalesce(%s, spravuje_osoby)
+                   spravuje_osoby = coalesce(%s, spravuje_osoby),
+                   spravuje_letadla = coalesce(%s, spravuje_letadla)
                WHERE osoba_id = %s RETURNING osoba_id""",
-            (data.aktivni, data.admin, data.smi_odblokovat, data.spravuje_osoby, osoba_id),
+            (data.aktivni, *prava, osoba_id),
         ).fetchone()
         if zmeneno and data.aktivni is False:
             smazat_relace(conn, "osoba_id = %s OR puvodni_osoba_id = %s", (osoba_id, osoba_id))

@@ -33,3 +33,9 @@
   --tl-vypln: transparent;
   --tl-barva: var(--barva-na-akci);
 }
+
+/* Oznámení dole na stránce bez spodní lišty (detail osoby, letadla): přichycené při posunu */
+.oznameni-dole {
+  position: sticky;
+  bottom: var(--mezera-2);
+}

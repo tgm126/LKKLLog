@@ -27,6 +27,7 @@ Práva se přidělují konkrétním osobám (sloupce v `ucet`); **admin má auto
 |---|---|
 | `spravuje_osoby` (nové, db/023) | seznam a detail osob, nová osoba, úprava údajů, člen, aktivní, oprávnění; založit účet (smí se přihlásit), zablokovat / povolit účet (ne účet admina), odkaz pro nastavení hesla |
 | `smi_odblokovat` | odblokovat účet zablokovaný po chybných heslech |
+| `spravuje_letadla` (db/029) | záložka Letadla: mimo provoz (`docs/modul-letadla.md`) |
 | `admin` | vše; navíc přiděluje práva (admin, smí odblokovat, spravuje osoby) a smí „přihlásit se jako“ |
 
 Pravidla (hlídá server, ne jen skrytím tlačítek): sám sobě nikdo nevypne „aktivní“ ani

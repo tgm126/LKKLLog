@@ -87,7 +87,7 @@
   --tl-barva: var(--barva-oranzova);
 }
 
-/* Detail: informace o účtu, odkaz pro heslo, úprava textu, oznámení dole */
+/* Detail: informace o účtu, odkaz pro heslo, úprava textu */
 .info-uctu {
   padding: var(--mezera-2) var(--mezera-3);
   border-top: var(--ramecek);
@@ -104,9 +104,4 @@
 .uprava-textu {
   display: grid;
   gap: var(--mezera-2);
-}
-
-.oznameni-dole {
-  position: sticky;
-  bottom: var(--mezera-2);
 }

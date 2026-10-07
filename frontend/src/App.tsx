@@ -12,6 +12,7 @@ import { Detail } from "./lety/Detail";
 import { Pruvodce } from "./lety/Pruvodce";
 import { Detail as DetailOsoby } from "./osoby/Detail";
 import { NovaOsoba } from "./osoby/Nova";
+import { SeznamLetadel } from "./letadla/Seznam";
 import { SeznamOsob } from "./osoby/Seznam";
 import { LetisteProDnesek, OsobyVProvozu } from "./provoz/Provoz";
 import { Lety } from "./stranky/Lety";
@@ -28,6 +29,7 @@ export function App() {
         <Route element={<SHlavickou />}>
           <Route index element={<Lety />} />
           <Route path="/osoby" element={<SeznamOsob />} />
+          <Route path="/letadla" element={<SeznamLetadel />} />
         </Route>
         <Route path="/novy-let" element={<Pruvodce />} />
         <Route path="/let/:id" element={<Detail />} />

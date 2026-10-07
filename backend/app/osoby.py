@@ -26,6 +26,7 @@ class UcetOsoby(BaseModel):
     admin: bool
     smi_odblokovat: bool
     spravuje_osoby: bool
+    spravuje_letadla: bool
     zablokovano: bool
     ma_heslo: bool
 
@@ -143,6 +144,7 @@ SELECT o.id, o.jmeno, o.prijmeni, o.email, o.telefon, o.cislo_clena, o.clen, o.a
            'admin', u.admin,
            'smi_odblokovat', u.smi_odblokovat,
            'spravuje_osoby', u.spravuje_osoby,
+           'spravuje_letadla', u.spravuje_letadla,
            'zablokovano', coalesce(u.zablokovano_do > now(), false),
            'ma_heslo', u.heslo_hash IS NOT NULL) END AS ucet,
        coalesce((SELECT json_agg(json_build_object(

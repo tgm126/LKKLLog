@@ -48,7 +48,12 @@ export type OsobaKratce = { osoba_id: number; jmeno: string; prijmeni: string };
 export type Ja = OsobaKratce & {
   email: string;
   /** Práva včetně „admin smí vše“. */
-  prava: { admin: boolean; smi_odblokovat: boolean; spravuje_osoby: boolean };
+  prava: {
+    admin: boolean;
+    smi_odblokovat: boolean;
+    spravuje_osoby: boolean;
+    spravuje_letadla: boolean;
+  };
   /** Skutečný admin, pokud je přihlášen jako jiná osoba. */
   puvodni: OsobaKratce | null;
 };

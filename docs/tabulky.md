@@ -50,7 +50,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_osoba_opravneni_kategorie` | vazba | pro které kategorie osoba oprávnění má; složené FK na oprávnění osoby a na povolené kategorie (`kategorie_povolena`); audit | 024 |
 | `v_osoba_smi` | pohled | role, které osoba smí zastat (role, účel, funkce, kategorie letadla) – nabídky osob v průvodci a detailu | 024 |
 | `v_osoba_opravneni` | pohled | přehled oprávnění osob s kategoriemi a omezením v jednom řádku (kontrola zadání) | 024 |
-| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin`, `smi_odblokovat` a `spravuje_osoby` (admin má všechna automaticky), pozvánka, ochrana proti hádání hesla | 005, 006, 023 |
+| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin`, `smi_odblokovat`, `spravuje_osoby` a `spravuje_letadla` (admin má všechna automaticky), pozvánka, ochrana proti hádání hesla | 005, 006, 023, 029 |
 | `relace_provoz` | tabulka | můj provoz: nastavení relace na jeden den (UTC) – letiště (prázdné = domovské); jiný den se nebere v úvahu | 026 |
 | `relace_provoz_osoba` | tabulka | osoby v provozu relace (filtr nabídky osob v posádce); žádný řádek = bez filtru | 026 |
 | `v_relace_letiste`, `v_relace_osoba` | pohled | dnešní letiště relace (zvolené, jinak domovské) a dnešní osoby v provozu | 026 |

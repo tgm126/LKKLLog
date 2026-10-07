@@ -71,7 +71,7 @@ test("osoby: admin má všechna práva zaškrtnutá a zašedlá", async ({ page 
   await page.getByRole("link", { name: "Osoby" }).click();
   await page.getByLabel("Hledat jméno, e-mail, telefon, číslo člena").fill("admin");
   await page.locator(".radek-osoby").first().click();
-  for (const pravo of [/^Spravuje osoby/, /^Smí odblokovat/]) {
+  for (const pravo of [/^Spravuje osoby/, /^Spravuje letadla/, /^Smí odblokovat/]) {
     const z = page.getByRole("checkbox", { name: pravo });
     await expect(z).toHaveAttribute("aria-checked", "true");
     await expect(z).toBeDisabled();
