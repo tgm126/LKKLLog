@@ -408,9 +408,21 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
             """SELECT l.id, l.kod, l.nazev, s.domovske
                FROM lkkl.v_lov_letiste l JOIN lkkl.lov_letiste s ON s.id = l.id"""
         ).fetchall(),
+        # u osoby, pro které kategorie letadel smí vést výcvik, přezkoušet a vlekat
+        # („*“ = všechny kategorie) – průvodce podle toho nabízí instruktory, examinátory, vlekaře
         "osoby": conn.execute(
-            """SELECT id, jmeno, prijmeni, vlekar FROM lkkl.lov_osoba
-               WHERE aktivni ORDER BY prijmeni, jmeno"""
+            """SELECT o.id, o.jmeno, o.prijmeni,
+                      coalesce(array_agg(DISTINCT coalesce(s.kategorie_kod, '*'))
+                               FILTER (WHERE s.vycvik), '{}') AS vycvik,
+                      coalesce(array_agg(DISTINCT coalesce(s.kategorie_kod, '*'))
+                               FILTER (WHERE s.prezkousi), '{}') AS prezkousi,
+                      coalesce(array_agg(DISTINCT coalesce(s.kategorie_kod, '*'))
+                               FILTER (WHERE s.vleka), '{}') AS vleka
+               FROM lkkl.lov_osoba o
+               LEFT JOIN lkkl.v_osoba_smi s ON s.osoba_id = o.id
+               WHERE o.aktivni
+               GROUP BY o.id
+               ORDER BY o.prijmeni, o.jmeno"""
         ).fetchall(),
         "ulohy": conn.execute(
             """SELECT u.id, u.nazev, u.osnova_id, u.osnova, u.ucel_id, k.kod AS kategorie_kod

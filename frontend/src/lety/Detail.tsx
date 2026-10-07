@@ -14,7 +14,14 @@ import { useAkceLetu, type Provedeno } from "./akce";
 import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from "./api";
 import { PolovinaPasku, tridaPasku } from "./Pasek";
 import { Udaj, Udaje } from "./Udaje";
-import { PIC_NAZEV, VolbaOsoby, VolbaPoctu, VolbaUlohy } from "./Volby";
+import {
+  cinnostFunkce,
+  PIC_NAZEV,
+  rychlaVolba,
+  VolbaOsoby,
+  VolbaPoctu,
+  VolbaUlohy,
+} from "./Volby";
 import { denUtc, minutyUtc, VolbaCasu } from "./VyberCasu";
 import { VyberMista } from "./VyberMista";
 import "./Detail.css";
@@ -86,11 +93,20 @@ function DetailLetuObrazovka({
   const u = (klic: string, povoleno = true) =>
     lzeUpravit && povoleno ? { upravit: prepnout(klic), otevreno: upravuji === klic } : {};
   const posadkaIds = l.posadka.map((c) => c.osoba_id);
-  const volbaOsoby = (vybrana: number | undefined, vybrat: (id: number) => void) => (
+  const volbaOsoby = (
+    funkceKod: string,
+    vybrana: number | undefined,
+    vybrat: (id: number) => void,
+  ) => (
     <VolbaOsoby
       osoby={nabidky.osoby}
       jaId={ja.osoba_id}
-      rychle={[ja.osoba_id]}
+      rychle={rychlaVolba(
+        nabidky.osoby,
+        cinnostFunkce(funkceKod, l.ucel_kod, l.je_vlecny),
+        l.kategorie_kod,
+        [ja.osoba_id],
+      )}
       vybrana={vybrana}
       vyloucit={posadkaIds.filter((id) => id !== vybrana)}
       vybrat={vybrat}
@@ -141,7 +157,7 @@ function DetailLetuObrazovka({
               hodnota={`${c.jmeno} ${c.prijmeni}`}
               {...u(`f${c.funkce_id}`)}
             >
-              {volbaOsoby(c.osoba_id, (id) =>
+              {volbaOsoby(c.funkce_kod, c.osoba_id, (id) =>
                 ulozit({
                   posadka: l.posadka.map((x) => ({
                     osoba_id: x.funkce_id === c.funkce_id ? id : x.osoba_id,

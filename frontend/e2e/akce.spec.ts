@@ -150,10 +150,10 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
   await page.getByRole("button", { name: "+ Nový let" }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Výcvik", exact: true }).click();
-  await page
-    .locator(".blok", { hasText: "Instruktor (PIC)" })
-    .getByRole("button", { name: "Já (Adam Admin)" })
-    .click();
+  // Za instruktora se rychle nabízí jen kdo má oprávnění instruktora kluzáků (FI(S)).
+  const instruktor = page.locator(".blok", { hasText: "Instruktor (PIC)" });
+  await expect(instruktor.getByRole("button")).toHaveText(["Já (Adam Admin)", "Hledat…"]);
+  await instruktor.getByRole("button", { name: "Já (Adam Admin)" }).click();
   const zak = page.locator(".blok", { hasText: "Žák" });
   await zak.getByRole("button", { name: "Hledat…" }).click();
   await zak.getByRole("button", { name: "Nela Nová" }).click();

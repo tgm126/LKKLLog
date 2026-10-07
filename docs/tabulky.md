@@ -39,7 +39,12 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_osoby_bez_prekryvu()` | funkce (v `let_kontrola`) | osoba na palubě nemůže být ve vzduchu ve dvou letech zároveň (plánování volné, dozor na zemi se nepočítá) | 018 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat ani vyprázdnit | 009, 017 |
-| `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní, vlekař | 004, 015, 017 |
+| `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní (příznak vlekař převeden do oprávnění) | 004, 015, 017, 021 |
+| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FI(A), CRI(A), FE(A), CRE(A), instruktor a inspektor ULL, vlekař) a co dovoluje: `vycvik`, `prezkousi`, `vleka`; `omezene` (pod dohledem) zatím jen evidence | 021 |
+| `lov_opravneni_kategorie` | vazba | pro které kategorie letadel oprávnění platí (bez řádku = všechny) | 021 |
+| `lov_osoba_opravneni` | vazba | kdo má jaké oprávnění (zadává správce v databázi); sleduje se v auditu | 021 |
+| `v_osoba_smi` | pohled | co osoba smí (výcvik, přezkoušení, vlekání) a pro kterou kategorii – nabídky osob v průvodci a detailu | 021 |
+| `v_osoba_opravneni` | pohled | přehled oprávnění osob v jednom řádku (kontrola zadání) | 021 |
 | `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
 | `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
@@ -47,7 +52,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005, 017 |
 | `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); zakládá ji spouštěč `app/migrace.py` | – |
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
-| `audit` (na let, posadka, let_tg, lov_osoba, ucet, lov_letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
+| `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, ucet, lov_letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
 | `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit | 012, 017 |
 | `lov_audit_popisek` | číselník | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012, 017 |
 | `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |

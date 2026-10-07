@@ -13,7 +13,15 @@ import { oznamitAkci, type Provedeno } from "./akce";
 import { useNabidky, type LetadloNabidka, type Nabidky, type Ucel } from "./api";
 import { PolovinaPasku, type LetPasku } from "./Pasek";
 import { Udaj, Udaje } from "./Udaje";
-import { jmeno, PIC_NAZEV, VolbaOsoby, VolbaPoctu, VolbaUlohy } from "./Volby";
+import {
+  cinnostFunkce,
+  jmeno,
+  PIC_NAZEV,
+  rychlaVolba,
+  VolbaOsoby,
+  VolbaPoctu,
+  VolbaUlohy,
+} from "./Volby";
 import { denUtc, hhmm, minutyUtc, VolbaCasu } from "./VyberCasu";
 import { nazevMista, VyberMista, type Misto } from "./VyberMista";
 import "./Pruvodce.css";
@@ -292,7 +300,12 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               <VolbaOsoby
                 osoby={nabidky.osoby}
                 jaId={ja.osoba_id}
-                rychle={[ja.osoba_id, ...letadlo.nedavni]}
+                rychle={rychlaVolba(
+                  nabidky.osoby,
+                  cinnostFunkce(p.kod, ucel.kod, false),
+                  letadlo.kategorie_kod,
+                  [ja.osoba_id, ...letadlo.nedavni],
+                )}
                 vybrana={novy.osoby[p.funkceId]}
                 vyloucit={obsazene(`f${p.funkceId}`)}
                 vybrat={(id) => zmenit({ osoby: { ...novy.osoby, [p.funkceId]: id }, platce: undefined })}
@@ -392,7 +405,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
             <VolbaOsoby
               osoby={nabidky.osoby}
               jaId={ja.osoba_id}
-              rychle={nabidky.osoby.filter((o) => o.vlekar).map((o) => o.id)}
+              rychle={rychlaVolba(nabidky.osoby, "vleka", novy.vlecna?.kategorie_kod, [])}
               vybrana={novy.vlekar}
               vyloucit={obsazene("vlekar")}
               vybrat={(id) => zmenit({ vlekar: id })}

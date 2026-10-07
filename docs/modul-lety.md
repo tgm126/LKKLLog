@@ -34,7 +34,7 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 |---|---|
 | `GET /api/den?den=RRRR-MM-DD` | den do hlavičky: datum, čas serveru, domovské letiště, sluneční časy (TB, SR, SS, TE) |
 | `GET /api/lety?den=RRRR-MM-DD` | lety dne pro pásky (z `v_let` + posádka, počet T&G, varování) a čas serveru; dnes i vše, co je ve vzduchu |
-| `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_lov_letadlo` + stav letí / naplánován), účely, způsoby vzletu, osoby, vlekaři, obecné úlohy |
+| `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_lov_letadlo` + stav letí / naplánován), účely, způsoby vzletu, osoby s kategoriemi, pro které smí vést výcvik / přezkoušet / vlekat (`v_osoba_smi`), obecné úlohy |
 | `GET /api/lety/nabidka-osob?letadlo_id=` | naposledy létající na letadle (rychlá volba) a poslední vlekař vlečné |
 | `POST /api/lety` | nový let z průvodce: letadlo, účel, posádka, POB, způsob vzletu, vlek (vlečná + vlekař), plátce, úloha, akce `vzlet` / `naplanovat` / `probehly` (s časy a počtem přistání) |
 | `GET /api/lety/{id}` | detail letu včetně historie (`v_historie_letu`) |
@@ -99,6 +99,13 @@ v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · ná
 údaje, ťuknutím se změní (místo: hledání letiště nebo popis místa). Proběhlý let: časy vzletu,
 přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin a minut,
 −1 / +1 a doba letu.
+**Nabídka osob podle oprávnění** (db/021, 7. 10. 2026): v rychlé volbě se nabídnou jen
+osoby s oprávněním pro kategorii letadla – u výcviku za instruktora (PIC) a za dozor u sóla
+ti, kdo smí vést výcvik (FI(S), FI(A), CRI(A), instruktor ULL…), u přezkoušení examinátoři
+(FE(S), FE(A), CRE(A), inspektor ULL), u vleku vlekaři. Nemá-li oprávnění nikdo, nabídne se
+Já a naposledy létající; „Hledat…“ vždy hledá mezi všemi (výjimky). Nic se nekontroluje ani
+neblokuje, platnost oprávnění se neeviduje. Oprávnění zadává správce v databázi
+(`lov_osoba_opravneni`, kontrola v `v_osoba_opravneni`).
 **Zrušení vleku:** naplánovaný vlek se ruší celý, po vzletu jen zvolený let (kluzák po
 přetrženém laně – vlečná letí dál).
 

@@ -14,6 +14,8 @@ from app import bezpecnost, migrace
 
 # Osnovy kluzáků jako na serveru (IU, IA, II).
 OSNOVY = (migrace.ADRESAR / "019_uloha_podle_ucelu_data.sql").read_text(encoding="utf-8")
+# Druhy oprávnění (FI(S), FE(S)…) jako na serveru.
+OPRAVNENI = (migrace.ADRESAR / "021_opravneni_data.sql").read_text(encoding="utf-8")
 
 ZAKLAD = os.environ.get("LKKL_E2E_ZAKLAD", "postgresql://lkkllog:lkkllog@127.0.0.1:5432")
 DATABAZE = "lkkllog_e2e"
@@ -141,6 +143,14 @@ def pripravit() -> None:
             c.execute("INSERT INTO lkkl.ucet (osoba_id) VALUES (%s)", (nova,))
             c.execute(FLOTILA)
             c.execute(OSNOVY)
+            c.execute(OPRAVNENI)
+            # Admin je instruktor kluzáků, Nela vlekař (nabídky v průvodci).
+            c.execute(
+                """INSERT INTO lkkl.lov_osoba_opravneni (osoba_id, opravneni_id)
+                   SELECT v.osoba, o.id FROM (VALUES (%s, 'FI_S'), (%s, 'VLEKAR')) AS v(osoba, kod)
+                   JOIN lkkl.lov_opravneni o ON o.kod = v.kod""",
+                (admin, nova),
+            )
             lety(c, admin, nova)
 
 

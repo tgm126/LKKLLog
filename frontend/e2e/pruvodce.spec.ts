@@ -34,6 +34,9 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   await page.getByRole("button", { name: "Aerovlek", exact: true }).click();
   await blok(page, "Vlečná").getByRole("button", { name: /^OK-CRA/ }).click();
   const vlekar = blok(page, "Vlekař");
+  // Rychle se nabízí jen vlekaři (oprávnění Vlekař); ostatní najde Hledat…
+  await expect(vlekar.getByRole("button", { name: "Nela Nová" })).toBeVisible();
+  await expect(vlekar.getByRole("button", { name: /Adam Admin/ })).toHaveCount(0);
   await vlekar.getByRole("button", { name: "Hledat…" }).click();
   // Pilot kluzáku nesmí vlekat – v nabídce vlekaře není.
   await expect(vlekar.getByRole("button", { name: /Adam Admin/ })).toHaveCount(0);

@@ -219,6 +219,38 @@ def test_nabidky(conn, pilot, let):
     assert nabidky["zpusob_kluzaku"] == "NAVIJAK"
 
 
+def test_nabidky_opravneni(conn, pilot, osoba, flotila):
+    """U osoby, pro které kategorie letadel smí vést výcvik, přezkoušet a vlekat (db/021)."""
+    pilot_id, k = pilot
+    vlekar = osoba("Vlekar", ucet=False)
+    nikdo = osoba("Nikdo", ucet=False)
+    instruktor = conn.execute(
+        """INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi, vycvik, prezkousi)
+           VALUES ('FI_S', 'FI(S)', 10, true, false) RETURNING id"""
+    ).fetchone()["id"]
+    conn.execute(
+        """INSERT INTO lkkl.lov_opravneni_kategorie
+           SELECT %s, id FROM lkkl.lov_kategorie WHERE kod = 'KLUZAK'""",
+        (instruktor,),
+    )
+    conn.execute(
+        """INSERT INTO lkkl.lov_osoba_opravneni VALUES (%s, %s),
+               (%s, (SELECT id FROM lkkl.lov_opravneni WHERE kod = 'VLEKAR'))""",
+        (pilot_id, instruktor, vlekar),
+    )
+    osoby = {o["id"]: o for o in k.get("/api/lety/nabidky").json()["osoby"]}
+    assert osoby[pilot_id]["vycvik"] == ["KLUZAK"] and osoby[pilot_id]["prezkousi"] == []
+    assert osoby[vlekar]["vleka"] == ["*"]  # vlekař bez kategorií = čímkoli
+    assert osoby[nikdo]["vycvik"] == osoby[nikdo]["vleka"] == []
+    # přidání oprávnění se zapíše do auditu
+    assert (
+        conn.execute(
+            "SELECT count(*) AS n FROM lkkl.audit WHERE tabulka = 'lov_osoba_opravneni'"
+        ).fetchone()["n"]
+        == 2
+    )
+
+
 def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):
     """Kdo je na palubě ve vzduchu, nemůže zároveň vzlétnout jinde; plánovat jde."""
     pilot_id, k = pilot

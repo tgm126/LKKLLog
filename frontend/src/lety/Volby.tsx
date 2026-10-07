@@ -17,6 +17,41 @@ export const PIC_NAZEV: Record<string, string> = {
 
 export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
 
+// --- kdo se nabízí: podle oprávnění osob (db/021) ---------------------------------------------
+
+/** Co se od osoby ve funkci čeká: výcvik (instruktor u výcviku, dozor u sóla), přezkoušení
+ *  (examinátor), vlekání (pilot vlečné); jinak nic zvláštního. */
+export type Cinnost = "vycvik" | "prezkousi" | "vleka";
+
+export function cinnostFunkce(
+  funkceKod: string,
+  ucelKod: string | null,
+  jeVlecny: boolean,
+): Cinnost | null {
+  if (funkceKod === "DOZOR") return "vycvik";
+  if (funkceKod !== "PIC") return null;
+  if (jeVlecny) return "vleka";
+  if (ucelKod === "VYCVIK") return "vycvik";
+  if (ucelKod === "PREZKOUSENI") return "prezkousi";
+  return null;
+}
+
+/** Smí osoba činnost na letadle dané kategorie (bez kategorie = na čemkoli)? */
+const smi = (o: Osoba, cinnost: Cinnost, kategorie: string | undefined) =>
+  o[cinnost].includes("*") || (kategorie ? o[cinnost].includes(kategorie) : o[cinnost].length > 0);
+
+/** Rychlá volba osoby: kdo má potřebné oprávnění; když se nic zvláštního nečeká nebo nikdo
+ *  oprávnění nemá, záloha (Já, naposledy létající). Ostatní najde „Hledat…“. */
+export function rychlaVolba(
+  osoby: Osoba[],
+  cinnost: Cinnost | null,
+  kategorie: string | undefined,
+  zaloha: number[],
+): number[] {
+  const maji = cinnost ? osoby.filter((o) => smi(o, cinnost, kategorie)).map((o) => o.id) : [];
+  return maji.length > 0 ? maji : zaloha;
+}
+
 /** Bez diakritiky a malými (hledání „cacky“ najde „Čacký“). */
 const proHledani = (text: string) =>
   text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("cs-CZ");
