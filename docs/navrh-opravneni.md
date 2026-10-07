@@ -36,8 +36,11 @@ Klíčová rozhodnutí, která „džungli“ zjednoduší:
    osoba ho má pro kluzáky, nebo pro kluzáky i TMG. Žádné řádky FI_S_TMG, CRI_A_SEP…
 3. **Omezení (instruktor pod dohledem) je vlastnost oprávnění osoby, ne zvláštní druh
    oprávnění.** Omezený FI(S) je pořád FI(S); omezení se po splnění podmínek jen odškrtne.
-4. **Co role vyžaduje, je u role, ne u každého oprávnění zvlášť:** „instruktor = PIC ve
-   výcviku“ a „dozor smí jen neomezený instruktor“ je zapsané jednou.
+   Na nabídku nemá vliv: omezený instruktor smí vyučovat i dozorovat sóla, jen nesmí povolit
+   **první** sólo a první samostatný přelet (SFCL.350, FCL.910.FI) – a které sólo je první,
+   aplikace neví.
+4. **Kde role v letu sedí, je zapsané jednou u role**, ne u každého oprávnění zvlášť:
+   „instruktor = PIC ve výcviku“, „dozor = dozor u sóla“.
 5. Kategorie letadla v aplikaci (KLUZAK, TMG, LETOUN, UL) slouží i jako „třída“ z předpisů –
    v klubu LETOUN = třída SEP (land), jiné třídy klub nemá.
 
@@ -52,15 +55,14 @@ Klíčová rozhodnutí, která „džungli“ zjednoduší:
 | `nazev`, `poradi`, `platny` | domény | | standard číselníku |
 | `ucel_id` | bigint NULL | FK `lov_ucel` | účel letu; **prázdný = vlečný let** (stejně jako `let.ucel_id`) |
 | `funkce_id` | bigint NOT NULL | FK `lov_funkce` | funkce v posádce |
-| `jen_neomezene` | boolean NOT NULL DEFAULT false | | roli smí jen osoba s **neomezeným** oprávněním |
 | | | UNIQUE NULLS NOT DISTINCT (`ucel_id`, `funkce_id`) | jedno místo v letu = nejvýš jedna role |
 
-| kod | nazev | účel | funkce | jen neomezené |
-|---|---|---|---|---|
-| INSTRUKTOR | Instruktor | VYCVIK | PIC | ne |
-| DOZOR | Dozor | VYCVIK_SOLO | DOZOR | **ano** (omezený nesmí povolit první sólo) |
-| EXAMINATOR | Examinátor | PREZKOUSENI | PIC | ne |
-| VLEKAR | Vlekař | (vlečný let) | PIC | ne |
+| kod | nazev | účel | funkce |
+|---|---|---|---|
+| INSTRUKTOR | Instruktor | VYCVIK | PIC |
+| DOZOR | Dozor | VYCVIK_SOLO | DOZOR |
+| EXAMINATOR | Examinátor | PREZKOUSENI | PIC |
+| VLEKAR | Vlekař | (vlečný let) | PIC |
 
 ### 3.2 `lov_opravneni` – druh oprávnění (číselník podle standardu)
 
@@ -88,7 +90,8 @@ součástí názvu, aplikace ho nepotřebuje.
 | | PK (`opravneni_id`, `kategorie_id`) |
 
 FI_S, FE_S → KLUZAK, TMG · FI_A, CRI_A, FE_A, CRE_A → LETOUN, TMG · INSTRUKTOR_ULL,
-INSPEKTOR_ULL → UL · VLEKAR → LETOUN, UL (TMG by šlo, klub s TMG nevleká).
+INSPEKTOR_ULL → UL · VLEKAR → LETOUN, UL (TMG předpis umožňuje, ale klub s TMG nevleká –
+řídký případ, do nabídky nepatří).
 
 ### 3.4 `lov_opravneni_role` – k jakým rolím oprávnění opravňuje
 
@@ -116,9 +119,9 @@ ne díky examinátorskému.
 | `omezene` | boolean NOT NULL DEFAULT false | instruktor s omezením (vyučuje pod dohledem) |
 | | PK (`osoba_id`, `opravneni_id`) | |
 
-Audit triggerem (jako ostatní `lov_osoba*`). `omezene` má smysl jen u instruktorů; u jiných
-oprávnění by jen ubralo roli s `jen_neomezene`, kterou stejně nedávají – samostatné omezení
-v databázi proto nezavádím.
+Audit triggerem (jako ostatní `lov_osoba*`). `omezene` je zatím **jen evidence** (nabídku
+neovlivní, viz kap. 2 bod 3); později z něj může být upozornění u prvního sóla. Má smysl jen
+u instruktorů – u jiných oprávnění nic nemění, samostatné omezení v databázi proto nezavádím.
 
 ### 3.6 `lov_osoba_opravneni_kategorie` – pro které kategorie ho osoba má
 
@@ -144,7 +147,6 @@ CREATE TABLE lkkl.lov_role (
     platny        lkkl.platny NOT NULL,
     ucel_id       bigint REFERENCES lkkl.lov_ucel,          -- prázdný = vlečný let
     funkce_id     bigint NOT NULL REFERENCES lkkl.lov_funkce,
-    jen_neomezene boolean NOT NULL DEFAULT false,
     UNIQUE NULLS NOT DISTINCT (ucel_id, funkce_id)
 );
 
@@ -194,7 +196,6 @@ JOIN lkkl.lov_osoba_opravneni_kategorie ok  ON (ok.osoba_id, ok.opravneni_id) = 
 JOIN lkkl.lov_kategorie k                   ON k.id = ok.kategorie_id
 JOIN lkkl.lov_opravneni_role orl            ON orl.opravneni_id = oo.opravneni_id
 JOIN lkkl.lov_role r                        ON r.id = orl.role_id AND r.platny
-                                           AND NOT (r.jen_neomezene AND oo.omezene)
 LEFT JOIN lkkl.lov_ucel u                   ON u.id = r.ucel_id
 JOIN lkkl.lov_funkce f                      ON f.id = r.funkce_id;
 ```
@@ -208,7 +209,7 @@ s výčtem kategorií a příznakem omezení) zůstává jako pomůcka pro ručn
 |---|---|---|
 | Instruktor kluzáků bez TMG | FI(S): KLUZAK | instruktor a dozor na kluzácích |
 | Instruktor kluzáků i TMG, zároveň examinátor | FI(S): KLUZAK, TMG; FE(S): KLUZAK | instruktor a dozor na kluzácích a TMG; examinátor na kluzácích |
-| Čerstvý instruktor | FI(S) **omezený**: KLUZAK | instruktor na kluzácích, **ne** dozor |
+| Čerstvý instruktor | FI(S) **omezený**: KLUZAK | instruktor a dozor na kluzácích (první sólo hlídá instruktor) |
 | Letoun a TMG, PPL | FI(A): LETOUN, TMG; VLEKAR: LETOUN | instruktor a dozor na letounech a TMG; vlekař na letounech |
 | Examinátor jen třídy | CRE(A): LETOUN | examinátor na letounech |
 | Externí examinátor | osoba „externí“ + FE(S): KLUZAK | examinátor na kluzácích |
@@ -239,11 +240,17 @@ typu dozor na zemi).
 - **Další role** (např. navijákář, služba RADIO) = nový řádek `lov_role` (a nový kód
   v programu) + vazby k oprávnění.
 
-## 8. Otevřené otázky
+## 8. Rozhodnuté otázky
 
-1. **Dozor a omezený instruktor:** smí omezený FI dozorovat *další* (ne první) sóla? Model
-   to umí obojí – jde jen o hodnotu `jen_neomezene` u role DOZOR.
-2. **Vlekař pro TMG:** nechat TMG v povolených kategoriích vlekaře (předpis to umožňuje),
-   nebo vynechat, dokud klub s TMG nevleká?
-3. **Inspektor ULL** dělá i dozor nad sóly? (Je to vždy instruktor ULL, takže by stačilo mít
-   obě oprávnění.)
+1. **Omezený instruktor a dozor:** smí. Omezený FI vyučuje pod dohledem a nesmí povolit
+   jen **první** sólo a první samostatný přelet (SFCL.350(b), FCL.910.FI(b)); omezený FI(A)
+   dokonce musí pro odstranění omezení **dozorovat aspoň 25 sól** žáků (FCL.910.FI(c)).
+   Role proto žádný příznak „jen neomezené“ nemá.
+2. **Vlekař pro TMG:** ne (správce 7. 10. 2026) – řídký případ.
+3. **Inspektor ULL:** podle LA 1 čl. 3.8.4 musí inspektor provozu mít platný pilotní průkaz
+   **a kvalifikaci instruktor**. Osoba má tedy obě oprávnění (instruktor ULL → instruktor
+   a dozor, inspektor ULL → examinátor); vazby se nezdvojují.
+
+Zdroje: [SFCL.350](https://regulatorylibrary.caa.co.uk/2018-1976/Content/Regs/01080_SFCL.350.htm),
+[FCL.905.FI / FCL.910.FI](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-aircrew-regulation-eu-no?page=30),
+[LA 1](https://www.laacr.cz/tml/files/2022/04/LA1_11.4.2022.pdf).
