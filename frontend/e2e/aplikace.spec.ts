@@ -59,3 +59,15 @@ test("neznámá adresa vede na přehled letů", async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("button", { name: "+ Nový let" })).toBeVisible();
 });
+
+test("nedostupný server: srozumitelná hláška místo obecné chyby", async ({ page }) => {
+  // Proxy před serverem odpoví 502, když aplikace neběží (nasazení, restart).
+  await prihlasit(page);
+  await page.route("**/api/lety/*/vzlet", (route) =>
+    route.fulfill({ status: 502, contentType: "text/html", body: "<html>Bad Gateway</html>" }),
+  );
+  await page.locator(".let.naplanovan").first().getByRole("button", { name: "Vzlet" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    /Server je nedostupný \(možná se právě aktualizuje\)/,
+  );
+});

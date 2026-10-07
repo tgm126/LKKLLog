@@ -9,6 +9,8 @@ export class ChybaApi extends Error {
   }
 }
 
+const NEDOSTUPNY = "Server je nedostupný (možná se právě aktualizuje). Zkuste to za chvíli.";
+
 async function zavolat<T>(metoda: "GET" | "POST", cesta: string, data?: unknown): Promise<T> {
   let odpoved: Response;
   try {
@@ -19,6 +21,10 @@ async function zavolat<T>(metoda: "GET" | "POST", cesta: string, data?: unknown)
     });
   } catch {
     throw new ChybaApi(0, "Nepodařilo se spojit se serverem. Zkontrolujte připojení.");
+  }
+  // Server neběží (nasazení, restart, výpadek) – odpovídá proxy před ním, ne aplikace.
+  if ([502, 503, 504].includes(odpoved.status)) {
+    throw new ChybaApi(odpoved.status, NEDOSTUPNY);
   }
   if (odpoved.status === 204) return undefined as T;
   const telo = await odpoved.json().catch(() => null);

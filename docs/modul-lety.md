@@ -197,3 +197,13 @@ frontend/
    jen když pro účel a kategorii letadla nějaká existuje (`db/019`). Kluzáky: osnovy IU, IA
    a II z Programu výcviku AeČR v.6 (úprava AK Kladno), nabídka úlohy podle účelu (vazba
    úloha ↔ účel); TMG zatím ne. Obecné úlohy u kluzáků nahradil sportovní výcvik (II).
+7. **Nedostupný server** (7. 10. 2026): výpadek sítě → „Nepodařilo se spojit se serverem…“;
+   server neběží a odpoví proxy (502, 503, 504) → „Server je nedostupný (možná se právě
+   aktualizuje). Zkuste to za chvíli.“ Přehled letů při neúspěšném obnovení ukazuje „Bez
+   spojení se serverem – údaje z … UTC“.
+
+## 7. K projednání
+- **Cíl letu u naplánovaného letu a letu ve vzduchu** (7. 10. 2026): dnes jde místo přistání
+  upravit až po přistání – omezení `pristani_ma_misto_a_pocet` (`db/009`) nedovolí místo
+  přistání bez času přistání. Návrh: `misto_pristani` do přistání = cíl, přistání z pásku cíl
+  zachová. Otevřené: má to databáze hlídat (uvolnit omezení), nebo cíl vést jinak?
