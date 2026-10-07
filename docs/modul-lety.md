@@ -76,7 +76,9 @@ dvojice otevře detail jejího letu.
   aplikace sama přiřadí každému letu, který není kluzák – i vlečné). U ukončeného letu
   (pásek nahoře v detailu) je vpravo v řádku štítků doba tučně a počet přistání („3×“).
   Varování má v pásku vlastní červený řádek. Akce pod páskem (T&G a PŘISTÁL, u naplánovaného
-  VZLET přes celou šířku).
+  VZLET přes celou šířku). **Barvy písma a tlačítek** (sjednoceno s desktopem 7. 10. 2026):
+  stopky v barvě textu (stav říká výplň pásku); PŘISTÁL zelené a VZLET modré plné s bílým
+  textem; T&G bílé s černým textem (pásek i detail).
 - **Ukončené a zrušené = deník**: řádky v jedné kartě, sloupce Letadlo · Posádka · Čas (vzlet
   nad přistáním) · Doba · P (počet přistání). **První dva řádky** patří posádce (osoba na
   řádek; je-li jen jedna, druhý zůstane prázdný), **třetí řádek** šedě vždy POB a odchylky od

@@ -1,5 +1,5 @@
 /* Pásek letu = barevný panel s výrazným okrajem (strip ŘLP); dole štítky v pevných pozicích.
-   Varianta stavu mění jen výplň panelu a barvu stopek. */
+   Varianta stavu mění jen výplň panelu; písmo (i stopky) je v barvě textu. */
 .let {
   --let-vypln: var(--barva-karta);
 
@@ -12,12 +12,10 @@
 
 .let.vzduch {
   --let-vypln: var(--barva-zelena-vypln);
-  --let-stopky: var(--barva-zelena);
 }
 
 .let.problem {
   --let-vypln: var(--barva-cervena-vypln);
-  --let-stopky: var(--barva-cervena);
 }
 
 .let.naplanovan,
@@ -98,7 +96,6 @@
 }
 
 .let-stopky {
-  color: var(--let-stopky, var(--barva-text));
   font-size: var(--pismo-l);
   font-weight: var(--tloustka-tucna);
 }
