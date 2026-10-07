@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Místa letů – návrh</title>
+<style>
+/* =============================================================================================
+   NÁVRH (7. 10. 2026) – místo vzletu a cíl (místo přistání) u naplánovaného letu a letu ve
+   vzduchu; přelet i přelet vleku (vlečná s kluzákem přistanou jinde). Pásek podle
+   pasek-mobil-v5.html, bloky podle lety-mobil-v4.html. Moje letiště = LKKL. Osoby smyšlené.
+   ============================================================================================= */
+:root {
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px; --pismo-m: 15px; --pismo-l: 20px;
+  --tloustka-tucna: 700;
+  --mezera-1: 4px; --mezera-2: 8px; --mezera-3: 12px;
+  --zaobleni: 10px; --zaobleni-pilulka: 999px; --dotyk: 44px;
+  --sirka-casu: 96px;
+  --mista-stitku: calc(6ch + 2 * var(--mezera-2)) calc(8ch + 2 * var(--mezera-2))
+                  calc(5ch + 2 * var(--mezera-2)) calc(5ch + 2 * var(--mezera-2));
+  --barva-pozadi:   light-dark(#eef0f3, #0d1015);
+  --barva-karta:    light-dark(#ffffff, #171b21);
+  --barva-text:     light-dark(#1a1d21, #e8eaed);
+  --barva-seda:     light-dark(#5b6570, #9aa4af);
+  --barva-cara:     light-dark(#d9dde2, #2c333c);
+  --barva-neutralni:light-dark(#f1f3f5, #1f252c);
+  --barva-zelena:   light-dark(#137a38, #4cc777);
+  --barva-modra:    light-dark(#0a5fd0, #6aa8ff);
+  --barva-modra-vypln: light-dark(#e3edfc, #122440);
+  --barva-obrys:    light-dark(#2b3138, #7d8894);
+  --barva-prepazka: light-dark(#aab2bb, #3f4852);
+  --vypln-vzduch:   light-dark(#e3f4e8, #122a1b);
+  --vypln-plan:     light-dark(#e3edfc, #122440);
+  --stitek-vypln:   light-dark(#ffffff, #0d1015);
+  --akce-modra: #0a5fd0; --akce-zelena: #137a38; --na-akci: #fff;
+}
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--pismo); font-size: var(--pismo-m); line-height: 1.3; background: #8a9099; padding: 16px; }
+.cisla { font-variant-numeric: tabular-nums; }
+h1 { color: #fff; font-size: 22px; } h2.cast { color: #fff; font-size: 18px; margin: 24px 0 4px; }
+.uvod { color: #fff; opacity: .9; max-width: 900px; margin: 4px 0 16px; }
+.rada { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.sloupec { width: 375px; padding: 12px; border-radius: 16px; background: var(--barva-pozadi); color: var(--barva-text); }
+.sloupec.svetly { color-scheme: light; } .sloupec.tmavy { color-scheme: dark; }
+.popis { color: #fff; font-size: 13px; margin-bottom: 6px; max-width: 375px; }
+.nadpis { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); margin: 4px 4px 8px; }
+.male { font-size: var(--pismo-s); } .seda { color: var(--barva-seda); } .tucne { font-weight: var(--tloustka-tucna); }
+
+/* --- pásek (pasek-mobil-v5) --- */
+.let { background: var(--barva-karta); border: 1.5px solid var(--barva-obrys); border-radius: var(--zaobleni); overflow: hidden; margin-bottom: var(--mezera-2); }
+.let.vzduch { background: var(--vypln-vzduch); --stopky: var(--barva-zelena); }
+.let.plan { background: var(--vypln-plan); }
+.par { display: grid; grid-template-columns: minmax(0, 1fr) var(--sirka-casu); grid-template-areas: "hlava cas" "posadka cas" "stitky stitky" "akce akce"; }
+.par + .par { border-top: 1px solid var(--barva-prepazka); }
+.hlava { grid-area: hlava; display: flex; align-items: baseline; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3) 0; white-space: nowrap; }
+.rejstrik { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); }
+.typ { font-size: var(--pismo-s); color: var(--barva-seda); }
+.posadka { grid-area: posadka; display: grid; padding: 0 var(--mezera-3) var(--mezera-2); }
+.funkce { font-size: var(--pismo-s); color: var(--barva-seda); }
+.cas { grid-area: cas; display: grid; align-content: start; justify-items: end; padding: var(--mezera-2) var(--mezera-3); }
+.stopky { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); color: var(--stopky); }
+.stitky { grid-area: stitky; display: grid; grid-template-columns: var(--mista-stitku) 1fr; gap: var(--mezera-1); align-items: center; padding: 0 var(--mezera-3) var(--mezera-2); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.stitek { justify-self: start; padding: 3px var(--mezera-2); border: 1px solid var(--barva-prepazka); border-radius: var(--zaobleni-pilulka); background: var(--stitek-vypln); white-space: nowrap; }
+.akce { grid-area: akce; display: flex; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); border-top: 1px solid var(--barva-prepazka); }
+.tl { flex: 1; height: var(--dotyk); display: grid; place-items: center; border-radius: var(--zaobleni); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; }
+.tl.zelene { background: var(--akce-zelena); color: var(--na-akci); }
+.tl.modre { background: var(--akce-modra); color: var(--na-akci); }
+
+/* trasa na pásku – tři varianty */
+.trasa-hlava { font-size: var(--pismo-m); font-weight: var(--tloustka-tucna); }                 /* A: v hlavě za typem */
+.stitek.trasa { justify-self: end; grid-column: 5; }                                               /* B: štítek vpravo v řádku štítků */
+.trasa-cas { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }                     /* C: pod časem */
+
+/* --- bloky detailu a průvodce --- */
+.blok { background: var(--barva-karta); border-radius: var(--zaobleni); margin-bottom: var(--mezera-2); overflow: hidden; box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.blok-nadpis { display: flex; justify-content: space-between; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); padding: var(--mezera-1) var(--mezera-3); background: var(--barva-neutralni); border-bottom: 1px solid var(--barva-cara); }
+.pole { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--barva-cara); }
+.p { background: var(--barva-karta); padding: var(--mezera-2) 24px var(--mezera-2) var(--mezera-3); position: relative; min-width: 0; }
+.p.cely { grid-column: 1 / -1; }
+.p .popisek { display: block; font-size: var(--pismo-s); color: var(--barva-seda); }
+.p .hodnota { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p .hodnota.vychozi { color: var(--barva-seda); }
+.p.upravit::after { content: "›"; position: absolute; right: var(--mezera-3); top: 50%; transform: translateY(-50%); color: var(--barva-seda); }
+.p.otevreno { background: var(--barva-modra-vypln); }
+.uprava { grid-column: 1 / -1; background: var(--barva-modra-vypln); padding: var(--mezera-2) var(--mezera-3) var(--mezera-3); display: grid; gap: var(--mezera-2); }
+.cipy { display: flex; flex-wrap: wrap; gap: var(--mezera-2); }
+.cip { min-height: var(--dotyk); display: inline-grid; place-items: center; padding: 0 var(--mezera-3); border: 1px solid var(--barva-prepazka); border-radius: var(--zaobleni); background: var(--barva-karta); }
+.cip.zap { background: var(--akce-modra); border-color: var(--akce-modra); color: var(--na-akci); font-weight: var(--tloustka-tucna); }
+.pole-text { height: var(--dotyk); border: 1px solid var(--barva-prepazka); border-radius: var(--zaobleni); background: var(--barva-karta); padding: 0 var(--mezera-3); display: flex; align-items: center; color: var(--barva-seda); }
+
+.panel { background: #fff; color: #111; border-radius: 12px; padding: 16px; max-width: 900px; margin-top: 24px; }
+.panel h2 { font-size: 17px; margin-bottom: 8px; } .panel ul { padding-left: 20px; } .panel li { margin-bottom: 4px; }
+.panel table { border-collapse: collapse; font-size: 14px; margin: 6px 0 10px; } .panel td, .panel th { border: 1px solid #ccc; padding: 3px 8px; text-align: left; vertical-align: top; }
+</style>
+</head>
+<body>
+<h1>Místa letů – cíl u naplánovaného letu a letu ve vzduchu</h1>
+<p class="uvod">Moje letiště je LKKL. Na pásku se trasa ukazuje, jen když let nezačíná a nekončí na mém
+  letišti (přelet ven, přílet odjinud). Tři varianty umístění – A v hlavě, B štítek vpravo, C pod
+  časem. Běžný let (start i cíl LKKL) trasu nemá.</p>
+
+<template id="pasky-a">
+  <div class="nadpis">Kluzák ve vzduchu – přelet na LKMB</div>
+  <div class="let vzduch"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-0914</span><span class="typ">ASW 15</span><span class="trasa-hlava">→ LKMB</span></div>
+    <div class="posadka"><span>Tomáš Bílek <span class="funkce">PIC</span></span></div>
+    <div class="cas cisla"><span class="stopky">1:42:10</span><span class="male seda">↑ 09:01</span></div>
+    <div class="stitky"><span></span><span class="stitek">aerovlek</span><span class="stitek">POB 1</span><span></span></div>
+    <div class="akce"><span class="tl zelene">Přistál</span></div>
+  </div></div>
+  <div class="nadpis">Vlek – vlečná i kluzák přeletí na LKMB</div>
+  <div class="let vzduch">
+    <div class="par">
+      <div class="hlava"><span class="rejstrik">OK-CRA</span><span class="typ">Z 526</span><span class="trasa-hlava">→ LKMB</span></div>
+      <div class="posadka"><span>Ondřej Novák <span class="funkce">vlekař</span></span></div>
+      <div class="cas cisla"><span class="stopky">0:12:40</span><span class="male seda">↑ 10:15</span></div>
+      <div class="stitky"><span class="stitek">vlek</span><span></span><span class="stitek">POB 1</span><span></span></div>
+    </div>
+    <div class="par">
+      <div class="hlava"><span class="rejstrik">OK-2728</span><span class="typ">L 13</span><span class="trasa-hlava">→ LKMB</span></div>
+      <div class="posadka"><span>Marek Dvořák <span class="funkce">PIC</span></span></div>
+      <div class="cas cisla"><span class="stopky">0:12:40</span><span class="male seda">↑ 10:15</span></div>
+      <div class="stitky"><span></span><span class="stitek">aerovlek</span><span class="stitek">POB 2</span><span></span></div>
+      <div class="akce"><span class="tl zelene">Přistál</span></div>
+    </div>
+  </div>
+  <div class="nadpis">Naplánovaný přílet odjinud (start LKMB, cíl moje letiště)</div>
+  <div class="let plan"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-CWF</span><span class="typ">C 172</span><span class="trasa-hlava">LKMB →</span></div>
+    <div class="posadka"><span>Petr Hora <span class="funkce">PIC</span></span></div>
+    <div class="cas"><span class="male seda">plán</span></div>
+    <div class="stitky"><span></span><span></span><span class="stitek">POB 2</span><span></span></div>
+    <div class="akce"><span class="tl modre">Vzlet</span></div>
+  </div></div>
+</template>
+
+<template id="pasky-b">
+  <div class="nadpis">Kluzák ve vzduchu – přelet na LKMB</div>
+  <div class="let vzduch"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-0914</span><span class="typ">ASW 15</span></div>
+    <div class="posadka"><span>Tomáš Bílek <span class="funkce">PIC</span></span></div>
+    <div class="cas cisla"><span class="stopky">1:42:10</span><span class="male seda">↑ 09:01</span></div>
+    <div class="stitky"><span></span><span class="stitek">aerovlek</span><span class="stitek">POB 1</span><span></span><span class="stitek trasa">→ LKMB</span></div>
+    <div class="akce"><span class="tl zelene">Přistál</span></div>
+  </div></div>
+  <div class="nadpis">Vlek – vlečná i kluzák přeletí na LKMB</div>
+  <div class="let vzduch">
+    <div class="par">
+      <div class="hlava"><span class="rejstrik">OK-CRA</span><span class="typ">Z 526</span></div>
+      <div class="posadka"><span>Ondřej Novák <span class="funkce">vlekař</span></span></div>
+      <div class="cas cisla"><span class="stopky">0:12:40</span><span class="male seda">↑ 10:15</span></div>
+      <div class="stitky"><span class="stitek">vlek</span><span></span><span class="stitek">POB 1</span><span></span><span class="stitek trasa">→ LKMB</span></div>
+    </div>
+    <div class="par">
+      <div class="hlava"><span class="rejstrik">OK-2728</span><span class="typ">L 13</span></div>
+      <div class="posadka"><span>Marek Dvořák <span class="funkce">PIC</span></span></div>
+      <div class="cas cisla"><span class="stopky">0:12:40</span><span class="male seda">↑ 10:15</span></div>
+      <div class="stitky"><span></span><span class="stitek">aerovlek</span><span class="stitek">POB 2</span><span></span><span class="stitek trasa">→ LKMB</span></div>
+      <div class="akce"><span class="tl zelene">Přistál</span></div>
+    </div>
+  </div>
+  <div class="nadpis">Naplánovaný přílet odjinud (start LKMB, cíl moje letiště)</div>
+  <div class="let plan"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-CWF</span><span class="typ">C 172</span></div>
+    <div class="posadka"><span>Petr Hora <span class="funkce">PIC</span></span></div>
+    <div class="cas"><span class="male seda">plán</span></div>
+    <div class="stitky"><span></span><span></span><span class="stitek">POB 2</span><span></span><span class="stitek trasa">LKMB →</span></div>
+    <div class="akce"><span class="tl modre">Vzlet</span></div>
+  </div></div>
+</template>
+
+<template id="pasky-c">
+  <div class="nadpis">Kluzák ve vzduchu – přelet na LKMB</div>
+  <div class="let vzduch"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-0914</span><span class="typ">ASW 15</span></div>
+    <div class="posadka"><span>Tomáš Bílek <span class="funkce">PIC</span></span></div>
+    <div class="cas cisla"><span class="stopky">1:42:10</span><span class="male seda">↑ 09:01</span><span class="trasa-cas">→ LKMB</span></div>
+    <div class="stitky"><span></span><span class="stitek">aerovlek</span><span class="stitek">POB 1</span><span></span></div>
+    <div class="akce"><span class="tl zelene">Přistál</span></div>
+  </div></div>
+  <div class="nadpis">Vlek – vlečná i kluzák přeletí na LKMB</div>
+  <div class="let vzduch">
+    <div class="par">
+      <div class="hlava"><span class="rejstrik">OK-CRA</span><span class="typ">Z 526</span></div>
+      <div class="posadka"><span>Ondřej Novák <span class="funkce">vlekař</span></span></div>
+      <div class="cas cisla"><span class="stopky">0:12:40</span><span class="male seda">↑ 10:15</span><span class="trasa-cas">→ LKMB</span></div>
+      <div class="stitky"><span class="stitek">vlek</span><span></span><span class="stitek">POB 1</span><span></span></div>
+    </div>
+    <div class="par">
+      <div class="hlava"><span class="rejstrik">OK-2728</span><span class="typ">L 13</span></div>
+      <div class="posadka"><span>Marek Dvořák <span class="funkce">PIC</span></span></div>
+      <div class="cas cisla"><span class="stopky">0:12:40</span><span class="male seda">↑ 10:15</span><span class="trasa-cas">→ LKMB</span></div>
+      <div class="stitky"><span></span><span class="stitek">aerovlek</span><span class="stitek">POB 2</span><span></span></div>
+      <div class="akce"><span class="tl zelene">Přistál</span></div>
+    </div>
+  </div>
+  <div class="nadpis">Naplánovaný přílet odjinud (start LKMB, cíl moje letiště)</div>
+  <div class="let plan"><div class="par">
+    <div class="hlava"><span class="rejstrik">OK-CWF</span><span class="typ">C 172</span></div>
+    <div class="posadka"><span>Petr Hora <span class="funkce">PIC</span></span></div>
+    <div class="cas"><span class="male seda">plán</span><span class="trasa-cas">LKMB →</span></div>
+    <div class="stitky"><span></span><span></span><span class="stitek">POB 2</span><span></span></div>
+    <div class="akce"><span class="tl modre">Vzlet</span></div>
+  </div></div>
+</template>
+
+<template id="formulare">
+  <div class="nadpis">Průvodce (vzlet teď / naplánovat) – běžný let</div>
+  <section class="blok">
+    <div class="blok-nadpis">Další údaje</div>
+    <div class="pole">
+      <div class="p upravit"><span class="popisek">Místo vzletu</span><span class="hodnota">LKKL Kladno</span></div>
+      <div class="p upravit"><span class="popisek">Cíl</span><span class="hodnota vychozi">návrat</span></div>
+      <div class="p upravit cely"><span class="popisek">Platí</span><span class="hodnota">Tomáš Bílek</span></div>
+    </div>
+  </section>
+
+  <div class="nadpis">Průvodce – aerovlek, přelet vleku na LKMB</div>
+  <section class="blok">
+    <div class="blok-nadpis">Další údaje</div>
+    <div class="pole">
+      <div class="p upravit cely"><span class="popisek">Místo vzletu</span><span class="hodnota">LKKL Kladno</span></div>
+      <div class="p upravit"><span class="popisek">Cíl kluzáku</span><span class="hodnota">LKMB Mladá Boleslav</span></div>
+      <div class="p upravit otevreno"><span class="popisek">Cíl vlečné</span><span class="hodnota vychozi">návrat</span></div>
+      <div class="uprava">
+        <div class="cipy"><span class="cip zap">Návrat (LKKL)</span><span class="cip">Jako kluzák (LKMB)</span></div>
+        <div class="pole-text">Hledat letiště (kód nebo název)</div>
+        <div class="cipy"><span class="cip">LKVO Vodochody</span><span class="cip">LKRO Roudnice</span></div>
+      </div>
+      <div class="p upravit cely"><span class="popisek">Platí</span><span class="hodnota">Marek Dvořák</span></div>
+    </div>
+  </section>
+
+  <div class="nadpis">Detail letu ve vzduchu – Časy a místa (UTC)</div>
+  <section class="blok">
+    <div class="blok-nadpis">Časy a místa (UTC)</div>
+    <div class="pole">
+      <div class="p upravit"><span class="popisek">Vzlet</span><span class="hodnota cisla">09:01</span></div>
+      <div class="p"><span class="popisek">Přistání</span><span class="hodnota seda">ve vzduchu</span></div>
+      <div class="p upravit"><span class="popisek">Místo vzletu</span><span class="hodnota">LKKL Kladno</span></div>
+      <div class="p upravit"><span class="popisek">Cíl</span><span class="hodnota">LKMB Mladá Boleslav</span></div>
+    </div>
+  </section>
+</template>
+
+<h2 class="cast">Pásek – kde ukázat trasu</h2>
+<div class="rada">
+  <div><div class="popis">A – v hlavě za typem letadla (tučně)</div><div class="sloupec svetly" data-sablona="pasky-a"></div></div>
+  <div><div class="popis">B – štítek vpravo v řádku štítků</div><div class="sloupec svetly" data-sablona="pasky-b"></div></div>
+  <div><div class="popis">C – pod časem vzletu</div><div class="sloupec svetly" data-sablona="pasky-c"></div></div>
+</div>
+<div class="rada" style="margin-top:16px">
+  <div><div class="popis">A – tmavý</div><div class="sloupec tmavy" data-sablona="pasky-a"></div></div>
+  <div><div class="popis">B – tmavý</div><div class="sloupec tmavy" data-sablona="pasky-b"></div></div>
+  <div><div class="popis">C – tmavý</div><div class="sloupec tmavy" data-sablona="pasky-c"></div></div>
+</div>
+
+<h2 class="cast">Průvodce a detail</h2>
+<div class="rada">
+  <div><div class="popis">Světlý</div><div class="sloupec svetly" data-sablona="formulare"></div></div>
+  <div><div class="popis">Tmavý</div><div class="sloupec tmavy" data-sablona="formulare"></div></div>
+</div>
+
+<div class="panel">
+  <h2>Pravidla</h2>
+  <table>
+    <tr><th>Zadáno</th><th>Místo vzletu</th><th>Cíl</th></tr>
+    <tr><td>nic</td><td>moje letiště</td><td>návrat na místo vzletu</td></tr>
+    <tr><td>jen start</td><td>zadaný</td><td>návrat na místo vzletu</td></tr>
+    <tr><td>jen cíl</td><td>moje letiště</td><td>zadaný</td></tr>
+    <tr><td>obojí</td><td>zadaný</td><td>zadaný</td></tr>
+  </table>
+  <ul>
+    <li><b>Cíl</b> = místo přistání zadané předem; nezadaný zůstane prázdný a při přistání ho
+      databáze doplní jako místo vzletu (návrat). Po přistání je to skutečné místo přistání.</li>
+    <li><b>Aerovlek:</b> cíl kluzáku a cíl vlečné zvlášť; vlečná má výchozí návrat, volba
+      „Jako kluzák“ pro přelet vleku. V detailu má každý let svůj cíl.</li>
+    <li><b>Pásek</b> ukazuje trasu jen u letu, který nezačíná nebo nekončí na mém letišti:
+      „→ LKMB“ (odlet jinam), „LKMB →“ (přílet odjinud), případně „LKMB → LKRO“.</li>
+  </ul>
+</div>
+
+<script>
+for (const s of document.querySelectorAll(".sloupec")) s.append(document.getElementById(s.dataset.sablona).content.cloneNode(true));
+</script>
+</body>
+</html>
