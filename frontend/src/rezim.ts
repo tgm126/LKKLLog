@@ -3,7 +3,7 @@
 export type Rezim = "auto" | "svetly" | "tmavy";
 
 export const REZIMY: { rezim: Rezim; nazev: string }[] = [
-  { rezim: "auto", nazev: "Podle zařízení" },
+  { rezim: "auto", nazev: "Auto" }, // podle zařízení
   { rezim: "svetly", nazev: "Světlý" },
   { rezim: "tmavy", nazev: "Tmavý" },
 ];

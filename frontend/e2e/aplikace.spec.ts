@@ -34,7 +34,7 @@ test("režim zobrazení se pamatuje, ťuknutí vedle nabídky ji jen zavře", as
 
   for (const [nazev, rezim] of [
     ["Světlý", "svetly"],
-    ["Podle zařízení", "auto"],
+    ["Auto", "auto"],
     ["Tmavý", "tmavy"],
   ] as const) {
     await uzivatel.click();

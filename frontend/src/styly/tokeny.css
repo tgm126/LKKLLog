@@ -59,7 +59,7 @@
 
   /* Deník ukončených letů: letadlo · posádka · čas (vzlet nad přistáním) · doba · přistání */
   --sloupce-deniku: 86px minmax(0, 1fr) 6ch 6ch 2ch;
-  --sirka-nabidky: 220px;     /* rozbalovací nabídka uživatele */
+  --sirka-nabidky: 264px;     /* rozbalovací nabídka uživatele (letiště s názvem na řádek) */
   --vrstva-zastinu: 1;        /* zástin pod nabídkou: ťuknutí vedle ji zavře */
   --vrstva-nabidky: 2;        /* nabídka nad obsahem stránky */
   --vrstva-dialogu: 3;        /* dialog (krátký let) nad vším */

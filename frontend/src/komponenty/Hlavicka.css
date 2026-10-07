@@ -45,50 +45,58 @@
   z-index: var(--vrstva-zastinu);
 }
 
-/* Nabídka uživatele pod iniciálami: kdo je přihlášen, režim zobrazení, odhlášení */
+/* Nabídka uživatele pod iniciálami: oddíly pod sebou oddělené čarou (kdo je přihlášen, můj
+   provoz, režim zobrazení, odhlášení), jedno odsazení, písmo jen 15 px (řádky) a 12 px
+   (nadpisy oddílů, e-mail); tučně jen jméno a vybraný režim. */
 .nabidka {
   position: absolute;
   top: 100%;
   right: var(--okraj-stranky);
   z-index: var(--vrstva-nabidky);
-  display: grid;
-  gap: var(--mezera-1);
-  min-width: var(--sirka-nabidky);
-  padding: var(--mezera-2);
+  width: var(--sirka-nabidky);
+  overflow: hidden;
   border: var(--ramecek);
   border-radius: var(--zaobleni);
   background: var(--barva-karta);
+  box-shadow: var(--stin-karty);
 }
 
-.nabidka-kdo {
-  padding: var(--mezera-1) var(--mezera-2) var(--mezera-2);
-  border-bottom: var(--ramecek);
+.nabidka-oddil {
+  display: grid;
+  padding: var(--mezera-2) var(--mezera-3);
 }
 
-.nabidka .nadpisek {
-  padding: var(--mezera-2) var(--mezera-2) 0;
+.nabidka-oddil + .nabidka-oddil {
+  border-top: var(--ramecek);
 }
 
-.nabidka .tl.bez-ramu {
+.nabidka-oddil .segmenty {
+  margin-top: var(--mezera-1);
+}
+
+/* Řádek nabídky: popisek vlevo, hodnota vpravo šedě a „›“; jiné letiště oranžově
+   (upozornění) */
+.nabidka .tl.nabidka-polozka {
+  --tl-odsazeni: 0;
   --tl-tloustka: var(--tloustka);
 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mezera-3);
   text-align: left;
 }
 
-.nabidka .tl[aria-pressed="true"] {
-  --tl-tloustka: var(--tloustka-tucna);
+.nabidka-polozka > span {
+  color: var(--barva-seda);
 }
 
-/* Můj provoz v nabídce: popisek vlevo, hodnota vpravo; jiné letiště oranžově (upozornění) */
-.nabidka .tl.nabidka-polozka {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--mezera-3);
+.nabidka-polozka > span::after {
+  content: " ›";
 }
 
-.nabidka-polozka .jinde {
+.nabidka-polozka > .jinde {
   color: var(--barva-oranzova);
-  font-weight: var(--tloustka-tucna);
 }
 
 /* Jiné letiště než domovské: štítek s kódem před zkráceným datem */

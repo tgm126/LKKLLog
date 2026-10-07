@@ -11,6 +11,7 @@ import { nacistRezim, nastavitRezim, REZIMY, type Rezim } from "../rezim";
 import { inicialy, zmenitUzivatele } from "../uzivatel";
 import { Stitek } from "./Stitek";
 import { Tlacitko } from "./Tlacitko";
+import "./Volby.css";
 import "./Hlavicka.css";
 
 export function Hlavicka({ ja }: { ja: Ja }) {
@@ -124,49 +125,61 @@ function NabidkaUzivatele({ ja }: { ja: Ja }) {
       {otevrena && <div className="zastin" onClick={() => setOtevrena(false)} />}
       {otevrena && (
         <div className="nabidka">
-          <div className="nabidka-kdo">
-            <div className="tucne">
+          <div className="nabidka-oddil">
+            <span className="tucne">
               {ja.jmeno} {ja.prijmeni}
-            </div>
-            <div className="male seda">{ja.email}</div>
-          </div>
-          <span className="nadpisek">Můj provoz · dnes</span>
-          <Tlacitko
-            varianta="bez-ramu"
-            className="nabidka-polozka"
-            onClick={() => navigate("/muj-provoz/letiste")}
-          >
-            Letiště
-            <span className={letiste && !letiste.domovske ? "jinde" : undefined}>
-              {letiste ? `${letiste.kod} ${letiste.nazev}` : "—"}
             </span>
-          </Tlacitko>
-          <Tlacitko
-            varianta="bez-ramu"
-            className="nabidka-polozka"
-            onClick={() => navigate("/muj-provoz/osoby")}
-          >
-            Osoby v provozu
-            <span>{provoz?.osoby.length || "všechny"}</span>
-          </Tlacitko>
-          <span className="nadpisek">Režim zobrazení</span>
-          {REZIMY.map((r) => (
+            <span className="male seda">{ja.email}</span>
+          </div>
+          <div className="nabidka-oddil">
+            <span className="nadpisek">Můj provoz · dnes</span>
             <Tlacitko
-              key={r.rezim}
               varianta="bez-ramu"
-              aria-pressed={rezim === r.rezim}
-              onClick={() => {
-                nastavitRezim(r.rezim);
-                setRezim(r.rezim);
-                setOtevrena(false);
-              }}
+              className="nabidka-polozka"
+              onClick={() => navigate("/muj-provoz/letiste")}
             >
-              {r.nazev}
+              Letiště
+              <span className={letiste && !letiste.domovske ? "jinde" : undefined}>
+                {letiste ? `${letiste.kod} ${letiste.nazev}` : "—"}
+              </span>
             </Tlacitko>
-          ))}
-          <Tlacitko varianta="obrys" disabled={odhlasit.isPending} onClick={() => odhlasit.mutate()}>
-            Odhlásit
-          </Tlacitko>
+            <Tlacitko
+              varianta="bez-ramu"
+              className="nabidka-polozka"
+              onClick={() => navigate("/muj-provoz/osoby")}
+            >
+              Osoby v provozu
+              <span>{provoz?.osoby.length || "všechny"}</span>
+            </Tlacitko>
+          </div>
+          <div className="nabidka-oddil">
+            <span className="nadpisek">Režim zobrazení</span>
+            <div className="segmenty">
+              {REZIMY.map((r) => (
+                <Tlacitko
+                  key={r.rezim}
+                  aria-pressed={rezim === r.rezim}
+                  onClick={() => {
+                    nastavitRezim(r.rezim);
+                    setRezim(r.rezim);
+                    setOtevrena(false);
+                  }}
+                >
+                  {r.nazev}
+                </Tlacitko>
+              ))}
+            </div>
+          </div>
+          <div className="nabidka-oddil">
+            <Tlacitko
+              varianta="bez-ramu"
+              className="nabidka-polozka"
+              disabled={odhlasit.isPending}
+              onClick={() => odhlasit.mutate()}
+            >
+              Odhlásit
+            </Tlacitko>
+          </div>
         </div>
       )}
     </span>
