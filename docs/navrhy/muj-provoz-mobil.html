@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Můj provoz – návrh</title>
+<style>
+/* =============================================================================================
+   NÁVRH (7. 10. 2026) – můj provoz: letiště a osoby v provozu na dnešek, jen pro tuto relaci
+   (docs/modul-muj-provoz.md). Styl jako lety-mobil-v4.html a osoby-mobil.html. Osoby
+   a situace jsou smyšlené.
+   ============================================================================================= */
+:root {
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px; --pismo-m: 15px; --pismo-l: 20px;
+  --tucne: 700;
+  --m1: 4px; --m2: 8px; --m3: 12px; --m4: 16px;
+  --zaobleni: 10px; --dotyk: 44px; --dotyk-hlavni: 52px;
+  --barva-pozadi:   light-dark(#eef0f3, #0d1015);
+  --barva-karta:    light-dark(#ffffff, #171b21);
+  --barva-cara:     light-dark(#d9dde2, #2c333c);
+  --barva-text:     light-dark(#1a1d21, #e8eaed);
+  --barva-seda:     light-dark(#5b6570, #9aa4af);
+  --barva-neutralni:light-dark(#f1f3f5, #1f252c);
+  --barva-prepazka: light-dark(#aab2bb, #3f4852);
+  --barva-modra:    light-dark(#0a5fd0, #6aa8ff);
+  --barva-modra-vypln: light-dark(#e3edfc, #122440);
+  --barva-oranzova: light-dark(#a35400, #f0a64a);
+  --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
+  --barva-zelena:   light-dark(#137a38, #4cc777);
+  --barva-zelena-vypln: light-dark(#e3f4e8, #122a1b);
+  --barva-obrys:    light-dark(#2b3138, #7d8894);
+  --akce-modra: #0a5fd0; --na-akci: #fff; --pruh: #f5b700; --na-pruhu: #1a1d21;
+}
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--pismo); font-size: var(--pismo-m); line-height: 1.3; background: #8a9099; padding: var(--m4); }
+.male { font-size: var(--pismo-s); } .seda { color: var(--barva-seda); } .tucne { font-weight: var(--tucne); }
+.cisla { font-variant-numeric: tabular-nums; }
+h1.navrh { color: #fff; font-size: 22px; } p.navrh { color: #fff; opacity: .9; max-width: 980px; margin: 4px 0 16px; }
+.rada { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-bottom: 28px; }
+.popis { color: #fff; font-size: 13px; margin-bottom: 6px; max-width: 375px; }
+.telefon { width: 375px; height: 812px; overflow: hidden; position: relative; border-radius: 28px; border: 8px solid #1b1b1b;
+  background: var(--barva-pozadi); color: var(--barva-text); display: flex; flex-direction: column; }
+.telefon.svetly { color-scheme: light; } .telefon.tmavy { color-scheme: dark; }
+.obsah { flex: 1; overflow: hidden; padding: var(--m3); }
+
+.pruh { background: var(--pruh); color: var(--na-pruhu); font-size: var(--pismo-s); font-weight: var(--tucne); text-align: center; padding: var(--m1); letter-spacing: .04em; }
+.hlavicka { background: var(--barva-karta); padding: var(--m2) var(--m3); border-bottom: 1px solid var(--barva-cara); position: relative; }
+.radek { display: flex; justify-content: space-between; align-items: baseline; gap: var(--m2); }
+.radek + .radek { margin-top: var(--m1); font-size: var(--pismo-s); color: var(--barva-seda); align-items: center; }
+.radek b { color: var(--barva-text); }
+.kulate { width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--barva-neutralni); font-size: var(--pismo-s); font-weight: var(--tucne); margin-left: var(--m2); vertical-align: middle; }
+.menu { background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); padding: 0 var(--m3); display: flex; gap: var(--m4); }
+.menu span { padding: var(--m2) 0; font-size: var(--pismo-s); font-weight: var(--tucne); letter-spacing: .04em; color: var(--barva-seda); border-bottom: 2px solid transparent; }
+.menu span.aktivni { color: var(--barva-modra); border-color: var(--barva-modra); }
+
+/* štítek letiště v hlavičce: oranžově = jiné než domovské */
+.stitek { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: var(--pismo-s); font-weight: var(--tucne); }
+.stitek.letiste { background: var(--barva-oranzova-vypln); color: var(--barva-oranzova); border: 1px solid var(--barva-oranzova); }
+.slunce { display: inline-flex; align-items: center; gap: var(--m2); }
+
+/* pásky v pozadí (jen naznačené) */
+.pasek { background: var(--barva-zelena-vypln); border: 1.5px solid var(--barva-obrys); border-radius: var(--zaobleni); padding: var(--m2) var(--m3); margin-bottom: var(--m2); }
+.pasek.planovany { background: light-dark(#e3edfc, #122440); }
+.pasek .r { display: flex; justify-content: space-between; }
+
+/* nabídka uživatele */
+.zastin { position: absolute; inset: 0; background: rgb(0 0 0 / 20%); }
+.nabidka { position: absolute; top: 100px; right: var(--m3); width: 290px; background: var(--barva-karta); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni); padding: var(--m2); display: grid; gap: var(--m1); box-shadow: 0 6px 20px rgb(0 0 0 / 25%); z-index: 2; }
+.nabidka-kdo { padding: var(--m1) var(--m2) var(--m2); border-bottom: 1px solid var(--barva-cara); }
+.nadpisek { font-size: var(--pismo-s); font-weight: var(--tucne); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); padding: var(--m2) var(--m2) 0; }
+.polozka { min-height: var(--dotyk); display: grid; grid-template-columns: 1fr auto 14px; align-items: center; gap: var(--m2); padding: 0 var(--m2); border-radius: var(--zaobleni); }
+.polozka .hodnota { text-align: right; }
+.polozka::after { content: "›"; color: var(--barva-seda); }
+.polozka.zvyraznena .hodnota { color: var(--barva-oranzova); font-weight: var(--tucne); }
+.volba { min-height: var(--dotyk); display: flex; align-items: center; padding: 0 var(--m2); }
+.volba.ano { font-weight: var(--tucne); }
+.tl { height: var(--dotyk); display: grid; place-items: center; border-radius: var(--zaobleni); font-weight: var(--tucne); }
+.tl.obrys { border: 1px solid var(--barva-prepazka); background: var(--barva-karta); }
+.tl.modre { background: var(--akce-modra); color: var(--na-akci); }
+
+/* obrazovka přes celý displej */
+.lista { display: grid; grid-template-columns: 28px 1fr auto; gap: var(--m2); align-items: center; background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); padding: var(--m2) var(--m3); }
+.lista .zpet { font-size: var(--pismo-l); }
+.blok { background: var(--barva-karta); border-radius: var(--zaobleni); margin-bottom: var(--m2); overflow: hidden; box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.blok-nadpis { display: flex; justify-content: space-between; font-size: var(--pismo-s); font-weight: var(--tucne); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); padding: var(--m1) var(--m3); background: var(--barva-neutralni); border-bottom: 1px solid var(--barva-cara); }
+.blok-nadpis .vpravo { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.blok-telo { padding: var(--m2) var(--m3); display: grid; gap: var(--m2); }
+.pole-text { height: var(--dotyk); border: 1px solid var(--barva-prepazka); border-radius: var(--zaobleni); background: var(--barva-karta); padding: 0 var(--m3); display: flex; align-items: center; color: var(--barva-seda); }
+.cipy { display: flex; flex-wrap: wrap; gap: var(--m2); }
+.cip { min-height: var(--dotyk); display: inline-grid; place-items: center; padding: 0 var(--m3); border: 1px solid var(--barva-prepazka); border-radius: var(--zaobleni); background: var(--barva-karta); }
+.cip.zap { background: var(--akce-modra); border-color: var(--akce-modra); color: var(--na-akci); font-weight: var(--tucne); }
+.cip.hledat { border-style: dashed; color: var(--barva-modra); }
+.segmenty { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--barva-prepazka); border-radius: var(--zaobleni); overflow: hidden; }
+.segmenty span { height: var(--dotyk); display: grid; place-items: center; font-weight: var(--tucne); border-left: 1px solid var(--barva-prepazka); background: var(--barva-karta); }
+.segmenty span:first-child { border-left: 0; }
+.segmenty span.zap { background: var(--akce-modra); color: var(--na-akci); }
+.seznam { display: grid; gap: 1px; background: var(--barva-cara); }
+.osoba { min-height: var(--dotyk); display: grid; grid-template-columns: 1fr 22px; align-items: center; gap: var(--m2); padding: 0 var(--m3); background: var(--barva-karta); }
+.osoba .pod { display: block; font-size: var(--pismo-s); color: var(--barva-seda); font-weight: 400; }
+.osoba.ano { font-weight: var(--tucne); }
+.policko { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--barva-prepazka); display: grid; place-items: center; font-size: 14px; font-weight: var(--tucne); color: transparent; }
+.osoba.ano .policko { background: var(--akce-modra); border-color: var(--akce-modra); color: #fff; }
+.dole { position: absolute; left: 0; right: 0; bottom: 0; padding: var(--m2) var(--m3) var(--m4); background: var(--barva-karta); border-top: 1px solid var(--barva-cara); display: grid; gap: var(--m2); }
+.filtr-info { font-size: var(--pismo-s); color: var(--barva-seda); }
+.filtr-info b { color: var(--barva-oranzova); }
+.postup { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--m1); padding: 0 var(--m3) var(--m2); background: var(--barva-karta); }
+.postup span { height: 4px; border-radius: 99px; background: var(--barva-cara); } .postup span.hotovo { background: var(--akce-modra); }
+
+.panel { background: #fff; color: #111; border-radius: 12px; padding: 16px; max-width: 820px; margin-bottom: 16px; }
+.panel h2 { font-size: 17px; margin: 0 0 8px; } .panel ul { padding-left: 20px; } .panel li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<h1 class="navrh">Můj provoz – letiště a osoby v provozu na dnešek (mobil)</h1>
+<p class="navrh">Jen pro tohoto uživatele na tomto zařízení a jen na dnešek. Příklad: klub je na
+  táboře v Mladé Boleslavi (LKMB), na letišti je 8 lidí.</p>
+
+<!-- ======================================================================================= -->
+<template id="hlavicka">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="hlavicka">
+    <div class="radek"><span style="font-size:20px" class="tucne">AK Kladno Log</span><span><span class="tucne cisla" style="font-size:20px">09:41:12</span> <span class="male seda">UTC</span><span class="kulate">TM</span></span></div>
+    <div class="radek cisla"><span class="slunce"><span class="stitek letiste">LKMB</span><span>7. 10.</span></span><span><b>TB</b> 04:39 · <b>SR</b> 05:12 · <b>SS</b> 16:30 · <b>TE</b> 17:02</span></div>
+  </header>
+  <nav class="menu"><span class="aktivni">LETY</span><span>OSOBY</span></nav>
+</template>
+
+<template id="nabidka">
+  <div data-vlozit="hlavicka"></div>
+  <main class="obsah">
+    <div class="pasek"><div class="r"><b>OK-3819</b><span class="cisla tucne">0:42</span></div><div class="male">Dvořák Marek · Malá Eva</div></div>
+    <div class="pasek"><div class="r"><b>OK-CRA</b><span class="cisla tucne">0:08</span></div><div class="male">Hora Petr</div></div>
+    <div class="pasek planovany"><div class="r"><b>OK-2817</b><span class="male seda">naplánovaný</span></div><div class="male">Kovář Jan</div></div>
+  </main>
+  <div class="zastin"></div>
+  <div class="nabidka">
+    <div class="nabidka-kdo"><div class="tucne">Tomáš Mandel</div><div class="male seda">tomas@example.cz</div></div>
+    <div class="nadpisek">Můj provoz · dnes</div>
+    <div class="polozka zvyraznena"><span>Letiště</span><span class="hodnota">LKMB Mladá Boleslav</span></div>
+    <div class="polozka"><span>Osoby v provozu</span><span class="hodnota">8</span></div>
+    <div class="nadpisek">Režim zobrazení</div>
+    <div class="volba ano">Podle zařízení</div>
+    <div class="volba">Světlý</div>
+    <div class="volba">Tmavý</div>
+    <span class="tl obrys">Odhlásit</span>
+  </div>
+</template>
+
+<template id="letiste">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="lista"><span class="zpet">←</span><span class="tucne" style="font-size:20px">Letiště pro dnešek</span><span></span></header>
+  <main class="obsah">
+    <section class="blok">
+      <div class="blok-nadpis">Domovské</div>
+      <div class="blok-telo"><div class="cipy"><span class="cip">LKKL Kladno</span></div></div>
+    </section>
+    <section class="blok">
+      <div class="blok-nadpis">Jiné letiště <span class="vpravo">platí do konce dne</span></div>
+      <div class="blok-telo">
+        <div class="pole-text">Hledat letiště (kód nebo název)</div>
+        <div class="cipy">
+          <span class="cip zap">LKMB Mladá Boleslav</span>
+          <span class="cip">LKVO Vodochody</span>
+          <span class="cip">LKRO Roudnice</span>
+          <span class="cip">LKHB Hodkovice</span>
+          <span class="cip">LKRA Raná</span>
+          <span class="cip">LKLT Letňany</span>
+          <span class="cip">LKTC Točná</span>
+          <span class="cip">LKPM Příbram</span>
+        </div>
+      </div>
+    </section>
+    <p class="male seda">Výchozí místo vzletu a přistání nových letů, sluneční časy a konec dne.
+      Jen pro vás na tomto zařízení; zítra zase LKKL.</p>
+  </main>
+</template>
+
+<template id="osoby">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="lista"><span class="zpet">←</span><span class="tucne" style="font-size:20px">Osoby v provozu</span><span class="male seda">8 vybraných</span></header>
+  <main class="obsah">
+    <div class="pole-text" style="margin-bottom:8px">Hledat jméno</div>
+    <div class="segmenty" style="margin-bottom:8px"><span>Vybrané 8</span><span class="zap">Všechny</span></div>
+    <section class="blok">
+      <div class="seznam">
+        <div class="osoba ano"><span>Bílek Tomáš<span class="pod">FI(S), FE(S)</span></span><span class="policko">✓</span></div>
+        <div class="osoba"><span>Brož Pavel<span class="pod">vlekař</span></span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Dvořák Marek<span class="pod">FI(S), vlekař</span></span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Hora Petr<span class="pod">FI(A)</span></span><span class="policko">✓</span></div>
+        <div class="osoba"><span>Kaplan Jan</span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Kovář Jan</span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Malá Eva<span class="pod">žák</span></span><span class="policko">✓</span></div>
+        <div class="osoba"><span>Malý David<span class="pod">externí</span></span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Mandel Tomáš</span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Novák Ondřej<span class="pod">vlekař</span></span><span class="policko">✓</span></div>
+        <div class="osoba"><span>Sýkora Ivo<span class="pod">FE(A)</span></span><span class="policko">✓</span></div>
+        <div class="osoba ano"><span>Veselá Jana</span><span class="policko">✓</span></div>
+      </div>
+    </section>
+  </main>
+  <div class="dole"><span class="tl obrys">Zrušit výběr – nabízet všechny</span></div>
+</template>
+
+<template id="posadka">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="lista"><span class="zpet">←</span><span class="tucne" style="font-size:20px">Nový let</span><span class="male seda">2 / 3 · Posádka</span></header>
+  <div class="postup"><span class="hotovo"></span><span class="hotovo"></span><span></span></div>
+  <main class="obsah">
+    <section class="blok">
+      <div class="blok-nadpis">Účel</div>
+      <div class="blok-telo"><div class="segmenty"><span>Normální</span><span class="zap">Výcvik</span><span>Sólo</span><span>Přezk.</span></div></div>
+    </section>
+    <section class="blok">
+      <div class="blok-nadpis">Instruktor (PIC)</div>
+      <div class="blok-telo">
+        <div class="filtr-info">jen osoby v provozu <b>(8)</b> · ostatní přes Hledat…</div>
+        <div class="cipy"><span class="cip zap">Bílek Tomáš</span><span class="cip">Dvořák Marek</span><span class="cip hledat">Hledat…</span></div>
+      </div>
+    </section>
+    <section class="blok">
+      <div class="blok-nadpis">Žák</div>
+      <div class="blok-telo">
+        <div class="filtr-info">jen osoby v provozu <b>(8)</b> · ostatní přes Hledat…</div>
+        <div class="cipy"><span class="cip">Malá Eva</span><span class="cip">Kovář Jan</span><span class="cip">Veselá Jana</span><span class="cip">Já</span><span class="cip">Hora Petr</span><span class="cip">Novák Ondřej</span><span class="cip hledat">Hledat…</span></div>
+      </div>
+    </section>
+  </main>
+  <div class="dole"><span class="tl modre" style="height:52px">DÁL</span></div>
+</template>
+
+<div class="rada">
+  <div><div class="popis">1 Nabídka uživatele: Můj provoz · dnes (štítek LKMB v hlavičce = jiné než domovské)</div><div class="telefon svetly" data-sablona="nabidka"></div></div>
+  <div><div class="popis">2 Letiště pro dnešek – ťuknutí uloží a vrátí zpět</div><div class="telefon svetly" data-sablona="letiste"></div></div>
+  <div><div class="popis">3 Osoby v provozu – zaškrtnutí se uloží hned</div><div class="telefon svetly" data-sablona="osoby"></div></div>
+  <div><div class="popis">4 Průvodce: rychlá volba jen z osob v provozu</div><div class="telefon svetly" data-sablona="posadka"></div></div>
+</div>
+<div class="rada">
+  <div><div class="popis">1 – tmavý</div><div class="telefon tmavy" data-sablona="nabidka"></div></div>
+  <div><div class="popis">2 – tmavý</div><div class="telefon tmavy" data-sablona="letiste"></div></div>
+  <div><div class="popis">3 – tmavý</div><div class="telefon tmavy" data-sablona="osoby"></div></div>
+  <div><div class="popis">4 – tmavý</div><div class="telefon tmavy" data-sablona="posadka"></div></div>
+</div>
+
+<div class="panel">
+  <h2>Návrh</h2>
+  <ul>
+    <li><b>Kde:</b> nabídka uživatele (kolečko s iniciálami), oddíl <b>Můj provoz · dnes</b>
+      nad režimem zobrazení. Letiště jiné než domovské oranžově (upozornění).</li>
+    <li><b>Platnost:</b> jen tato relace (zařízení) a jen dnešní den (UTC, jako přehled letů);
+      zítra domovské letiště a bez filtru.</li>
+    <li><b>Hlavička:</b> při jiném letišti oranžový štítek s kódem před slunečními časy, časy pro
+      zvolené letiště; ťuknutí na štítek otevře výběr letiště.</li>
+    <li><b>Letiště:</b> výchozí místo vzletu a přistání nových letů a přistání z pásku, konec
+      dne pro varování, zobrazení místa na páscích (jen když není moje). Seznam letů dne
+      ukazuje dál všechny lety klubu.</li>
+    <li><b>Osoby v provozu:</b> rychlá volba posádky jen z nich (a vždy Já); u rolí s oprávněním
+      ti, kdo smějí, jinak všechny osoby v provozu. „Hledat…“ najde kohokoli. Bez výběru se
+      nabízí jako dnes.</li>
+  </ul>
+</div>
+
+<script>
+for (const t of document.querySelectorAll(".telefon")) t.append(document.getElementById(t.dataset.sablona).content.cloneNode(true));
+for (const v of document.querySelectorAll("[data-vlozit]")) v.replaceWith(document.getElementById(v.dataset.vlozit).content.cloneNode(true));
+</script>
+</body>
+</html>
