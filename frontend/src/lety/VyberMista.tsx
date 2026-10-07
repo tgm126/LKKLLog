@@ -2,20 +2,27 @@ import { useState } from "react";
 
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
+import { useMujProvoz } from "../provoz/api";
 import type { Nabidky } from "./api";
 import "../komponenty/Volby.css";
 
-/** Místo: letiště, nebo popis místa v terénu; prázdné = domovské letiště. */
+/** Místo: letiště, nebo popis místa v terénu; prázdné = moje letiště (můj provoz). */
 export type Misto = { id: number | null; popis: string | null };
 
-/** Název místa pro údaj „Místo vzletu / přistání“ (prázdné = domovské letiště). */
-export function nazevMista(nabidky: Nabidky, misto: Misto | undefined) {
+/** Název místa pro údaj „Místo vzletu / přistání“ (prázdné = moje letiště). */
+export function nazevMista(nabidky: Nabidky, misto: Misto | undefined, mojeId: number | undefined) {
   if (misto?.popis) return misto.popis;
-  const letiste = nabidky.letiste.find((l) => (misto?.id ? l.id === misto.id : l.domovske));
+  const letiste = nabidky.letiste.find((l) => l.id === (misto?.id ?? mojeId));
   return letiste ? `${letiste.kod} ${letiste.nazev}` : null;
 }
 
-/** Letiště (hledání podle kódu nebo názvu) nebo jiné místo popisem (přistání do terénu). */
+/** Moje letiště na dnešek (můj provoz, jinak domovské). */
+export function useMojeLetisteId(): number | undefined {
+  return useMujProvoz().data?.letiste?.id;
+}
+
+/** Letiště (hledání podle kódu nebo názvu; moje letiště první) nebo jiné místo popisem
+ *  (přistání do terénu). */
 export function VyberMista({
   nabidky,
   ulozit,
@@ -25,9 +32,10 @@ export function VyberMista({
 }) {
   const [hledat, setHledat] = useState("");
   const [popis, setPopis] = useState("");
+  const mojeId = useMojeLetisteId();
   const h = hledat.trim().toLocaleLowerCase("cs-CZ");
   const letiste = [...nabidky.letiste]
-    .sort((a, b) => Number(b.domovske) - Number(a.domovske))
+    .sort((a, b) => Number(b.id === mojeId) - Number(a.id === mojeId))
     .filter((x) => !h || `${x.kod} ${x.nazev}`.toLocaleLowerCase("cs-CZ").includes(h))
     .slice(0, 12);
   return (

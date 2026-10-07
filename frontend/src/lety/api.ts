@@ -7,7 +7,8 @@ import { nastavitCasServeru } from "../cas";
 export type Den = {
   den: string;
   ted: string;
-  domovske: string | null;
+  /** Moje letiště na dnešek (můj provoz, jinak domovské); sluneční časy jsou pro ně. */
+  letiste: { id: number; kod: string; nazev: string; domovske: boolean } | null;
   slunce: { tb: string | null; sr: string | null; ss: string | null; te: string | null };
 };
 

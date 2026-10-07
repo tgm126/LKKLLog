@@ -13,6 +13,7 @@ import { Pruvodce } from "./lety/Pruvodce";
 import { Detail as DetailOsoby } from "./osoby/Detail";
 import { NovaOsoba } from "./osoby/Nova";
 import { SeznamOsob } from "./osoby/Seznam";
+import { LetisteProDnesek, OsobyVProvozu } from "./provoz/Provoz";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
@@ -32,6 +33,8 @@ export function App() {
         <Route path="/let/:id" element={<Detail />} />
         <Route path="/osoba/nova" element={<NovaOsoba />} />
         <Route path="/osoba/:id" element={<DetailOsoby />} />
+        <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
+        <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

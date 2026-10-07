@@ -79,6 +79,33 @@
   --tl-tloustka: var(--tloustka-tucna);
 }
 
+/* Můj provoz v nabídce: popisek vlevo, hodnota vpravo; jiné letiště oranžově (upozornění) */
+.nabidka .tl.nabidka-polozka {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mezera-3);
+}
+
+.nabidka-polozka .jinde {
+  color: var(--barva-oranzova);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Jiné letiště než domovské: štítek s kódem před zkráceným datem */
+.hlavicka-letiste {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mezera-2);
+}
+
+/* VÝJIMKA: štítek letiště je tlačítko menší než --dotyk – je v hlavičce jen jako upozornění,
+   stejná volba je v nabídce uživatele. */
+.hlavicka-letiste button {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
 /* Menu: záložky v řádku, při nedostatku místa se posouvá do strany */
 .menu {
   display: flex;

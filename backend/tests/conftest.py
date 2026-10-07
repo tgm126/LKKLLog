@@ -111,6 +111,13 @@ def prihlasit(klient):
     return prihlasit
 
 
+@pytest.fixture
+def pilot(osoba, prihlasit):
+    """Přihlášený pilot (id, klient)."""
+    pilot_id = osoba("Pilot")
+    return pilot_id, prihlasit("pilot@example.cz")
+
+
 # --- lety -------------------------------------------------------------------------------------
 
 

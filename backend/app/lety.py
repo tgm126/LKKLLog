@@ -30,12 +30,20 @@ class Slunce(BaseModel):
     te: datetime | None
 
 
+class Letiste(BaseModel):
+    id: int
+    kod: str
+    nazev: str
+    domovske: bool
+
+
 class Den(BaseModel):
     den: date
     ted: datetime
     """Čas serveru – obrazovka podle něj počítá stopky (hodiny telefonu se mohou lišit)."""
-    domovske: str | None
-    """Kód domovského letiště (místo se na páscích uvádí, jen když je jiné)."""
+    letiste: Letiste | None
+    """Moje letiště na dnešek (můj provoz, jinak domovské) – sluneční časy, výchozí místa;
+    místo se na páscích uvádí, jen když je jiné."""
     slunce: Slunce
 
 
@@ -67,9 +75,9 @@ class Pasek(BaseModel):
     vlek_rejstrik: str | None
     """Druhé letadlo vleku (u kluzáku vlečná, u vlečné kluzák)."""
     misto_vzletu: str | None
-    """Jen když není domovské."""
+    """Jen když není moje letiště."""
     misto_pristani: str | None
-    """Jen když není domovské."""
+    """Jen když není moje letiště."""
     cas_vzletu: datetime | None
     cas_pristani: datetime | None
     doba_uctovana_min: int | None
@@ -95,20 +103,34 @@ class LetyDne(BaseModel):
 # --- pomocné --------------------------------------------------------------------------------
 
 
-def _den_a_domovske(conn: Connection, den: date | None) -> tuple[date, datetime, dict | None]:
+def _den_a_letiste(
+    conn: Connection, den: date | None, relace_id: str
+) -> tuple[date, datetime, dict | None]:
+    """Den (dnes v UTC, není-li zadán), čas serveru a moje letiště na dnešek (db/026)."""
     r = conn.execute(
         """SELECT (now() AT TIME ZONE 'UTC')::date AS dnes, now() AS ted,
-                  (SELECT json_build_object('kod', kod, 'sirka', zem_sirka, 'delka', zem_delka)
-                   FROM lkkl.lov_letiste WHERE domovske) AS domovske"""
+                  (SELECT json_build_object('id', letiste_id, 'kod', kod, 'nazev', nazev,
+                                            'domovske', domovske,
+                                            'sirka', zem_sirka, 'delka', zem_delka)
+                   FROM lkkl.v_relace_letiste WHERE relace_id = %s) AS letiste""",
+        (relace_id,),
     ).fetchone()
-    return den or r["dnes"], r["ted"], r["domovske"]
+    return den or r["dnes"], r["ted"], r["letiste"]
 
 
-def slunce(domovske: dict | None, den: date) -> Slunce:
-    """Sluneční časy pro souřadnice domovského letiště (knihovna astral, soumrak 6°)."""
-    if not domovske or domovske["sirka"] is None or domovske["delka"] is None:
+def moje_letiste_id(conn: Connection, relace_id: str) -> int | None:
+    """Letiště relace na dnešek – výchozí místo vzletu a přistání."""
+    r = conn.execute(
+        "SELECT letiste_id FROM lkkl.v_relace_letiste WHERE relace_id = %s", (relace_id,)
+    ).fetchone()
+    return r["letiste_id"] if r else None
+
+
+def slunce(letiste: dict | None, den: date) -> Slunce:
+    """Sluneční časy pro souřadnice letiště (knihovna astral, soumrak 6°)."""
+    if not letiste or letiste["sirka"] is None or letiste["delka"] is None:
         return Slunce(tb=None, sr=None, ss=None, te=None)
-    s = sun(Observer(float(domovske["sirka"]), float(domovske["delka"])), den, tzinfo=UTC)
+    s = sun(Observer(float(letiste["sirka"]), float(letiste["delka"])), den, tzinfo=UTC)
     return Slunce(tb=s["dawn"], sr=s["sunrise"], ss=s["sunset"], te=s["dusk"])
 
 
@@ -134,34 +156,29 @@ def varovani(let: dict, ted: datetime, te: datetime | None) -> str | None:
 @router.get("/den", response_model=Den)
 def den_info(
     den: date | None = None,
-    _: Prihlaseny = Depends(prihlaseny),
+    p: Prihlaseny = Depends(prihlaseny),
     conn: Connection = Depends(spojeni),
 ):
-    """Den do hlavičky: datum, čas serveru, domovské letiště a sluneční časy."""
-    den, ted, domovske = _den_a_domovske(conn, den)
-    return Den(
-        den=den,
-        ted=ted,
-        domovske=domovske["kod"] if domovske else None,
-        slunce=slunce(domovske, den),
-    )
+    """Den do hlavičky: datum, čas serveru, moje letiště a jeho sluneční časy."""
+    den, ted, letiste = _den_a_letiste(conn, den, p.relace_id)
+    return Den(den=den, ted=ted, letiste=letiste, slunce=slunce(letiste, den))
 
 
 @router.get("/lety", response_model=LetyDne)
 def lety(
     den: date | None = None,
-    _: Prihlaseny = Depends(prihlaseny),
+    p: Prihlaseny = Depends(prihlaseny),
     conn: Connection = Depends(spojeni),
 ):
     """Lety dne pro pásky; dnes i všechno, co je ve vzduchu (i kdyby vzlétlo včera)."""
-    den, ted, domovske = _den_a_domovske(conn, den)
-    domovsky_kod = domovske["kod"] if domovske else None
+    den, ted, letiste = _den_a_letiste(conn, den, p.relace_id)
+    moje_kod = letiste["kod"] if letiste else None
     radky = conn.execute(
         """SELECT v.id, v.stav, v.rejstrik, v.typ, v.kategorie_kod, v.ucel, v.ucel_kod,
                   v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny, v.vlecny_let_id,
                   v.vleceny_let_id, coalesce(av.rejstrik, ak.rejstrik) AS vlek_rejstrik,
-                  nullif(v.misto_vzletu, %(domovske)s) AS misto_vzletu,
-                  nullif(v.misto_pristani, %(domovske)s) AS misto_pristani,
+                  nullif(v.misto_vzletu, %(moje)s) AS misto_vzletu,
+                  nullif(v.misto_pristani, %(moje)s) AS misto_pristani,
                   v.cas_vzletu, v.cas_pristani, v.doba_uctovana_min, v.pocet_pristani,
                   v.pob, v.uloha, a.max_doba_min, v.duvod_zruseni, v.zruseno, v.dodatecne,
                   v.zalozeno,
@@ -183,9 +200,9 @@ def lety(
            WHERE v.den = %(den)s
               OR (v.stav = 'VE_VZDUCHU' AND %(den)s = (now() AT TIME ZONE 'UTC')::date)
            ORDER BY v.id""",
-        {"den": den, "domovske": domovsky_kod},
+        {"den": den, "moje": moje_kod},
     ).fetchall()
-    te = slunce(domovske, den).te
+    te = slunce(letiste, den).te
     return LetyDne(ted=ted, lety=[Pasek(**r, varovani=varovani(r, ted, te)) for r in radky])
 
 
@@ -269,18 +286,19 @@ def vzlet(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = D
 
 
 @router.post("/lety/{let_id}/pristani", response_model=Provedeno)
-def pristani(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
-    """Přistání teď; místo = domovské (doplní databáze), přistání celkem = T&G + 1."""
+def pristani(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+    """Přistání teď; místo = moje letiště, přistání celkem = T&G + 1."""
     let = _let(conn, let_id)
     with zmena(conn):
         cas = conn.execute(
             """UPDATE lkkl.let l
                SET cas_pristani = now(),
+                   misto_pristani_id = %s,
                    pocet_pristani = (SELECT count(*) FROM lkkl.let_tg t WHERE t.let_id = l.id) + 1
                WHERE id = %s AND cas_vzletu IS NOT NULL AND cas_pristani IS NULL
                  AND zruseni_duvod_id IS NULL
                RETURNING cas_pristani""",
-            (let_id,),
+            (moje_letiste_id(conn, p.relace_id), let_id),
         ).fetchone()
     if cas is None:
         if let["stav"] == "NAPLANOVAN":
@@ -468,10 +486,10 @@ class NovyLet(BaseModel):
     """Proběhlý aerovlek: kdy přistála vlečná."""
     misto_vzletu_id: int | None = None
     misto_vzletu_popis: str | None = None
-    """Místo vzletu (letiště, nebo popis); nezadané = domovské letiště (doplní databáze)."""
+    """Místo vzletu (letiště, nebo popis); nezadané = moje letiště."""
     misto_pristani_id: int | None = None
     misto_pristani_popis: str | None = None
-    """Proběhlý let: místo přistání; nezadané = domovské."""
+    """Proběhlý let: místo přistání; nezadané = moje letiště."""
 
 
 def _zalozit(conn: Connection, udaje: dict, posadka: list[ClenIn]) -> int:
@@ -539,18 +557,22 @@ def novy_let(
     if platce_id is None and not data.plati_aeroklub:
         platce_id = _vychozi_platce(conn, data.posadka, pic_id)
 
+    # nezadané místo = moje letiště (výslovně, ne domovské doplněné databází)
+    moje = moje_letiste_id(conn, p.relace_id)
+    vzlet_popis = (data.misto_vzletu_popis or "").strip() or None
+    pristani_popis = (data.misto_pristani_popis or "").strip() or None
     spolecne = {
         "ted": data.akce == "vzlet",
         "cas_vzletu": data.cas_vzletu if probehly else None,
         "platce_id": platce_id,
         "plati_aeroklub": data.plati_aeroklub,
         "zalozil_id": p.osoba_id,
-        "misto_vzletu_id": data.misto_vzletu_id,
-        "misto_vzletu_popis": (data.misto_vzletu_popis or "").strip() or None,
+        "misto_vzletu_id": data.misto_vzletu_id or (None if vzlet_popis else moje),
+        "misto_vzletu_popis": vzlet_popis,
     }
     pristani_kluzaku = {
-        "misto_pristani_id": data.misto_pristani_id,
-        "misto_pristani_popis": (data.misto_pristani_popis or "").strip() or None,
+        "misto_pristani_id": data.misto_pristani_id or (None if pristani_popis else moje),
+        "misto_pristani_popis": pristani_popis,
     }
     # vlečná se vrací na místo vzletu
     pristani_vlecne = {
@@ -608,7 +630,7 @@ def novy_let(
 
 
 @router.get("/lety/{let_id}")
-def detail(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
     """Všechny údaje letu, posádka, časy T&G a historie z auditu (docs/modul-lety.md 3.5)."""
     let = conn.execute(
         """SELECT v.id, v.verze, v.stav, v.letadlo_id, v.rejstrik, v.typ, v.kategorie,
@@ -664,8 +686,8 @@ def detail(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = 
            WHERE let_id = %s ORDER BY kdy, transakce""",
         (let_id,),
     ).fetchall()
-    den, ted, domovske = _den_a_domovske(conn, None)
-    let["varovani"] = varovani(let, ted, slunce(domovske, den).te)
+    den, ted, letiste = _den_a_letiste(conn, None, p.relace_id)
+    let["varovani"] = varovani(let, ted, slunce(letiste, den).te)
     return let
 
 
@@ -783,12 +805,19 @@ DRUHA_POLOVINA = {
 def upravit(
     let_id: int,
     data: Uprava,
-    _: Prihlaseny = Depends(prihlaseny),
+    p: Prihlaseny = Depends(prihlaseny),
     conn: Connection = Depends(spojeni),
 ):
     """Úprava údajů letu; změnil-li let mezitím někdo jiný (jiná verze), odmítne se."""
     let = _let(conn, let_id)
     zmeny = data.model_dump(exclude_unset=True, exclude={"verze", "posadka"})
+    # doplněné přistání bez místa = moje letiště (ne domovské doplněné databází)
+    if (
+        zmeny.get("cas_pristani") is not None
+        and let["cas_pristani"] is None
+        and not {"misto_pristani_id", "misto_pristani_popis"} & zmeny.keys()
+    ):
+        zmeny["misto_pristani_id"] = moje_letiste_id(conn, p.relace_id)
     if isinstance(zmeny.get("poznamka"), str):
         zmeny["poznamka"] = zmeny["poznamka"].strip() or None
     for pole, druhe in DRUHA_POLOVINA.items():
@@ -833,4 +862,4 @@ def upravit(
                     "INSERT INTO lkkl.posadka (let_id, osoba_id, funkce_id) VALUES (%s, %s, %s)",
                     (let_id, osoba_id, funkce_id),
                 )
-    return detail(let_id, _, conn)
+    return detail(let_id, p, conn)

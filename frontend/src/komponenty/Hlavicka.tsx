@@ -1,13 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 
 import { poslat, type Ja } from "../api";
-import { denSlovy, hodinyMinuty, hodinyMinutySekundy } from "../cas";
+import { denKratce, denSlovy, hodinyMinuty, hodinyMinutySekundy } from "../cas";
 import { useDen } from "../lety/api";
+import { useMujProvoz } from "../provoz/api";
 import { useTik } from "../tik";
 import { nacistRezim, nastavitRezim, REZIMY, type Rezim } from "../rezim";
 import { inicialy, zmenitUzivatele } from "../uzivatel";
+import { Stitek } from "./Stitek";
 import { Tlacitko } from "./Tlacitko";
 import "./Hlavicka.css";
 
@@ -49,15 +51,32 @@ function CasUtc() {
   );
 }
 
-/** Den a sluneční časy domovského letiště (TB začátek a TE konec občanského soumraku). */
+/** Den a sluneční časy mého letiště (TB začátek a TE konec občanského soumraku). Je-li dnes
+ *  jiné než domovské (můj provoz), vlevo oranžový štítek s kódem a datum zkrácené, aby se
+ *  vešly všechny časy; ťuknutí na štítek otevře výběr letiště. */
 function DenASlunce() {
   const den = useDen().data;
+  const navigate = useNavigate();
   if (!den) return null;
   const { tb, sr, ss, te } = den.slunce;
   const casy: [string, string | null][] = [["TB", tb], ["SR", sr], ["SS", ss], ["TE", te]];
+  const jinde = den.letiste && !den.letiste.domovske ? den.letiste : null;
   return (
     <div className="hlavicka-radek cisla">
-      <span>{denSlovy(den.den)}</span>
+      {jinde ? (
+        <span className="hlavicka-letiste">
+          <button
+            type="button"
+            aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
+            onClick={() => navigate("/muj-provoz/letiste")}
+          >
+            <Stitek barva="oranzovy">{jinde.kod}</Stitek>
+          </button>
+          {denKratce(den.den)}
+        </span>
+      ) : (
+        <span>{denSlovy(den.den)}</span>
+      )}
       {tb && (
         <span>
           {casy.map(([zkratka, cas], i) => (
@@ -74,6 +93,9 @@ function DenASlunce() {
 
 function NabidkaUzivatele({ ja }: { ja: Ja }) {
   const [otevrena, setOtevrena] = useState(false);
+  const navigate = useNavigate();
+  const provoz = useMujProvoz().data;
+  const letiste = provoz?.letiste;
   const [rezim, setRezim] = useState<Rezim>(nacistRezim);
   const qc = useQueryClient();
   const odhlasit = useMutation({
@@ -108,6 +130,25 @@ function NabidkaUzivatele({ ja }: { ja: Ja }) {
             </div>
             <div className="male seda">{ja.email}</div>
           </div>
+          <span className="nadpisek">Můj provoz · dnes</span>
+          <Tlacitko
+            varianta="bez-ramu"
+            className="nabidka-polozka"
+            onClick={() => navigate("/muj-provoz/letiste")}
+          >
+            Letiště
+            <span className={letiste && !letiste.domovske ? "jinde" : undefined}>
+              {letiste ? `${letiste.kod} ${letiste.nazev}` : "—"}
+            </span>
+          </Tlacitko>
+          <Tlacitko
+            varianta="bez-ramu"
+            className="nabidka-polozka"
+            onClick={() => navigate("/muj-provoz/osoby")}
+          >
+            Osoby v provozu
+            <span>{provoz?.osoby.length || "všechny"}</span>
+          </Tlacitko>
           <span className="nadpisek">Režim zobrazení</span>
           {REZIMY.map((r) => (
             <Tlacitko

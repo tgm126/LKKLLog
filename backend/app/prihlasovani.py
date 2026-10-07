@@ -135,6 +135,22 @@ def _smazat_cookie(response: Response) -> None:
     response.delete_cookie(COOKIE, httponly=True, secure=True, samesite="lax", path="/")
 
 
+def smazat_relace(conn: Connection, podminka: str, parametry: tuple) -> int:
+    """Smaže relace podle podmínky (pevný text v kódu) i s jejich nastavením „můj provoz“
+    (db/026; cizí klíče jsou bez kaskádového mazání)."""
+    relace = f"SELECT id FROM lkkl.relace WHERE {podminka}"  # noqa: S608 – pevný text
+    with conn.transaction():
+        for tabulka in ("relace_provoz_osoba", "relace_provoz"):
+            conn.execute(
+                f"DELETE FROM lkkl.{tabulka} WHERE relace_id IN ({relace})",  # noqa: S608
+                parametry,
+            )
+        return conn.execute(
+            f"DELETE FROM lkkl.relace WHERE {podminka}",  # noqa: S608 – pevný text
+            parametry,
+        ).rowcount
+
+
 def _nova_relace(conn: Connection, osoba_id: int, request: Request) -> str:
     klic, otisk = bezpecnost.novy_klic_relace()
     zarizeni = request.headers.get("user-agent", "")[:200] or None
@@ -167,7 +183,7 @@ def prihlaseny(
         (PRODLOUZIT_PO, otisk),
     ).fetchone()
     if r is None:
-        conn.execute("DELETE FROM lkkl.relace WHERE id = %s", (otisk,))
+        smazat_relace(conn, "id = %s", (otisk,))
         smazat = Response()
         _smazat_cookie(smazat)
         raise HTTPException(
@@ -305,7 +321,7 @@ def prihlaseni(
 def odhlaseni(request: Request, conn: Connection = Depends(spojeni)):
     klic = request.cookies.get(COOKIE)
     if klic:
-        conn.execute("DELETE FROM lkkl.relace WHERE id = %s", (bezpecnost.otisk_klice(klic),))
+        smazat_relace(conn, "id = %s", (bezpecnost.otisk_klice(klic),))
     odpoved = Response(status_code=204)
     _smazat_cookie(odpoved)
     return odpoved
@@ -330,9 +346,9 @@ def zarizeni(p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spo
 
 @router.post("/zarizeni/odhlasit-ostatni", status_code=204)
 def odhlasit_ostatni(p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
-    conn.execute(
-        """DELETE FROM lkkl.relace
-           WHERE osoba_id = %s AND id <> %s AND puvodni_osoba_id IS NULL""",
+    smazat_relace(
+        conn,
+        "osoba_id = %s AND id <> %s AND puvodni_osoba_id IS NULL",
         (p.osoba_id, p.relace_id),
     )
 
@@ -401,10 +417,7 @@ def heslo_nastavit(
             osoba_id = u["osoba_id"]
             nastavit_kontext(conn, osoba_id)  # heslo si nastavuje sama osoba (pro audit)
             _ulozit_heslo(conn, osoba_id, data.heslo)
-            conn.execute(
-                "DELETE FROM lkkl.relace WHERE osoba_id = %s OR puvodni_osoba_id = %s",
-                (osoba_id, osoba_id),
-            )
+            smazat_relace(conn, "osoba_id = %s OR puvodni_osoba_id = %s", (osoba_id, osoba_id))
             conn.execute(
                 "UPDATE lkkl.ucet SET posledni_prihlaseni = now() WHERE osoba_id = %s",
                 (osoba_id,),
@@ -430,9 +443,9 @@ def heslo_zmenit(
         spravne = bezpecnost.over_heslo(otisk, data.stare)
         if spravne:
             _ulozit_heslo(conn, p.osoba_id, data.nove)
-            conn.execute(
-                """DELETE FROM lkkl.relace
-                   WHERE (osoba_id = %s OR puvodni_osoba_id = %s) AND id <> %s""",
+            smazat_relace(
+                conn,
+                "(osoba_id = %s OR puvodni_osoba_id = %s) AND id <> %s",
                 (p.osoba_id, p.osoba_id, p.relace_id),
             )
     if not spravne:
@@ -507,10 +520,7 @@ def ucet_zmenit(
             (data.aktivni, data.admin, data.smi_odblokovat, data.spravuje_osoby, osoba_id),
         ).fetchone()
         if zmeneno and data.aktivni is False:
-            conn.execute(
-                "DELETE FROM lkkl.relace WHERE osoba_id = %s OR puvodni_osoba_id = %s",
-                (osoba_id, osoba_id),
-            )
+            smazat_relace(conn, "osoba_id = %s OR puvodni_osoba_id = %s", (osoba_id, osoba_id))
     if zmeneno is None:
         raise HTTPException(404, "Účet neexistuje.")
     return conn.execute(_UCET_SQL + " WHERE osoba_id = %s", (osoba_id,)).fetchone()

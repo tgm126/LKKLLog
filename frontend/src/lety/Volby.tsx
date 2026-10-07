@@ -34,11 +34,24 @@ const smi = (o: Osoba, h: Hledana) =>
   );
 
 /** Rychlá volba osoby: kdo smí roli zastat podle oprávnění; když nikdo, záloha (Já,
- *  naposledy létající). Ostatní najde „Hledat…“. */
-export function rychlaVolba(osoby: Osoba[], hledana: Hledana, zaloha: number[]): number[] {
+ *  naposledy létající). Jsou-li vybrané osoby v provozu (můj provoz), jen z nich – kdo smí,
+ *  jinak Já, záloha a ostatní osoby v provozu. Ostatní najde „Hledat…“. */
+export function rychlaVolba(
+  osoby: Osoba[],
+  hledana: Hledana,
+  zaloha: number[],
+  provoz: VProvozu,
+): number[] {
   const smiji = osoby.filter((o) => smi(o, hledana)).map((o) => o.id);
-  return smiji.length > 0 ? smiji : zaloha;
+  if (provoz.osoby.length === 0) return smiji.length > 0 ? smiji : zaloha;
+  const vProvozu = (id: number) => id === provoz.jaId || provoz.osoby.includes(id);
+  const smijiVProvozu = smiji.filter(vProvozu);
+  if (smijiVProvozu.length > 0) return smijiVProvozu;
+  return [...new Set([provoz.jaId, ...zaloha, ...provoz.osoby])].filter(vProvozu);
 }
+
+/** Osoby v provozu (prázdné = bez filtru) a já (nabízím se vždy). */
+export type VProvozu = { osoby: number[]; jaId: number };
 
 /** Osoba: rychlá volba (Já, nedávní…) a „Hledat…“ (hledání podle jména ve všech osobách).
  *  Po výběru zůstane jen vybraná osoba (plně modře) a „Hledat…“, ostatní se skryjí; ťuknutím
@@ -52,6 +65,7 @@ export function VolbaOsoby({
   vybrat,
   pred,
   menit = false,
+  filtr,
 }: {
   osoby: Osoba[];
   jaId: number;
@@ -63,6 +77,8 @@ export function VolbaOsoby({
   pred?: ReactNode;
   /** Rovnou celá rychlá volba i s vybranou osobou (úprava v detailu letu). */
   menit?: boolean;
+  /** Počet osob v provozu, je-li rychlá volba jen z nich (můj provoz). */
+  filtr?: number;
 }) {
   const [hledam, setHledam] = useState(false);
   const [text, setText] = useState("");
@@ -79,8 +95,14 @@ export function VolbaOsoby({
   )
     .filter((o) => !vyloucit.includes(o.id))
     .sort((a, b) => Number(b.id === jaId) - Number(a.id === jaId));
+  const otevrenaNabidka = hledam || otevrena || !vybranaOsoba;
   return (
     <>
+      {!hledam && otevrenaNabidka && filtr !== undefined && filtr > 0 && (
+        <p className="male seda">
+          jen osoby v provozu <b>({filtr})</b> · ostatní přes Hledat…
+        </p>
+      )}
       {hledam && (
         <Pole
           popisek="Hledat osobu"
@@ -90,7 +112,7 @@ export function VolbaOsoby({
         />
       )}
       <div className="cipy">
-        {!hledam && !otevrena && vybranaOsoba ? (
+        {!otevrenaNabidka && vybranaOsoba ? (
           <Tlacitko aria-pressed onClick={() => setOtevrena(true)}>
             {popis(vybranaOsoba)}
           </Tlacitko>

@@ -13,7 +13,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from .nastaveni import nastaveni
-from .prihlasovani import odkaz_pro_heslo
+from .prihlasovani import odkaz_pro_heslo, smazat_relace
 
 
 def odkaz(conn: psycopg.Connection, email: str) -> str:
@@ -31,7 +31,7 @@ def odkaz(conn: psycopg.Connection, email: str) -> str:
 
 
 def uklid(conn: psycopg.Connection) -> int:
-    return conn.execute("DELETE FROM lkkl.relace WHERE plati_do <= now()").rowcount
+    return smazat_relace(conn, "plati_do <= now()", ())
 
 
 def ostry_provoz(conn: psycopg.Connection) -> str:

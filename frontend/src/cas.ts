@@ -48,3 +48,9 @@ export function denSlovy(den: string): string {
   const tyden = d.toLocaleDateString("cs-CZ", { weekday: "long", timeZone: "UTC" });
   return `${tyden.charAt(0).toUpperCase()}${tyden.slice(1)} ${d.getUTCDate()}. ${d.getUTCMonth() + 1}. ${d.getUTCFullYear()}`;
 }
+
+/** 6. 10. (den ve tvaru RRRR-MM-DD) */
+export function denKratce(den: string): string {
+  const d = new Date(`${den}T12:00:00Z`);
+  return `${d.getUTCDate()}. ${d.getUTCMonth() + 1}.`;
+}

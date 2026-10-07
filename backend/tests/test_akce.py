@@ -2,8 +2,6 @@
 
 import re
 
-import pytest
-
 from .conftest import _id
 
 
@@ -14,13 +12,6 @@ def _stav(conn, let_id: int) -> dict:
            FROM lkkl.v_let WHERE id = %s""",
         (let_id,),
     ).fetchone()
-
-
-@pytest.fixture
-def pilot(osoba, prihlasit):
-    """Přihlášený pilot (id, klient)."""
-    pilot_id = osoba("Pilot")
-    return pilot_id, prihlasit("pilot@example.cz")
 
 
 def test_vzlet_jen_jednou_a_zpet(conn, pilot, let):

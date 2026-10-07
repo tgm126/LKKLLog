@@ -8,7 +8,13 @@ from app import lety
 def test_den_a_slunce(prihlasit, osoba, flotila):
     osoba("Pilot")
     den = prihlasit("pilot@example.cz").get("/api/den", params={"den": "2026-10-06"}).json()
-    assert den["den"] == "2026-10-06" and den["domovske"] == "LKKL"
+    assert den["den"] == "2026-10-06"
+    assert den["letiste"] == {
+        "id": den["letiste"]["id"],
+        "kod": "LKKL",
+        "nazev": "Kladno",
+        "domovske": True,
+    }
     # Kladno 6. 10. 2026 (UTC): soumrak 04:38, východ 05:11, západ 16:31, konec soumraku 17:04.
     casy = {k: v[11:16] for k, v in den["slunce"].items()}
     assert casy == {"tb": "04:38", "sr": "05:11", "ss": "16:31", "te": "17:04"}

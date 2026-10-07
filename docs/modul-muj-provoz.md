@@ -1,7 +1,7 @@
 # Modul: můj provoz (letiště a osoby v provozu na dnešek)
 
-> **Návrh k odsouhlasení** (7. 10. 2026). Maketa `docs/navrhy/muj-provoz-mobil.html` (mobil;
-> desktop později).
+Navrženo a odsouhlaseno 7. 10. 2026, skript `db/026_muj_provoz.sql`. Maketa
+`docs/navrhy/muj-provoz-mobil.html` (mobil; desktop později).
 
 ## 1. Účel
 Aeroklub se občas přesune jinam (např. na týden na tábor) a na letišti nebývají všichni
@@ -35,10 +35,10 @@ změnit. Nastavení ostatních uživatelů se nemění.
   vešly všechny čtyři sluneční časy); sluneční časy jsou pro toto letiště. Ťuknutí na štítek
   otevře výběr letiště.
 - **Posádka v průvodci a v detailu letu:** je-li vybraná aspoň jedna osoba v provozu, rychlá
-  volba nabízí jen je (a vždy „Já“) – u instruktora, dozoru, examinátora a vlekaře z nich ty,
-  kdo roli smí podle oprávnění (když nikdo, všechny osoby v provozu); u pilota a žáka osoby
-  v provozu (nedávno létající napřed). Nad volbou drobně „jen osoby v provozu (12)“.
-  „Hledat…“ hledá mezi všemi. Bez výběru se nabízí jako dnes.
+  volba nabízí jen je: kdo roli smí podle oprávnění (instruktor, dozor, examinátor, vlekař),
+  a když z nich nikdo, Já, nedávno létající a ostatní osoby v provozu (u pilota a žáka vždy
+  tak). Nad volbou drobně „jen osoby v provozu (12) · ostatní přes Hledat…“. „Hledat…“
+  hledá mezi všemi. Bez výběru se nabízí jako dnes.
 
 ## 4. Co letiště změní
 | Kde | Dnes (domovské) | S nastaveným letištěm |
@@ -51,7 +51,8 @@ změnit. Nastavení ostatních uživatelů se nemění.
 | Seznam letů dne | všechny lety klubu | beze změny – všechny lety klubu (rozhodnuto 7. 10. 2026) |
 
 Databáze dál doplňuje domovské letiště tam, kde místo nikdo nezadal (zápis přímo v databázi);
-aplikace při nastaveném letišti posílá místo vždy výslovně.
+server místo z aplikace ukládá vždy výslovně (nový let, proběhlý let, přistání z pásku,
+doplněné přistání v detailu).
 
 ## 5. Data
 Provozní tabulky (zahájení ostrého provozu je vyprázdní spolu s relacemi), bez auditu –
@@ -63,7 +64,7 @@ CREATE TABLE lkkl.relace_provoz (
     den        date   NOT NULL,                        -- pro který den (UTC) nastavení platí
     letiste_id bigint REFERENCES lkkl.lov_letiste      -- prázdné = domovské
 );
-CREATE TABLE lkkl.relace_osoba (                        -- osoby v provozu; žádný řádek = bez filtru
+CREATE TABLE lkkl.relace_provoz_osoba (                        -- osoby v provozu; žádný řádek = bez filtru
     relace_id  text   NOT NULL REFERENCES lkkl.relace_provoz,
     osoba_id   bigint NOT NULL REFERENCES lkkl.lov_osoba,
     PRIMARY KEY (relace_id, osoba_id)
@@ -71,17 +72,22 @@ CREATE TABLE lkkl.relace_osoba (                        -- osoby v provozu; žá
 ```
 - Nastavení s jiným dnem než dnešním se nebere v úvahu; první uložení v novém dni ho přepíše
   (a smaže osoby).
-- Odhlášení a úklid prošlých relací smažou nejdřív `relace_osoba` a `relace_provoz` (cizí
-  klíče bez kaskádového mazání).
-- Pohled `v_relace_provoz`: relace → dnešní letiště (zvolené, jinak domovské) s kódem,
-  názvem a souřadnicemi; jinak se nikde neopakuje pravidlo „platí jen dnes“.
+- Odhlášení, zablokování, změna hesla i úklid prošlých relací mažou relace jednou funkcí
+  serveru `smazat_relace` – nejdřív `relace_provoz_osoba` a `relace_provoz` (cizí klíče bez
+  kaskádového mazání).
+- Pohledy `v_relace_letiste` (relace → dnešní letiště: zvolené, jinak domovské; kód, název,
+  souřadnice) a `v_relace_osoba` (dnešní osoby v provozu) – jinde se pravidlo „platí jen
+  dnes“ neopakuje.
+- Tabulka osob se jmenuje `relace_provoz_osoba` (jméno `relace_osoba` má už index na
+  `relace.osoba_id`).
 
 ## 6. Rozhraní (API)
 | Volání | Co |
 |---|---|
 | `GET /api/muj-provoz` | dnešní nastavení relace: letiště (id, kód, název, domovské) a osoby v provozu (id) |
 | `POST /api/muj-provoz/letiste` | `{letiste_id}` – prázdné = domovské |
-| `POST /api/muj-provoz/osoby` | `{osoba_id, ma}` – přidat / odebrat; `{zrusit: true}` – bez filtru |
+| `POST /api/muj-provoz/osoby` | `{osoba_id, ma}` – přidat / odebrat |
+| `POST /api/muj-provoz/osoby/zrusit` | bez filtru – nabízejí se všichni |
 | `GET /api/den`, `GET /api/lety`, akce letu | letiště relace místo domovského (sluneční časy, varování, výchozí místa, zobrazení místa) |
 
 ## 7. Testy

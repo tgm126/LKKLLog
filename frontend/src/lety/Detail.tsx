@@ -22,6 +22,7 @@ import {
   VolbaUlohy,
 } from "./Volby";
 import { denUtc, minutyUtc, VolbaCasu } from "./VyberCasu";
+import { useMujProvoz } from "../provoz/api";
 import { VyberMista } from "./VyberMista";
 import "./Detail.css";
 
@@ -65,6 +66,8 @@ function DetailLetuObrazovka({
   zpet: () => void;
 }) {
   const ja = useJa().data!;
+  const provoz = useMujProvoz().data;
+  const vProvozu = { osoby: provoz?.osoby ?? [], jaId: ja.osoba_id };
   const navigate = useNavigate();
   const qc = useQueryClient();
   const oznamit = useOznamit();
@@ -104,7 +107,9 @@ function DetailLetuObrazovka({
         nabidky.osoby,
         { ucel: l.je_vlecny ? null : l.ucel_kod, funkce: funkceKod, kategorie: l.kategorie_kod },
         [ja.osoba_id],
+        vProvozu,
       )}
+      filtr={vProvozu.osoby.length}
       vybrana={vybrana}
       vyloucit={posadkaIds.filter((id) => id !== vybrana)}
       vybrat={vybrat}

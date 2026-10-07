@@ -19,7 +19,9 @@ def test_provozni_tabulky(conn):
     vyprázdní. Nová tabulka změní tento seznam – je třeba vědomě rozhodnout, kam patří
     (trvalá data = předpona lov_)."""
     tabulky = [r["tabulka"] for r in conn.execute("SELECT tabulka FROM lkkl.v_provozni_tabulky")]
-    assert tabulky == ["audit", "let", "let_tg", "posadka", "relace"]
+    assert tabulky == [
+        "audit", "let", "let_tg", "posadka", "relace", "relace_provoz", "relace_provoz_osoba",
+    ]  # fmt: skip
 
 
 def test_zahajeni_ostreho_provozu(conn, osoba, prihlasit):

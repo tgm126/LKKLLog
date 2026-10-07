@@ -1,8 +1,8 @@
-/* Zaškrtávátka: dlaždice 44 px, dvě vedle sebe, přepážky = mezera 1 px nad barvou čáry
-   (jako pole údajů); lichá poslední dlaždice se roztáhne přes celou šířku. */
+/* Zaškrtávátka: dlaždice 44 px, dvě vedle sebe (--zaskrtavatka-sloupce), přepážky = mezera
+   1 px nad barvou čáry (jako pole údajů); lichá poslední dlaždice se roztáhne přes celou šířku. */
 .zaskrtavatka {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--zaskrtavatka-sloupce, 2), minmax(0, 1fr));
   gap: var(--ramecek-sirka);
   border-top: var(--ramecek);
   background: var(--barva-cara);

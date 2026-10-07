@@ -1,0 +1,17 @@
+/* Můj provoz (maketa docs/navrhy/muj-provoz-mobil.html): hledání a filtr nad seznamem osob,
+   seznam osob v provozu jako karta se zaškrtávátky v jednom sloupci. */
+
+.provoz-hledani {
+  display: grid;
+  gap: var(--mezera-2);
+  margin-bottom: var(--mezera-2);
+}
+
+.osoby-v-provozu {
+  --zaskrtavatka-sloupce: 1;
+
+  overflow: hidden;
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+  box-shadow: var(--stin-karty);
+}

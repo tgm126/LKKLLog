@@ -22,7 +22,8 @@ import {
   VolbaUlohy,
 } from "./Volby";
 import { denUtc, hhmm, minutyUtc, VolbaCasu } from "./VyberCasu";
-import { nazevMista, VyberMista, type Misto } from "./VyberMista";
+import { useMujProvoz } from "../provoz/api";
+import { nazevMista, useMojeLetisteId, VyberMista, type Misto } from "./VyberMista";
 import "../komponenty/Volby.css";
 import "./Pruvodce.css";
 
@@ -82,6 +83,9 @@ const chybi = (ano: boolean) => ano && <span className="text-chyby">vyberte</spa
 
 function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => void }) {
   const ja = useJa().data!;
+  const provoz = useMujProvoz().data;
+  const vProvozu = { osoby: provoz?.osoby ?? [], jaId: ja.osoba_id };
+  const mojeId = provoz?.letiste?.id;
   const [krok, setKrok] = useState<Krok>(1);
   const [novy, setNovy] = useState<Novy>({ osoby: {}, pob: 1 });
   const [upravuji, setUpravuji] = useState<string | null>(null);
@@ -303,7 +307,9 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
                   nabidky.osoby,
                   { ucel: ucel.kod, funkce: p.kod, kategorie: letadlo.kategorie_kod },
                   [ja.osoba_id, ...letadlo.nedavni],
+                  vProvozu,
                 )}
+                filtr={vProvozu.osoby.length}
                 vybrana={novy.osoby[p.funkceId]}
                 vyloucit={obsazene(`f${p.funkceId}`)}
                 vybrat={(id) => zmenit({ osoby: { ...novy.osoby, [p.funkceId]: id }, platce: undefined })}
@@ -405,7 +411,9 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
                 nabidky.osoby,
                 { ucel: null, funkce: "PIC", kategorie: novy.vlecna?.kategorie_kod },
                 [],
+                vProvozu,
               )}
+              filtr={vProvozu.osoby.length}
               vybrana={novy.vlekar}
               vyloucit={obsazene("vlekar")}
               vybrat={(id) => zmenit({ vlekar: id })}
@@ -431,12 +439,12 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
       )}
       <Blok nadpis="Další údaje">
         <Udaje>
-          <Udaj popisek="Místo vzletu" hodnota={nazevMista(nabidky, novy.mistoVzletu)} {...upravit("misto")}>
+          <Udaj popisek="Místo vzletu" hodnota={nazevMista(nabidky, novy.mistoVzletu, mojeId)} {...upravit("misto")}>
             <VyberMista
               nabidky={nabidky}
               ulozit={(id, popis) =>
                 zmenit({
-                  mistoVzletu: id === nabidky.letiste.find((l) => l.domovske)?.id ? undefined : { id, popis },
+                  mistoVzletu: id === mojeId ? undefined : { id, popis },
                 })
               }
             />
@@ -613,6 +621,7 @@ function ProbehlyLet(
 ) {
   const { letadlo, aerovlek, nabidky } = props;
   const ulozit = useUlozit(props);
+  const mojeId = useMojeLetisteId();
   const [den, setDen] = useState<"dnes" | "vcera">("dnes");
   const [casy, setCasy] = useState<Record<PoleCasu, number | null>>({
     vzlet: null,
@@ -720,15 +729,14 @@ function ProbehlyLet(
         <Udaje>
           <Udaj
             popisek="Místo přistání"
-            hodnota={nazevMista(nabidky, mistoPristani)}
+            hodnota={nazevMista(nabidky, mistoPristani, mojeId)}
             upravit={() => setUpravuji(!upravuji)}
             otevreno={upravuji}
           >
             <VyberMista
               nabidky={nabidky}
               ulozit={(id, popis) => {
-                const domovske = nabidky.letiste.find((l) => l.domovske)?.id;
-                setMistoPristani(id === domovske ? undefined : { id, popis });
+                setMistoPristani(id === mojeId ? undefined : { id, popis });
                 setUpravuji(false);
               }}
             />

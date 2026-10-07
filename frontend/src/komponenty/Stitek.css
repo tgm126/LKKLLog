@@ -30,6 +30,12 @@
   --stitek-barva: var(--barva-cervena);
 }
 
+.stitek.oranzovy {
+  --stitek-vypln: var(--barva-oranzova-vypln);
+  --stitek-barva: var(--barva-oranzova);
+  --stitek-okraj: var(--barva-oranzova);
+}
+
 .stitek.pasek {
   --stitek-vypln: var(--barva-stitek-pasku);
   --stitek-barva: var(--barva-text);
