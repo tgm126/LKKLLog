@@ -25,14 +25,19 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
   `--barva-najeti` (řádek pod myší), `--pismo-kod` (surová zpráva METAR/TAF – `VÝJIMKA`).
 - **Kdy desktop:** okno široké **od 1200 px** (rozhoduje šířka, ne zařízení). 1366 px notebook
   i 1920 px při zvětšení 150 % (= 1280 px) tedy dostanou desktop. **Od 1500 px** přibude pravý
-  sloupec Informace; užší okno ho má za tlačítkem v liště.
+  sloupec souhrnů; užší okno ho má za tlačítkem „Souhrny“ v liště. Hranice jsou v kódu
+  (`rozvrzeni.ts`), ne v CSS – rozvržení vybírá jiné komponenty a pevné rozměry patří jen do
+  tokenů.
+- **Ovládání myší:** uvnitř desky mají tokeny `--dotyk` a `--dotyk-hlavni` hodnoty pro myš
+  (32 a 40 px), takže sdílené volby, čipy a pole z mobilu se zmenší samy.
 - **Myš:** co jde kliknout, reaguje na najetí (zvýraznění, u upravitelného pole ✎); popisky
   (`title`) doplní, co se nevejde (celý název úlohy, typ letadla, celá posádka).
 - **Sluneční časy** (lišta, varování, časová osa) počítá server knihovnou `astral` pro moje
   letiště – i nautický a astronomický soumrak (Slunce 12° a 18° pod obzorem).
 - **Klávesnice jen tam, kde zrychlí:** `N` nový let, `Esc` zavře panel, `Ctrl+Z` během 6 s
-  vrátí poslední akci (jako tlačítko Zpět), v hledání osoby šipky a `Enter`, časy proběhlého
-  letu se píšou z klávesnice (`13:05`). Zkratky pro VZLET / PŘISTÁL ne (omyl na špatném pásku).
+  vrátí poslední akci (jako tlačítko Zpět); v poli pro text klávesy nepůsobí. Zkratky pro
+  VZLET / PŘISTÁL ne (omyl na špatném pásku). Časy proběhlého letu a úpravy časů zatím
+  výběrem z mřížky jako na mobilu (psaní z klávesnice případně později).
 - **Pásky se nepřetahují** myší (rozhodnuto 7. 10. 2026) – akce jsou jen tlačítka.
 
 ## 3. Rozvržení
@@ -109,8 +114,9 @@ Vodorovná řada přihrádek se svislými přepážkami – jako papírový stri
 - Ukončené od posledního přistání, pod nimi oddíl Zrušené (přeškrtnutý rejstřík).
   Patička: lety, doba, přistání. Celá posádka s funkcemi v popisku řádku.
 
-### 3.4 Informace (pravý sloupec)
-Svislý sloupec **karet**; každá karta je samostatný zdroj, přidávají se postupně:
+### 3.4 Souhrny (pravý sloupec)
+Svislý sloupec **karet**; každá karta je samostatný zdroj, přidávají se postupně (zatím jen
+karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
 1. **Plachtařský provoz:** nahoře **P** (počet přistání kluzáků), **doba letů** kluzáků
    a **doba vleků**; pod tím tabulka kluzáků a vlečných (Letadlo · Doba · P).
 2. **Motorový provoz:** nahoře **P** a **doba letů**; pod tím tabulka letadel (Letadlo ·
@@ -151,8 +157,10 @@ Kliknutím na nadpis se sbalí; na notebooku je sbalená od začátku.
   i tmavou hodnotou). Den je bez výplně. Najetí myší na pásmo ukáže jeho časy. V létě na naší
   zeměpisné šířce astronomická noc nenastane (zhruba od konce května do poloviny července) –
   pásmo astronomického soumraku pak sahá až k okraji osy.
-- `GET /api/den` vrátí navíc začátek a konec nautického a astronomického soumraku (prázdné,
-  když nenastane).
+- `GET /api/den` vrací navíc začátek ráno a konec večer nautického (`nr`, `nv`)
+  a astronomického soumraku (`ar`, `av`) – prázdné, když nenastane.
+- Kreslí se jako SVG s polohami v procentech (atributy), bez vložených stylů a pevných
+  rozměrů; barvy z tokenů.
 
 ### 3.6 Jiný den
 Šipky ‹ › v liště listují dny (dopředu nejvýš do dneška). Pod lištou modrý pruh „Prohlížíte
@@ -173,38 +181,41 @@ pole v detailu nejdou upravit, klik na letadlo na zemi nic nezaloží; v liště
   stejné jako na mobilu (`modul-lety.md` 3.5): pásek nahoře, bloky Posádka a let · Časy
   a místa · Platba a poznámka · Evidence s historií (u zrušeného i důvod zrušení). **Bez horní
   lišty s rejstříkem** (rozhodnuto 7. 10. 2026 – rejstřík je hned v pásku): pásek je úplně
-  nahoře a vedle něj vpravo zavírací křížek (a `Esc`); pásek se vejde na jeden řádek i s trasou. Úprava **přímo v poli** (klik → pole
-  k zápisu nebo nabídka, `Enter` uloží, `Esc` vrátí). Akce v patičce.
+  nahoře a vedle něj vpravo zavírací křížek (a `Esc`); pásek se vejde na jeden řádek i s trasou.
+  Úprava **na místě stejně jako na mobilu** – klik na pole otevře pod ním volby nebo pole
+  k zápisu (stejné komponenty, jen menší). Akce v patičce.
 - **Nový let** (820 px) je **jeden formulář místo průvodce** (rozhodnuto 7. 10. 2026): nahoře
   rozpracovaný pásek (čárkovaný, u aerovleku dvojice), vlevo Letadlo (dlaždice podle kategorií
   a stavu) · Účel a vzlet (segmenty) · Vlek; vpravo Posádka · Úloha (osnova → seznam) · Další
   údaje (místa, plátce, poznámka). Chybějící povinná volba má v hlavičce bloku „vyberte“
   a patička vypíše „Chybí: …“. Patička: VZLET TEĎ · NAPLÁNOVAT · PROBĚHLÝ LET… (ukáže pole časů).
   Pravidla a nabídky stejné jako průvodce; na mobilu průvodce zůstává.
-- **Osoby:** rychlá volba čipy podle oprávnění a mého provozu (stejná pravidla jako průvodce)
-  + **pole „Hledat…“ s našeptáváním** (bez diakritiky, podle jména i příjmení) místo
-  samostatné obrazovky hledání.
+- **Osoby:** rychlá volba čipy podle oprávnění a mého provozu a „Hledat…“ (pole přímo v bloku,
+  bez diakritiky) – stejná komponenta jako v průvodci.
 - Adresy zůstávají (`/let/:id`, `/novy-let`): na desktopu otevřou panel nad deskou, na mobilu
   celou obrazovku – odkaz funguje na obou.
 
 ## 4. Technické řešení (frontend)
 
 - **Stejné rozhraní (API) a data** – desktop nepotřebuje nové tabulky; souhrny provozu, „kde
-  je“ a časová osa se počítají z letů dne (případně jeden nový pohled pro souhrn, rozhodne se
-  při psaní kódu). Jiný den používá existující `?den=`.
-- Volba rozvržení podle šířky okna (`matchMedia("(min-width: 1200px)")`, přepne se i při
-  změně velikosti okna). Sdílené: načítání dat (`lety/api.ts`, obnovování 10 s), akce letu
-  a Zpět, pravidla nabídek osob, štítek, tlačítko, výběr místa. Vlastní desktopové:
-  stránka `stranky/Deska.tsx`, `lety/PasekRadek.tsx` (pásek v řadě přihrádek),
-  `lety/RadaLetadel.tsx`, `lety/DenikTabulka.tsx`, `lety/CasovaOsa.tsx`, `lety/NovyLet.tsx`
-  (formulář v jednom), `komponenty/Panel.tsx`, `komponenty/Naseptavac.tsx`,
-  `komponenty/Karta.tsx`.
-- Styly dál jen z tokenů; desktopové komponenty mají vlastní CSS. Polohy úseček časové osy
-  přes vlastní proměnné komponenty (`--od`, `--do`), ne vložené styly. Kontrola stylů beze změny.
-- **Testy:** klikací testy (Playwright) navíc v rozměru 1366 × 768 a 1920 × 1080: deska
-  (pásky, deník, řada letadel, časová osa), nový let z řady letadel i klávesou N, VZLET →
-  PŘISTÁL → Zpět (i Ctrl+Z), detail s úpravou na místě, panel otevřený a zároveň akce na
-  jiném pásku, jiný den (širší deník, bez pásků).
+  je“ a časová osa se počítají z letů dne. Jiný den používá `?den=` u `useDen` a `useLety`
+  (`lety/api.ts`). Server navíc vrací nautický a astronomický soumrak (3.5).
+- **Rozvržení** podle šířky okna (`rozvrzeni.ts`: `useDeska` od 1200 px, `useSirokaDeska` od
+  1500 px; přepne se i při změně velikosti okna). `App.tsx` pak pro `/`, `/let/:id`
+  a `/novy-let` vybere desku s panelem, jinak mobilní obrazovky; ostatní obrazovky (osoby,
+  letadla, můj provoz) zatím zůstávají mobilní sloupcem uprostřed (krok 2 a 3 v kap. 5).
+- **Sdílené s mobilem:** data a obnovování, akce letu a Zpět (`lety/akce.tsx`), detail
+  rozdělený na bloky a akce (`DetailBloky`, `AkceDetailu` v `lety/Detail.tsx`), nový let jako
+  stav s pravidly a bloky (`lety/novyLet.tsx` – průvodce je skládá po krocích, deska do
+  formuláře), pořadí a dvojice vleku (`lety/poradi.ts`), štítky, volby, tlačítka.
+- **Desktopové** (`deska/`): `Deska.tsx` (stránka, klávesy), `Lista.tsx`, `RadaLetadel.tsx`,
+  `Pasky.tsx` a `PasekDeska.tsx` (pásek v řadě přihrádek), `DenikDne.tsx`, `Souhrny.tsx`,
+  `CasovaOsa.tsx`, `PanelDetailu.tsx`, `PanelNovehoLetu.tsx`; `komponenty/Panel.tsx`.
+- Styly dál jen z tokenů; desktopové komponenty mají vlastní CSS. Kontrola stylů beze změny.
+- **Testy:** klikací testy `e2e/deska.spec.ts` v rozměru 1920 × 1080 a 1366 × 768: deska
+  (pásky, řada letadel, deník, souhrny, časová osa), akce z pásku a Ctrl+Z, detail v panelu
+  s úpravou a zároveň akce na jiném pásku, Esc, nový let klávesou N a z řady letadel až po
+  VZLET TEĎ, souhrny za tlačítkem, jiný den bez pásků, pod 1200 px mobilní přehled.
 
 ## 5. Postup (malé moduly) – odsouhlaseno 7. 10. 2026
 
@@ -257,7 +268,7 @@ cizím jménem – audit by zapsal nesprávnou osobu.
 
 ### 6.2 Další otázky
 1. **Písmo 12 / 15 / 20 px i na desktopu.** Na věži z dálky stačí zvětšení prohlížeče
-   (`Ctrl +`); rozvržení s ním počítá (1920 při 125 % = 1536 px, Informace zůstanou).
+   (`Ctrl +`); rozvržení s ním počítá (1920 při 125 % = 1536 px, souhrny zůstanou).
    Čtvrtou velikost (např. hodiny) zatím nezavádím.
 2. **Počasí – zdroj.** Kandidát: veřejné API `aviationweather.gov` (METAR/TAF ve formátu JSON,
    bez klíče), stahuje server a drží 5–10 minut v paměti (žádná tabulka, nejde o naše data);

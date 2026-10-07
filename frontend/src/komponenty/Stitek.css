@@ -4,7 +4,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--mezera-1) var(--mezera-2);
+  padding: var(--stitek-odsazeni, var(--mezera-1) var(--mezera-2));
   border: var(--ramecek-sirka) solid var(--stitek-okraj, transparent);
   border-radius: var(--zaobleni-pilulka);
   background: var(--stitek-vypln, var(--barva-neutralni));

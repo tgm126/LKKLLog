@@ -8,25 +8,7 @@ import { Tlacitko } from "../komponenty/Tlacitko";
 import { useAkceLetu } from "../lety/akce";
 import { useLety, type Pasek, type Stav } from "../lety/api";
 import { Denik, PasekNaplanovany, PasekVeVzduchu } from "../lety/Pasek";
-
-const podle =
-  (klic: (l: Pasek) => string | null, sestupne = false) =>
-  (a: Pasek, b: Pasek) =>
-    (klic(a) ?? "").localeCompare(klic(b) ?? "") * (sestupne ? -1 : 1);
-
-/** Vlek (kluzák + jeho vlečná ve stejném stavu) jako jedna dvojice – naplánovaný i ve vzduchu. */
-function dvojice(lety: Pasek[]): Pasek[][] {
-  const podleId = new Map(lety.map((l) => [l.id, l]));
-  const vlecne = new Set(
-    lety.flatMap((l) => (l.vlecny_let_id && podleId.has(l.vlecny_let_id) ? [l.vlecny_let_id] : [])),
-  );
-  return lety
-    .filter((l) => !vlecne.has(l.id))
-    .map((l) => {
-      const vlecna = l.vlecny_let_id ? podleId.get(l.vlecny_let_id) : undefined;
-      return vlecna ? [l, vlecna] : [l];
-    });
-}
+import { dvojice, podle } from "../lety/poradi";
 
 /** Přehled letů dne: ve vzduchu, naplánované (pásky), ukončené a zrušené (deník) –
  *  maketa docs/navrhy/lety-mobil-v4.html. */

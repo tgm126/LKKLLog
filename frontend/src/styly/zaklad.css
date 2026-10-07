@@ -13,7 +13,8 @@ body {
   line-height: var(--radkovani);
 }
 
-/* Na velké obrazovce mobilní návrh jako sloupec uprostřed (návrh pro počítač přijde později). */
+/* Obrazovky bez desktopové podoby jsou na velké obrazovce sloupcem uprostřed; provozní deska
+   (deska/Deska.css) zabere celé okno. */
 #aplikace {
   display: flex;
   flex-direction: column;

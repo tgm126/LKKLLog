@@ -1,0 +1,174 @@
+/* Pásek na desktopu: řada přihrádek se svislými přepážkami (strip ŘLP). Stav mění jen výplň
+   pásku (zelená ve vzduchu, modrá naplánovaný, červená problém); písmo v barvě textu. */
+.pasek-deska {
+  --pasek-vypln: var(--barva-karta);
+  --stitek-odsazeni: 0 var(--mezera-2);
+
+  display: grid;
+  grid-template-columns: var(--sloupce-pasku-deska);
+  border: var(--okraj-pasku) solid var(--barva-obrys);
+  border-radius: var(--zaobleni);
+  background: var(--pasek-vypln);
+}
+
+.pasek-deska.vzduch {
+  --pasek-vypln: var(--barva-zelena-vypln);
+}
+
+.pasek-deska.problem {
+  --pasek-vypln: var(--barva-cervena-vypln);
+}
+
+.pasek-deska.naplanovan,
+.pasek-deska.rozpracovany {
+  --pasek-vypln: var(--barva-modra-vypln);
+}
+
+/* Rozpracovaný let v novém letu: čárkovaný okraj = ještě neuložený */
+.pasek-deska.rozpracovany {
+  border-style: dashed;
+}
+
+/* Klik kamkoli mimo tlačítka otevře detail; pod myší šedý prstenec, otevřený v barvě textu */
+.pasek-deska.otevira {
+  cursor: pointer;
+}
+
+.pasek-deska.otevira:hover {
+  box-shadow: 0 0 0 var(--prstenec) var(--barva-prepazka);
+}
+
+.pasek-deska.vybrany,
+.pasek-deska.vybrany:hover {
+  box-shadow:
+    0 0 0 var(--prstenec-mezera) var(--barva-pozadi),
+    0 0 0 calc(var(--prstenec-mezera) + var(--prstenec)) var(--barva-text);
+}
+
+.prihradka {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+  padding: var(--mezera-1) var(--mezera-3);
+  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
+}
+
+.prihradka:first-child {
+  border-left: 0;
+}
+
+.prihradka > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pasek-vlecna {
+  color: var(--barva-text);
+}
+
+/* Štítky 2 × 2 v pevných pozicích: účel · způsob vzletu / POB · úloha. Oba řádky stejně
+   vysoké – prázdná pozice má šířku i výšku štítku, nic se neposune ani svisle. */
+.pasek-stitky {
+  grid-template-columns: var(--mista-stitku-deska);
+  grid-auto-rows: 1fr;
+  gap: var(--mezera-1);
+}
+
+.pasek-stitky > span {
+  display: grid;
+}
+
+/* Trasa: odkud nahoře, kam dole (moje letiště šedě, jiné tučně); jinak prázdná */
+.pasek-trasa {
+  padding-inline: var(--mezera-2);
+}
+
+.pasek-cas {
+  justify-items: end;
+}
+
+.pasek-stopky {
+  font-size: var(--pismo-l);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Akce: T&G bílé s černým textem, PŘISTÁL zeleně a VZLET modře plné, pevná šířka */
+.pasek-akce {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mezera-2);
+}
+
+/* Tlačítka se nezkracují (ostatní přihrádky zkracují text „…“) */
+.pasek-akce > * {
+  overflow: visible;
+}
+
+.pasek-akce .tl {
+  --tl-vyska: var(--klik-hlavni);
+  --tl-zaobleni: var(--zaobleni-ovladace);
+}
+
+.pasek-akce .tl.zelene,
+.pasek-akce .tl.modre {
+  --tl-min-sirka: var(--sirka-akce);
+}
+
+.pasek-akce .spolecne {
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+  white-space: normal;
+}
+
+.pasek-varovani {
+  grid-column: 1 / -1;
+  padding: var(--mezera-1) var(--mezera-3);
+  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
+  color: var(--barva-cervena);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Pásek v panelu (detail, nový let): sám, prázdné přihrádky vynechané, posádka bere zbytek */
+.pasek-deska.v-panelu {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.pasek-deska.v-panelu > .prihradka {
+  flex: none;
+}
+
+.pasek-deska.v-panelu > .prihradka:first-child {
+  flex-basis: var(--sirka-letadla-panelu);
+}
+
+.pasek-deska.v-panelu > .pasek-posadka {
+  flex: 1 1 0;
+  min-width: 12ch;
+}
+
+.pasek-deska.v-panelu > .pasek-stitky {
+  grid-template-columns: auto auto;
+}
+
+.pasek-deska.v-panelu > .pasek-cas {
+  flex-basis: var(--sirka-casu);
+}
+
+.pasek-deska.v-panelu > .pasek-varovani {
+  flex-basis: 100%;
+}
+
+/* Vlek: kluzák a vlečná jako dvojitý pásek, mezi nimi čárkovaná přepážka */
+.dvojice-deska > .pasek-deska:first-child {
+  border-bottom-width: 0;
+  border-radius: var(--zaobleni) var(--zaobleni) 0 0;
+}
+
+.dvojice-deska > .pasek-deska + .pasek-deska {
+  border-top: var(--ramecek-sirka) dashed var(--barva-prepazka);
+  border-radius: 0 0 var(--zaobleni) var(--zaobleni);
+}

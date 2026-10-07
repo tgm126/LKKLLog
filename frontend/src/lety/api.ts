@@ -9,7 +9,10 @@ export type Den = {
   ted: string;
   /** Moje letiště na dnešek (můj provoz, jinak domovské); sluneční časy jsou pro ně. */
   letiste: { id: number; kod: string; nazev: string; domovske: boolean } | null;
-  slunce: { tb: string | null; sr: string | null; ss: string | null; te: string | null };
+  /** Občanský soumrak (TB, TE), východ a západ; pro časovou osu desktopu i začátek ráno
+   *  a konec večer nautického (nr, nv) a astronomického soumraku (ar, av) – prázdné, když
+   *  nenastane. */
+  slunce: Record<"tb" | "sr" | "ss" | "te" | "nr" | "nv" | "ar" | "av", string | null>;
 };
 
 export type Clen = { jmeno: string; prijmeni: string; funkce: string; funkce_kod: string };
@@ -48,25 +51,29 @@ export type Pasek = {
   varovani: string | null;
 };
 
+/** Dotaz na den: bez dne dnešek, jinak `?den=RRRR-MM-DD` (desktop – jiný den). */
+const sDnem = (cesta: string, den?: string) => (den ? `${cesta}?den=${den}` : cesta);
+
 /** Den do hlavičky (datum, sluneční časy); jednou za minutu kvůli přechodu půlnoci. */
-export function useDen() {
+export function useDen(den?: string) {
   return useQuery({
-    queryKey: ["den"],
+    queryKey: ["den", den ?? "dnes"],
     queryFn: async () => {
-      const den = await ziskat<Den>("/den");
-      nastavitCasServeru(den.ted);
-      return den;
+      const d = await ziskat<Den>(sDnem("/den", den));
+      nastavitCasServeru(d.ted);
+      return d;
     },
     refetchInterval: 60_000,
   });
 }
 
-/** Lety dne; obnovují se samy každých 10 s a po návratu do aplikace (docs/modul-lety.md 3.2). */
-export function useLety() {
+/** Lety dne; obnovují se samy každých 10 s a po návratu do aplikace (docs/modul-lety.md 3.2).
+ *  Bez dne dnešek (i vše, co je ve vzduchu), jinak lety zvoleného dne (desktop). */
+export function useLety(den?: string) {
   return useQuery({
-    queryKey: ["lety"],
+    queryKey: ["lety", den ?? "dnes"],
     queryFn: async () => {
-      const lety = await ziskat<{ ted: string; lety: Pasek[] }>("/lety");
+      const lety = await ziskat<{ ted: string; lety: Pasek[] }>(sDnem("/lety", den));
       nastavitCasServeru(lety.ted);
       return lety.lety;
     },

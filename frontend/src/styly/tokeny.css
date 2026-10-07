@@ -62,13 +62,38 @@
   /* Deník ukončených letů: letadlo · posádka · čas (vzlet nad přistáním) · doba · přistání */
   --sloupce-deniku: 86px minmax(0, 1fr) 6ch 6ch 2ch;
   --sirka-nabidky: 264px;     /* rozbalovací nabídka uživatele (letiště s názvem na řádek) */
-  --vrstva-zastinu: 1;        /* zástin pod nabídkou: ťuknutí vedle ji zavře */
-  --vrstva-nabidky: 2;        /* nabídka nad obsahem stránky */
-  --vrstva-dialogu: 3;        /* dialog (krátký let) nad vším */
+  --vrstva-panelu: 1;         /* desktop: panel detailu / nového letu nad deskou */
+  --vrstva-zastinu: 2;        /* zástin pod nabídkou: ťuknutí vedle ji zavře */
+  --vrstva-nabidky: 3;        /* nabídka nad obsahem stránky */
+  --vrstva-dialogu: 4;        /* dialog (krátký let) nad vším */
   --pruhlednost-neaktivni: .4; /* tlačítko, které zatím nejde použít */
   --vyska-okna: 100dvh;       /* celá výška displeje (bez lišty prohlížeče na mobilu) */
-  --sirka-mobilu: 480px;      /* na velké obrazovce mobilní návrh jako sloupec, než vznikne
-                                 návrh pro počítač */
+  --sirka-mobilu: 480px;      /* obrazovky bez desktopové podoby (osoby, letadla…) jako sloupec */
+
+  /* --- Desktop: provozní deska (docs/modul-desktop.md, maketa provoz-desktop-v7.html).
+     Ovládání myší – menší cíle než palcem; šířky sloupců a panelů. --- */
+  --klik: 32px;               /* běžný ovládací prvek (segment, čip, ikona) */
+  --klik-hlavni: 40px;        /* akce na pásku a v patičce panelu */
+  --zaobleni-ovladace: 8px;   /* tlačítka a rámečky na desktopu */
+  --sirka-pasku: 880px;       /* sloupec pásků nejvýš (posádka se vejde i na notebooku) */
+  --sirka-info: 320px;        /* pravý sloupec souhrnů (od 1500 px) */
+  --sirka-panelu: 620px;      /* detail letu (pásek s trasou se vejde vedle křížku) */
+  --sirka-noveho: 820px;      /* nový let – formulář ve dvou sloupcích */
+  --sirka-akce: 112px;        /* PŘISTÁL / VZLET na pásku */
+
+  /* Pásek = přihrádky: letadlo · posádka · štítky 2 × 2 · trasa · čas · akce (T&G + PŘISTÁL) */
+  --sloupce-pasku-deska: 140px minmax(0, 1fr) auto 84px var(--sirka-casu) 212px;
+  --mista-stitku-deska: calc(6ch + 2 * var(--mezera-2)) calc(8ch + 2 * var(--mezera-2));
+  --sirka-letadla-panelu: 140px; /* přihrádka letadla na pásku v panelu (OK-CUO 78) */
+
+  /* Deník: letadlo · posádka · vzlet · přistání · doba · přistání (jeden řádek na let) */
+  --sloupce-deniku-deska: 92px minmax(0, 1fr) 5ch 5ch 6ch 2ch;
+  --sirka-lodi: 96px;         /* letadlo v řadě letadel */
+  --vyska-osy: 18px;          /* řádek časové osy (jedno letadlo) */
+  --sirka-popisku-osy: 92px;  /* rejstřík vlevo od časové osy */
+  --prouzek-stavu: 4px;      /* stav letadla v řadě letadel (proužek vlevo) */
+  --prstenec: 3px;           /* zvýraznění pásku: pod myší šedě, vybraný (detail) v barvě textu */
+  --prstenec-mezera: 2px;    /* mezera mezi páskem a prstencem vybraného */
 
   /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. Kontrast textu
      na kartě i na barevných plochách ≥ 4,3 : 1 (výpočet v návrhu lety-mobil-v4.html). */
@@ -90,6 +115,15 @@
   --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
   --barva-cervena:        light-dark(#c42b2b, #ff7a7a);
   --barva-cervena-vypln:  light-dark(#fce6e6, #2f171a);
+  --barva-najeti:         light-dark(#f5f8fc, #1b222b);   /* desktop: řádek pod myší */
+
+  /* Časová osa: pásma soumraku – čím dál od dne, tím tmavší (den = barva karty) – a lety */
+  --barva-soumrak-obcansky:     light-dark(#f2f5f9, #1b212a);
+  --barva-soumrak-nauticky:     light-dark(#e6ebf2, #161b23);
+  --barva-soumrak-astronomicky: light-dark(#d8dfe9, #12161d);
+  --barva-noc:                  light-dark(#c8d1de, #0d1015);
+  --barva-osa-let:              light-dark(#8d97a3, #7d8894);
+  --barva-osa-vlek:             light-dark(#c3c9d0, #4a535e);
 
   /* VÝJIMKA: akční a varovné barvy jsou v obou režimech stejné – syté plochy s bílým textem
      musí být čitelné na slunci i ve tmě; tmavá varianta by ztratila kontrast. */
@@ -101,6 +135,7 @@
   --barva-na-pruhu:    #1a1d21;
   --barva-zastin:      rgb(0 0 0 / 45%);
   --stin-karty:        0 1px 2px rgb(0 0 0 / 8%);  /* karta se odliší od stránky */  /* pod dialogem – ztmaví stránku v obou režimech */
+  --stin-panelu:       -8px 0 24px rgb(0 0 0 / 18%); /* panel zprava vystoupí nad desku */
   --barva-oznameni:    #24292f;   /* lišta „Zpět“ – tmavá v obou režimech, aby vystoupila */
   --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
 }

@@ -31,6 +31,11 @@ export function useOznamit() {
   return useContext(Kontext).oznamit;
 }
 
+/** Právě zobrazené oznámení (desktop: Ctrl+Z provede jeho ZPĚT). */
+export function useZprava() {
+  return useContext(Kontext);
+}
+
 export function Oznameni() {
   const { zprava, oznamit } = useContext(Kontext);
   if (!zprava) return null;

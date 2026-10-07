@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Literal
 
 from astral import Observer
-from astral.sun import sun
+from astral.sun import dawn, dusk, sun
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection, errors
 from pydantic import BaseModel
@@ -22,12 +22,18 @@ router = APIRouter(prefix="/api")
 
 
 class Slunce(BaseModel):
-    """Začátek a konec občanského soumraku a východ a západ slunce (UTC)."""
+    """Začátek a konec občanského soumraku a východ a západ slunce (UTC); pro časovou osu
+    desktopu i začátek ráno a konec večer nautického (12°) a astronomického (18°) soumraku –
+    prázdné, když Slunce tak hluboko nesestoupí (v létě astronomický, docs/modul-desktop.md)."""
 
     tb: datetime | None
     sr: datetime | None
     ss: datetime | None
     te: datetime | None
+    nr: datetime | None
+    nv: datetime | None
+    ar: datetime | None
+    av: datetime | None
 
 
 class Letiste(BaseModel):
@@ -126,12 +132,30 @@ def moje_letiste_id(conn: Connection, relace_id: str) -> int | None:
     return r["letiste_id"] if r else None
 
 
+def _soumrak(funkce, misto: Observer, den: date, stupnu: int) -> datetime | None:
+    """Začátek (dawn) nebo konec (dusk) soumraku; None, když Slunce tak hluboko nesestoupí."""
+    try:
+        return funkce(misto, den, depression=stupnu, tzinfo=UTC)
+    except ValueError:
+        return None
+
+
 def slunce(letiste: dict | None, den: date) -> Slunce:
-    """Sluneční časy pro souřadnice letiště (knihovna astral, soumrak 6°)."""
+    """Sluneční časy pro souřadnice letiště (knihovna astral, občanský soumrak 6°)."""
     if not letiste or letiste["sirka"] is None or letiste["delka"] is None:
-        return Slunce(tb=None, sr=None, ss=None, te=None)
-    s = sun(Observer(float(letiste["sirka"]), float(letiste["delka"])), den, tzinfo=UTC)
-    return Slunce(tb=s["dawn"], sr=s["sunrise"], ss=s["sunset"], te=s["dusk"])
+        return Slunce(tb=None, sr=None, ss=None, te=None, nr=None, nv=None, ar=None, av=None)
+    misto = Observer(float(letiste["sirka"]), float(letiste["delka"]))
+    s = sun(misto, den, tzinfo=UTC)
+    return Slunce(
+        tb=s["dawn"],
+        sr=s["sunrise"],
+        ss=s["sunset"],
+        te=s["dusk"],
+        nr=_soumrak(dawn, misto, den, 12),
+        nv=_soumrak(dusk, misto, den, 12),
+        ar=_soumrak(dawn, misto, den, 18),
+        av=_soumrak(dusk, misto, den, 18),
+    )
 
 
 def doba(minut: int) -> str:

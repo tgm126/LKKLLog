@@ -47,7 +47,7 @@ export function Hlavicka({ ja }: { ja: Ja }) {
   );
 }
 
-function CasUtc() {
+export function CasUtc() {
   const ted = useTik();
   return (
     <span>
@@ -97,7 +97,7 @@ function DenASlunce() {
   );
 }
 
-function NabidkaUzivatele({ ja }: { ja: Ja }) {
+export function NabidkaUzivatele({ ja }: { ja: Ja }) {
   const [otevrena, setOtevrena] = useState(false);
   const navigate = useNavigate();
   const provoz = useMujProvoz().data;

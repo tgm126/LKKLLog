@@ -26,9 +26,10 @@ import { useMujProvoz } from "../provoz/api";
 import { VyberMista } from "./VyberMista";
 import "./Detail.css";
 
-// Detail letu přes celou obrazovku (docs/modul-lety.md 3.5, maketa lety-mobil-v4.html):
-// nahoře pásek letu jako v přehledu, pod ním bloky Posádka a let · Časy a místa · Platba
-// a poznámka · Evidence s poli ve dvou sloupcích. Ťuknutí na pole ho upraví pod ním.
+// Detail letu (docs/modul-lety.md 3.5, maketa lety-mobil-v4.html): nahoře pásek letu jako
+// v přehledu, pod ním bloky Posádka a let · Časy a místa · Platba a poznámka · Evidence
+// s poli ve dvou sloupcích. Ťuknutí na pole ho upraví pod ním. Na mobilu přes celou
+// obrazovku; na desktopu tytéž bloky a akce v panelu zprava (deska/PanelDetailu.tsx).
 
 const STAV: Record<Stav, [string, BarvaStitku | undefined]> = {
   VE_VZDUCHU: ["Ve vzduchu", "zeleny"],
@@ -65,9 +66,41 @@ function DetailLetuObrazovka({
   nabidky: Nabidky;
   zpet: () => void;
 }) {
+  const mojeKod = useMujProvoz().data?.letiste?.kod;
+  const [stav, barva] = l.varovani ? (["Ve vzduchu", "cerveny"] as const) : STAV[l.stav];
+  return (
+    <Obrazovka
+      zpet={zpet}
+      zpetPopis="Zpět"
+      nadpis="Let"
+      vpravo={<Stitek barva={barva}>{stav}</Stitek>}
+      akce={
+        <>
+          <Oznameni />
+          <AkceDetailu let_={l} nabidky={nabidky} />
+        </>
+      }
+    >
+      <div className={`let ${tridaPasku([l])}`}>
+        {/* trasa na pásku jen tam, kde místo není moje letiště (jako v přehledu) */}
+        <PolovinaPasku
+          let={{
+            ...l,
+            misto_vzletu: l.misto_vzletu === mojeKod ? null : l.misto_vzletu,
+            misto_pristani: l.misto_pristani === mojeKod ? null : l.misto_pristani,
+          }}
+        />
+      </div>
+      <DetailBloky let_={l} nabidky={nabidky} />
+    </Obrazovka>
+  );
+}
+
+/** Bloky detailu (Posádka a let · Časy a místa · Platba a poznámka · Evidence) s úpravou
+ *  na místě – mobil i panel desktopu. */
+export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky }) {
   const ja = useJa().data!;
   const provoz = useMujProvoz().data;
-  const mojeKod = provoz?.letiste?.kod;
   const vProvozu = { osoby: provoz?.osoby ?? [], jaId: ja.osoba_id };
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -137,28 +170,10 @@ function DetailLetuObrazovka({
   const platce = l.plati_aeroklub
     ? "Aeroklub"
     : l.platce_jmeno && `${l.platce_jmeno} ${l.platce_prijmeni}`;
-  const [stav, barva] = l.varovani ? (["Ve vzduchu", "cerveny"] as const) : STAV[l.stav];
   const upravy = l.historie.slice(1);
 
   return (
-    <Obrazovka
-      zpet={zpet}
-      zpetPopis="Zpět"
-      nadpis="Let"
-      vpravo={<Stitek barva={barva}>{stav}</Stitek>}
-      akce={<AkceDetailu let_={l} nabidky={nabidky} />}
-    >
-      <div className={`let ${tridaPasku([l])}`}>
-        {/* trasa na pásku jen tam, kde místo není moje letiště (jako v přehledu) */}
-        <PolovinaPasku
-          let={{
-            ...l,
-            misto_vzletu: l.misto_vzletu === mojeKod ? null : l.misto_vzletu,
-            misto_pristani: l.misto_pristani === mojeKod ? null : l.misto_pristani,
-          }}
-        />
-      </div>
-
+    <>
       <Blok nadpis="Posádka a let">
         <Udaje>
           {l.posadka.map((c) => (
@@ -349,7 +364,7 @@ function DetailLetuObrazovka({
           )}
         </Udaje>
       </Blok>
-    </Obrazovka>
+    </>
   );
 }
 
@@ -410,7 +425,8 @@ function UpravaPoznamky({ puvodni, ulozit }: { puvodni: string; ulozit: (p: stri
 
 // --- akce: podle stavu letu, zrušení s důvodem -------------------------------------------------
 
-function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky }) {
+/** Akce detailu podle stavu letu (PŘISTÁL, T&G, VZLET, zrušení s důvodem, obnovení). */
+export function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky }) {
   const { provest, pristat, dialog, probiha } = useAkceLetu();
   const qc = useQueryClient();
   const oznamit = useOznamit();
@@ -462,7 +478,6 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
   return (
     <>
       {dialog}
-      <Oznameni />
       {l.stav === "VE_VZDUCHU" && (
         <div className="akce-vedle">
           {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (

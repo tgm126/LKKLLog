@@ -6,7 +6,7 @@ Vzhled podle maket `docs/navrhy/lety-mobil-v4.html` (přehled a detail; pásek p
 `pasek-mobil-v5.html`) a
 `docs/navrhy/pruvodce-mobil-v4.html` (nový let) – mobil, světlý i tmavý režim. Data v tabulkách
 `let`, `posadka`, `let_tg` a pohledech `v_let`, `v_historie_letu`, `v_lov_letadlo`,
-`v_lov_*` (skripty `db/009`–`015`). Obrazovka pro počítač zatím ne.
+`v_lov_*` (skripty `db/009`–`015`). Obrazovka pro počítač (provozní deska): `docs/modul-desktop.md`.
 
 ## 1. Rozsah
 
@@ -24,7 +24,7 @@ Vzhled podle maket `docs/navrhy/lety-mobil-v4.html` (přehled a detail; pásek p
 
 **Ne (později):** úlohy z osnov (blok úlohy bude, až dodáte osnovy – do té doby jen obecné
 úlohy, viz otázka 6), uzávěrky, výpis a export, můj nálet, displej, upozornění (e-mail, push),
-obrazovka pro počítač, kontrola dokladů a rozlétanosti.
+kontrola dokladů a rozlétanosti (obrazovka pro počítač je samostatný modul `docs/modul-desktop.md`).
 
 ## 2. Rozhraní (API)
 

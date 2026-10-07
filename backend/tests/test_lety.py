@@ -15,9 +15,26 @@ def test_den_a_slunce(prihlasit, osoba, flotila):
         "nazev": "Kladno",
         "domovske": True,
     }
-    # Kladno 6. 10. 2026 (UTC): soumrak 04:38, východ 05:11, západ 16:31, konec soumraku 17:04.
+    # Kladno 6. 10. 2026 (UTC): soumrak 04:38, východ 05:11, západ 16:31, konec soumraku 17:04;
+    # nautický 04:01–17:41, astronomický 03:23–18:19 (časová osa desktopu).
     casy = {k: v[11:16] for k, v in den["slunce"].items()}
-    assert casy == {"tb": "04:38", "sr": "05:11", "ss": "16:31", "te": "17:04"}
+    assert casy == {
+        "tb": "04:38",
+        "sr": "05:11",
+        "ss": "16:31",
+        "te": "17:04",
+        "nr": "04:01",
+        "nv": "17:41",
+        "ar": "03:23",
+        "av": "18:19",
+    }
+
+
+def test_v_lete_astronomicka_noc_nenastane(prihlasit, osoba, flotila):
+    osoba("Pilot")
+    den = prihlasit("pilot@example.cz").get("/api/den", params={"den": "2026-06-21"}).json()
+    assert den["slunce"]["ar"] is None and den["slunce"]["av"] is None
+    assert den["slunce"]["nr"][11:16] == "01:02" and den["slunce"]["nv"][11:16] == "21:08"
 
 
 def test_lety_dne(prihlasit, osoba, let):

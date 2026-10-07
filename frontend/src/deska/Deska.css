@@ -1,0 +1,581 @@
+/* Provozní deska – desktop (docs/modul-desktop.md, maketa provoz-desktop-v7.html). Jen tokeny.
+   Ovládání myší: uvnitř desky mají dotykové rozměry hodnoty pro myš, takže sdílené volby,
+   čipy a pole (stejné jako na mobilu) se zmenší samy. */
+
+/* Deska přes celé okno (ostatní obrazovky zůstávají sloupcem mobilní šířky) */
+#aplikace:has(> .deska) {
+  height: var(--vyska-okna);
+  max-width: none;
+}
+
+.deska {
+  --dotyk: var(--klik);
+  --dotyk-hlavni: var(--klik-hlavni);
+
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* --- lišta ----------------------------------------------------------------------------------- */
+.lista-desky {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-4);
+  padding: var(--mezera-2) var(--mezera-4);
+  border-bottom: var(--ramecek);
+  background: var(--barva-karta);
+  white-space: nowrap;
+}
+
+.navigace-desky {
+  display: flex;
+  gap: var(--mezera-1);
+}
+
+.navigace-desky a {
+  padding: var(--mezera-1) var(--mezera-3);
+  border-radius: var(--zaobleni-ovladace);
+  color: var(--barva-text);
+  text-decoration: none;
+}
+
+.navigace-desky a:hover {
+  background: var(--barva-neutralni);
+}
+
+.navigace-desky a.active {
+  background: var(--barva-modra-vypln);
+  color: var(--barva-modra);
+  font-weight: var(--tloustka-tucna);
+}
+
+.den-desky {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-1);
+  margin-left: auto;
+}
+
+.den-desky .tl {
+  --tl-min-sirka: var(--klik);
+  --tl-odsazeni: 0;
+  --tl-pismo: var(--pismo-l);
+  --tl-barva: var(--barva-seda);
+}
+
+/* VÝJIMKA: štítek letiště je tlačítko menší než --klik – v liště jen jako upozornění */
+.letiste-desky {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.slunce-desky {
+  display: flex;
+  gap: var(--mezera-3);
+}
+
+.do-te {
+  color: var(--barva-oranzova);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Nabídka uživatele: stejná komponenta jako na mobilu, u pravého okraje lišty */
+.lista-desky .nabidka {
+  right: var(--mezera-4);
+}
+
+/* --- jiný den ------------------------------------------------------------------------------ */
+.pruh-jineho-dne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mezera-3);
+  padding: var(--mezera-1);
+  border-bottom: var(--ramecek);
+  background: var(--barva-modra-vypln);
+  color: var(--barva-modra);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* --- řada letadel -------------------------------------------------------------------------- */
+.rada-letadel {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-4);
+  padding: var(--mezera-2) var(--mezera-4);
+  overflow-x: auto;
+  border-bottom: var(--ramecek);
+  background: var(--barva-karta);
+}
+
+.novy-let {
+  flex: none;
+  height: var(--klik-hlavni);
+  padding: 0 var(--mezera-4);
+  border: 0;
+  border-radius: var(--zaobleni-ovladace);
+  background: var(--barva-akce-modra);
+  color: var(--barva-na-akci);
+  font-weight: var(--tloustka-tucna);
+  white-space: nowrap;
+}
+
+kbd {
+  margin-left: var(--mezera-1);
+  padding: 0 var(--mezera-1);
+  border: var(--ramecek-sirka) solid currentcolor;
+  border-radius: var(--zaobleni-policka);
+  font-family: var(--pismo);
+  font-size: var(--pismo-s);
+}
+
+.skupina-lodi {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--mezera-1);
+}
+
+.skupina-lodi > .nadpisek {
+  margin-right: var(--mezera-1);
+}
+
+/* Bez názvů kategorií (notebook): skupiny oddělí přepážka */
+.skupina-lodi:not(:has(> .nadpisek)) + .skupina-lodi {
+  padding-left: var(--mezera-3);
+  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
+}
+
+/* Letadlo: neutrální rámeček, stav jen proužkem vlevo */
+.lod {
+  display: grid;
+  min-width: var(--sirka-lodi);
+  padding: var(--mezera-1) var(--mezera-3);
+  border: var(--ramecek-sirka) solid var(--barva-prepazka);
+  border-radius: var(--zaobleni-ovladace);
+  background: var(--barva-karta);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lod:disabled {
+  opacity: var(--pruhlednost-neaktivni);
+  cursor: not-allowed;
+}
+
+.lod:disabled .rejstrik-lodi {
+  text-decoration: line-through;
+}
+
+.lod:hover:not(:disabled) {
+  border-color: var(--barva-obrys);
+}
+
+.lod.vzduch {
+  box-shadow: inset var(--prouzek-stavu) 0 0 var(--barva-zelena);
+}
+
+.lod.naplanovan {
+  box-shadow: inset var(--prouzek-stavu) 0 0 var(--barva-modra);
+}
+
+.jinde {
+  color: var(--barva-oranzova);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* --- sloupce ------------------------------------------------------------------------------- */
+.deska-spodek {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.deska-sloupce {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, var(--sirka-pasku)) minmax(0, 1fr);
+  gap: var(--mezera-4);
+  min-height: 0;
+  padding: var(--mezera-3) var(--mezera-4) var(--mezera-2);
+}
+
+.deska-sloupce.siroka {
+  grid-template-columns: minmax(0, var(--sirka-pasku)) minmax(0, 1fr) var(--sirka-info);
+}
+
+.deska-sloupce.jiny-den {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.deska-sloupce.jiny-den.siroka {
+  grid-template-columns: minmax(0, 1fr) var(--sirka-info);
+}
+
+/* Každý sloupec se posouvá sám (lišta, řada letadel a osa zůstávají) */
+.deska-sloupec {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.deska-sloupec > .pasek-deska,
+.deska-sloupec > div {
+  margin-bottom: var(--mezera-2);
+}
+
+/* Souhrny na užší desce: vysunuté zprava přes deník */
+.souhrny-vysunute {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--vrstva-panelu);
+  width: var(--sirka-info);
+  padding: var(--mezera-3) var(--mezera-4);
+  background: var(--barva-pozadi);
+  box-shadow: var(--stin-panelu);
+}
+
+.nadpis-sloupce {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mezera-2);
+  margin: var(--mezera-1) var(--mezera-1) var(--mezera-2);
+}
+
+.prazdny-sloupec {
+  margin: 0 var(--mezera-1) var(--mezera-4);
+}
+
+.vpravo-auto {
+  margin-left: auto;
+}
+
+/* --- deník dne ----------------------------------------------------------------------------- */
+.deska-denik {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.denik-deska {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+}
+
+.denik-radky {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.radek-deniku {
+  display: grid;
+  grid-template-columns: var(--sloupce-deniku-deska);
+  align-items: baseline;
+  gap: var(--mezera-2);
+  width: 100%;
+  padding: var(--mezera-1) var(--mezera-3);
+  border: 0;
+  border-top: var(--ramecek);
+  background: none;
+  text-align: left;
+}
+
+.radek-deniku > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radek-deniku:hover {
+  background: var(--barva-najeti);
+}
+
+.radek-deniku.vybrany {
+  background: var(--barva-modra-vypln);
+}
+
+.radek-deniku.zrusen {
+  color: var(--barva-seda);
+}
+
+.radek-deniku.zrusen > :first-child {
+  text-decoration: line-through;
+}
+
+.radek-deniku.zahlavi {
+  border-top: 0;
+  background: var(--barva-neutralni);
+  color: var(--barva-seda);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+  cursor: default;
+}
+
+.radek-deniku .vpravo {
+  text-align: right;
+}
+
+.mezititulek {
+  margin: 0;
+  padding: var(--mezera-1) var(--mezera-3);
+  border-top: var(--ramecek);
+  background: var(--barva-neutralni);
+}
+
+.denik-pata {
+  display: flex;
+  gap: var(--mezera-4);
+  margin: 0;
+  padding: var(--mezera-2) var(--mezera-3);
+  border-top: var(--ramecek);
+}
+
+.denik-pata b {
+  color: var(--barva-text);
+  font-size: var(--pismo-m);
+}
+
+/* --- souhrny ------------------------------------------------------------------------------- */
+.karta-souhrnu {
+  margin-bottom: var(--mezera-3);
+  overflow: hidden;
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+}
+
+.karta-souhrnu > .nadpisek {
+  margin: 0;
+  padding: var(--mezera-2) var(--mezera-3);
+  border-bottom: var(--ramecek);
+  background: var(--barva-neutralni);
+}
+
+.cisla-souhrnu {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  padding: var(--mezera-2) 0;
+  text-align: center;
+}
+
+.cisla-souhrnu > div {
+  display: grid;
+}
+
+.tabulka-souhrnu {
+  width: 100%;
+  margin-bottom: var(--mezera-2);
+  border-collapse: collapse;
+}
+
+/* Odsazení od okraje karty (tabulka s otevřenými čarami nemá vlastní odsazení) */
+.tabulka-souhrnu :is(th, td):first-child {
+  padding-left: var(--mezera-3);
+}
+
+.tabulka-souhrnu :is(th, td):last-child {
+  padding-right: var(--mezera-3);
+}
+
+.tabulka-souhrnu th {
+  color: var(--barva-seda);
+  font-size: var(--pismo-s);
+  text-align: right;
+}
+
+.tabulka-souhrnu td {
+  padding: var(--mezera-1) 0;
+  border-top: var(--ramecek);
+  text-align: right;
+}
+
+.tabulka-souhrnu th:first-child,
+.tabulka-souhrnu td:first-child {
+  text-align: left;
+}
+
+/* --- časová osa ---------------------------------------------------------------------------- */
+.casova-osa {
+  flex: none;
+  margin: 0 var(--mezera-4) var(--mezera-3);
+  overflow: hidden;
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+}
+
+.osa-hlava {
+  display: flex;
+  align-items: center;
+  gap: var(--mezera-4);
+  width: 100%;
+  padding: var(--mezera-1) var(--mezera-3);
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.osa-legenda {
+  display: flex;
+  gap: var(--mezera-3);
+}
+
+.vzorek {
+  display: inline-block;
+  width: var(--mezera-4);
+  height: var(--mezera-2);
+  margin: 0 var(--mezera-1);
+  border: var(--ramecek);
+  border-radius: var(--zaobleni-policka);
+  background: var(--vzorek);
+}
+
+.vzorek.ukonceny {
+  --vzorek: var(--barva-osa-let);
+}
+
+.vzorek.letici {
+  --vzorek: var(--barva-akce-zelena);
+}
+
+.vzorek.ted {
+  width: 0;
+  border: 0;
+  border-left: var(--obrys-sirka) solid var(--barva-modra);
+  border-radius: 0;
+}
+
+.vzorek.obcansky {
+  --vzorek: var(--barva-soumrak-obcansky);
+}
+
+.vzorek.nauticky {
+  --vzorek: var(--barva-soumrak-nauticky);
+}
+
+.vzorek.astronomicky {
+  --vzorek: var(--barva-soumrak-astronomicky);
+}
+
+.vzorek.noc {
+  --vzorek: var(--barva-noc);
+}
+
+.osa-telo {
+  padding: 0 var(--mezera-3) var(--mezera-2);
+  border-top: var(--ramecek);
+}
+
+.osa-radek {
+  display: grid;
+  grid-template-columns: var(--sirka-popisku-osy) minmax(0, 1fr);
+  align-items: center;
+}
+
+.osa-draha {
+  display: block;
+  width: 100%;
+  height: var(--vyska-osy);
+}
+
+.osa-cislo {
+  fill: var(--barva-seda);
+  font-size: var(--pismo-s);
+}
+
+.osa-pasmo.obcansky {
+  fill: var(--barva-soumrak-obcansky);
+}
+
+.osa-pasmo.nauticky {
+  fill: var(--barva-soumrak-nauticky);
+}
+
+.osa-pasmo.astronomicky {
+  fill: var(--barva-soumrak-astronomicky);
+}
+
+.osa-pasmo.noc {
+  fill: var(--barva-noc);
+}
+
+.osa-hodina {
+  stroke: var(--barva-cara);
+  stroke-width: var(--ramecek-sirka);
+}
+
+.osa-ted {
+  stroke: var(--barva-modra);
+  stroke-width: var(--obrys-sirka);
+}
+
+/* Úsečka letu: ukončený šedě, vlek světleji, letící a varování sytou akční barvou */
+.osa-let {
+  cursor: pointer;
+  fill: var(--barva-osa-let);
+}
+
+.osa-let.vlek {
+  fill: var(--barva-osa-vlek);
+}
+
+.osa-let.letici {
+  fill: var(--barva-akce-zelena);
+}
+
+.osa-let.problem {
+  fill: var(--barva-akce-cervena);
+}
+
+.osa-let:hover {
+  stroke: var(--barva-prepazka);
+  stroke-width: var(--obrys-sirka);
+}
+
+.osa-let.vybrany {
+  stroke: var(--barva-text);
+  stroke-width: var(--obrys-sirka);
+}
+
+/* --- oznámení a formulář nového letu ------------------------------------------------------ */
+.deska-oznameni {
+  position: absolute;
+  bottom: var(--mezera-4);
+  left: var(--mezera-4);
+  z-index: var(--vrstva-nabidky);
+}
+
+.rozpracovany-pasek {
+  margin-bottom: var(--mezera-3);
+}
+
+/* Formulář ve dvou sloupcích (vlevo letadlo, účel, vzlet, vlek; vpravo posádka, úloha…) */
+.formular-deska {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0 var(--mezera-3);
+}
+
+.formular-deska.jednosloupcovy {
+  grid-template-columns: minmax(0, 1fr);
+}

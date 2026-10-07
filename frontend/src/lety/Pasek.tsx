@@ -46,6 +46,8 @@ export type LetPasku = Pick<
   /** Místa jen tehdy, když nejsou moje letiště (server je u pásků vynechá). */
   misto_vzletu?: string | null;
   misto_pristani?: string | null;
+  /** Kdy byl let založen (desktop: u naplánovaného letu v přihrádce času). */
+  zalozeno?: string;
 };
 
 /** Trasa na pásek (maketa mista-letu-mobil.html, varianta B): jen jedna strana – kam letí
@@ -57,21 +59,21 @@ function trasa(l: LetPasku): string | null {
 }
 
 /** Účel do pole pásku; běžný (normální) se nevypisuje, vlečná má „vlek“. */
-function ucelKratce(l: LetPasku) {
+export function ucelKratce(l: LetPasku) {
   if (l.je_vlecny) return "vlek";
   if (!l.ucel_kod || l.ucel_kod === "NORMALNI") return null;
   return UCEL_KRATCE[l.ucel_kod] ?? (l.ucel && malymi(l.ucel));
 }
 
 /** Způsob vzletu do pole pásku; vlastní (motorem) se nevypisuje. */
-const zpusobKratce = (l: LetPasku) =>
+export const zpusobKratce = (l: LetPasku) =>
   l.zpusob_vzletu_kod && l.zpusob_vzletu_kod !== "VLASTNI" ? kratce(l.zpusob_vzletu) : null;
 
 /** Označení úlohy (IU/4) z názvu „IU/4 Navijákové vzlety…“. */
-const ulohaKratce = (uloha: string | null) => uloha?.split(" ")[0] ?? null;
+export const ulohaKratce = (uloha: string | null) => uloha?.split(" ")[0] ?? null;
 
 /** Posádka: každá osoba na vlastním řádku, funkce malým šedým písmem. */
-function Posadka({ clenove }: { clenove: LetPasku["posadka"] }) {
+export function Posadka({ clenove }: { clenove: LetPasku["posadka"] }) {
   return clenove.map((c) => (
     <span key={c.funkce_kod}>
       {c.jmeno} {c.prijmeni}{" "}

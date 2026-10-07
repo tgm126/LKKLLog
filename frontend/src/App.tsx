@@ -8,6 +8,9 @@ import { OznameniProvider } from "./komponenty/Oznameni";
 import { Pruh, PruhProvozu } from "./komponenty/Pruh";
 import { Tlacitko } from "./komponenty/Tlacitko";
 import { Vstupni } from "./komponenty/Vstupni";
+import { Deska } from "./deska/Deska";
+import { PanelDetailu } from "./deska/PanelDetailu";
+import { PanelNovehoLetu } from "./deska/PanelNovehoLetu";
 import { Detail } from "./lety/Detail";
 import { Pruvodce } from "./lety/Pruvodce";
 import { Detail as DetailOsoby } from "./osoby/Detail";
@@ -18,21 +21,38 @@ import { LetisteProDnesek, OsobyVProvozu } from "./provoz/Provoz";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
+import { useDeska } from "./rozvrzeni";
 import { useJa, zmenitUzivatele } from "./uzivatel";
 
 export function App() {
+  // Provoz (přehled, detail letu, nový let): na desktopu provozní deska s panelem zprava,
+  // jinak mobilní obrazovky (docs/modul-desktop.md). Adresy jsou stejné – odkaz funguje
+  // na obou. Ostatní obrazovky zatím jen v mobilní podobě (sloupec uprostřed).
+  const deska = useDeska();
   return (
     <Routes>
       <Route path="/prihlaseni" element={<Prihlaseni />} />
       <Route path="/heslo" element={<NastaveniHesla />} />
       <Route element={<Prihlaseny />}>
+        {deska ? (
+          <Route path="/" element={<Deska />}>
+            <Route index element={null} />
+            <Route path="let/:id" element={<PanelDetailu />} />
+            <Route path="novy-let" element={<PanelNovehoLetu />} />
+          </Route>
+        ) : (
+          <>
+            <Route element={<SHlavickou />}>
+              <Route index element={<Lety />} />
+            </Route>
+            <Route path="/novy-let" element={<Pruvodce />} />
+            <Route path="/let/:id" element={<Detail />} />
+          </>
+        )}
         <Route element={<SHlavickou />}>
-          <Route index element={<Lety />} />
           <Route path="/osoby" element={<SeznamOsob />} />
           <Route path="/letadla" element={<SeznamLetadel />} />
         </Route>
-        <Route path="/novy-let" element={<Pruvodce />} />
-        <Route path="/let/:id" element={<Detail />} />
         <Route path="/osoba/nova" element={<NovaOsoba />} />
         <Route path="/osoba/:id" element={<DetailOsoby />} />
         <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
