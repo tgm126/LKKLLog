@@ -17,39 +17,25 @@ export const PIC_NAZEV: Record<string, string> = {
 
 export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
 
-// --- kdo se nabízí: podle oprávnění osob (db/021) ---------------------------------------------
+// --- kdo se nabízí: podle oprávnění osob (db/021, 022) ----------------------------------------
 
-/** Co se od osoby ve funkci čeká: výcvik (instruktor u výcviku, dozor u sóla), přezkoušení
- *  (examinátor), vlekání (pilot vlečné); jinak nic zvláštního. */
-export type Cinnost = "vycvik" | "prezkousi" | "vleka";
+/** Role v letu: účel (null = vlečný let) a funkce osoby na letadle dané kategorie. */
+type Hledana = { ucel: string | null; funkce: string; kategorie: string | undefined };
 
-export function cinnostFunkce(
-  funkceKod: string,
-  ucelKod: string | null,
-  jeVlecny: boolean,
-): Cinnost | null {
-  if (funkceKod === "DOZOR") return "vycvik";
-  if (funkceKod !== "PIC") return null;
-  if (jeVlecny) return "vleka";
-  if (ucelKod === "VYCVIK") return "vycvik";
-  if (ucelKod === "PREZKOUSENI") return "prezkousi";
-  return null;
-}
+/** Smí osoba zastat roli (bez kategorie letadla = na čemkoli)? */
+const smi = (o: Osoba, h: Hledana) =>
+  o.role.some(
+    (r) =>
+      r.ucel === h.ucel &&
+      r.funkce === h.funkce &&
+      (r.kategorie === null || h.kategorie === undefined || r.kategorie === h.kategorie),
+  );
 
-/** Smí osoba činnost na letadle dané kategorie (bez kategorie = na čemkoli)? */
-const smi = (o: Osoba, cinnost: Cinnost, kategorie: string | undefined) =>
-  o[cinnost].includes("*") || (kategorie ? o[cinnost].includes(kategorie) : o[cinnost].length > 0);
-
-/** Rychlá volba osoby: kdo má potřebné oprávnění; když se nic zvláštního nečeká nebo nikdo
- *  oprávnění nemá, záloha (Já, naposledy létající). Ostatní najde „Hledat…“. */
-export function rychlaVolba(
-  osoby: Osoba[],
-  cinnost: Cinnost | null,
-  kategorie: string | undefined,
-  zaloha: number[],
-): number[] {
-  const maji = cinnost ? osoby.filter((o) => smi(o, cinnost, kategorie)).map((o) => o.id) : [];
-  return maji.length > 0 ? maji : zaloha;
+/** Rychlá volba osoby: kdo smí roli zastat podle oprávnění; když nikdo, záloha (Já,
+ *  naposledy létající). Ostatní najde „Hledat…“. */
+export function rychlaVolba(osoby: Osoba[], hledana: Hledana, zaloha: number[]): number[] {
+  const smiji = osoby.filter((o) => smi(o, hledana)).map((o) => o.id);
+  return smiji.length > 0 ? smiji : zaloha;
 }
 
 /** Bez diakritiky a malými (hledání „cacky“ najde „Čacký“). */

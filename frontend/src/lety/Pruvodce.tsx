@@ -14,7 +14,6 @@ import { useNabidky, type LetadloNabidka, type Nabidky, type Ucel } from "./api"
 import { PolovinaPasku, type LetPasku } from "./Pasek";
 import { Udaj, Udaje } from "./Udaje";
 import {
-  cinnostFunkce,
   jmeno,
   PIC_NAZEV,
   rychlaVolba,
@@ -302,8 +301,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
                 jaId={ja.osoba_id}
                 rychle={rychlaVolba(
                   nabidky.osoby,
-                  cinnostFunkce(p.kod, ucel.kod, false),
-                  letadlo.kategorie_kod,
+                  { ucel: ucel.kod, funkce: p.kod, kategorie: letadlo.kategorie_kod },
                   [ja.osoba_id, ...letadlo.nedavni],
                 )}
                 vybrana={novy.osoby[p.funkceId]}
@@ -405,7 +403,11 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
             <VolbaOsoby
               osoby={nabidky.osoby}
               jaId={ja.osoba_id}
-              rychle={rychlaVolba(nabidky.osoby, "vleka", novy.vlecna?.kategorie_kod, [])}
+              rychle={rychlaVolba(
+                nabidky.osoby,
+                { ucel: null, funkce: "PIC", kategorie: novy.vlecna?.kategorie_kod },
+                [],
+              )}
               vybrana={novy.vlekar}
               vyloucit={obsazene("vlekar")}
               vybrat={(id) => zmenit({ vlekar: id })}

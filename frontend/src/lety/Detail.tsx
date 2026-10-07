@@ -15,7 +15,6 @@ import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from 
 import { PolovinaPasku, tridaPasku } from "./Pasek";
 import { Udaj, Udaje } from "./Udaje";
 import {
-  cinnostFunkce,
   PIC_NAZEV,
   rychlaVolba,
   VolbaOsoby,
@@ -103,8 +102,7 @@ function DetailLetuObrazovka({
       jaId={ja.osoba_id}
       rychle={rychlaVolba(
         nabidky.osoby,
-        cinnostFunkce(funkceKod, l.ucel_kod, l.je_vlecny),
-        l.kategorie_kod,
+        { ucel: l.je_vlecny ? null : l.ucel_kod, funkce: funkceKod, kategorie: l.kategorie_kod },
         [ja.osoba_id],
       )}
       vybrana={vybrana}

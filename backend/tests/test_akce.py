@@ -220,17 +220,23 @@ def test_nabidky(conn, pilot, let):
 
 
 def test_nabidky_opravneni(conn, pilot, osoba, flotila):
-    """U osoby, pro které kategorie letadel smí vést výcvik, přezkoušet a vlekat (db/021)."""
+    """U osoby role, které smí zastat podle oprávnění (db/021, 022)."""
     pilot_id, k = pilot
     vlekar = osoba("Vlekar", ucet=False)
     nikdo = osoba("Nikdo", ucet=False)
     instruktor = conn.execute(
-        """INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi, vycvik, prezkousi)
-           VALUES ('FI_S', 'FI(S)', 10, true, false) RETURNING id"""
+        """INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi)
+           VALUES ('FI_S', 'FI(S)', 10) RETURNING id"""
     ).fetchone()["id"]
     conn.execute(
         """INSERT INTO lkkl.lov_opravneni_kategorie
            SELECT %s, id FROM lkkl.lov_kategorie WHERE kod = 'KLUZAK'""",
+        (instruktor,),
+    )
+    conn.execute(
+        """INSERT INTO lkkl.lov_opravneni_role (opravneni_id, ucel_id, funkce_id)
+           SELECT %s, (SELECT id FROM lkkl.lov_ucel WHERE kod = 'VYCVIK'),
+                  (SELECT id FROM lkkl.lov_funkce WHERE kod = 'PIC')""",
         (instruktor,),
     )
     conn.execute(
@@ -239,16 +245,15 @@ def test_nabidky_opravneni(conn, pilot, osoba, flotila):
         (pilot_id, instruktor, vlekar),
     )
     osoby = {o["id"]: o for o in k.get("/api/lety/nabidky").json()["osoby"]}
-    assert osoby[pilot_id]["vycvik"] == ["KLUZAK"] and osoby[pilot_id]["prezkousi"] == []
-    assert osoby[vlekar]["vleka"] == ["*"]  # vlekař bez kategorií = čímkoli
-    assert osoby[nikdo]["vycvik"] == osoby[nikdo]["vleka"] == []
+    assert osoby[pilot_id]["role"] == [{"ucel": "VYCVIK", "funkce": "PIC", "kategorie": "KLUZAK"}]
+    # vlekař (role z převodu v 022): vlečný let (bez účelu), PIC, jakákoli kategorie
+    assert osoby[vlekar]["role"] == [{"ucel": None, "funkce": "PIC", "kategorie": None}]
+    assert osoby[nikdo]["role"] == []
     # přidání oprávnění se zapíše do auditu
-    assert (
-        conn.execute(
-            "SELECT count(*) AS n FROM lkkl.audit WHERE tabulka = 'lov_osoba_opravneni'"
-        ).fetchone()["n"]
-        == 2
-    )
+    pocet = conn.execute(
+        "SELECT count(*) AS n FROM lkkl.audit WHERE tabulka = 'lov_osoba_opravneni'"
+    ).fetchone()["n"]
+    assert pocet == 2
 
 
 def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):

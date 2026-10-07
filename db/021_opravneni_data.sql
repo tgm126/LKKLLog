@@ -1,19 +1,21 @@
--- 021 data: druhy oprávnění instruktorů a examinátorů a kategorie letadel, pro které platí
--- (docs/podklady/instruktori-a-examinatori.md). Vlekař je ve struktuře (021_opravneni.sql).
--- Kdo má jaké oprávnění, zadává správce do lkkl.lov_osoba_opravneni (kontrola: v_osoba_opravneni).
--- Spustit jednou ručně: psql -1 -f db/021_opravneni_data.sql
+-- 021 data: druhy oprávnění instruktorů a examinátorů, kategorie letadel, pro které platí,
+-- a role v letu, ke kterým opravňují (docs/podklady/instruktori-a-examinatori.md).
+-- Vlekař je ve struktuře (021_opravneni.sql, role z 022). Kdo má jaké oprávnění, zadává
+-- správce do lkkl.lov_osoba_opravneni (kontrola: v_osoba_opravneni).
+-- Na serveru provedeno 7. 10. 2026 (role tam vznikly převodem v 022); pro novou databázi:
+-- psql -1 -f db/021_opravneni_data.sql
 
-INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi, vycvik, prezkousi, omezene) VALUES
-    ('FI_S',           'FI(S) – instruktor kluzáků',               10, true,  false, false),
-    ('FI_S_OMEZENY',   'FI(S) omezený – pod dohledem',             15, true,  false, true),
-    ('FE_S',           'FE(S) – examinátor kluzáků',               20, false, true,  false),
-    ('FI_A',           'FI(A) – instruktor letounů',               30, true,  false, false),
-    ('FI_A_OMEZENY',   'FI(A) omezený – pod dohledem',             35, true,  false, true),
-    ('CRI_A',          'CRI(A) – instruktor třídní kvalifikace',   40, true,  false, false),
-    ('FE_A',           'FE(A) – examinátor letounů',               50, false, true,  false),
-    ('CRE_A',          'CRE(A) – examinátor třídní kvalifikace',   55, false, true,  false),
-    ('INSTRUKTOR_ULL', 'Instruktor ULL',                           60, true,  false, false),
-    ('INSPEKTOR_ULL',  'Inspektor provozu ULL',                    70, false, true,  false);
+INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi, omezene) VALUES
+    ('FI_S',           'FI(S) – instruktor kluzáků',               10, false),
+    ('FI_S_OMEZENY',   'FI(S) omezený – pod dohledem',             15, true),
+    ('FE_S',           'FE(S) – examinátor kluzáků',               20, false),
+    ('FI_A',           'FI(A) – instruktor letounů',               30, false),
+    ('FI_A_OMEZENY',   'FI(A) omezený – pod dohledem',             35, true),
+    ('CRI_A',          'CRI(A) – instruktor třídní kvalifikace',   40, false),
+    ('FE_A',           'FE(A) – examinátor letounů',               50, false),
+    ('CRE_A',          'CRE(A) – examinátor třídní kvalifikace',   55, false),
+    ('INSTRUKTOR_ULL', 'Instruktor ULL',                           60, false),
+    ('INSPEKTOR_ULL',  'Inspektor provozu ULL',                    70, false);
 
 -- Kategorie: kluzákoví instruktoři a examinátoři na kluzácích a TMG, letounoví na letounech
 -- a TMG, ULL na ultralehkých. Kategorie, která v databázi není, se přeskočí.
@@ -33,3 +35,13 @@ FROM (VALUES
 ) AS v(opravneni, kategorie)
 JOIN lkkl.lov_opravneni o ON o.kod = v.opravneni
 JOIN lkkl.lov_kategorie k ON k.kod = v.kategorie;
+
+-- Role (testovací naplnění, správce upraví): instruktoři i examinátoři výcvik · PIC,
+-- sólo · dozor a přezkoušení · PIC.
+INSERT INTO lkkl.lov_opravneni_role (opravneni_id, ucel_id, funkce_id)
+SELECT o.id, u.id, f.id
+FROM lkkl.lov_opravneni o
+CROSS JOIN (VALUES ('VYCVIK', 'PIC'), ('VYCVIK_SOLO', 'DOZOR'), ('PREZKOUSENI', 'PIC')) AS r(ucel, funkce)
+JOIN lkkl.lov_ucel u   ON u.kod = r.ucel
+JOIN lkkl.lov_funkce f ON f.kod = r.funkce
+WHERE o.kod <> 'VLEKAR';

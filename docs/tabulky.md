@@ -40,10 +40,11 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_doplnit_misto` | trigger | nezadané místo vzletu / přistání = domovské letiště | 009 |
 | `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat ani vyprázdnit | 009, 017 |
 | `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, aktivní (příznak vlekař převeden do oprávnění) | 004, 015, 017, 021 |
-| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FI(A), CRI(A), FE(A), CRE(A), instruktor a inspektor ULL, vlekař) a co dovoluje: `vycvik`, `prezkousi`, `vleka`; `omezene` (pod dohledem) zatím jen evidence | 021 |
+| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FI(A), CRI(A), FE(A), CRE(A), instruktor a inspektor ULL, vlekař); `omezene` (pod dohledem) zatím jen evidence | 021, 022 |
+| `lov_opravneni_role` | vazba | k jakým rolím v letu oprávnění opravňuje: účel (prázdný = vlečný let) + funkce, např. výcvik · PIC, sólo · dozor, přezkoušení · PIC, vlek · PIC | 022 |
 | `lov_opravneni_kategorie` | vazba | pro které kategorie letadel oprávnění platí (bez řádku = všechny) | 021 |
 | `lov_osoba_opravneni` | vazba | kdo má jaké oprávnění (zadává správce v databázi); sleduje se v auditu | 021 |
-| `v_osoba_smi` | pohled | co osoba smí (výcvik, přezkoušení, vlekání) a pro kterou kategorii – nabídky osob v průvodci a detailu | 021 |
+| `v_osoba_smi` | pohled | role, které osoba smí zastat (účel, funkce, kategorie letadla) – nabídky osob v průvodci a detailu | 021, 022 |
 | `v_osoba_opravneni` | pohled | přehled oprávnění osob v jednom řádku (kontrola zadání) | 021 |
 | `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |

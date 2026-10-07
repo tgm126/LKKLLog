@@ -408,16 +408,14 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
             """SELECT l.id, l.kod, l.nazev, s.domovske
                FROM lkkl.v_lov_letiste l JOIN lkkl.lov_letiste s ON s.id = l.id"""
         ).fetchall(),
-        # u osoby, pro které kategorie letadel smí vést výcvik, přezkoušet a vlekat
-        # („*“ = všechny kategorie) – průvodce podle toho nabízí instruktory, examinátory, vlekaře
+        # u osoby role, které smí zastat podle oprávnění (účel – prázdný = vlečný let, funkce,
+        # kategorie letadla – prázdná = všechny); průvodce podle nich nabízí osoby do posádky
         "osoby": conn.execute(
             """SELECT o.id, o.jmeno, o.prijmeni,
-                      coalesce(array_agg(DISTINCT coalesce(s.kategorie_kod, '*'))
-                               FILTER (WHERE s.vycvik), '{}') AS vycvik,
-                      coalesce(array_agg(DISTINCT coalesce(s.kategorie_kod, '*'))
-                               FILTER (WHERE s.prezkousi), '{}') AS prezkousi,
-                      coalesce(array_agg(DISTINCT coalesce(s.kategorie_kod, '*'))
-                               FILTER (WHERE s.vleka), '{}') AS vleka
+                      coalesce(json_agg(json_build_object('ucel', s.ucel_kod,
+                                                          'funkce', s.funkce_kod,
+                                                          'kategorie', s.kategorie_kod))
+                               FILTER (WHERE s.osoba_id IS NOT NULL), '[]') AS role
                FROM lkkl.lov_osoba o
                LEFT JOIN lkkl.v_osoba_smi s ON s.osoba_id = o.id
                WHERE o.aktivni
