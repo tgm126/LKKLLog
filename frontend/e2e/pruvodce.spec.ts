@@ -23,6 +23,12 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   await page.getByRole("button", { name: "+ Nový let" }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  // Po výběru zůstane jen vybraná osoba a Hledat…; ťuknutím na ni se nabídka znovu otevře.
+  const pic = page.locator(".blok", { hasText: "PIC" });
+  await expect(pic.getByRole("button")).toHaveText(["Já (Adam Admin)", "Hledat…"]);
+  await pic.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  await expect(pic.getByRole("button", { name: "Nela Nová" })).toBeVisible();
+  await pic.getByRole("button", { name: "Já (Adam Admin)" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
 
   await page.getByRole("button", { name: "Aerovlek", exact: true }).click();

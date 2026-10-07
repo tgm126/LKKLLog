@@ -92,7 +92,8 @@ dvojice otevře detail jejího letu.
 (čárkovaný okraj = ještě neuložený), který se plní s každou volbou. Krok 1: dlaždice letadel
 ve skupinách podle kategorie (barva podle stavu jako v přehledu). Volby v blocích (karta
 s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
-(vybraná plně modře s ✓, „Hledat…“ otevře hledání podle jména), chybějící povinná volba má
+(„Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
+a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má
 v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. **Místo vzletu**
 (u proběhlého letu **místo přistání**) a **plátce** jsou předvyplněné řádky v bloku Další
 údaje, ťuknutím se změní (místo: hledání letiště nebo popis místa). Proběhlý let: časy vzletu,

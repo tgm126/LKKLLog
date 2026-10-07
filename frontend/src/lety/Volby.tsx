@@ -21,8 +21,9 @@ export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
 const proHledani = (text: string) =>
   text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("cs-CZ");
 
-/** Osoba: rychlá volba (Já, nedávní…), vybraná plně modře s ✓; „Hledat…“ otevře hledání
- *  podle jména ve všech osobách. Vyloučené osoby (už mají jinou funkci) se nenabízejí. */
+/** Osoba: rychlá volba (Já, nedávní…) a „Hledat…“ (hledání podle jména ve všech osobách).
+ *  Po výběru zůstane jen vybraná osoba (plně modře) a „Hledat…“, ostatní se skryjí; ťuknutím
+ *  na vybranou se nabídka znovu otevře. Vyloučené osoby (už mají jinou funkci) se nenabízejí. */
 export function VolbaOsoby({
   osoby,
   jaId,
@@ -31,6 +32,7 @@ export function VolbaOsoby({
   vyloucit = [],
   vybrat,
   pred,
+  menit = false,
 }: {
   osoby: Osoba[];
   jaId: number;
@@ -40,9 +42,14 @@ export function VolbaOsoby({
   vybrat: (id: number) => void;
   /** Volba před osobami (Aeroklub u plátce). */
   pred?: ReactNode;
+  /** Rovnou celá rychlá volba i s vybranou osobou (úprava v detailu letu). */
+  menit?: boolean;
 }) {
   const [hledam, setHledam] = useState(false);
   const [text, setText] = useState("");
+  const [otevrena, setOtevrena] = useState(menit);
+  const vybranaOsoba = osoby.find((o) => o.id === vybrana);
+  const popis = (o: Osoba) => (o.id === jaId ? `Já (${jmeno(o)})` : jmeno(o));
   const hledat = proHledani(text.trim());
   const nabidka = (
     hledam
@@ -64,22 +71,31 @@ export function VolbaOsoby({
         />
       )}
       <div className="cipy">
-        {pred}
-        {nabidka.map((o) => (
-          <Tlacitko
-            key={o.id}
-            varianta="obrys"
-            aria-pressed={o.id === vybrana}
-            onClick={() => {
-              // po výběru z hledání zpět na rychlou volbu (vybraná osoba + Hledat…)
-              setHledam(false);
-              setText("");
-              vybrat(o.id);
-            }}
-          >
-            {o.id === jaId ? `Já (${jmeno(o)})` : jmeno(o)}
+        {!hledam && !otevrena && vybranaOsoba ? (
+          <Tlacitko varianta="obrys" aria-pressed onClick={() => setOtevrena(true)}>
+            {popis(vybranaOsoba)}
           </Tlacitko>
-        ))}
+        ) : (
+          <>
+            {pred}
+            {nabidka.map((o) => (
+              <Tlacitko
+                key={o.id}
+                varianta="obrys"
+                aria-pressed={o.id === vybrana}
+                onClick={() => {
+                  // po výběru zůstane jen vybraná osoba a Hledat…
+                  setHledam(false);
+                  setText("");
+                  setOtevrena(false);
+                  vybrat(o.id);
+                }}
+              >
+                {popis(o)}
+              </Tlacitko>
+            ))}
+          </>
+        )}
         {!hledam && (
           <Tlacitko varianta="obrys" className="hledat" onClick={() => setHledam(true)}>
             Hledat…

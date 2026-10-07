@@ -435,6 +435,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
               rychle={pole.map((p) => novy.osoby[p.funkceId]).filter((id): id is number => !!id)}
               vybrana={typeof platce === "number" ? platce : undefined}
               vybrat={(id) => zmenit({ platce: id })}
+              menit
               pred={
                 <Tlacitko
                   varianta="obrys"

@@ -94,6 +94,7 @@ function DetailLetuObrazovka({
       vybrana={vybrana}
       vyloucit={posadkaIds.filter((id) => id !== vybrana)}
       vybrat={vybrat}
+      menit
     />
   );
 
@@ -269,6 +270,7 @@ function DetailLetuObrazovka({
               rychle={posadkaIds}
               vybrana={l.plati_aeroklub ? undefined : (l.platce_id ?? undefined)}
               vybrat={(id) => ulozit({ platce_id: id })}
+              menit
               pred={
                 <Tlacitko
                   varianta="obrys"

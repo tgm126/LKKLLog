@@ -33,7 +33,7 @@
   border-left: 0;
 }
 
-/* Čipy (osoby, plátce, vlečná, osnova): vybraný s ✓; Hledat… čárkovaně */
+/* Čipy (osoby, plátce, vlečná, osnova): vybraný plně modře; Hledat… čárkovaně */
 .cipy {
   display: flex;
   flex-wrap: wrap;
@@ -49,10 +49,6 @@
 
 .cipy .tl[aria-pressed="true"] {
   font-weight: var(--tloustka-tucna);
-}
-
-.cipy .tl[aria-pressed="true"]::before {
-  content: "✓ ";
 }
 
 .cipy .tl.hledat {
