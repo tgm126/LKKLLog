@@ -87,11 +87,11 @@
   color: var(--barva-seda);
 }
 
-/* Čas vpravo (bez čáry): stopky a vzlet, nebo vzlet nad přistáním */
+/* Čas vpravo (bez čáry), nahoře v řádku s rejstříkem: stopky a vzlet, nebo vzlet nad přistáním */
 .let-cas {
   display: grid;
   grid-area: cas;
-  align-content: center;
+  align-content: start;
   justify-items: end;
   padding: var(--mezera-2) var(--mezera-3);
   white-space: nowrap;
