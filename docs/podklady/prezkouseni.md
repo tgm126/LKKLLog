@@ -70,16 +70,27 @@ U ULL tedy **instruktor nepřezkušuje vůbec** – zkoušky i ověření dovedn
 provozu. Periodický cvičný let s instruktorem LA 1 nepožaduje. **[ověřit v UL 3, zda
 neobsahuje navíc výcvikové „kontrolní lety“]**
 
-## 5. Klubová pravidla (mimo předpisy) [ověřit u LKKL]
+## 5. Klubové pravidlo LKKL – „školka“ (podle správce, 7. 10. 2026)
 
-Aerokluby mívají v provozním řádu nebo ve výcvikovém programu DTO vlastní lety navíc:
-- **kontrolní let na začátku sezóny** (po zimní přestávce) s instruktorem;
-- **přezkušovací let před prvním sólem** – předpis jen říká, že první sólo povoluje
-  neomezený FI(S); v programech výcviku bývá kontrolní let s jiným (vedoucím) instruktorem;
-- kontrolní let **před přeškolením** na jiný typ nebo po delší přestávce.
+Na **začátku sezóny**, **pro každý létaný typ**:
+- **1 let s instruktorem** – úlohy **4 a 6** základní osnovy;
+- **1 sólo let** – většinou **přistání do omezeného prostoru**;
+- u **jednomístného typu** jen sólo let **s dozorem FI na zemi**.
 
-Jsou to lety s instruktorem, ne přezkoušení podle předpisů. Jestli a jak je LKKL vyžaduje,
-je třeba doplnit z provozního řádu klubu.
+Není to přezkoušení podle předpisů, ale výcvik s instruktorem a sólo pod dohledem
+(v aplikaci účel Výcvik s úlohou osnovy a Výcvik sólo s dozorem).
+
+## 5a. Examinátoři – kdo smí zkoušku a kdo jen přezkoušení
+
+| Examinátor | Zkouška dovednosti | Přezkoušení odborné způsobilosti (POZ) |
+|---|---|---|
+| FE(S) (SFCL.415) | SPL (300 h), rozšíření na TMG | SPL, TMG |
+| FE(A) s 500 h (FCL.1005.FE) | **jen LAPL(A)** | LAPL(A) |
+| FE(A) s 1000 h | PPL(A), třídy SEP / TMG | třídy SEP / TMG |
+| **CRE(A)** (FCL.1005.CRE) | **jen kvalifikace třídy** (a rozšíření LAPL na další třídu) – **ne** průkaz LAPL / PPL | **prodloužení a obnova** tříd SEP / TMG |
+| inspektor provozu ULL | závěrečná zkouška | ověření praktických dovedností |
+
+CRE je tedy příklad examinátora, který dělá POZ, ale ne zkoušku k vydání průkazu.
 
 ## 6. Co z toho plyne pro aplikaci (k projednání)
 
@@ -115,6 +126,8 @@ je třeba doplnit z provozního řádu klubu.
   [Guidance for SPL holders](https://members.gliding.co.uk/wp-content/uploads/sites/3/2020/10/Guidance-for-SPL-holders.pdf)
 - EASA Easy Access Rules for Aircrew: [FCL.105.A a FCL.140.A](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-aircrew-regulation-eu-no?page=7),
   [FCL.1000 examinátoři](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-aircrew-regulation-eu-no?page=39),
+  [FCL.1005.FE](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-aircrew-regulation-eu-no?page=40),
+  [FCL.1005.CRE](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-aircrew-regulation-eu-no?page=42),
   [FCL.1005.FIE](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-aircrew-regulation-eu-no?page=45)
 - ÚCL: [CAA-ZLP-165 Prodlužování a obnova kvalifikací pilotů letounů](https://www.caa.cz/wp-content/uploads/2022/11/CAA-ZLP-165-Prodluzovani-a-obnova-kvalifikaci-pilotu-letounu_rev-30.11..pdf),
   [SEP/TMG administrativní prodloužení](https://www.caa.gov.cz/wp-content/uploads/2025/10/SEP-TMG-Administrativni-prodlouzeni.pdf),
