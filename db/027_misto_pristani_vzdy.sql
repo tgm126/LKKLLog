@@ -3,6 +3,11 @@
 -- Nezadané místo = výchozí letiště – aplikace posílá moje letiště (můj provoz), databáze
 -- doplní domovské (zápis přímo v databázi). Dosud se místo přistání doplňovalo až při přistání.
 
+-- Nejdřív pryč staré omezení (místo přistání jen po přistání), jinak by nešlo doplnit.
+ALTER TABLE lkkl.let
+    DROP CONSTRAINT pristani_ma_misto_a_pocet,
+    DROP CONSTRAINT misto_pristani_nejvys_jedno;
+
 -- Stávající lety bez místa přistání (naplánované, ve vzduchu, zrušené před přistáním) dostanou
 -- domovské letiště – stejně, jako by se doplnilo při přistání. Převod, ne úprava uživatelem:
 -- do historie letu se nezapisuje.
@@ -10,12 +15,12 @@ ALTER TABLE lkkl.let DISABLE TRIGGER audit;
 UPDATE lkkl.let
 SET misto_pristani_id = (SELECT id FROM lkkl.lov_letiste WHERE domovske)
 WHERE misto_pristani_id IS NULL AND misto_pristani_popis IS NULL;
+-- odložené kontroly letu hned (s čekajícími kontrolami nejde tabulku dál měnit)
+SET CONSTRAINTS ALL IMMEDIATE;
 ALTER TABLE lkkl.let ENABLE TRIGGER audit;
 
 -- Místo přistání vždy (letiště, nebo popis); počet přistání dál jen po přistání.
 ALTER TABLE lkkl.let
-    DROP CONSTRAINT pristani_ma_misto_a_pocet,
-    DROP CONSTRAINT misto_pristani_nejvys_jedno,
     ADD CONSTRAINT misto_pristani_jedno
         CHECK ((misto_pristani_id IS NULL) <> (misto_pristani_popis IS NULL)),
     ADD CONSTRAINT pocet_pristani_po_pristani
