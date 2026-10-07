@@ -39,7 +39,9 @@
     "stitky stitky"
     "varovani varovani"
     "akce akce";
-  grid-template-columns: minmax(0, 1fr) var(--sirka-casu);
+
+  /* čas vpravo nejméně --sirka-casu, delší obsah (rejstřík vlečné OK-CUO 78) si místo vezme */
+  grid-template-columns: minmax(0, 1fr) minmax(var(--sirka-casu), max-content);
 }
 
 /* Pásek v přehledu: ťuknutí otevře detail letu */
@@ -92,6 +94,7 @@
   align-content: center;
   justify-items: end;
   padding: var(--mezera-2) var(--mezera-3);
+  white-space: nowrap;
 }
 
 .let-stopky {

@@ -222,8 +222,8 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
           cas ??
           (aerovlek && novy.vlecna ? (
             <>
-              <span className="male seda">vlečná</span>
               <b>{novy.vlecna.rejstrik}</b>
+              <span className="male seda">vlečná</span>
             </>
           ) : (
             <span className="male seda">nový</span>

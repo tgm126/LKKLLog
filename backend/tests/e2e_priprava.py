@@ -21,12 +21,13 @@ HESLO_ADMINA = "heslo-pro-e2e-test"  # noqa: S105 – jen testovací databáze
 
 FLOTILA = """
 INSERT INTO lkkl.lov_kategorie (kod, nazev, poradi)
-VALUES ('KLUZAK', 'Kluzák', 10), ('LETOUN', 'Letoun', 30);
+VALUES ('KLUZAK', 'Kluzák', 10), ('LETOUN', 'Letoun', 30), ('UL', 'Ultralehký letoun', 40);
 
 INSERT INTO lkkl.lov_typ (kod, nazev, poradi, kategorie_id, pocet_mist)
 SELECT v.kod, v.nazev, v.poradi, k.id, v.mist
 FROM (VALUES ('L13', 'L 13', 10, 'KLUZAK', 2), ('ASW20', 'ASW 20', 20, 'KLUZAK', 1),
-             ('Z126', 'Z 126', 30, 'LETOUN', 2), ('Z526', 'Z 526', 40, 'LETOUN', 2))
+             ('Z126', 'Z 126', 30, 'LETOUN', 2), ('Z526', 'Z 526', 40, 'LETOUN', 2),
+             ('SKYLANE', 'AirLony Skylane', 50, 'UL', 2))
      AS v(kod, nazev, poradi, kat, mist)
 JOIN lkkl.lov_kategorie k ON k.kod = v.kat;
 
@@ -34,7 +35,8 @@ INSERT INTO lkkl.lov_letadlo (rejstrik, typ_id, vlecne, max_doba_min)
 SELECT v.rejstrik, t.id, v.vlecne, v.max_doba
 FROM (VALUES ('OK-2817', 'L13', false, NULL), ('OK-3819', 'L13', false, NULL),
              ('OK-6722', 'ASW20', false, NULL), ('OK-MFV', 'Z126', false, 90),
-             ('OK-CRA', 'Z526', true, NULL)) AS v(rejstrik, typ, vlecne, max_doba)
+             ('OK-CRA', 'Z526', true, NULL),
+             ('OK-CUO 78', 'SKYLANE', true, NULL)) AS v(rejstrik, typ, vlecne, max_doba)
 JOIN lkkl.lov_typ t ON t.kod = v.typ;
 
 INSERT INTO lkkl.lov_letiste (kod, nazev, domovske, zem_sirka, zem_delka, poradi)

@@ -233,13 +233,14 @@ export function PasekNaplanovany({ lety, provest, zaneprazdnen }: { lety: PasekL
 
 // --- deník: ukončené a zrušené lety --------------------------------------------------------
 
-/** Odchylky od běžného letu do druhého řádku (účel, způsob vzletu, úloha, POB 2, dodatečně). */
-function odchylky(l: PasekLetu) {
+/** Podrobnosti do třetího řádku: vždy POB, pak odchylky od běžného letu (účel, způsob
+ *  vzletu, úloha, dodatečně). */
+function podrobnosti(l: PasekLetu) {
   return [
+    `POB ${l.pob}`,
     ucelKratce(l),
     zpusobKratce(l),
     ulohaKratce(l.uloha),
-    l.pob > 1 && `POB ${l.pob}`,
     l.dodatecne && "dodatečně",
   ].filter(Boolean);
 }
@@ -251,7 +252,7 @@ function RadekDeniku({ let: l }: { let: PasekLetu }) {
   const [prvni, ...dalsi] = (
     zrusen ? l.posadka.filter((c) => c.funkce_kod === "PIC") : l.posadka
   ).map((c) => `${c.jmeno} ${c.prijmeni}`);
-  const doplnek = zrusen ? [l.duvod_zruseni] : odchylky(l);
+  const doplnek = zrusen ? [l.duvod_zruseni] : podrobnosti(l);
   return (
     <div className={`denik-radek ${zrusen ? "zrusen" : "ukoncen"}`} onClick={otevrit}>
       <span className="denik-rejstrik">{l.rejstrik}</span>

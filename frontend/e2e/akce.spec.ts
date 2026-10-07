@@ -51,7 +51,7 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
   // Vlečná přistála – kluzák zůstal ve vzduchu sám; vlečná v deníku s účelem „vlek“.
   const kluzak = page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" });
   await expect(kluzak.locator(".let-par")).toHaveCount(1);
-  const vlek = page.locator(".denik-radek.ukoncen .seda", { hasText: /^vlek$/ });
+  const vlek = page.locator(".denik-radek.ukoncen .seda", { hasText: /· vlek$/ });
   await expect(vlek).toHaveCount(1);
   // Kluzák po přetrženém laně: zrušit jako přerušený vzlet (vlečná zůstane ukončená).
   await kluzak.getByRole("button", { name: "Přistál" }).click();

@@ -80,8 +80,8 @@ dvojice otevře detail jejího letu.
   VZLET přes celou šířku).
 - **Ukončené a zrušené = deník**: řádky v jedné kartě, sloupce Letadlo · Posádka · Čas (vzlet
   nad přistáním) · Doba · P (počet přistání). **První dva řádky** patří posádce (osoba na
-  řádek; je-li jen jedna, druhý zůstane prázdný), **třetí řádek** šedě odchylky od běžného letu
-  (účel, způsob vzletu, úloha, POB 2, dodatečně; u zrušeného důvod) – od posádky až do konce
+  řádek; je-li jen jedna, druhý zůstane prázdný), **třetí řádek** šedě vždy POB a odchylky od
+  běžného letu (účel, způsob vzletu, úloha, dodatečně; u zrušeného důvod) – od posádky až do konce
   řádku, bez zalomení (7. 10. 2026).
 - **Letiště** vzletu a přistání se v přehledu neukazují, jen v detailu letu.
 - Šířky pozic štítků a sloupců deníku (tokeny `--mista-stitku`, `--sloupce-deniku`) jsou ve

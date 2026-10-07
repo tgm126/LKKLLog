@@ -41,6 +41,7 @@ test("přehled letů dne", async ({ page }) => {
   const cra = page.locator(".denik-radek.ukoncen", { hasText: "OK-CRA" });
   await expect(cra.locator(".denik-pristani")).toHaveText("3");
   await expect(cra.locator(".denik-doba")).toHaveText('45"');
+  await expect(cra.locator(".denik-podrobnosti")).toHaveText("POB 1 · dodatečně"); // POB vždy
   await expect(cra).not.toContainText("LKLT");
 
   // Zrušené jsou sbalené, ťuknutím se rozbalí.
