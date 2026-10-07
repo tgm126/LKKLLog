@@ -2,12 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { prihlasit, pripravitData } from "./pomocne";
 
-// Detail letu: ťuknutí na pásek, úprava na místě, zrušení s důvodem, obnovení, další let.
+// Detail letu: ťuknutí na pásek, úprava na místě, zrušení s důvodem, obnovení.
 
 test.beforeAll(() => pripravitData());
 test.beforeEach(async ({ page }) => prihlasit(page));
 
-test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page }) => {
+test("detail: úprava, zrušení a obnovení", async ({ page }) => {
   await page.locator(".denik-radek.ukoncen", { hasText: "OK-CRA" }).click();
   await expect(page.locator(".obrazovka .let-hlava")).toContainText("OK-CRA");
   await expect(page.getByText("Ukončený")).toBeVisible();
@@ -35,15 +35,6 @@ test("detail: úprava, zrušení, obnovení a další let odsud", async ({ page 
   // Historie úprav v evidenci (rozbalí se ťuknutím).
   await page.getByRole("button", { name: /Historie/ }).click();
   await expect(page.getByText(/Úprava · Adam Admin/).first()).toBeVisible();
-
-  // Další let odsud: naplánovaný, místo vzletu = místo přistání.
-  await page.getByRole("button", { name: "Další let odsud" }).click();
-  await expect(page.getByRole("status")).toHaveText(/OK-CRA naplánován/);
-  await page
-    .locator(".let.naplanovan", { hasText: "OK-CRA" })
-    .filter({ hasNotText: "OK-6722" })
-    .click();
-  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT/ })).toBeVisible();
 });
 
 test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa", async ({ page }) => {

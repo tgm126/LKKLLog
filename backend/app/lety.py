@@ -617,7 +617,7 @@ def novy_let(
     )
 
 
-# --- detail letu: údaje, historie, zrušení, obnovení, další let, úpravy -----------------------
+# --- detail letu: údaje, historie, zrušení, obnovení, úpravy ---------------------------------
 
 
 @router.get("/lety/{let_id}")
@@ -721,43 +721,6 @@ def obnovit(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection =
     if not radky:
         raise HTTPException(409, f"{let['rejstrik']}: let není zrušený.")
     return Provedeno(let_id=let_id, rejstrik=let["rejstrik"], akce="obnovit", cas=None)
-
-
-def _kopie(conn: Connection, puvodni_id: int, vlecny_let_id: int | None, zalozil: int) -> int:
-    """Naplánovaná kopie letu: letadlo, účel, posádka, POB, způsob vzletu, úloha, plátce;
-    místo vzletu i přistání = místo přistání původního letu (letadlo tam stojí)."""
-    let_id = conn.execute(
-        """INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
-               misto_vzletu_id, misto_vzletu_popis, misto_pristani_id, misto_pristani_popis,
-               pob, platce_id, plati_aeroklub, uloha_id, zalozil_id)
-           SELECT letadlo_id, ucel_id, zpusob_vzletu_id, %(vlecny)s,
-                  misto_pristani_id, misto_pristani_popis, misto_pristani_id, misto_pristani_popis,
-                  pob, platce_id, plati_aeroklub, uloha_id, %(zalozil)s
-           FROM lkkl.let WHERE id = %(id)s
-           RETURNING id""",
-        {"id": puvodni_id, "vlecny": vlecny_let_id, "zalozil": zalozil},
-    ).fetchone()["id"]
-    conn.execute(
-        """INSERT INTO lkkl.posadka (let_id, osoba_id, funkce_id)
-           SELECT %s, osoba_id, funkce_id FROM lkkl.posadka WHERE let_id = %s""",
-        (let_id, puvodni_id),
-    )
-    return let_id
-
-
-@router.post("/lety/{let_id}/dalsi", response_model=Provedeno)
-def dalsi(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
-    """Další let odsud: naplánovaná kopie (u aerovleku i s vlečnou a vlekařem)."""
-    let = _let(conn, let_id)
-    vlecny = conn.execute("SELECT vlecny_let_id FROM lkkl.let WHERE id = %s", (let_id,)).fetchone()
-    with zmena(conn):
-        novy_vlecny = (
-            _kopie(conn, vlecny["vlecny_let_id"], None, p.osoba_id)
-            if vlecny["vlecny_let_id"]
-            else None
-        )
-        novy = _kopie(conn, let_id, novy_vlecny, p.osoba_id)
-    return Provedeno(let_id=novy, rejstrik=let["rejstrik"], akce="naplanovat", cas=None)
 
 
 class Uprava(BaseModel):

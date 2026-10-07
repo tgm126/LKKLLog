@@ -19,7 +19,7 @@ Vzhled podle maket `docs/navrhy/lety-mobil-v4.html` (přehled a detail; pásek p
 - **Průvodce novým letem:** letadlo → posádka → let; VZLET TEĎ / Naplánovat / Proběhlý let;
   vlek jako dvojice letů.
 - **Akce letu:** VZLET (u vleku pro oba lety), PŘISTÁL, T&G, **Zpět** po akci, zrušení
-  s důvodem, obnovení, další let odsud.
+  s důvodem, obnovení.
 - **Detail letu:** všechny údaje, úprava ťuknutím na místě, historie z auditu.
 
 **Ne (později):** úlohy z osnov (blok úlohy bude, až dodáte osnovy – do té doby jen obecné
@@ -45,7 +45,6 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 | `POST /api/lety/{id}/zpet` | vrátí poslední akci (vzlet, přistání, T&G) – viz 3.4 |
 | `POST /api/lety/{id}/zrusit` | zrušení s důvodem (`lov_duvod_zruseni`) |
 | `POST /api/lety/{id}/obnovit` | zrušení se vrátí |
-| `POST /api/lety/{id}/dalsi` | další let odsud: stejné letadlo, účel, posádka; místo vzletu i přistání = místo přistání původního letu |
 
 ## 3. Chování
 
@@ -139,7 +138,7 @@ Nahoře **stejný pásek jako v přehledu** (bez akcí), pod ním bloky Posádka
 hodnotou, přepážky jako na pásku); upravitelné pole má vpravo „›“ a ťuknutím se pod ním
 otevře úprava (výběr z nabídky, čas stejným výběrem jako u proběhlého letu). Historie
 z `v_historie_letu` je v Evidenci sbalená („3 úpravy“), ťuknutím se rozbalí. Akce dole
-(u ukončeného letu „Další let odsud“ a „Zrušit let“ vedle sebe).
+(u ukončeného letu „Zrušit let“; „Další let odsud“ zrušen 7. 10. 2026).
 
 Upravit jde: posádka (jiná osoba ve funkci), POB (je-li zadaný), úloha, místo a čas vzletu,
 **místo přistání vždy** (do přistání plán, pak skutečnost; letiště, nebo popis místa
@@ -212,7 +211,7 @@ frontend/
    i ukončeného letu. Přistání z pásku místo nemění (přistání do terénu se opraví v detailu,
    plán zůstane v historii letu). Zpět u přistání místo nechá. Aerovlek: místo přistání
    v průvodci platí pro kluzák i vlečnou (spolu se vrací, nebo spolu přeletí), v detailu má
-   každý let své. Další let odsud: obě místa = místo přistání původního letu. Stávající lety
+   každý let své. Stávající lety
    bez místa přistání dostaly domovské (převod bez zápisu do historie).
 9. **Trasa na pásku** (varianta B): u naplánovaného letu a letu ve vzduchu štítek vpravo
    v řádku štítků, jen jedna strana – kam letí („→ LKMB“), jinak odkud („LKMB →“); jen když

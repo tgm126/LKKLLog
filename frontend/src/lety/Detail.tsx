@@ -413,7 +413,6 @@ function UpravaPoznamky({ puvodni, ulozit }: { puvodni: string; ulozit: (p: stri
 function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky }) {
   const { provest, pristat, dialog, probiha } = useAkceLetu();
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const oznamit = useOznamit();
   const [rusim, setRusim] = useState(false);
   const zaneprazdnen = probiha?.letId === l.id;
@@ -427,12 +426,7 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
       await qc.invalidateQueries({ queryKey: ["lety"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["let"] });
       setRusim(false);
-      if (a.cesta === "dalsi") {
-        oznamit({ text: `${p.rejstrik} naplánován` });
-        navigate("/");
-      } else {
-        oznamit({ text: `${p.rejstrik} ${a.cesta === "zrusit" ? "zrušen" : "obnoven"}` });
-      }
+      oznamit({ text: `${p.rejstrik} ${a.cesta === "zrusit" ? "zrušen" : "obnoven"}` });
     },
     onError: (e) => oznamit({ text: e.message, chyba: true }),
   });
@@ -494,17 +488,6 @@ function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky 
         >
           Obnovit let
         </Tlacitko>
-      ) : l.stav === "UKONCEN" && !l.je_vlecny ? (
-        <div className="akce-vedle">
-          <Tlacitko
-            varianta="obrys"
-            disabled={prikaz.isPending}
-            onClick={() => prikaz.mutate({ cesta: "dalsi" })}
-          >
-            Další let odsud
-          </Tlacitko>
-          {zrusit}
-        </div>
       ) : (
         zrusit
       )}

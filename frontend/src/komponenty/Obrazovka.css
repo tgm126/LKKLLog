@@ -60,7 +60,7 @@
   --tl-vyska: var(--dotyk-hlavni);
 }
 
-/* Dvě akce vedle sebe (Naplánovat / Proběhlý let, Další let odsud / Zrušit let) */
+/* Dvě akce vedle sebe (Naplánovat / Proběhlý let) */
 .akce-vedle {
   display: flex;
   gap: var(--mezera-2);

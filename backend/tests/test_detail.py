@@ -1,4 +1,4 @@
-"""Detail letu: údaje, historie, zrušení a obnovení, další let odsud, úpravy (modul lety 3.5)."""
+"""Detail letu: údaje, historie, zrušení a obnovení, úpravy (modul lety 3.5)."""
 
 from .conftest import _id
 
@@ -28,27 +28,6 @@ def test_zrusit_a_obnovit_vlek(conn, osoba, prihlasit, let):
     assert k.post(f"/api/lety/{kluzak}/zrusit", json={"duvod_id": pocasi}).status_code == 409
     assert k.post(f"/api/lety/{vlecna}/obnovit").status_code == 200
     assert k.get(f"/api/lety/{kluzak}").json()["stav"] == "NAPLANOVAN"
-
-
-def test_dalsi_let_odsud(conn, osoba, prihlasit, let):
-    pilot, vlekar = osoba("Pilot"), osoba("Vlekar")
-    vlecna = let(
-        "OK-CRA", {"PIC": vlekar}, ucel=None, zpusob="VLASTNI",
-        vzlet="now() - interval '1 hour'", pristani="now() - interval '50 minutes'",
-    )  # fmt: skip
-    kluzak = let(
-        "OK-3819", {"PIC": pilot}, zpusob="VLEK", vlecny_let_id=vlecna,
-        vzlet="now() - interval '1 hour'", pristani="now() - interval '10 minutes'",
-        misto_pristani="LKLT",
-    )  # fmt: skip
-    k = prihlasit("pilot@example.cz")
-    odpoved = k.post(f"/api/lety/{kluzak}/dalsi")
-    assert odpoved.status_code == 200, odpoved.text
-    novy = k.get(f"/api/lety/{odpoved.json()['let_id']}").json()
-    assert novy["stav"] == "NAPLANOVAN"
-    assert novy["misto_vzletu"] == novy["misto_pristani"] == "LKLT"  # letadlo stojí v LKLT
-    assert [c["osoba_id"] for c in novy["posadka"]] == [pilot]
-    assert novy["vlek"]["rejstrik"] == "OK-CRA" and novy["vlek"]["pilot"] == "Jan Vlekar"
 
 
 def test_upravy(conn, osoba, prihlasit, let):
