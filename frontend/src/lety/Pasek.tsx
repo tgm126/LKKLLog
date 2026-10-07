@@ -233,9 +233,6 @@ export function PasekNaplanovany({ lety, provest, zaneprazdnen }: { lety: PasekL
 
 // --- deník: ukončené a zrušené lety --------------------------------------------------------
 
-/** Jméno se nezalomí uprostřed (zalomí se jen mezi osobami). */
-const nezalomit = (text: string) => text.replaceAll(" ", " ");
-
 /** Odchylky od běžného letu do druhého řádku (účel, způsob vzletu, úloha, POB 2, dodatečně). */
 function odchylky(l: PasekLetu) {
   return [
@@ -250,16 +247,17 @@ function odchylky(l: PasekLetu) {
 function RadekDeniku({ let: l }: { let: PasekLetu }) {
   const otevrit = useOtevrit(l.id);
   const zrusen = l.stav === "ZRUSEN";
-  const posadka = (zrusen ? l.posadka.filter((c) => c.funkce_kod === "PIC") : l.posadka)
-    .map((c) => nezalomit(`${c.jmeno} ${c.prijmeni}`))
-    .join(" · ");
+  // Dva řádky pro posádku (druhý prázdný, je-li osoba jen jedna), třetí řádek podrobnosti.
+  const [prvni, ...dalsi] = (
+    zrusen ? l.posadka.filter((c) => c.funkce_kod === "PIC") : l.posadka
+  ).map((c) => `${c.jmeno} ${c.prijmeni}`);
   const doplnek = zrusen ? [l.duvod_zruseni] : odchylky(l);
   return (
     <div className={`denik-radek ${zrusen ? "zrusen" : "ukoncen"}`} onClick={otevrit}>
       <span className="denik-rejstrik">{l.rejstrik}</span>
       <span className="denik-posadka">
-        <span>{posadka}</span>
-        {doplnek.length > 0 && <span className="male seda">{doplnek.join(" · ")}</span>}
+        <span>{prvni}</span>
+        <span>{dalsi.join(" · ") || " "}</span>
       </span>
       <span className="denik-cas cisla">
         {l.cas_vzletu && <span>{hodinyMinuty(l.cas_vzletu)}</span>}
@@ -267,6 +265,9 @@ function RadekDeniku({ let: l }: { let: PasekLetu }) {
       </span>
       <span className="denik-doba cisla">{!zrusen && doba(l.doba_uctovana_min ?? 0)}</span>
       <span className="denik-pristani cisla">{!zrusen && l.pocet_pristani}</span>
+      {doplnek.length > 0 && (
+        <span className="denik-podrobnosti male seda">{doplnek.join(" · ")}</span>
+      )}
     </div>
   );
 }

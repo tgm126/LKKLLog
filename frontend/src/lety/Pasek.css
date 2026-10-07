@@ -194,10 +194,25 @@
   white-space: nowrap;
 }
 
-/* Posádka (jméno se nezalomí, jen mezi osobami) a pod ní odchylky od běžného letu */
+/* Posádka na dvou řádcích (osoba na řádek, druhý prázdný, je-li osoba jen jedna) */
 .denik-posadka {
   display: grid;
   min-width: 0;
+}
+
+.denik-posadka > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Třetí řádek: odchylky od běžného letu (u zrušeného důvod) od posádky až do konce řádku,
+   bez zalomení */
+.denik-podrobnosti {
+  grid-column: 2 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .denik-cas {
