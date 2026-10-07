@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oprávnění osob – návrh v2</title>
+<style>
+/* =============================================================================================
+   NÁVRH v2 (7. 10. 2026) – blok Oprávnění v detailu osoby podle docs/navrh-opravneni.md:
+   oprávnění osoba má pro jednotlivé kategorie letadel, „omezený“ je vlastnost oprávnění
+   (instruktor pod dohledem). Dvě varianty k výběru. Ostatní obrazovky osob beze změny
+   (osoby-mobil.html). Osoby jsou smyšlené.
+   ============================================================================================= */
+:root {
+  --pismo: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pismo-s: 12px; --pismo-m: 15px; --pismo-l: 20px;
+  --tucne: 700;
+  --m1: 4px; --m2: 8px; --m3: 12px; --m4: 16px;
+  --zaobleni: 10px; --dotyk: 44px;
+  --barva-pozadi:   light-dark(#eef0f3, #0d1015);
+  --barva-karta:    light-dark(#ffffff, #171b21);
+  --barva-cara:     light-dark(#d9dde2, #2c333c);
+  --barva-text:     light-dark(#1a1d21, #e8eaed);
+  --barva-seda:     light-dark(#5b6570, #9aa4af);
+  --barva-neutralni:light-dark(#f1f3f5, #1f252c);
+  --barva-prepazka: light-dark(#aab2bb, #3f4852);
+  --barva-modra:    light-dark(#0a5fd0, #6aa8ff);
+  --barva-zelena:   light-dark(#137a38, #4cc777);
+  --barva-oranzova: light-dark(#a35400, #f0a64a);
+  --barva-oranzova-vypln: light-dark(#fdf0e1, #2e1f0b);
+  --akce-modra: #0a5fd0; --na-akci: #fff; --pruh: #f5b700; --na-pruhu: #1a1d21;
+}
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--pismo); font-size: var(--pismo-m); line-height: 1.3; background: #8a9099; padding: var(--m4); }
+.male { font-size: var(--pismo-s); } .seda { color: var(--barva-seda); } .tucne { font-weight: var(--tucne); }
+h1.navrh { color: #fff; font-size: 22px; } p.navrh { color: #fff; opacity: .9; max-width: 980px; margin: 4px 0 16px; }
+.rada { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-bottom: 28px; }
+.popis { color: #fff; font-size: 13px; margin-bottom: 6px; max-width: 375px; }
+.telefon { width: 375px; min-height: 812px; overflow: hidden; /* celý blok (na telefonu se posouvá) */ position: relative; border-radius: 28px; border: 8px solid #1b1b1b;
+  background: var(--barva-pozadi); color: var(--barva-text); display: flex; flex-direction: column; }
+.telefon.svetly { color-scheme: light; } .telefon.tmavy { color-scheme: dark; }
+.obsah { flex: 1; overflow: hidden; padding: var(--m3); }
+.pruh { background: var(--pruh); color: var(--na-pruhu); font-size: var(--pismo-s); font-weight: var(--tucne); text-align: center; padding: var(--m1); letter-spacing: .04em; }
+.det-hlava { display: grid; grid-template-columns: 28px 1fr auto; gap: var(--m2); align-items: center; background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); padding: var(--m2) var(--m3); }
+.det-hlava .zpet { font-size: var(--pismo-l); }
+.stitek { font-size: var(--pismo-s); font-weight: var(--tucne); padding: 4px 10px; border-radius: 999px; background: light-dark(#e3f4e8, #122a1b); color: var(--barva-zelena); }
+.blok { background: var(--barva-karta); border-radius: var(--zaobleni); margin-bottom: var(--m2); overflow: hidden; box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.blok-nadpis { display: flex; justify-content: space-between; font-size: var(--pismo-s); font-weight: var(--tucne); letter-spacing: .04em; text-transform: uppercase; color: var(--barva-seda); padding: var(--m1) var(--m3); background: var(--barva-neutralni); border-bottom: 1px solid var(--barva-cara); }
+.blok-nadpis .vpravo { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+/* --- varianta A: skupiny podle kategorie (stávající zaškrtávátka) ---------------------------- */
+.zaskrt { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--barva-cara); }
+.zaskrt > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+.z-volba { min-height: var(--dotyk); display: grid; grid-template-columns: 1fr 22px; align-items: center; gap: var(--m2); padding: 0 var(--m3); background: var(--barva-karta); }
+.z-volba .pod { display: block; font-size: var(--pismo-s); color: var(--barva-seda); font-weight: 400; }
+.policko { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--barva-prepazka); display: grid; place-items: center; font-size: 14px; font-weight: var(--tucne); color: transparent; }
+.z-volba.ano .policko { background: var(--akce-modra); border-color: var(--akce-modra); color: #fff; }
+.z-volba.ano { font-weight: var(--tucne); }
+.z-volba.omez.ano .policko { background: var(--barva-oranzova); border-color: var(--barva-oranzova); }
+.skupina { font-size: var(--pismo-s); color: var(--barva-seda); padding: var(--m1) var(--m3); background: var(--barva-karta); border-top: 1px solid var(--barva-cara); }
+.skupina:first-of-type { border-top: 0; }
+
+/* --- varianta B: řádek = oprávnění, čipy = kategorie (+ omezený) ----------------------------- */
+.opr { display: grid; gap: 1px; background: var(--barva-cara); }
+.opr-radek { background: var(--barva-karta); padding: var(--m2) var(--m3); display: grid; gap: var(--m1); }
+.opr-radek .nazev { font-weight: var(--tucne); }
+.opr-radek .nazev span { font-weight: 400; color: var(--barva-seda); font-size: var(--pismo-s); }
+.opr-radek.nema .nazev { font-weight: 400; color: var(--barva-seda); }
+.cipy { display: flex; flex-wrap: wrap; gap: var(--m1); }
+.cip { height: 32px; display: inline-grid; place-items: center; padding: 0 var(--m3); border: 1px solid var(--barva-prepazka); border-radius: 999px; font-size: var(--pismo-s); font-weight: var(--tucne); background: var(--barva-karta); }
+.cip.zap { background: var(--akce-modra); border-color: var(--akce-modra); color: var(--na-akci); }
+.cip.omez { border-style: dashed; color: var(--barva-seda); margin-left: auto; }
+.cip.omez.zap { border-style: solid; background: var(--barva-oranzova-vypln); border-color: var(--barva-oranzova); color: var(--barva-oranzova); }
+
+.panel { background: #fff; color: #111; border-radius: 12px; padding: 16px; max-width: 820px; margin-bottom: 16px; }
+.panel h2 { font-size: 17px; margin: 0 0 8px; } .panel ul { padding-left: 20px; } .panel li { margin-bottom: 4px; }
+.panel table { border-collapse: collapse; font-size: 14px; margin: 6px 0 10px; } .panel td, .panel th { border: 1px solid #ccc; padding: 3px 8px; text-align: left; }
+</style>
+</head>
+<body>
+<h1 class="navrh">Oprávnění osob – návrh v2 (mobil)</h1>
+<p class="navrh">Příklad: Marek Dvořák má FI(S) pro kluzáky i TMG, FE(S) jen pro kluzáky, FI(A) pro
+  letouny – zatím omezený (pod dohledem), a je vlekař na letounech. Ostatní obrazovky osob beze
+  změny (osoby-mobil.html).</p>
+
+<!-- ======================================================================================= -->
+<template id="varianta-a">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="det-hlava"><span class="zpet">←</span><span class="tucne" style="font-size:20px">Dvořák Marek</span><span class="stitek">účet aktivní</span></header>
+  <main class="obsah">
+    <section class="blok">
+      <div class="blok-nadpis">Oprávnění <span class="vpravo">4 oprávnění</span></div>
+      <div class="skupina">Kluzák</div>
+      <div class="zaskrt">
+        <div class="z-volba ano"><span>FI(S)<span class="pod">instruktor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba ano"><span>FE(S)<span class="pod">examinátor</span></span><span class="policko">✓</span></div>
+      </div>
+      <div class="skupina">Motorový kluzák</div>
+      <div class="zaskrt">
+        <div class="z-volba ano"><span>FI(S)<span class="pod">instruktor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>FE(S)<span class="pod">examinátor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>FI(A)<span class="pod">instruktor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>CRI(A)<span class="pod">instruktor třídy</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>FE(A)<span class="pod">examinátor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>CRE(A)<span class="pod">examinátor třídy</span></span><span class="policko">✓</span></div>
+      </div>
+      <div class="skupina">Letoun</div>
+      <div class="zaskrt">
+        <div class="z-volba ano"><span>FI(A)<span class="pod">instruktor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>CRI(A)<span class="pod">instruktor třídy</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>FE(A)<span class="pod">examinátor</span></span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>CRE(A)<span class="pod">examinátor třídy</span></span><span class="policko">✓</span></div>
+        <div class="z-volba ano"><span>Vlekař</span><span class="policko">✓</span></div>
+      </div>
+      <div class="skupina">Ultralehký</div>
+      <div class="zaskrt">
+        <div class="z-volba"><span>Instruktor ULL</span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>Inspektor ULL</span><span class="policko">✓</span></div>
+        <div class="z-volba"><span>Vlekař</span><span class="policko">✓</span></div>
+      </div>
+      <div class="skupina">Omezený instruktor (pod dohledem)</div>
+      <div class="zaskrt">
+        <div class="z-volba"><span>FI(S)</span><span class="policko">✓</span></div>
+        <div class="z-volba omez ano"><span>FI(A)</span><span class="policko">✓</span></div>
+      </div>
+    </section>
+  </main>
+</template>
+
+<template id="varianta-b">
+  <div class="pruh">TESTOVACÍ PROVOZ</div>
+  <header class="det-hlava"><span class="zpet">←</span><span class="tucne" style="font-size:20px">Dvořák Marek</span><span class="stitek">účet aktivní</span></header>
+  <main class="obsah">
+    <section class="blok">
+      <div class="blok-nadpis">Oprávnění <span class="vpravo">4 oprávnění</span></div>
+      <div class="opr">
+        <div class="opr-radek"><div class="nazev">FI(S) <span>instruktor kluzáků</span></div>
+          <div class="cipy"><span class="cip zap">Kluzák</span><span class="cip zap">Motorový kluzák</span><span class="cip omez">omezený</span></div></div>
+        <div class="opr-radek"><div class="nazev">FE(S) <span>examinátor kluzáků</span></div>
+          <div class="cipy"><span class="cip zap">Kluzák</span><span class="cip">Motorový kluzák</span></div></div>
+        <div class="opr-radek"><div class="nazev">FI(A) <span>instruktor letounů</span></div>
+          <div class="cipy"><span class="cip zap">Letoun</span><span class="cip">Motorový kluzák</span><span class="cip omez zap">omezený</span></div></div>
+        <div class="opr-radek nema"><div class="nazev">CRI(A) <span>instruktor třídy</span></div>
+          <div class="cipy"><span class="cip">Letoun</span><span class="cip">Motorový kluzák</span></div></div>
+        <div class="opr-radek nema"><div class="nazev">FE(A) <span>examinátor letounů</span></div>
+          <div class="cipy"><span class="cip">Letoun</span><span class="cip">Motorový kluzák</span></div></div>
+        <div class="opr-radek nema"><div class="nazev">CRE(A) <span>examinátor třídy</span></div>
+          <div class="cipy"><span class="cip">Letoun</span><span class="cip">Motorový kluzák</span></div></div>
+        <div class="opr-radek nema"><div class="nazev">Instruktor ULL</div>
+          <div class="cipy"><span class="cip">Ultralehký</span></div></div>
+        <div class="opr-radek nema"><div class="nazev">Inspektor ULL</div>
+          <div class="cipy"><span class="cip">Ultralehký</span></div></div>
+        <div class="opr-radek"><div class="nazev">Vlekař</div>
+          <div class="cipy"><span class="cip zap">Letoun</span><span class="cip">Ultralehký</span></div></div>
+      </div>
+    </section>
+  </main>
+</template>
+
+<div class="rada">
+  <div><div class="popis">A – skupiny podle kategorie letadla (stávající zaškrtávátka) – světlý</div><div class="telefon svetly" data-sablona="varianta-a"></div></div>
+  <div><div class="popis">B – řádek = oprávnění, čipy = kategorie a „omezený“ – světlý</div><div class="telefon svetly" data-sablona="varianta-b"></div></div>
+</div>
+<div class="rada">
+  <div><div class="popis">A – tmavý</div><div class="telefon tmavy" data-sablona="varianta-a"></div></div>
+  <div><div class="popis">B – tmavý</div><div class="telefon tmavy" data-sablona="varianta-b"></div></div>
+</div>
+
+<div class="panel">
+  <h2>Společné</h2>
+  <ul>
+    <li>Nabízí se jen kombinace, které číselník dovoluje (<code>lov_opravneni_kategorie</code>) –
+      FI(S) nejde zaškrtnout pro letoun ani UL.</li>
+    <li>Zaškrtnutí první kategorie oprávnění osobě <b>přidá</b>, odškrtnutí poslední ho
+      <b>odebere</b> (i s omezením). Uloží se hned, v historii osoby „Přidání / Odebrání
+      oprávnění“, „Úprava rozsahu oprávnění“.</li>
+    <li><b>Omezený</b> = instruktor pod dohledem (jen u oprávnění, která dávají roli instruktora).
+      Barva oranžová = upozornění; nabídku v letech neovlivní.</li>
+    <li>Seznam osob: štítky beze změny (zkratky oprávnění), omezený s vyznačením „FI(A)·o“
+      <i>[k rozhodnutí]</i>.</li>
+  </ul>
+</div>
+<div class="panel">
+  <h2>Srovnání variant</h2>
+  <table>
+    <tr><th></th><th>A – skupiny podle kategorie</th><th>B – řádek = oprávnění</th></tr>
+    <tr><td>Odpovídá modelu</td><td>osoba × kategorie (pohled „co smí na kluzáku“)</td><td>oprávnění → kategorie, omezení u oprávnění (přesně tabulky)</td></tr>
+    <tr><td>Stejné oprávnění</td><td>vícekrát (FI(S) u kluzáku i TMG)</td><td>jednou</td></tr>
+    <tr><td>Omezení</td><td>zvláštní skupina dole</td><td>čip přímo v řádku oprávnění</td></tr>
+    <tr><td>Délka</td><td>16 + 2 zaškrtávátka</td><td>9 řádků</td></tr>
+    <tr><td>Komponenty</td><td>stávající <code>Zaskrtavatka</code></td><td>stávající čipy voleb (<code>komponenty/Volby.css</code>) + řádek</td></tr>
+  </table>
+  <p><b>Doporučení: B</b> – oprávnění je vidět jednou i s rozsahem a omezením, odpovídá to
+    datovému modelu a je kratší. Nepoužitá oprávnění jsou šedá, ale pořád po ruce.</p>
+</div>
+
+<script>
+for (const t of document.querySelectorAll(".telefon")) t.append(document.getElementById(t.dataset.sablona).content.cloneNode(true));
+</script>
+</body>
+</html>
