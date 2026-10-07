@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provozní deska v7 – desktop</title>
+<style>
+/* =============================================================================================
+   NÁVRH v7 (7. 10. 2026) – desktop: provozní deska. Proti v6: tlačítka sjednocená s mobilem –
+   PŘISTÁL zeleně a VZLET modře plné s bílým textem, T&G bílé s černým textem (i v detailu);
+   stopky a varování v barvě textu; detail letu bez horní lišty s rejstříkem (opakoval se
+   v pásku hned pod ní) – zavírací křížek je vedle pásku. Osoby a lety jsou smyšlené.
+   ============================================================================================= */
+:root {
+  --pismo: system-ui, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+  /* VÝJIMKA: surová zpráva METAR/TAF neproporcionálním písmem – skupiny znaků pod sebou */
+  --pismo-kod: ui-monospace, Consolas, "Cascadia Mono", monospace;
+  --pismo-s: 12px;
+  --pismo-m: 15px;
+  --pismo-l: 20px;
+  --tloustka-tucna: 700;
+  --radkovani: 1.35;
+  --proklad-verzalky: .04em;
+
+  --mezera-1: 4px;
+  --mezera-2: 8px;
+  --mezera-3: 12px;
+  --mezera-4: 16px;
+
+  --zaobleni: 12px;
+  --zaobleni-pasku: 10px;
+  --zaobleni-pilulka: 999px;
+  --zaobleni-ovladace: 8px;
+  --ramecek-sirka: 1px;
+  --okraj-pasku: 1.5px;
+  --prechod: .15s;
+
+  /* --- desktop: myš místo palce --- */
+  --klik: 32px;
+  --klik-hlavni: 40px;
+  --vyska-listy: 52px;
+  --sirka-pasku: 880px;
+  --sirka-info: 320px;
+  --sirka-panelu: 620px;
+  --sirka-noveho: 820px;
+  --sirka-casu: 96px;
+  --vyska-osy: 18px;          /* řádek časové osy (jedno letadlo) */
+  /* Pásek = přihrádky: letadlo · posádka · štítky 2 × 2 · trasa · čas · akce */
+  --sloupce-pasku: 128px minmax(0, 1fr) auto 84px var(--sirka-casu) 212px;
+  --sirka-akce: 112px;        /* PŘISTÁL / VZLET na pásku */
+  --mista-stitku-2: calc(6ch + 2 * var(--mezera-2)) calc(8ch + 2 * var(--mezera-2));
+  /* Deník: dva řádky na let (vedle pásků) / jeden řádek se všemi sloupci (jiný den, široký) */
+  --sloupce-deniku: 92px minmax(0, 1fr) 5ch 5ch 6ch 2ch;
+
+  --barva-text:           light-dark(#1a1d21, #e8eaed);
+  --barva-seda:           light-dark(#5b6570, #9aa4af);
+  --barva-cara:           light-dark(#d9dde2, #2c333c);
+  --barva-pozadi:         light-dark(#eef0f3, #0d1015);
+  --barva-karta:          light-dark(#fff, #171b21);
+  --barva-neutralni:      light-dark(#f1f3f5, #1f252c);
+  --barva-obrys:          light-dark(#2b3138, #7d8894);
+  --barva-prepazka:       light-dark(#aab2bb, #3f4852);
+  --barva-stitek-pasku:   light-dark(#fff, #0d1015);
+  --barva-najeti:         light-dark(#f5f8fc, #1b222b);
+  --barva-modra:          light-dark(#0a5fd0, #6aa8ff);
+  --barva-modra-vypln:    light-dark(#e3edfc, #122440);
+  --barva-zelena:         light-dark(#137a38, #4cc777);
+  --barva-zelena-vypln:   light-dark(#e3f4e8, #122a1b);
+  --barva-oranzova:       light-dark(#a35400, #f0a64a);
+  --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
+  --barva-cervena:        light-dark(#c42b2b, #ff7a7a);
+  --barva-cervena-vypln:  light-dark(#fce6e6, #2f171a);
+  /* Pásma soumraku na časové ose: čím tmavší, tím dál od dne (den = barva karty) */
+  --barva-soumrak-obcansky:     light-dark(#f2f5f9, #1b212a);
+  --barva-soumrak-nauticky:     light-dark(#e6ebf2, #161b23);
+  --barva-soumrak-astronomicky: light-dark(#d8dfe9, #12161d);
+  --barva-noc:                  light-dark(#c8d1de, #0d1015);
+  --barva-osa-let:              light-dark(#8d97a3, #7d8894);   /* ukončený let na časové ose */
+  --barva-osa-vlek:             light-dark(#c3c9d0, #4a535e);
+  --barva-akce-modra:  #0a5fd0;
+  --barva-akce-zelena: #137a38;
+  --barva-akce-cervena: #c42b2b;
+  --barva-na-akci:     #fff;
+  --barva-pruh:        #f5b700;
+  --barva-na-pruhu:    #1a1d21;
+  --barva-oznameni:    #24292f;
+  --stin-panelu:       -8px 0 24px rgb(0 0 0 / 18%);
+  --stin-nabidky:      0 8px 24px rgb(0 0 0 / 20%);
+  --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
+}
+
+* { box-sizing: border-box; margin: 0; }
+body { font-family: var(--pismo); background: #6f767e; color: #fff; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.cisla { font-variant-numeric: tabular-nums; }
+.male { font-size: var(--pismo-s); }
+.seda { color: var(--barva-seda); }
+
+/* --- ovládání makety (mimo aplikaci) ------------------------------------------------------- */
+.ovladani { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 16px; background: #22272d; font-size: 13px; }
+.ovladani b { font-size: 15px; margin-right: 8px; }
+.ovladani .skup { display: flex; gap: 2px; align-items: center; }
+.ovladani .skup > span { opacity: .7; margin-right: 6px; }
+.ovladani button { border: 1px solid #555d66; background: transparent; color: #fff; padding: 4px 10px; border-radius: 6px; }
+.ovladani button.zap { background: #fff; color: #111; }
+.scena { position: relative; margin: 16px auto; }
+.ramec { position: absolute; top: 0; left: 0; transform-origin: top left; overflow: hidden; border-radius: 6px; box-shadow: 0 10px 40px rgb(0 0 0 / 35%); }
+.vysvetleni { max-width: 1100px; margin: 0 auto 40px; padding: 20px 24px; background: #fff; color: #1a1d21; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+.vysvetleni h2 { font-size: 18px; margin: 12px 0 6px; }
+.vysvetleni h2:first-child { margin-top: 0; }
+.vysvetleni ul { padding-left: 20px; }
+.vysvetleni kbd { border: 1px solid #aaa; border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 12px; }
+
+/* --- aplikace -------------------------------------------------------------------------------- */
+.aplikace {
+  container: app / inline-size;
+  position: relative; width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  background: var(--barva-pozadi); color: var(--barva-text);
+  font-size: var(--pismo-m); line-height: var(--radkovani);
+}
+.aplikace[data-rezim="svetly"] { color-scheme: light; }
+.aplikace[data-rezim="tmavy"] { color-scheme: dark; }
+.pruh { background: var(--barva-pruh); color: var(--barva-na-pruhu); text-align: center; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: var(--proklad-verzalky); text-transform: uppercase; padding: 2px; }
+.pruh-den { display: none; align-items: center; justify-content: center; gap: var(--mezera-3); padding: 4px; background: var(--barva-modra-vypln); color: var(--barva-modra); font-weight: var(--tloustka-tucna); border-bottom: var(--ramecek); }
+.aplikace[data-den="jiny"] .pruh-den { display: flex; }
+.pruh-den button { height: 28px; padding: 0 var(--mezera-3); border: 0; border-radius: var(--zaobleni-ovladace); background: var(--barva-akce-modra); color: var(--barva-na-akci); font-weight: var(--tloustka-tucna); }
+
+/* horní lišta */
+.lista { flex: none; height: var(--vyska-listy); display: flex; align-items: center; gap: var(--mezera-4); padding: 0 var(--mezera-4); background: var(--barva-karta); border-bottom: var(--ramecek); }
+.nazev { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); white-space: nowrap; }
+.navigace { display: flex; gap: var(--mezera-1); }
+.navigace a { padding: 6px 10px; border-radius: var(--zaobleni-ovladace); text-decoration: none; color: var(--barva-text); white-space: nowrap; }
+.navigace a:hover { background: var(--barva-neutralni); }
+.navigace a.aktivni { background: var(--barva-modra-vypln); color: var(--barva-modra); font-weight: var(--tloustka-tucna); }
+.navigace a.pozdeji { color: var(--barva-seda); cursor: default; }
+.navigace a.pozdeji:hover { background: none; }
+.den { display: flex; align-items: center; gap: var(--mezera-2); margin-left: auto; white-space: nowrap; }
+.den b { min-width: 17ch; text-align: center; }
+.ikona { width: var(--klik); height: var(--klik); display: inline-grid; place-items: center; border: 0; border-radius: var(--zaobleni-pilulka); background: transparent; color: var(--barva-seda); font-size: var(--pismo-l); line-height: 1; }
+.ikona:hover { background: var(--barva-neutralni); color: var(--barva-text); }
+.ikona[disabled] { opacity: .3; cursor: default; background: none; }
+.slunce { display: flex; gap: var(--mezera-3); font-size: var(--pismo-s); white-space: nowrap; }
+.slunce b { color: var(--barva-seda); margin-right: 2px; }
+.slunce .zbyva { color: var(--barva-oranzova); font-weight: var(--tloustka-tucna); }
+.hodiny { white-space: nowrap; }
+.hodiny b { font-size: var(--pismo-l); }
+.tl-lista { display: inline-flex; align-items: center; height: var(--klik); padding: 0 var(--mezera-3); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); white-space: nowrap; }
+.tl-lista:hover { border-color: var(--barva-obrys); }
+.tl-info { display: none; }
+.cteni { display: none; align-items: center; gap: var(--mezera-2); }
+.aplikace[data-cteni] .cteni { display: flex; }
+.aplikace[data-cteni] .jen-zapis { display: none; }
+.stitek-cteni { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: var(--proklad-verzalky); text-transform: uppercase; color: var(--barva-oranzova); background: var(--barva-oranzova-vypln); border: var(--ramecek-sirka) solid var(--barva-oranzova); border-radius: var(--zaobleni-pilulka); padding: 2px var(--mezera-2); white-space: nowrap; }
+.kulate { width: var(--klik); height: var(--klik); border-radius: var(--zaobleni-pilulka); border: 0; background: var(--barva-modra-vypln); color: var(--barva-modra); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.kulate:hover { outline: 2px solid var(--barva-modra); }
+
+/* řada letadel: stav, dnešní nálet, kde letadlo je */
+.flotila { flex: none; display: flex; align-items: center; gap: var(--mezera-4); padding: var(--mezera-2) var(--mezera-4); background: var(--barva-karta); border-bottom: var(--ramecek); overflow-x: auto; }
+.skupina { display: flex; align-items: center; gap: var(--mezera-1); }
+.skupina-nazev, .nadpis { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: var(--proklad-verzalky); text-transform: uppercase; color: var(--barva-seda); white-space: nowrap; }
+.skupina-nazev { margin-right: var(--mezera-1); }
+.lod { min-width: 96px; display: grid; text-align: left; line-height: 1.2; padding: 4px 10px 4px 12px; border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); white-space: nowrap; }
+.lod:hover { border-color: var(--barva-obrys); }
+.lod b { font-size: var(--pismo-m); }
+.lod span { font-size: var(--pismo-s); color: var(--barva-seda); }
+.lod .jinde { color: var(--barva-oranzova); font-weight: var(--tloustka-tucna); }
+/* stav jen proužkem vlevo (zelená letí, modrá naplánované) – barevná plocha je jen na pásku */
+.lod.vzduch { box-shadow: inset 4px 0 0 var(--barva-zelena); }
+.lod.plan { box-shadow: inset 4px 0 0 var(--barva-modra); }
+.lod.mimo { opacity: .45; cursor: not-allowed; }
+.lod.mimo b { text-decoration: line-through; }
+.tl-novy { height: var(--klik-hlavni); padding: 0 var(--mezera-4); border: 0; border-radius: var(--zaobleni-ovladace); background: var(--barva-akce-modra); color: var(--barva-na-akci); font-weight: var(--tloustka-tucna); white-space: nowrap; }
+.tl-novy:hover, .tl:hover { filter: brightness(1.12); }
+kbd { font-family: var(--pismo); font-size: var(--pismo-s); border: 1px solid currentcolor; border-radius: 4px; padding: 0 4px; margin-left: 6px; opacity: .75; }
+
+/* deska: pásky · deník · informace */
+/* spodek = deska + časová osa; panely (detail, nový let) vyjedou přes obojí až dolů */
+.spodek { flex: 1; position: relative; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.prostor { flex: 1; position: relative; min-height: 0; overflow: hidden; }
+.deska { height: 100%; display: grid; grid-template-columns: minmax(0, var(--sirka-pasku)) minmax(0, 1fr) var(--sirka-info); gap: var(--mezera-4); padding: var(--mezera-4) var(--mezera-4) var(--mezera-2); }
+.aplikace[data-den="jiny"] #pasky { display: none; }
+.aplikace[data-den="jiny"] .deska { grid-template-columns: minmax(0, 1fr) var(--sirka-info); }
+.sloupec { min-height: 0; overflow-y: auto; }
+.sekce { display: flex; align-items: baseline; gap: var(--mezera-2); margin: var(--mezera-1) var(--mezera-1) var(--mezera-2); }
+.sekce .vpravo { margin-left: auto; font-size: var(--pismo-s); color: var(--barva-seda); }
+.prazdne { margin: 0 var(--mezera-1) var(--mezera-4); color: var(--barva-seda); font-size: var(--pismo-s); }
+@container app (max-width: 1499px) {
+  .deska { grid-template-columns: minmax(0, var(--sirka-pasku)) minmax(0, 1fr); }
+  .aplikace[data-den="jiny"] .deska { grid-template-columns: minmax(0, 1fr); }
+  .info { display: none; }
+  .info.otevrena { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: var(--sirka-info); padding: var(--mezera-4); background: var(--barva-pozadi); box-shadow: var(--stin-panelu); z-index: 3; }
+  .tl-info { display: inline-flex; }
+  .slunce .tb, .slunce .sr { display: none; }
+  .skupina-nazev { display: none; }
+  .skupina + .skupina { padding-left: var(--mezera-3); border-left: var(--ramecek-sirka) solid var(--barva-prepazka); }
+  .flotila { gap: var(--mezera-3); }
+  .lod { min-width: 0; }
+}
+
+/* --- pásek letu (desktop) ------------------------------------------------------------------ */
+.pasek { display: grid; grid-template-columns: var(--sloupce-pasku); background: var(--barva-karta); border: var(--okraj-pasku) solid var(--barva-obrys); border-radius: var(--zaobleni-pasku); margin-bottom: var(--mezera-2); cursor: pointer; transition: box-shadow var(--prechod); }
+.pasek.vzduch { background: var(--barva-zelena-vypln); }
+.pasek.problem { background: var(--barva-cervena-vypln); }
+.pasek.plan { background: var(--barva-modra-vypln); }
+.pasek.rozpracovany { border-style: dashed; cursor: default; }
+/* Pásek v panelu: jeden pásek, prázdné přihrádky se vynechají, posádka dostane zbytek šířky */
+.pasek.v-panelu { display: flex; flex-wrap: wrap; margin-bottom: var(--mezera-3); cursor: default; }
+.pasek.v-panelu .box { flex: none; }
+.pasek.v-panelu .box:first-child { flex-basis: 120px; }
+.pasek.v-panelu .posadka { flex: 1 1 0; min-width: 9em; }
+.pasek.v-panelu .stitky { grid-template-columns: auto auto; }
+.pasek.v-panelu .cas { flex-basis: var(--sirka-casu); }
+.pasek.v-panelu .varovani { flex-basis: 100%; }
+.pasek:not(.rozpracovany, .v-panelu):hover { box-shadow: 0 0 0 3px var(--barva-prepazka); }
+.pasek.vybrany { box-shadow: 0 0 0 2px var(--barva-pozadi), 0 0 0 5px var(--barva-text); }   /* prstenec s mezerou – vidět v obou režimech */
+.dvojice { margin-bottom: var(--mezera-2); }
+.dvojice .pasek { margin-bottom: 0; }
+.dvojice .pasek:first-child { border-bottom-width: 0; border-radius: var(--zaobleni-pasku) var(--zaobleni-pasku) 0 0; }
+.dvojice .pasek + .pasek { border-top: var(--ramecek-sirka) dashed var(--barva-prepazka); border-radius: 0 0 var(--zaobleni-pasku) var(--zaobleni-pasku); }
+.box { display: grid; align-content: center; min-width: 0; padding: 6px 10px; border-left: var(--ramecek-sirka) solid var(--barva-prepazka); }
+.box:first-child { border-left: 0; }
+.box > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.akce > * { overflow: visible; }
+.rejstrik { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); line-height: 1.15; }
+.typ, .funkce { font-size: var(--pismo-s); color: var(--barva-seda); font-style: normal; }
+.typ .vlecna { color: var(--barva-text); font-weight: var(--tloustka-tucna); }
+.posadka .prazdna { color: var(--barva-seda); }
+.stitky { grid-template-columns: var(--mista-stitku-2); grid-auto-rows: 1fr; gap: var(--mezera-1); align-content: center; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.stitek { justify-self: start; padding: 1px var(--mezera-2); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-pilulka); background: var(--barva-stitek-pasku); }
+.stitek:empty { visibility: hidden; }
+.stitek:empty::before { content: "\200b"; }   /* prázdná pozice má výšku štítku – nic se neposune ani svisle */
+/* trasa: odkud nahoře, kam dole; moje letiště šedě, jiné tučně */
+.trasa { padding-inline: var(--mezera-2); }
+.trasa span { font-size: var(--pismo-s); color: var(--barva-seda); }
+.trasa b { font-size: var(--pismo-m); }
+.cas { justify-items: end; }
+.stopky { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); line-height: 1.15; }
+.akce { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.akce .spolecne { font-size: var(--pismo-s); color: var(--barva-seda); white-space: normal; padding-left: var(--mezera-1); }
+.tl { height: var(--klik-hlavni); padding: 0 var(--mezera-3); flex: none; border: 0; border-radius: var(--zaobleni-ovladace); font-weight: var(--tloustka-tucna); letter-spacing: var(--proklad-verzalky); text-transform: uppercase; white-space: nowrap; }
+.tl.zelene { flex: 1; background: var(--barva-akce-zelena); color: var(--barva-na-akci); }
+.tl.modre { flex: 1; background: var(--barva-akce-modra); color: var(--barva-na-akci); }
+.tl.svetle { background: var(--barva-karta); color: var(--barva-modra); border: var(--ramecek-sirka) solid var(--barva-prepazka); }
+.tl.cervene { background: var(--barva-karta); color: var(--barva-cervena); border: var(--ramecek-sirka) solid var(--barva-prepazka); }
+/* T&G: bílé s černým textem (jako na mobilu); PŘISTÁL a VZLET na pásku plné, pevná šířka */
+.tl.obrys { background: var(--barva-karta); color: var(--barva-text); border: var(--ramecek-sirka) solid var(--barva-prepazka); }
+.tl.obrys:hover { filter: none; border-color: var(--barva-obrys); }
+.pasek .tl.zelene, .pasek .tl.modre { flex: none; width: var(--sirka-akce); }
+.tl[disabled] { opacity: .4; cursor: not-allowed; filter: none; }
+.varovani { grid-column: 1 / -1; padding: 3px 10px; border-top: var(--ramecek-sirka) solid var(--barva-prepazka); color: var(--barva-cervena); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+
+/* --- deník dne ------------------------------------------------------------------------------- */
+.denik-sloupec { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.karta { background: var(--barva-karta); border: var(--ramecek); border-radius: var(--zaobleni); }
+.denik { flex: 1; min-height: 0; overflow-y: auto; }
+.radek { display: grid; grid-template-columns: var(--sloupce-deniku); gap: var(--mezera-2); align-items: baseline; padding: 5px var(--mezera-3); border-top: var(--ramecek); cursor: pointer; }
+.radek > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.radek:hover { background: var(--barva-najeti); }
+.radek.vybrany { background: var(--barva-modra-vypln); }
+.radek.zahlavi { position: sticky; top: 0; z-index: 1; border-top: 0; background: var(--barva-neutralni); cursor: default; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-seda); border-radius: var(--zaobleni) var(--zaobleni) 0 0; }
+.radek .r { font-weight: var(--tloustka-tucna); }
+.radek .vpr { text-align: right; }
+.radek .doba { font-weight: var(--tloustka-tucna); }
+.radek.zruseny { color: var(--barva-seda); }
+.radek.zruseny .r { text-decoration: line-through; }
+.radek.mezititulek { cursor: default; background: var(--barva-neutralni); }
+.denik-pata { display: flex; gap: var(--mezera-4); padding: var(--mezera-2) var(--mezera-3); border-top: var(--ramecek); font-size: var(--pismo-s); color: var(--barva-seda); }
+.denik-pata b { color: var(--barva-text); font-size: var(--pismo-m); }
+
+/* --- informace (pravý sloupec) ------------------------------------------------------------- */
+.info .karta { margin-bottom: var(--mezera-3); overflow: hidden; }
+.karta-hlava { display: flex; align-items: baseline; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); background: var(--barva-neutralni); border-bottom: var(--ramecek); }
+.karta-hlava .vpravo { margin-left: auto; font-size: var(--pismo-s); color: var(--barva-seda); }
+.karta-telo { padding: var(--mezera-2) var(--mezera-3); }
+.cisla-dne { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; text-align: center; padding: var(--mezera-2) 0; }
+.cisla-dne b { display: block; font-size: var(--pismo-l); }
+.cisla-dne span { font-size: var(--pismo-s); color: var(--barva-seda); }
+.tab-mala { width: 100%; border-collapse: collapse; font-size: var(--pismo-s); }
+.tab-mala th { text-align: right; font-weight: var(--tloustka-tucna); color: var(--barva-seda); padding: 2px 0; }
+.tab-mala th:first-child { text-align: left; }
+.tab-mala td { padding: 3px 0; border-top: var(--ramecek); white-space: nowrap; }
+.tab-mala td:not(:first-child) { text-align: right; padding-left: var(--mezera-2); }
+.tab-mala .r { font-weight: var(--tloustka-tucna); font-size: var(--pismo-m); }
+.stitek-pozdeji { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-oranzova); background: var(--barva-oranzova-vypln); border-radius: var(--zaobleni-pilulka); padding: 0 var(--mezera-2); }
+.zalozky { display: flex; gap: var(--mezera-1); margin-bottom: var(--mezera-2); }
+.zalozky button { height: 26px; padding: 0 var(--mezera-2); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.zalozky button.zap { background: var(--barva-modra-vypln); color: var(--barva-modra); border-color: var(--barva-modra); }
+.surova { font-family: var(--pismo-kod); font-size: var(--pismo-s); background: var(--barva-neutralni); border-radius: var(--zaobleni-ovladace); padding: 6px var(--mezera-2); white-space: pre-wrap; word-break: break-word; }
+.meteo { display: grid; grid-template-columns: auto 1fr; gap: 2px var(--mezera-3); margin: var(--mezera-2) 0; font-size: var(--pismo-s); }
+.meteo dt { color: var(--barva-seda); }
+.meteo dd { margin: 0; font-weight: var(--tloustka-tucna); }
+.karta.misto { border-style: dashed; background: transparent; }
+.karta.misto .karta-telo { font-size: var(--pismo-s); color: var(--barva-seda); }
+.vpravo-auto { margin-left: auto; align-self: center; }
+
+/* --- časová osa dne -------------------------------------------------------------------------- */
+.osa { flex: none; margin: 0 var(--mezera-4) var(--mezera-3); }
+.osa-hlava { display: flex; align-items: center; gap: var(--mezera-3); padding: 4px var(--mezera-3); cursor: pointer; }
+.osa-hlava .legenda { display: flex; gap: var(--mezera-3); font-size: var(--pismo-s); color: var(--barva-seda); }
+.osa-hlava .legenda i { display: inline-block; width: 14px; height: 8px; border-radius: 2px; margin-right: 4px; border: 0; background: var(--barva-osa-let); }
+.osa-hlava .legenda i.vzduch { background: var(--barva-akce-zelena); }
+.osa-hlava .legenda i.pasmo { margin-left: var(--mezera-2); border: var(--ramecek-sirka) solid var(--barva-cara); background: var(--pasmo); }
+.osa-hlava .legenda i.ted { width: 0; border-left: 2px solid var(--barva-modra); border-radius: 0; }
+.osa-hlava .vpravo { margin-left: auto; font-size: var(--pismo-s); color: var(--barva-seda); }
+.osa.sbalena .osa-telo { display: none; }
+.osa-telo { position: relative; padding: 0 var(--mezera-3) var(--mezera-2); border-top: var(--ramecek); }
+/* vrstva pod úsečkami: pásma soumraku a čáry hodin přes všechny řádky */
+.osa-vrstva { position: absolute; top: 0; bottom: var(--mezera-2); left: calc(var(--mezera-3) + 92px); right: var(--mezera-3); }
+.osa-pasmo { position: absolute; top: 0; bottom: 0; left: var(--od); width: calc(var(--do) - var(--od)); background: var(--pasmo); }
+.osa-cara { position: absolute; top: var(--vyska-osy); bottom: 0; left: var(--od); border-left: var(--ramecek-sirka) solid var(--barva-cara); pointer-events: none; }
+.p-obc { --pasmo: var(--barva-soumrak-obcansky); }
+.p-nau { --pasmo: var(--barva-soumrak-nauticky); }
+.p-ast { --pasmo: var(--barva-soumrak-astronomicky); }
+.p-noc { --pasmo: var(--barva-noc); }
+.osa-radek { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; height: var(--vyska-osy); }
+.osa-radek .r { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+/* dráha = 14 hodin (04–18 UTC), svislá čára každou hodinu */
+.osa-draha { position: relative; height: 100%; pointer-events: none; }
+.osa-draha > * { pointer-events: auto; }
+.osa-hodina { position: absolute; left: var(--od); transform: translateX(-50%); font-size: var(--pismo-s); color: var(--barva-seda); }
+.osa-let { position: absolute; top: 4px; bottom: 4px; left: var(--od); width: calc(var(--do) - var(--od)); min-width: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--barva-osa-let); }
+/* letící: sytá akční barva v obou režimech (tmavá varianta zelené a červené by na ose křičela) */
+.osa-let.vzduch { background: var(--barva-akce-zelena); }
+.osa-let.problem { background: var(--barva-akce-cervena); }
+.osa-let.vlek { background: var(--barva-osa-vlek); }
+.osa-let:hover { outline: 2px solid var(--barva-prepazka); }
+.osa-let.vybrany { outline: 2px solid var(--barva-text); outline-offset: 1px; }
+.osa-radek { position: relative; pointer-events: none; }   /* myš projde na pásmo pod řádkem */
+.osa-znacka { position: absolute; top: 0; bottom: 0; left: var(--od); border-left: 2px solid var(--barva-modra); pointer-events: none; }
+
+/* --- panely (detail, nový let) --------------------------------------------------------------- */
+.panel { position: absolute; top: 0; right: 0; bottom: 0; width: var(--sirka-panelu); display: flex; flex-direction: column; background: var(--barva-pozadi); border-left: var(--ramecek); box-shadow: var(--stin-panelu); transform: translateX(105%); transition: transform var(--prechod); z-index: 4; }
+.panel.siroky { width: var(--sirka-noveho); }
+.panel.otevreny { transform: none; }
+.panel-hlava { display: flex; align-items: center; gap: var(--mezera-3); padding: var(--mezera-3) var(--mezera-4); background: var(--barva-karta); border-bottom: var(--ramecek); }
+.panel-hlava h2 { font-size: var(--pismo-l); }
+.panel-hlava .ikona { margin-left: auto; }
+.panel-telo { flex: 1; overflow-y: auto; padding: var(--mezera-4); }
+/* detail: pásek nahoře, vedle něj zavírací křížek (rejstřík se neopakuje v liště nad páskem) */
+.detail-hlava { display: flex; align-items: flex-start; gap: var(--mezera-2); }
+.detail-hlava .pasek { flex: 1; min-width: 0; }
+.panel-pata { display: flex; align-items: center; gap: var(--mezera-2); padding: var(--mezera-3) var(--mezera-4); background: var(--barva-karta); border-top: var(--ramecek); }
+.panel-pata .tl { flex: none; min-width: 120px; }
+.panel-pata .chybi { margin-left: auto; font-size: var(--pismo-s); color: var(--barva-seda); }
+.blok { background: var(--barva-karta); border: var(--ramecek); border-radius: var(--zaobleni); margin-bottom: var(--mezera-3); overflow: hidden; }
+.blok-hlava { display: flex; gap: var(--mezera-2); align-items: baseline; padding: 6px var(--mezera-3); background: var(--barva-neutralni); border-bottom: var(--ramecek); }
+.blok-hlava .vyberte { margin-left: auto; font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); color: var(--barva-cervena); }
+.blok-telo { padding: var(--mezera-2) var(--mezera-3) var(--mezera-3); display: grid; gap: var(--mezera-2); }
+.pole-mrizka { display: grid; grid-template-columns: 1fr 1fr; }
+.pole { padding: 6px var(--mezera-3); border-top: var(--ramecek); min-width: 0; }
+.pole:nth-child(-n+2) { border-top: 0; }
+.pole:nth-child(even) { border-left: var(--ramecek); }
+.pole .popisek { font-size: var(--pismo-s); color: var(--barva-seda); }
+.pole .hodnota { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pole.upravitelne { cursor: pointer; }
+.pole.upravitelne:hover { background: var(--barva-modra-vypln); }
+.pole.upravitelne .popisek::after { content: " ✎"; opacity: 0; }
+.pole.upravitelne:hover .popisek::after { opacity: 1; }
+.uprava { display: flex; gap: var(--mezera-1); }
+.uprava input { flex: 1; min-width: 0; height: var(--klik); padding: 0 var(--mezera-2); border: 2px solid var(--barva-modra); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); }
+.uprava button { height: var(--klik); padding: 0 var(--mezera-2); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.historie { font-size: var(--pismo-s); }
+.historie summary { cursor: pointer; padding: 6px var(--mezera-3); color: var(--barva-modra); font-weight: var(--tloustka-tucna); }
+.historie ol { list-style: none; padding: 0 var(--mezera-3) var(--mezera-2); }
+.historie li { padding: 4px 0; border-top: var(--ramecek); }
+
+/* formulář nového letu */
+.formular { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--mezera-3); align-items: start; }
+.dlazdice { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+.dlazdice-nadpis { font-size: var(--pismo-s); color: var(--barva-seda); }
+.dl { text-align: left; padding: 4px var(--mezera-2); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); }
+.dl b { display: block; }
+.dl span { font-size: var(--pismo-s); color: var(--barva-seda); }
+.dl:hover { border-color: var(--barva-obrys); }
+.dl.vzduch { background: var(--barva-zelena-vypln); }
+.dl.plan { background: var(--barva-modra-vypln); }
+.dl.mimo { opacity: .45; cursor: not-allowed; }
+.dl.zap { outline: 2px solid var(--barva-modra); outline-offset: -1px; }
+.segmenty { display: inline-flex; border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); overflow: hidden; justify-self: start; }
+.segmenty button { height: var(--klik); padding: 0 var(--mezera-3); border: 0; border-left: var(--ramecek-sirka) solid var(--barva-prepazka); background: var(--barva-karta); }
+.segmenty button:first-child { border-left: 0; }
+.segmenty button:hover { background: var(--barva-najeti); }
+.segmenty button.zap { background: var(--barva-akce-modra); color: var(--barva-na-akci); font-weight: var(--tloustka-tucna); }
+.role { display: grid; gap: var(--mezera-1); }
+.role-nazev { font-size: var(--pismo-s); color: var(--barva-seda); }
+.cipy { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cip { height: 28px; padding: 0 var(--mezera-3); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-pilulka); background: var(--barva-karta); }
+.cip:hover { border-color: var(--barva-obrys); }
+.cip.zap { background: var(--barva-akce-modra); border-color: var(--barva-akce-modra); color: var(--barva-na-akci); font-weight: var(--tloustka-tucna); }
+.hledat { position: relative; }
+.hledat input { width: 15ch; height: 28px; padding: 0 var(--mezera-3); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-pilulka); background: var(--barva-karta); }
+.hledat input:focus { outline: 2px solid var(--barva-modra); border-color: transparent; width: 22ch; }
+.naseptavac { position: absolute; top: 32px; left: 0; z-index: 5; min-width: 240px; max-height: 220px; overflow-y: auto; background: var(--barva-karta); border: var(--ramecek); border-radius: var(--zaobleni-ovladace); box-shadow: var(--stin-nabidky); }
+.naseptavac button { display: block; width: 100%; text-align: left; padding: 6px var(--mezera-3); border: 0; background: transparent; }
+.naseptavac button:hover, .naseptavac button.zvyrazneny { background: var(--barva-modra-vypln); }
+.naseptavac .zadny { padding: 6px var(--mezera-3); color: var(--barva-seda); font-size: var(--pismo-s); }
+.radky-udaju { display: grid; }
+.radek-udaje { display: flex; justify-content: space-between; gap: var(--mezera-2); padding: 6px 0; border-top: var(--ramecek); cursor: pointer; }
+.radek-udaje:first-child { border-top: 0; }
+.radek-udaje span:first-child { color: var(--barva-seda); font-size: var(--pismo-s); align-self: center; }
+.radek-udaje:hover b { color: var(--barva-modra); }
+.uloha-seznam { display: grid; max-height: 168px; overflow-y: auto; border: var(--ramecek); border-radius: var(--zaobleni-ovladace); }
+.uloha-seznam button { text-align: left; padding: 4px var(--mezera-2); border: 0; border-top: var(--ramecek); background: var(--barva-karta); }
+.uloha-seznam button:first-child { border-top: 0; }
+.uloha-seznam button:hover { background: var(--barva-najeti); }
+.uloha-seznam button.zap { background: var(--barva-modra-vypln); font-weight: var(--tloustka-tucna); }
+.pocet { display: inline-flex; align-items: center; gap: var(--mezera-2); }
+.pocet button { width: var(--klik); height: var(--klik); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-weight: var(--tloustka-tucna); }
+.casy { display: flex; gap: var(--mezera-3); align-items: end; flex-wrap: wrap; }
+.casy label { display: grid; gap: 2px; font-size: var(--pismo-s); color: var(--barva-seda); }
+.casy input { width: 9ch; height: var(--klik); padding: 0 var(--mezera-2); border: var(--ramecek-sirka) solid var(--barva-prepazka); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-size: var(--pismo-m); color: var(--barva-text); font-variant-numeric: tabular-nums; }
+.casy input:focus { outline: 2px solid var(--barva-modra); }
+
+/* nabídka uživatele */
+.nabidka { position: absolute; top: calc(var(--vyska-listy) + 20px); right: var(--mezera-4); z-index: 6; width: 300px; background: var(--barva-karta); border: var(--ramecek); border-radius: var(--zaobleni); box-shadow: var(--stin-nabidky); display: none; }
+.nabidka.otevrena { display: block; }
+.nabidka .cast { padding: var(--mezera-2) var(--mezera-3); border-top: var(--ramecek); display: grid; gap: var(--mezera-1); }
+.nabidka .cast:first-child { border-top: 0; }
+.nabidka .radek-udaje { border: 0; padding: 2px 0; }
+
+/* oznámení Zpět */
+.oznameni { position: absolute; left: var(--mezera-4); bottom: var(--mezera-4); z-index: 7; display: none; align-items: center; gap: var(--mezera-4); padding: var(--mezera-2) var(--mezera-2) var(--mezera-2) var(--mezera-4); border-radius: var(--zaobleni); background: var(--barva-oznameni); color: var(--barva-na-akci); box-shadow: var(--stin-nabidky); overflow: hidden; }
+.oznameni.otevrene { display: flex; }
+.oznameni button { height: var(--klik); padding: 0 var(--mezera-3); border: 0; border-radius: var(--zaobleni-ovladace); background: transparent; color: var(--barva-pruh); font-weight: var(--tloustka-tucna); text-transform: uppercase; }
+.oznameni button:hover { background: rgb(255 255 255 / 12%); }
+.oznameni .ubyva { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--barva-pruh); }
+</style>
+</head>
+<body>
+
+<div class="ovladani">
+  <b>Provozní deska v7 – desktop (návrh)</b>
+  <div class="skup" id="vel"><span>Obrazovka</span>
+    <button data-w="1920" data-h="1080" class="zap">Věž / klubovna 1920 × 1080</button>
+    <button data-w="1366" data-h="768">Notebook 1366 × 768</button>
+  </div>
+  <div class="skup" id="meritko"><span>Měřítko</span>
+    <button data-m="fit" class="zap">Přizpůsobit oknu</button>
+    <button data-m="1">100 %</button>
+  </div>
+  <div class="skup" id="rezim-makety"><span>Režim</span>
+    <button data-r="svetly" class="zap">Světlý</button>
+    <button data-r="tmavy">Tmavý</button>
+  </div>
+  <div class="skup" id="prihlaseni"><span>Přihlášení</span>
+    <button data-p="plne" class="zap">Plné</button>
+    <button data-p="cteni" title="Odloženo – zatím se nebude dělat">Jen ke čtení (odloženo)</button>
+  </div>
+</div>
+
+<div class="scena" id="scena"><div class="ramec" id="ramec">
+<div class="aplikace" id="app" data-rezim="svetly" data-den="dnes">
+  <div class="pruh">Testovací provoz – data nejsou skutečná</div>
+
+  <header class="lista">
+    <span class="nazev">AK Kladno Log</span>
+    <nav class="navigace">
+      <a href="#" class="aktivni">Provoz</a>
+      <a href="#" title="Desktopová podoba Osob – další krok">Osoby</a>
+      <a href="#" class="pozdeji" title="Později: deník za období, uzávěrky, export">Deník</a>
+      <a href="#" title="Desktopová podoba Letadel – další krok">Letadla</a>
+    </nav>
+    <div class="den">
+      <button class="ikona" id="denZpet" title="Předchozí den">‹</button>
+      <b id="denText">Středa 7. 10. 2026</b>
+      <button class="ikona" id="denVpred" title="Další den" disabled>›</button>
+    </div>
+    <div class="slunce cisla">
+      <span class="tb"><b>TB</b>04:35</span><span class="sr"><b>SR</b>05:09</span><span><b>SS</b>16:32</span><span><b>TE</b>17:06</span>
+      <span class="zbyva" id="doTE" title="Zbývá do konce občanského soumraku"></span>
+    </div>
+    <div class="cteni"><span class="stitek-cteni" title="Na tomto počítači nejde nic změnit">Jen ke čtení</span><button class="tl-lista" id="tlPrihlasit">Přihlásit k úpravám</button></div>
+    <button class="tl-lista tl-info" id="tlInfo">Informace</button>
+    <span class="hodiny cisla"><b id="hodiny">14:21:05</b> <span class="male seda">UTC</span></span>
+    <button class="kulate" id="tlUzivatel" title="Tomáš Mráz">TM</button>
+  </header>
+  <div class="pruh-den"><span id="pruhDenText"></span><button id="tlDnes">Zpět na dnešek</button></div>
+
+  <div class="flotila" id="flotila"></div>
+
+  <div class="spodek">
+  <div class="prostor">
+    <main class="deska">
+      <section class="sloupec" id="pasky"></section>
+      <section class="denik-sloupec">
+        <div class="sekce"><span class="nadpis">Deník dne</span><span class="vpravo" id="denikSouhrn"></span></div>
+        <div class="karta denik" id="denik"></div>
+      </section>
+      <aside class="sloupec info" id="info"></aside>
+    </main>
+  </div>
+
+  <section class="osa karta" id="osa">
+    <div class="osa-hlava" id="osaHlava"><span class="nadpis" id="osaNadpis">▾ Časová osa dne</span>
+      <span class="legenda"><span><i></i>ukončený</span><span><i class="vzduch"></i>ve vzduchu</span><span><i class="ted"></i>teď</span><span>soumrak:<i class="pasmo p-obc"></i>občanský<i class="pasmo p-nau"></i>nautický<i class="pasmo p-ast"></i>astronomický<i class="pasmo p-noc"></i>noc</span></span>
+      <span class="vpravo">klik na let = detail · na pásmo = časy soumraku</span></div>
+    <div class="osa-telo" id="osaTelo"></div>
+  </section>
+  <div class="panel" id="detail"></div>
+  <div class="panel siroky" id="novy"></div>
+  </div>
+
+  <div class="nabidka" id="nabidka">
+    <div class="cast"><b>Tomáš Mráz</b><span class="male seda">tomas.mraz@example.cz</span></div>
+    <div class="cast">
+      <span class="nadpis">Můj provoz · dnes</span>
+      <div class="radek-udaje"><span>Letiště</span><b>LKKL Kladno <span class="male seda">domovské</span></b></div>
+      <div class="radek-udaje"><span>Osoby v provozu</span><b>všechny</b></div>
+    </div>
+    <div class="cast">
+      <span class="nadpis">Režim zobrazení</span>
+      <div class="segmenty" id="rezimAplikace"><button data-r="svetly">Podle zařízení</button><button data-r="svetly" class="zap">Světlý</button><button data-r="tmavy">Tmavý</button></div>
+    </div>
+    <div class="cast"><div class="radek-udaje"><b>Odhlásit</b></div></div>
+  </div>
+
+  <div class="oznameni" id="oznameni"><span id="oznameniText"></span><button id="tlZpet">Zpět<kbd>Ctrl Z</kbd></button><span class="ubyva" id="ubyva"></span></div>
+</div>
+</div></div>
+
+<div class="vysvetleni">
+  <h2>Co je nového proti v6</h2>
+  <ul>
+    <li><b>Tlačítka sjednocená s mobilem:</b> PŘISTÁL zeleně a VZLET modře plné s bílým textem,
+      T&amp;G bílé s černým textem (na pásku i v detailu). Stopky jsou v barvě textu, text varování červeně (jako na mobilu).</li>
+    <li><b>Detail letu bez horní lišty</b> s rejstříkem – stejný údaj je hned v pásku pod ní. Zavírací
+      křížek je vpravo vedle pásku (a <kbd>Esc</kbd>); důvod zrušení je v bloku Evidence.</li>
+  </ul>
+  <h2>Z v5 a v6</h2>
+  <ul>
+    <li>Na pásku žádné barevné písmo kromě tlačítek; stav letu říká výplň pásku.</li>
+    <li>Neutrální řada letadel s proužkem stavu, trasa jen mimo moje letiště, výrazný vybraný pásek,
+      jemnější časová osa, panely až dolů.</li>
+  </ul>
+  <h2>Z předchozích verzí</h2>
+  <ul>
+    <li>Souhrny provozu (P, doba letů, doba vleků, tabulka Doba · P), deník jeden řádek na let, pásek bez „⋯“.</li>
+    <li>Řada letadel se stavem a dnešním náletem; klik na letadlo na zemi = nový let s ním.</li>
+    <li>Časová osa podle dne s pásmy soumraku. Přihlášení jen ke čtení je <b>odložené</b>.</li>
+  </ul>
+  <h2>Ovládání</h2>
+  <ul>
+    <li>Klik na pásek, řádek deníku nebo úsečku osy = detail letu (panel zprava, deska zůstává
+      ovladatelná). Pole s ✎ se upravují na místě, <kbd>Enter</kbd> uloží, <kbd>Esc</kbd> zruší.</li>
+    <li><b>+ Nový let</b> nebo <kbd>N</kbd> = formulář nového letu; <kbd>Esc</kbd> zavře panel;
+      po VZLET / PŘISTÁL / T&amp;G 6 s lišta Zpět (i <kbd>Ctrl</kbd>+<kbd>Z</kbd>).</li>
+  </ul>
+</div>
+
+<script>
+/* ============================== data makety (smyšlená) ============================== */
+const MOJE = "LKKL";
+const LETISTE = { LKKL: "Kladno", LKMB: "Mladá Boleslav", LKHV: "Hořovice", LKVO: "Vodochody", LKPC: "Panenský Týnec" };
+const LETADLA = [
+  { r: "OK-0914", typ: "ASW 15", kat: "Kluzáky", kluzak: true, max: 240 },
+  { r: "OK-2817", typ: "L 13 Blaník", kat: "Kluzáky", kluzak: true },
+  { r: "OK-6512", typ: "L 13 Blaník", kat: "Kluzáky", kluzak: true },
+  { r: "OK-2728", typ: "L 13 Blaník", kat: "Kluzáky", kluzak: true },
+  { r: "OK-8210", typ: "LS 4", kat: "Kluzáky", kluzak: true },
+  { r: "OK-4404", typ: "Discus b", kat: "Kluzáky", kluzak: true, mimo: true },
+  { r: "OK-MFV", typ: "Z 126", kat: "Motorová" },
+  { r: "OK-CWF", typ: "Cessna 172", kat: "Motorová" },
+  { r: "OK-CRA", typ: "Cessna 152", kat: "Motorová" },
+  { r: "OK-CUO 78", typ: "Skylane", kat: "UL", vlecna: true },
+  { r: "OK-NUA 21", typ: "Virus SW", kat: "UL" },
+];
+const OSOBY = ["Tomáš Mráz", "Marek Dvořák", "Eva Malá", "Jan Kovář", "Petr Hora", "David Malý", "Tomáš Bílek",
+  "Pavel Brož", "Jan Kaplan", "Ivo Sýkora", "Marek Novotný", "Jiří Vlk", "Lucie Černá", "Ondřej Kos", "Karel Říha",
+  "Alena Svobodová", "Martin Šťastný", "Kateřina Dušková"];
+const ULOHY = {
+  IU: ["IU/1 Seznamovací let", "IU/2 Vliv řídidel", "IU/3 Navijákové vzlety s instruktorem", "IU/4 Navijákové vzlety – nácvik", "IU/6 Let po okruhu", "IU/8 První samostatný let"],
+  IA: ["IA/1 Aerovlek s instruktorem", "IA/2 Aerovlek – samostatně"],
+  II: ["II/3 Termické létání", "II/9 Přelet 50 km", "II/9P Přelet – přistání v terénu", "II/12 Přelet 300 km"],
+};
+const ULOHY_VSE = Object.values(ULOHY).flat();
+const ulohaNazev = (k) => (k ? ULOHY_VSE.find((u) => u.startsWith(k + " ")) || k : "");
+const DNY = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"];
+
+const t = (h, m, s = 0) => h * 3600 + m * 60 + s;
+const START = Date.now(), T0 = t(14, 21, 5);
+/* sluneční časy LKKL 7. 10. 2026 (astral): začátek astronomického, nautického, občanského soumraku
+   ráno, východ, západ, konec občanského, nautického, astronomického soumraku večer */
+const AR = t(3, 20), NR = t(3, 58), TB = t(4, 35), SR = t(5, 9), SS = t(16, 32), TE = t(17, 6), NV = t(17, 43), AV = t(18, 21);
+const ted = () => T0 + Math.floor((Date.now() - START) / 1000);
+const d2 = (n) => String(n).padStart(2, "0");
+const hm = (s) => `${d2(Math.floor(s / 3600) % 24)}:${d2(Math.floor(s / 60) % 60)}`;
+const hms = (s) => `${hm(s)}:${d2(s % 60)}`;
+const stopky = (s) => `${Math.floor(s / 3600)}:${d2(Math.floor(s / 60) % 60)}:${d2(s % 60)}`;
+const doba = (min) => (min >= 60 ? `${Math.floor(min / 60)}°${d2(min % 60)}″` : `${min}″`);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const letadlo = (r) => LETADLA.find((a) => a.r === r);
+const minuty = (l) => Math.max(1, Math.round((l.pristani - l.vzlet) / 60));
+
+let dalsiId = 100;
+const L = (o) => ({ id: dalsiId++, ucel: "", zpusob: "", uloha: "", pob: 1, tg: 0, odkud: MOJE, kam: MOJE, prist: 1, poznamka: "", ...o });
+const LETY = [
+  L({ id: 1, r: "OK-2817", stav: "VZDUCH", ucel: "výcvik", zpusob: "aerovlek", pob: 2, uloha: "IU/6", posadka: [["Marek Dvořák", "PIC"], ["Eva Malá", "žák"]], vzlet: t(14, 12, 40), vlecna: 2 }),
+  L({ id: 2, r: "OK-CUO 78", stav: "VZDUCH", ucel: "vlek", posadka: [["Pavel Brož", "PIC"]], vzlet: t(14, 12, 40), kluzakLet: 1 }),
+  L({ id: 3, r: "OK-CWF", stav: "VZDUCH", ucel: "výcvik", pob: 2, posadka: [["Petr Hora", "PIC"], ["David Malý", "žák"]], vzlet: t(13, 47, 30), tg: 3 }),
+  L({ id: 4, r: "OK-MFV", stav: "VZDUCH", posadka: [["Jan Kovář", "PIC"]], vzlet: t(12, 58, 10), tg: 2, kam: "LKMB" }),
+  L({ id: 5, r: "OK-0914", stav: "VZDUCH", zpusob: "naviják", uloha: "II/3", posadka: [["Tomáš Bílek", "PIC"]], vzlet: t(10, 5, 0) }),
+  L({ id: 6, r: "OK-6512", stav: "PLAN", ucel: "sólo", zpusob: "naviják", uloha: "IU/8", posadka: [["Jan Kaplan", "PIC"], ["Marek Novotný", "dozor"]], zalozeno: t(13, 55), zalozil: "Marek Novotný" }),
+  L({ id: 7, r: "OK-CRA", stav: "PLAN", pob: 2, posadka: [["Jiří Vlk", "PIC"]], kam: "LKHV", zalozeno: t(14, 2), zalozil: "Jiří Vlk" }),
+];
+const U = (r, posadka, v, p, o = {}) => LETY.push(L({ r, posadka, vzlet: v, pristani: p, stav: "UKONCEN", ...o }));
+U("OK-2817", [["Marek Dvořák", "PIC"], ["Eva Malá", "žák"]], t(13, 31), t(13, 44), { ucel: "výcvik", zpusob: "aerovlek", uloha: "IU/6", pob: 2 });
+U("OK-CUO 78", [["Pavel Brož", "PIC"]], t(13, 31), t(13, 38), { ucel: "vlek" });
+U("OK-6512", [["Jan Kaplan", "PIC"], ["Marek Novotný", "dozor"]], t(13, 20), t(13, 26), { ucel: "sólo", zpusob: "naviják", uloha: "IU/8" });
+U("OK-8210", [["Lucie Černá", "PIC"]], t(11, 40), t(13, 5), { zpusob: "naviják", uloha: "II/9", poznamka: "výstup do 1800 m" });
+U("OK-6512", [["Marek Novotný", "PIC"], ["Jan Kaplan", "žák"]], t(12, 52), t(12, 58), { ucel: "výcvik", zpusob: "naviják", uloha: "IU/4", pob: 2 });
+U("OK-CWF", [["Petr Hora", "PIC"], ["David Malý", "žák"]], t(11, 50), t(12, 41), { ucel: "výcvik", pob: 2, prist: 6 });
+U("OK-2817", [["Marek Dvořák", "PIC"], ["Ivo Sýkora", "žák"]], t(12, 30), t(12, 36), { ucel: "výcvik", zpusob: "naviják", uloha: "IU/4", pob: 2 });
+U("OK-NUA 21", [["Ondřej Kos", "PIC"]], t(11, 15), t(11, 52), { pob: 2, kam: "LKMB", poznamka: "zůstává přes noc" });
+U("OK-CRA", [["Karel Říha", "PIC"], ["Jiří Vlk", "přezkoušený"]], t(10, 30), t(11, 42), { ucel: "přezk.", pob: 2, prist: 3 });
+U("OK-CUO 78", [["Pavel Brož", "PIC"]], t(10, 44), t(10, 51), { ucel: "vlek" });
+U("OK-2728", [["Martin Šťastný", "PIC"]], t(10, 44), t(11, 30), { zpusob: "aerovlek", uloha: "II/3" });
+U("OK-MFV", [["Jan Kovář", "PIC"]], t(9, 50), t(10, 40), { prist: 4 });
+U("OK-2817", [["Marek Dvořák", "PIC"], ["Eva Malá", "žák"]], t(10, 12), t(10, 18), { ucel: "výcvik", zpusob: "naviják", uloha: "IU/3", pob: 2 });
+U("OK-CWF", [["Petr Hora", "PIC"]], t(9, 30), t(9, 52), { odkud: "LKVO" });
+U("OK-CWF", [["Petr Hora", "PIC"]], t(8, 40), t(9, 5), { kam: "LKVO", poznamka: "tankování" });
+LETY.push(L({ r: "OK-2728", stav: "ZRUSEN", ucel: "výcvik", zpusob: "naviják", pob: 2, posadka: [["Marek Dvořák", "PIC"], ["Kateřina Dušková", "žák"]], duvod: "technická závada", zruseno: t(9, 12) }));
+
+let vybrany = null;   // id letu v detailu
+let posunDne = 0;     // 0 = dnes, −1 = včera…
+let cteni = false;    // přihlášení jen ke čtení
+const dnes = () => posunDne === 0;
+/* jiný den: v maketě stejné ukončené lety (ukázka), pásky jen u dneška */
+const letyDne = () => (dnes() ? LETY : LETY.filter((l) => l.stav === "UKONCEN" || l.stav === "ZRUSEN"));
+
+/* ============================== pásky ============================== */
+function varovani(l) {
+  if (l.stav !== "VZDUCH") return "";
+  const a = letadlo(l.r);
+  if (a.max && ted() - l.vzlet > a.max * 60) return `Přes maximální dobu letu letadla (${a.max / 60} h)`;
+  if (ted() > TE) return "Po konci občanského soumraku (TE 17:06)";
+  return "";
+}
+function platce(l) {
+  const d = l.posadka.find(([, f]) => f === "žák" || f === "přezkoušený");
+  return (d || l.posadka[0] || [""])[0];
+}
+function stitky(l) {
+  const s = [l.ucel, l.zpusob, `POB ${l.pob}`, l.uloha];
+  return `<div class="box stitky">${s.map((x, i) => `<span class="stitek"${i === 3 && x ? ` title="${esc(ulohaNazev(x))}"` : ""}>${esc(x)}</span>`).join("")}</div>`;
+}
+function posadkaHtml(l) {
+  const o = l.posadka.length ? l.posadka : [["— pilot —", ""]];
+  return `<div class="box posadka">${o.map(([j, f]) => `<span${j.startsWith("—") ? ' class="prazdna"' : ""}>${esc(j)} <i class="funkce">${esc(f)}</i></span>`).join("")}</div>`;
+}
+const misto = (k) => (k === MOJE ? `<span>${k}</span>` : `<b>${k}</b>`);
+function pasekHtml(l, { druhy = false, bezAkci = false } = {}) {
+  const a = letadlo(l.r) || { typ: "" };
+  const v = varovani(l);
+  const stav = { ROZ: "rozpracovany", PLAN: "plan", VZDUCH: v ? "problem" : "vzduch" }[l.stav] || "";
+  let cas = "", akce = "";
+  if (l.stav === "UKONCEN") {
+    cas = `<span>${hm(l.vzlet)}–${hm(l.pristani)}</span><span><b>${doba(minuty(l))}</b> <span class="male seda">${l.prist}×</span></span>`;
+  } else if (l.stav === "ZRUSEN") {
+    cas = `<span class="male seda">zrušen</span>`;
+  } else if (l.stav === "VZDUCH") {
+    cas = `<span class="stopky" data-vzlet="${l.vzlet}">${stopky(ted() - l.vzlet)}</span><span class="male seda">↑ ${hm(l.vzlet)}</span>`;
+    const tg = !a.kluzak && !l.kluzakLet;
+    akce = (tg ? `<button class="tl obrys jen-zapis" data-akce="tg" data-id="${l.id}" title="Dotek a vzlet (touch and go)">T&amp;G ${l.tg}</button>` : "")
+      + `<button class="tl zelene jen-zapis" data-akce="pristal" data-id="${l.id}">Přistál</button>`;
+  } else if (l.stav === "PLAN") {
+    cas = `<span class="male seda">plán</span><span class="male seda" title="Založil ${esc(l.zalozil)}">zal. ${hm(l.zalozeno)}</span>`;
+    akce = druhy ? `<span class="spolecne">vzlétne spolu s kluzákem</span>` : `<button class="tl modre jen-zapis" data-akce="vzlet" data-id="${l.id}">Vzlet</button>`;
+  } else {
+    cas = `<span class="male seda">nový let</span>`;
+  }
+  const panel = bezAkci || l.stav === "ROZ";
+  if (panel && (l.stav === "VZDUCH" || l.stav === "PLAN")) akce = "";
+  const typ = l.kluzakLet ? `${esc(a.typ)} · <span class="vlecna">vlečná</span>` : esc(a.typ);
+  return `<div class="pasek ${stav}${panel ? " v-panelu" : vybrany === l.id ? " vybrany" : ""}" data-let="${l.id}">
+    <div class="box"><span class="rejstrik">${esc(l.r || "OK-…")}</span><span class="typ">${typ}</span></div>
+    ${posadkaHtml(l)}${stitky(l)}
+    <div class="box trasa" title="${esc(`${l.odkud} ${LETISTE[l.odkud] || ""} → ${l.kam} ${LETISTE[l.kam] || ""}${l.stav === "UKONCEN" ? "" : " (plán)"}`)}">${l.odkud === MOJE && l.kam === MOJE ? "" : `${misto(l.odkud)}<span>→ ${misto(l.kam)}</span>`}</div>
+    <div class="box cas cisla">${cas}</div>
+    ${panel && !akce ? "" : `<div class="box akce">${akce}</div>`}
+    ${v ? `<div class="varovani">${esc(v)}</div>` : ""}
+  </div>`;
+}
+function dvojice(lety) {
+  const byId = new Map(LETY.map((l) => [l.id, l]));
+  return lety.filter((l) => !l.kluzakLet || !lety.includes(byId.get(l.kluzakLet)))
+    .map((l) => { const v = l.vlecna && byId.get(l.vlecna); return v && v.stav === l.stav ? [l, v] : [l]; });
+}
+function renderPasky() {
+  const vzduch = dvojice(LETY.filter((l) => l.stav === "VZDUCH").sort((a, b) => a.vzlet - b.vzlet));
+  const plan = dvojice(LETY.filter((l) => l.stav === "PLAN"));
+  const skup = (d) => d.length === 1 ? pasekHtml(d[0])
+    : `<div class="dvojice">${pasekHtml(d[0])}${pasekHtml(d[1], { druhy: true })}</div>`;
+  const pocet = (d) => d.reduce((s, x) => s + x.length, 0);
+  document.getElementById("pasky").innerHTML =
+    `<div class="sekce"><span class="nadpis">Ve vzduchu ${pocet(vzduch)}</span><span class="vpravo">nejdéle letící nahoře</span></div>`
+    + (vzduch.length ? vzduch.map(skup).join("") : `<div class="prazdne">Nikdo neletí.</div>`)
+    + `<div class="sekce"><span class="nadpis">Naplánované ${pocet(plan)}</span><span class="vpravo">v pořadí založení</span></div>`
+    + (plan.length ? plan.map(skup).join("") : `<div class="prazdne">Nic naplánováno.</div>`);
+}
+
+/* ============================== řada letadel ============================== */
+function stavLetadla(r) {
+  if (LETY.some((l) => l.r === r && l.stav === "VZDUCH")) return "vzduch";
+  if (LETY.some((l) => l.r === r && l.stav === "PLAN")) return "plan";
+  return "";
+}
+/* kde letadlo je = místo posledního přistání (dnes); jiné než moje letiště se ukáže */
+function kdeJe(r) {
+  const p = LETY.filter((l) => l.r === r && l.stav === "UKONCEN").sort((a, b) => b.pristani - a.pristani)[0];
+  return p && p.kam !== MOJE ? p.kam : "";
+}
+function renderFlotila() {
+  const kat = [...new Set(LETADLA.map((a) => a.kat))];
+  document.getElementById("flotila").innerHTML =
+    `<button class="tl-novy jen-zapis" data-akce="novy">+ Nový let<kbd>N</kbd></button>`
+    + kat.map((k) => `<div class="skupina"><span class="skupina-nazev">${k}</span>${LETADLA.filter((a) => a.kat === k).map((a) => {
+      const s = a.mimo ? "mimo" : stavLetadla(a.r);
+      const uk = LETY.filter((l) => l.r === a.r && l.stav === "UKONCEN");
+      const jinde = kdeJe(a.r);
+      let radek2;
+      if (a.mimo) radek2 = "mimo provoz";
+      else if (s === "vzduch") { const l = LETY.find((x) => x.r === a.r && x.stav === "VZDUCH"); radek2 = `letí <span data-vzlet-hm="${l.vzlet}">${hm(ted() - l.vzlet).replace(/^0/, "")}</span>`; }
+      else if (s === "plan") radek2 = "naplánován";
+      else radek2 = uk.length ? `${uk.length}× ${doba(uk.reduce((x, l) => x + minuty(l), 0))}` : "dnes nelétal";
+      if (jinde && s !== "vzduch") radek2 += ` · <span class="jinde">na ${jinde}</span>`;
+      const title = `${a.typ}${a.vlecna ? " · vlečná" : ""} · ${a.mimo ? "mimo provoz" : s === "vzduch" ? "letí – ukázat pásek" : s === "plan" ? "naplánovaný – ukázat pásek" : cteni ? "na zemi" : "na zemi – nový let"}`;
+      return `<button class="lod ${s}" data-lod="${a.r}" title="${title}"><b>${a.r}</b><span>${radek2}</span></button>`;
+    }).join("")}</div>`).join("");
+}
+
+/* ============================== deník ============================== */
+function trasaDeniku(l) { return l.odkud !== MOJE || l.kam !== MOJE ? `${l.odkud} → ${l.kam}` : ""; }
+function renderDenik() {
+  const lety = letyDne();
+  const uk = lety.filter((l) => l.stav === "UKONCEN").sort((a, b) => b.pristani - a.pristani);
+  const zr = lety.filter((l) => l.stav === "ZRUSEN");
+  const radek = (l) => {
+    const zrus = l.stav === "ZRUSEN";
+    const [p, d] = l.posadka;
+    const osoby = esc(p[0]) + (d ? ` · ${esc(d[0])} <i class="funkce">${esc(d[1])}</i>` : "");
+    return `<div class="radek${zrus ? " zruseny" : ""}${vybrany === l.id ? " vybrany" : ""}" data-let="${l.id}" title="${esc(l.posadka.map(([j, f]) => j + " (" + f + ")").join(", "))}">
+      <span class="r">${esc(l.r)}</span><span>${osoby}</span>
+      <span class="cisla">${l.vzlet ? hm(l.vzlet) : ""}</span><span class="cisla">${l.pristani ? hm(l.pristani) : ""}</span>
+      <span class="cisla vpr doba">${zrus ? "" : doba(minuty(l))}</span><span class="cisla vpr">${zrus ? "" : l.prist}</span>
+    </div>`;
+  };
+  const min = uk.reduce((s, l) => s + minuty(l), 0);
+  const prist = uk.reduce((s, l) => s + l.prist, 0);
+  document.getElementById("denikSouhrn").textContent = `ukončené ${uk.length} · zrušené ${zr.length}`;
+  document.getElementById("denik").innerHTML =
+    `<div class="radek zahlavi"><span>Letadlo</span><span>Posádka</span><span>↑</span><span>↓</span><span class="vpr">Doba</span><span class="vpr">P</span></div>`
+    + uk.map(radek).join("")
+    + (zr.length ? `<div class="radek mezititulek"><span class="nadpis">Zrušené ${zr.length}</span></div>` + zr.map(radek).join("") : "")
+    + `<div class="denik-pata"><span>Lety <b class="cisla">${uk.length}</b></span><span>Doba <b class="cisla">${doba(min)}</b></span><span>Přistání <b class="cisla">${prist}</b></span><span class="vpravo-auto">doba = účtovaná, nejméně 1 minuta</span></div>`;
+}
+
+/* ============================== informace ============================== */
+const METAR = {
+  LKPR: { stari: 21, metar: "METAR LKPR 071400Z 24012G22KT 9999 FEW040 SCT050 14/06 Q1018 NOSIG",
+    taf: "TAF LKPR 071100Z 0712/0812 24012KT 9999 SCT040\n  TEMPO 0714/0718 24015G25KT\n  BECMG 0721/0723 VRB03KT\n  PROB30 0802/0806 4000 BR BKN008",
+    dek: [["Vítr", "240° 12 kt, nárazy 22 kt"], ["Dohlednost", "10 km a víc"], ["Oblačnost", "FEW 4000 ft · SCT 5000 ft"], ["Teplota / rosný bod", "14 °C / 6 °C"], ["QNH", "1018 hPa"]] },
+  LKKB: { stari: 9, metar: "METAR LKKB 071400Z 23010KT 9999 SCT045 15/05 Q1018",
+    taf: "TAF LKKB 071100Z 0712/0806 23010KT 9999 SCT045", dek: [["Vítr", "230° 10 kt"], ["Dohlednost", "10 km a víc"], ["Oblačnost", "SCT 4500 ft"], ["Teplota / rosný bod", "15 °C / 5 °C"], ["QNH", "1018 hPa"]] },
+};
+let stanice = "LKPR";
+/* plachtařský provoz = lety kluzáků a vlečné lety; ostatní (i vlastní lety vlečné, TMG) = motorový */
+const plachtarsky = (l) => letadlo(l.r).kluzak || l.ucel === "vlek";
+function tabulkaLetadel(lety, popisek = () => "") {
+  const radky = [...new Set(lety.map((l) => l.r))].map((r) => {
+    const x = lety.filter((l) => l.r === r);
+    return [r, x.reduce((s, l) => s + minuty(l), 0), x.reduce((s, l) => s + l.prist, 0), popisek(r)];
+  }).sort((p, q) => LETADLA.findIndex((x) => x.r === p[0]) - LETADLA.findIndex((x) => x.r === q[0]));
+  return `<div class="karta-telo"><table class="tab-mala cisla"><tr><th>Letadlo</th><th>Doba</th><th title="Počet přistání">P</th></tr>
+    ${radky.map(([r, min, p, pop]) => `<tr><td class="r">${r}${pop ? ` <span class="male seda">${pop}</span>` : ""}</td><td><b>${doba(min)}</b></td><td>${p}</td></tr>`).join("")}</table></div>`;
+}
+function renderInfo() {
+  const lety = letyDne();
+  const uk = lety.filter((l) => l.stav === "UKONCEN");
+  const kluzaky = uk.filter((l) => letadlo(l.r).kluzak), vleky = uk.filter((l) => l.ucel === "vlek");
+  const motor = uk.filter((l) => !plachtarsky(l));
+  const soucet = (x) => doba(x.reduce((s, l) => s + minuty(l), 0));
+  const pristani = (x) => x.reduce((s, l) => s + l.prist, 0);
+  const m = METAR[stanice];
+  document.getElementById("info").innerHTML = `
+    <div class="karta"><div class="karta-hlava"><span class="nadpis">Plachtařský provoz</span></div>
+      <div class="cisla-dne cisla"><div><b>${pristani(kluzaky)}</b><span title="Počet přistání">P</span></div><div><b>${soucet(kluzaky)}</b><span>doba letů</span></div><div><b>${soucet(vleky)}</b><span>doba vleků</span></div></div>
+      ${tabulkaLetadel([...kluzaky, ...vleky], (r) => (letadlo(r).vlecna ? "vleky" : ""))}</div>
+    <div class="karta"><div class="karta-hlava"><span class="nadpis">Motorový provoz</span></div>
+      <div class="cisla-dne cisla"><div><b>${pristani(motor)}</b><span title="Počet přistání">P</span></div><div><b>${soucet(motor)}</b><span>doba letů</span></div></div>
+      ${tabulkaLetadel(motor)}</div>
+    <div class="karta"><div class="karta-hlava"><span class="nadpis">Počasí</span><span class="stitek-pozdeji">později</span><span class="vpravo">ukázka</span></div>
+      <div class="karta-telo">
+        <div class="zalozky">${Object.keys(METAR).map((k) => `<button data-stanice="${k}" class="${k === stanice ? "zap" : ""}">${k}</button>`).join("")}<span class="male seda vpravo-auto">METAR před ${m.stari} min</span></div>
+        <div class="surova">${esc(m.metar)}</div>
+        <dl class="meteo">${m.dek.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl>
+        <div class="male seda">TAF</div>
+        <div class="surova">${esc(m.taf)}</div>
+      </div></div>
+    <div class="karta misto"><div class="karta-hlava"><span class="nadpis">Další zdroje</span><span class="vpravo">místo pro budoucí karty</span></div>
+      <div class="karta-telo">NOTAM · AUP/UUP (aktivace prostorů) · GAMET · radar srážek · stav letadel (údržba)</div></div>`;
+}
+
+/* ============================== časová osa ============================== */
+/* osa podle dne: hodinu před začátkem občanského soumraku až hodinu po jeho konci (vždy obsáhne
+   i všechny lety dne – v maketě jsou všechny uvnitř) */
+const OSA_OD = TB - 3600, OSA_DO = TE + 3600;
+const pct = (s) => `${(((Math.min(Math.max(s, OSA_OD), OSA_DO) - OSA_OD) / (OSA_DO - OSA_OD)) * 100).toFixed(2)}%`;
+function renderOsa() {
+  const lety = letyDne().filter((l) => l.stav === "UKONCEN" || l.stav === "VZDUCH");
+  const letadla = LETADLA.filter((a) => lety.some((l) => l.r === a.r));
+  const znacky = dnes() ? `<span class="osa-znacka" style="--od:${pct(ted())}"></span>` : "";
+  const popis = { "p-obc": "občanský soumrak", "p-nau": "nautický soumrak", "p-ast": "astronomický soumrak", "p-noc": "noc" };
+  const pasma = [["p-noc", OSA_OD, AR], ["p-ast", AR, NR], ["p-nau", NR, TB], ["p-obc", TB, SR],
+    ["p-obc", SS, TE], ["p-nau", TE, NV], ["p-ast", NV, AV], ["p-noc", AV, OSA_DO]]
+    .filter(([, od, kon]) => kon > OSA_OD && od < OSA_DO)
+    .map(([k, od, kon]) => `<span class="osa-pasmo ${k}" style="--od:${pct(od)};--do:${pct(kon)}" title="${popis[k]} ${hm(od)}–${hm(kon)} UTC"></span>`).join("");
+  const hodiny = [], cary = [];
+  for (let h = Math.ceil(OSA_OD / 3600); h * 3600 <= OSA_DO; h++) {
+    hodiny.push(`<span class="osa-hodina cisla" style="--od:${pct(t(h, 0))}">${d2(h)}</span>`);
+    cary.push(`<span class="osa-cara" style="--od:${pct(t(h, 0))}"></span>`);
+  }
+  document.getElementById("osaTelo").innerHTML =
+    `<div class="osa-vrstva">${pasma}${cary.join("")}</div>`
+    + `<div class="osa-radek osa-stupnice"><span></span><div class="osa-draha">${hodiny.join("")}</div></div>`
+    + letadla.map((a) => `<div class="osa-radek"><span class="r">${a.r}</span><div class="osa-draha">${znacky}${lety.filter((l) => l.r === a.r).map((l) => {
+      const konec = l.pristani || ted();
+      const cls = l.stav === "VZDUCH" ? (varovani(l) ? "problem" : "vzduch") : l.ucel === "vlek" ? "vlek" : "";
+      const popis = `${l.r} ${hm(l.vzlet)}–${l.pristani ? hm(l.pristani) : "letí"} · ${l.posadka.map(([j]) => j).join(", ")}${l.ucel ? " · " + l.ucel : ""}`;
+      return `<button class="osa-let ${cls}${vybrany === l.id ? " vybrany" : ""}" style="--od:${pct(l.vzlet)};--do:${pct(konec)}" data-let="${l.id}" title="${esc(popis)}"></button>`;
+    }).join("")}</div></div>`).join("");
+}
+
+/* ============================== detail letu ============================== */
+const UPRAVY = [
+  ["14:13", "Eva Časoměřič", "vzlet 14:12:40 (oba lety vleku)"],
+  ["13:58", "Marek Dvořák", "úloha IU/4 → IU/6"],
+  ["13:55", "Marek Dvořák", "založil let (naplánovaný)"],
+];
+function pole(popisek, hodnota, upr = true) {
+  return `<div class="pole${upr && !cteni ? " upravitelne" : ""}"><div class="popisek">${popisek}</div><div class="hodnota">${hodnota}</div></div>`;
+}
+function renderDetail() {
+  const l = LETY.find((x) => x.id === vybrany);
+  const el = document.getElementById("detail");
+  if (!l) { el.classList.remove("otevreny"); return; }
+  const mistoPole = (k) => `${k} <span class="male seda">${LETISTE[k] || ""}</span>`;
+  const posadka = l.posadka.map(([j, f]) => pole(f === "PIC" ? "Pilot (PIC)" : f[0].toUpperCase() + f.slice(1), esc(j))).join("");
+  let akce = "";
+  if (l.stav === "VZDUCH") akce = (!letadlo(l.r).kluzak && !l.kluzakLet ? `<button class="tl obrys jen-zapis" data-akce="tg" data-id="${l.id}">T&amp;G ${l.tg}</button>` : "") + `<button class="tl zelene jen-zapis" data-akce="pristal" data-id="${l.id}">Přistál</button>`;
+  if (l.stav === "PLAN") akce = `<button class="tl modre jen-zapis" data-akce="vzlet" data-id="${l.id}">Vzlet</button>`;
+  akce += l.stav === "ZRUSEN" ? `<button class="tl svetle jen-zapis">Obnovit let</button>` : `<button class="tl cervene jen-zapis">Zrušit let…</button>`;
+  el.innerHTML = `
+    <div class="panel-telo">
+      <div class="detail-hlava">${pasekHtml(l, { bezAkci: true })}<button class="ikona" data-akce="zavrit" title="Zavřít (Esc)">×</button></div>
+      <div class="blok"><div class="blok-hlava"><span class="nadpis">Posádka a let</span></div><div class="pole-mrizka">
+        ${posadka}${pole("Účel", l.ucel || "normální", false)}${pole("Způsob vzletu", l.zpusob || "vlastní", false)}${pole("POB", l.pob, !l.ucel)}${pole("Úloha", esc(ulohaNazev(l.uloha)) || "—")}
+      </div></div>
+      <div class="blok"><div class="blok-hlava"><span class="nadpis">Časy a místa (UTC)</span></div><div class="pole-mrizka cisla">
+        ${pole("Vzlet", l.vzlet ? hms(l.vzlet) : "—", l.stav !== "PLAN")}${pole("Místo vzletu", mistoPole(l.odkud))}
+        ${pole("Přistání", l.pristani ? hms(l.pristani) : "—", l.stav === "UKONCEN")}${pole(l.stav === "UKONCEN" ? "Místo přistání" : "Místo přistání (plán)", mistoPole(l.kam))}
+        ${l.stav === "UKONCEN" ? pole("Přistání celkem", l.prist) + pole("Doba (účtovaná)", doba(minuty(l)), false) : pole("T&amp;G", l.tg, false) + pole("Doba", l.stav === "VZDUCH" ? "běží" : "—", false)}
+      </div></div>
+      <div class="blok"><div class="blok-hlava"><span class="nadpis">Platba a poznámka</span></div><div class="pole-mrizka">
+        ${pole("Plátce", esc(platce(l)))}${pole("Poznámka", l.poznamka ? esc(l.poznamka) : '<span class="seda">přidat…</span>')}
+      </div></div>
+      <div class="blok"><div class="blok-hlava"><span class="nadpis">Evidence</span></div><div class="pole-mrizka">
+        ${pole("Založeno", "7. 10. 13:55 · Marek Dvořák", false)}${pole("Verze záznamu", "3", false)}${l.stav === "ZRUSEN" ? pole("Důvod zrušení", esc(l.duvod), false) : ""}
+      </div>
+      <details class="historie"><summary>Historie – ${UPRAVY.length} úpravy</summary><ol>${UPRAVY.map(([c, k, co]) => `<li><b class="cisla">${c}</b> · ${k} · ${co}</li>`).join("")}</ol></details></div>
+    </div>
+    <div class="panel-pata">${akce}<span class="chybi">${cteni ? "Jen ke čtení – úpravy po přihlášení" : "Esc zavře · deska zůstává ovladatelná"}</span></div>`;
+  el.classList.add("otevreny");
+}
+function otevritDetail(id) {
+  zavritNovy();
+  vybrany = id;
+  renderVse();
+}
+function upravitPole(p) {
+  if (p.querySelector(".uprava")) return;
+  const h = p.querySelector(".hodnota");
+  const puvodni = h.innerHTML, text = h.textContent.replace("přidat…", "");
+  h.innerHTML = `<div class="uprava"><input value="${esc(text)}"><button data-u="ok">Uložit</button><button data-u="ne">Zrušit</button></div>`;
+  const i = h.querySelector("input");
+  i.focus(); i.select();
+  const konec = (ulozit) => { h.innerHTML = ulozit ? esc(i.value) || '<span class="seda">přidat…</span>' : puvodni; };
+  i.addEventListener("keydown", (e) => { if (e.key === "Enter") konec(true); if (e.key === "Escape") { e.stopPropagation(); konec(false); } });
+  h.querySelector("[data-u=ok]").onclick = (e) => { e.stopPropagation(); konec(true); };
+  h.querySelector("[data-u=ne]").onclick = (e) => { e.stopPropagation(); konec(false); };
+}
+
+/* ============================== nový let ============================== */
+let nf = null;
+const UCELY = [["", "Normální"], ["výcvik", "Výcvik"], ["sólo", "Sólo"], ["přezk.", "Přezkoušení"]];
+const DRUHA = { "výcvik": "žák", "sólo": "dozor", "přezk.": "přezkoušený" };
+const RYCHLE = {
+  pic: { "": ["Já", "Tomáš Bílek", "Lucie Černá", "Jan Kovář"], "výcvik": ["Marek Dvořák", "Petr Hora", "Marek Novotný"], "sólo": ["Jan Kaplan", "Ivo Sýkora", "Eva Malá"], "přezk.": ["Karel Říha"] },
+  "žák": ["Eva Malá", "David Malý", "Jan Kaplan", "Ivo Sýkora"], dozor: ["Marek Dvořák", "Marek Novotný", "Petr Hora"], "přezkoušený": ["Jiří Vlk", "Ondřej Kos"],
+  vlekar: ["Pavel Brož", "Jan Kovář"],
+};
+function otevritNovy(r = null) {
+  if (cteni || !dnes()) return;
+  vybrany = null;
+  nf = { r, ucel: "", zpusob: "", pic: null, druha: null, pob: 1, osnova: "IU", uloha: "", vlecna: "OK-CUO 78", vlekar: "Pavel Brož", probehly: false };
+  renderVse();
+  document.getElementById("novy").classList.add("otevreny");
+}
+function zavritNovy() { nf = null; document.getElementById("novy").classList.remove("otevreny"); }
+function chybi() {
+  if (!nf) return [];
+  const a = letadlo(nf.r), c = [];
+  if (!a) c.push("letadlo");
+  if (a?.kluzak && !nf.zpusob) c.push("způsob vzletu");
+  if (!nf.pic) c.push("pilot");
+  if (DRUHA[nf.ucel] && !nf.druha) c.push(DRUHA[nf.ucel]);
+  if (nf.ucel && nf.ucel !== "přezk." && a?.kluzak && !nf.uloha) c.push("úloha");
+  return c;
+}
+function rozpracovany() {
+  const posadka = [];
+  if (nf.pic) posadka.push([nf.pic === "Já" ? "Tomáš Mráz" : nf.pic, "PIC"]);
+  if (DRUHA[nf.ucel] && nf.druha) posadka.push([nf.druha, DRUHA[nf.ucel]]);
+  const pob = DRUHA[nf.ucel] && DRUHA[nf.ucel] !== "dozor" ? 2 : nf.pob;
+  return { id: 0, r: nf.r, stav: "ROZ", ucel: nf.ucel, zpusob: nf.zpusob, uloha: nf.uloha, pob, posadka, odkud: MOJE, kam: MOJE, tg: 0 };
+}
+function cipy(role, vybrana, nabidka) {
+  const seznam = nabidka.includes(vybrana) || !vybrana ? nabidka : [vybrana, ...nabidka];
+  return `<div class="cipy">${seznam.map((o) => `<button class="cip${o === vybrana ? " zap" : ""}" data-osoba="${esc(o)}" data-role="${role}">${esc(o)}</button>`).join("")}
+    <span class="hledat"><input placeholder="Hledat…" data-hledat="${role}" autocomplete="off"><span class="naseptavac" hidden></span></span></div>`;
+}
+function blok(nazev, telo, vyberte = false) {
+  return `<div class="blok"><div class="blok-hlava"><span class="nadpis">${nazev}</span>${vyberte ? '<span class="vyberte">vyberte</span>' : ""}</div><div class="blok-telo">${telo}</div></div>`;
+}
+function renderNovy() {
+  const el = document.getElementById("novy");
+  if (!nf) return;
+  const a = letadlo(nf.r);
+  const c = chybi();
+  const kat = [...new Set(LETADLA.map((x) => x.kat))];
+  const dlazdice = kat.map((k) => `<div class="dlazdice-nadpis">${k}</div><div class="dlazdice">${LETADLA.filter((x) => x.kat === k).map((x) => {
+    const s = x.mimo ? "mimo" : stavLetadla(x.r);
+    return `<button class="dl ${s}${x.r === nf.r ? " zap" : ""}" data-dl="${x.r}" ${x.mimo ? 'title="Mimo provoz"' : ""}><b>${x.r}</b><span>${x.typ}</span></button>`;
+  }).join("")}</div>`).join("");
+  const druha = DRUHA[nf.ucel];
+  const uloha = nf.ucel && a?.kluzak
+    ? blok("Úloha", `<div class="segmenty">${Object.keys(ULOHY).map((o) => `<button data-osnova="${o}" class="${o === nf.osnova ? "zap" : ""}">${o}</button>`).join("")}</div>
+      <div class="uloha-seznam">${ULOHY[nf.osnova].map((u) => `<button data-uloha="${esc(u)}" class="${nf.uloha && u.startsWith(nf.uloha + " ") ? "zap" : ""}">${esc(u)}</button>`).join("")}</div>`, c.includes("úloha"))
+    : "";
+  const vlek = nf.zpusob === "aerovlek"
+    ? blok("Vlek", `<div class="role"><span class="role-nazev">Vlečná</span><div class="cipy">${["OK-CUO 78", "OK-MFV"].map((v) => `<button class="cip${v === nf.vlecna ? " zap" : ""}" data-vlecna="${v}">${v}</button>`).join("")}</div></div>
+      <div class="role"><span class="role-nazev">Vlekař (PIC vlečné)</span>${cipy("vlekar", nf.vlekar, RYCHLE.vlekar)}</div>`)
+    : "";
+  el.innerHTML = `
+    <div class="panel-hlava"><h2>Nový let</h2><span class="seda">dnes · LKKL Kladno</span><button class="ikona" data-akce="zavrit" title="Zavřít (Esc)">×</button></div>
+    <div class="panel-telo">
+      ${nf.zpusob === "aerovlek"
+        ? `<div class="dvojice">${pasekHtml(rozpracovany())}${pasekHtml({ id: 0, r: nf.vlecna, stav: "ROZ", ucel: "vlek", zpusob: "", uloha: "", pob: 1, tg: 0, odkud: MOJE, kam: MOJE, kluzakLet: 1, posadka: nf.vlekar ? [[nf.vlekar === "Já" ? "Tomáš Mráz" : nf.vlekar, "PIC"]] : [] })}</div>`
+        : pasekHtml(rozpracovany())}
+      <div class="formular">
+        <div>
+          ${blok("Letadlo", dlazdice, !a)}
+          ${blok("Účel a vzlet", `<div class="segmenty">${UCELY.map(([k, n]) => `<button data-ucel="${k}" class="${k === nf.ucel ? "zap" : ""}">${n}</button>`).join("")}</div>
+            ${a?.kluzak ? `<div class="segmenty">${["naviják", "aerovlek"].map((z) => `<button data-zpusob="${z}" class="${z === nf.zpusob ? "zap" : ""}">${z[0].toUpperCase() + z.slice(1)}</button>`).join("")}</div>` : `<span class="male seda">${a ? "vzlet vlastní" : ""}</span>`}`, a?.kluzak && !nf.zpusob)}
+          ${vlek}
+        </div>
+        <div>
+          ${blok("Posádka", `<div class="role"><span class="role-nazev">${nf.ucel === "výcvik" ? "Instruktor (PIC)" : nf.ucel === "přezk." ? "Examinátor (PIC)" : "Pilot (PIC)"}</span>${cipy("pic", nf.pic, RYCHLE.pic[nf.ucel])}</div>
+            ${druha ? `<div class="role"><span class="role-nazev">${druha[0].toUpperCase() + druha.slice(1)}</span>${cipy("druha", nf.druha, RYCHLE[druha])}</div>` : ""}
+            ${!nf.ucel ? `<div class="role"><span class="role-nazev">Osob na palubě (POB)</span><span class="pocet"><button data-pob="-1">−</button><b class="cisla">${nf.pob}</b><button data-pob="1">+</button></span></div>` : ""}`,
+            c.includes("pilot") || c.includes(druha))}
+          ${uloha}
+          ${blok("Další údaje", `<div class="radky-udaju">
+            <div class="radek-udaje"><span>Místo vzletu</span><b>LKKL Kladno ›</b></div>
+            <div class="radek-udaje"><span>Místo přistání</span><b>LKKL Kladno ›</b></div>
+            <div class="radek-udaje"><span>Plátce</span><b>${esc(druha && druha !== "dozor" ? nf.druha || "žák" : nf.pic === "Já" ? "Tomáš Mráz" : nf.pic || "pilot")} ›</b></div>
+            <div class="radek-udaje"><span>Poznámka</span><b class="seda">přidat… ›</b></div></div>`)}
+          ${nf.probehly ? blok("Proběhlý let – časy UTC", `<div class="casy">
+            <label>Vzlet<input value="13:05" class="cisla"></label><label>Přistání<input value="13:40" class="cisla"></label>
+            ${nf.zpusob === "aerovlek" ? `<label>Přistání vlečné<input value="13:12" class="cisla"></label>` : ""}
+            <label>Přistání celkem<input value="1" class="cisla"></label><span class="male seda">doba 35″ · čas se píše z klávesnice</span></div>`) : ""}
+        </div>
+      </div>
+    </div>
+    <div class="panel-pata">
+      ${nf.probehly
+        ? `<button class="tl modre" data-akce="nf-probehly" ${c.length ? "disabled" : ""}>Uložit proběhlý let</button><button class="tl svetle" data-akce="nf-zpet-probehly">Zpět</button>`
+        : `<button class="tl zelene" data-akce="nf-vzlet" ${c.length ? "disabled" : ""}>Vzlet teď</button><button class="tl modre" data-akce="nf-plan" ${c.length ? "disabled" : ""}>Naplánovat</button><button class="tl svetle" data-akce="nf-ukaz-probehly">Proběhlý let…</button>`}
+      <span class="chybi">${c.length ? "Chybí: " + c.join(", ") : "Vše vyplněno"}</span>
+    </div>`;
+}
+function ulozitNovy(stav) {
+  const { id: _, ...z } = rozpracovany();
+  const l = L({ ...z, stav, zalozeno: ted(), zalozil: "Tomáš Mráz" });
+  if (stav === "VZDUCH") l.vzlet = ted();
+  if (stav === "UKONCEN") { l.vzlet = t(13, 5); l.pristani = t(13, 40); }
+  LETY.push(l);
+  if (nf.zpusob === "aerovlek") {
+    const v = L({ r: nf.vlecna, stav, ucel: "vlek", posadka: [[nf.vlekar === "Já" ? "Tomáš Mráz" : nf.vlekar, "PIC"]], kluzakLet: l.id, vzlet: l.vzlet, zalozeno: ted(), zalozil: "Tomáš Mráz" });
+    if (stav === "UKONCEN") v.pristani = t(13, 12);
+    l.vlecna = v.id; LETY.push(v);
+  }
+  const text = { VZDUCH: `${l.r} vzlet ${hms(ted())}`, PLAN: `${l.r} naplánován`, UKONCEN: `${l.r} proběhlý let uložen` }[stav];
+  zavritNovy();
+  oznamit(text, () => { LETY.splice(LETY.findIndex((x) => x.id === l.id), 1); const v = LETY.findIndex((x) => x.kluzakLet === l.id); if (v >= 0) LETY.splice(v, 1); });
+  renderVse();
+}
+
+/* našeptávač osob */
+const bezDiakritiky = (s) => s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+function naseptat(input) {
+  const box = input.nextElementSibling;
+  const q = bezDiakritiky(input.value.trim());
+  if (!q) { box.hidden = true; return; }
+  const n = OSOBY.filter((o) => bezDiakritiky(o).split(" ").some((c) => c.startsWith(q)) || bezDiakritiky(o).startsWith(q)).slice(0, 8);
+  box.innerHTML = n.length ? n.map((o, i) => `<button class="${i === 0 ? "zvyrazneny" : ""}" data-osoba="${esc(o)}" data-role="${input.dataset.hledat}">${esc(o)}</button>`).join("") : `<div class="zadny">Nikdo neodpovídá.</div>`;
+  box.hidden = false;
+}
+
+/* ============================== akce letu, Zpět ============================== */
+let zpet = null, zpetCasovac = null;
+function oznamit(text, vratit) {
+  const el = document.getElementById("oznameni");
+  document.getElementById("oznameniText").textContent = text;
+  const pruh = document.getElementById("ubyva");
+  pruh.style.transition = "none"; pruh.style.width = "100%";
+  requestAnimationFrame(() => requestAnimationFrame(() => { pruh.style.transition = "width 6s linear"; pruh.style.width = "0"; }));
+  el.classList.add("otevrene");
+  zpet = vratit;
+  clearTimeout(zpetCasovac);
+  zpetCasovac = setTimeout(() => { el.classList.remove("otevrene"); zpet = null; }, 6000);
+}
+function provestZpet() {
+  if (!zpet) return;
+  zpet(); zpet = null;
+  document.getElementById("oznameni").classList.remove("otevrene");
+  renderVse();
+}
+function akceLetu(akce, id) {
+  if (cteni) return;
+  const l = LETY.find((x) => x.id === id);
+  if (!l) return;
+  const dvoj = [l, LETY.find((x) => x.id === l.vlecna)].filter(Boolean);
+  const puvodni = dvoj.map((x) => ({ ...x }));
+  const obnovit = () => puvodni.forEach((p) => Object.assign(LETY.find((x) => x.id === p.id), p));
+  if (akce === "vzlet") { dvoj.forEach((x) => { x.stav = "VZDUCH"; x.vzlet = ted(); }); oznamit(`${dvoj.map((x) => x.r).join(" + ")} vzlet ${hms(ted())}`, obnovit); }
+  if (akce === "tg") { l.tg++; oznamit(`${l.r} T&G ${l.tg} · ${hms(ted())}`, () => Object.assign(l, puvodni[0])); }
+  if (akce === "pristal") {
+    const p = { ...l };
+    l.stav = "UKONCEN"; l.pristani = ted(); l.prist = l.tg + 1;
+    oznamit(`${l.r} přistání ${hms(ted())}`, () => Object.assign(l, p));
+  }
+  renderVse();
+}
+
+/* ============================== den, přihlášení ============================== */
+function nastavitDen(posun) {
+  posunDne = Math.min(0, posun);
+  const d = new Date(Date.UTC(2026, 9, 7 + posunDne));
+  const text = `${DNY[d.getUTCDay()]} ${d.getUTCDate()}. ${d.getUTCMonth() + 1}. ${d.getUTCFullYear()}`;
+  document.getElementById("denText").textContent = text;
+  document.getElementById("denVpred").disabled = dnes();
+  document.getElementById("app").dataset.den = dnes() ? "dnes" : "jiny";
+  document.getElementById("pruhDenText").textContent = `Prohlížíte ${text.toLowerCase()} – deník dne (pásky jsou jen u dneška; v maketě stejné lety jako dnes)`;
+  vybrany = null; zavritNovy();
+  renderVse();
+}
+function nastavitCteni(ano) {
+  cteni = ano;
+  const app = document.getElementById("app");
+  if (ano) app.dataset.cteni = ""; else delete app.dataset.cteni;
+  document.querySelectorAll("#prihlaseni button").forEach((x) => x.classList.toggle("zap", (x.dataset.p === "cteni") === ano));
+  zavritNovy();
+  renderVse();
+}
+
+/* ============================== vykreslení a události ============================== */
+function renderVse() { renderFlotila(); renderPasky(); renderDenik(); renderInfo(); renderOsa(); renderDetail(); renderNovy(); }
+
+document.getElementById("app").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-akce]");
+  if (!e.target.closest("#nabidka, #tlUzivatel")) document.getElementById("nabidka").classList.remove("otevrena");
+  if (b) {
+    e.stopPropagation();
+    const id = Number(b.dataset.id), a = b.dataset.akce;
+    if (a === "novy") return otevritNovy();
+    if (a === "zavrit") { vybrany = null; zavritNovy(); return renderVse(); }
+    if (a === "nf-vzlet") return ulozitNovy("VZDUCH");
+    if (a === "nf-plan") return ulozitNovy("PLAN");
+    if (a === "nf-probehly") return ulozitNovy("UKONCEN");
+    if (a === "nf-ukaz-probehly") { nf.probehly = true; return renderNovy(); }
+    if (a === "nf-zpet-probehly") { nf.probehly = false; return renderNovy(); }
+    return akceLetu(a, id);
+  }
+  const c = e.target;
+  if (c.closest("#tlUzivatel")) return document.getElementById("nabidka").classList.toggle("otevrena");
+  if (c.closest("#tlInfo")) return document.getElementById("info").classList.toggle("otevrena");
+  if (c.closest("#tlPrihlasit")) return nastavitCteni(false);
+  if (c.closest("#denZpet")) return nastavitDen(posunDne - 1);
+  if (c.closest("#denVpred")) return nastavitDen(posunDne + 1);
+  if (c.closest("#tlDnes")) return nastavitDen(0);
+  if (c.closest("#osaHlava")) {
+    const osa = document.getElementById("osa");
+    osa.classList.toggle("sbalena");
+    document.getElementById("osaNadpis").textContent = `${osa.classList.contains("sbalena") ? "▸" : "▾"} Časová osa dne`;
+    return;
+  }
+  const rz = c.closest("#rezimAplikace [data-r]");
+  if (rz) { nastavitRezim(rz.dataset.r); document.querySelectorAll("#rezimAplikace button").forEach((x) => x.classList.toggle("zap", x === rz)); return; }
+  const st = c.closest("[data-stanice]");
+  if (st) { stanice = st.dataset.stanice; return renderInfo(); }
+  const lod = c.closest("[data-lod]");
+  if (lod) {
+    const r = lod.dataset.lod, a = letadlo(r);
+    if (a.mimo) return;
+    const l = LETY.find((x) => x.r === r && (x.stav === "VZDUCH" || x.stav === "PLAN"));
+    if (l) { if (!dnes()) nastavitDen(0); otevritDetail(l.id); document.querySelector(`.pasek[data-let="${l.id}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); return; }
+    return otevritNovy(r);
+  }
+  const p = c.closest(".pole.upravitelne");
+  if (p) return upravitPole(p);
+  /* formulář nového letu */
+  if (nf && c.closest("#novy")) {
+    const d = c.closest("[data-dl]");
+    if (d) { if (letadlo(d.dataset.dl).mimo) return; nf.r = d.dataset.dl; if (!letadlo(nf.r).kluzak) { nf.zpusob = ""; nf.uloha = ""; } return renderNovy(); }
+    const u = c.closest("[data-ucel]");
+    if (u) { nf.ucel = u.dataset.ucel; nf.druha = null; nf.uloha = ""; if (nf.pic && !RYCHLE.pic[nf.ucel].includes(nf.pic)) nf.pic = null; return renderNovy(); }
+    const z = c.closest("[data-zpusob]");
+    if (z) { nf.zpusob = z.dataset.zpusob; return renderNovy(); }
+    const o = c.closest("[data-osoba]");
+    if (o) { const k = o.dataset.role === "pic" ? "pic" : o.dataset.role === "vlekar" ? "vlekar" : "druha"; nf[k] = nf[k] === o.dataset.osoba && k !== "vlekar" ? null : o.dataset.osoba; return renderNovy(); }
+    const os = c.closest("[data-osnova]");
+    if (os) { nf.osnova = os.dataset.osnova; return renderNovy(); }
+    const ul = c.closest("[data-uloha]");
+    if (ul) { nf.uloha = ul.dataset.uloha.split(" ")[0]; return renderNovy(); }
+    const v = c.closest("[data-vlecna]");
+    if (v) { nf.vlecna = v.dataset.vlecna; return renderNovy(); }
+    const pob = c.closest("[data-pob]");
+    if (pob) { nf.pob = Math.min(2, Math.max(1, nf.pob + Number(pob.dataset.pob))); return renderNovy(); }
+    return;
+  }
+  const radek = c.closest("[data-let]");
+  if (radek && !radek.closest("#detail")) return otevritDetail(Number(radek.dataset.let));
+});
+document.getElementById("app").addEventListener("input", (e) => { if (e.target.matches("[data-hledat]")) naseptat(e.target); });
+document.getElementById("app").addEventListener("keydown", (e) => {
+  if (!e.target.matches("[data-hledat]")) return;
+  const box = e.target.nextElementSibling, pol = [...box.querySelectorAll("button")];
+  const i = pol.findIndex((x) => x.classList.contains("zvyrazneny"));
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    const n = (i + (e.key === "ArrowDown" ? 1 : -1) + pol.length) % pol.length;
+    pol.forEach((x, k) => x.classList.toggle("zvyrazneny", k === n));
+  }
+  if (e.key === "Enter" && pol[i]) pol[i].click();
+  if (e.key === "Escape") { e.stopPropagation(); box.hidden = true; e.target.value = ""; }
+});
+document.addEventListener("keydown", (e) => {
+  const vPoli = e.target.matches("input, textarea");
+  if (e.key === "Escape") { document.getElementById("nabidka").classList.remove("otevrena"); vybrany = null; zavritNovy(); renderVse(); }
+  if ((e.key === "n" || e.key === "N") && !vPoli && !e.ctrlKey && !e.metaKey) { e.preventDefault(); otevritNovy(); }
+  if (e.key.toLowerCase() === "z" && (e.ctrlKey || e.metaKey) && !vPoli && zpet) { e.preventDefault(); provestZpet(); }
+});
+document.getElementById("tlZpet").onclick = (e) => { e.stopPropagation(); provestZpet(); };
+
+/* hodiny, stopky; osa a varování jednou za 10 s */
+let tik = 0;
+setInterval(() => {
+  const s = ted();
+  document.getElementById("hodiny").textContent = hms(s);
+  const zb = TE - s;
+  document.getElementById("doTE").textContent = zb > 0 ? `do TE ${Math.floor(zb / 3600)}:${d2(Math.floor(zb / 60) % 60)}` : "po TE";
+  document.querySelectorAll("[data-vzlet]").forEach((x) => { x.textContent = stopky(s - Number(x.dataset.vzlet)); });
+  document.querySelectorAll("[data-vzlet-hm]").forEach((x) => { x.textContent = hm(s - Number(x.dataset.vzletHm)).replace(/^0/, ""); });
+  if (++tik % 10 === 0) { renderPasky(); renderOsa(); }
+}, 1000);
+
+/* ============================== ovládání makety ============================== */
+let W = 1920, H = 1080, meritko = "fit";
+function prizpusobit() {
+  const r = document.getElementById("ramec"), s = document.getElementById("scena");
+  const k = meritko === "fit" ? Math.min(1, (window.innerWidth - 32) / W) : 1;
+  r.style.width = W + "px"; r.style.height = H + "px"; r.style.transform = `scale(${k})`;
+  s.style.width = W * k + "px"; s.style.height = H * k + "px";
+  document.getElementById("osa").classList.toggle("sbalena", W < 1500);
+  document.getElementById("osaNadpis").textContent = `${W < 1500 ? "▸" : "▾"} Časová osa dne`;
+}
+function nastavitRezim(r) {
+  document.getElementById("app").dataset.rezim = r;
+  document.querySelectorAll("#rezim-makety button").forEach((x) => x.classList.toggle("zap", x.dataset.r === r));
+}
+function prepinac(id, f) {
+  document.getElementById(id).addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle("zap", x === b));
+    f(b.dataset);
+  });
+}
+prepinac("vel", (d) => { W = +d.w; H = +d.h; prizpusobit(); });
+prepinac("meritko", (d) => { meritko = d.m; prizpusobit(); });
+prepinac("rezim-makety", (d) => nastavitRezim(d.r));
+prepinac("prihlaseni", (d) => nastavitCteni(d.p === "cteni"));
+window.addEventListener("resize", prizpusobit);
+prizpusobit();
+renderVse();
+</script>
+</body>
+</html>
