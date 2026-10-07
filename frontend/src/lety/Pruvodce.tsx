@@ -509,12 +509,17 @@ function Dlazdice({
       onClick={vybrat}
     >
       <span className="dlazdice-rejstrik">{a.rejstrik}</span>
-      <span className="male seda">{typ}</span>
-      {a.leti_od && (
-        <span className="dlazdice-stav cisla">letí {stopky(a.leti_od, ted()).slice(0, -3)}</span>
-      )}
-      {!a.leti_od && a.naplanovan && <span className="dlazdice-stav">naplánován</span>}
-      {a.mimo_provoz && <span className="dlazdice-stav">mimo provoz</span>}
+      <span className="dlazdice-typ male seda">{typ}</span>
+      {/* řádek stavu mají všechny dlaždice (i prázdný) – stejná výška bez ohledu na obsah */}
+      <span className="dlazdice-stav cisla">
+        {a.mimo_provoz
+          ? "mimo provoz"
+          : a.leti_od
+            ? `letí ${stopky(a.leti_od, ted()).slice(0, -3)}`
+            : a.naplanovan
+              ? "naplánován"
+              : " "}
+      </span>
     </button>
   );
 }

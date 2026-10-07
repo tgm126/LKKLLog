@@ -57,6 +57,14 @@
   white-space: nowrap;
 }
 
+/* Typ na jeden řádek (dlouhý se zkrátí „…“) – dlaždice jsou stejně vysoké */
+.dlazdice-typ {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dlazdice-stav {
   color: var(--dlazdice-stav, var(--barva-seda));
   font-size: var(--pismo-s);
