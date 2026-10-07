@@ -13,7 +13,11 @@ def test_prihlaseni_a_ja(klient, osoba, conn):
     assert "httponly" in odpoved.headers["set-cookie"].lower()
     assert "secure" in odpoved.headers["set-cookie"].lower()
     ja = k.get("/api/ja").json()
-    assert ja["osoba_id"] == osoba_id and ja["prava"] == {"admin": True, "smi_odblokovat": False}
+    assert ja["osoba_id"] == osoba_id and ja["prava"] == {
+        "admin": True,
+        "smi_odblokovat": True,
+        "spravuje_osoby": True,
+    }
     assert ja["puvodni"] is None
     radek = conn.execute(
         "SELECT posledni_prihlaseni FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)

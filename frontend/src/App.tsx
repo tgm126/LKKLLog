@@ -10,6 +10,9 @@ import { Tlacitko } from "./komponenty/Tlacitko";
 import { Vstupni } from "./komponenty/Vstupni";
 import { Detail } from "./lety/Detail";
 import { Pruvodce } from "./lety/Pruvodce";
+import { Detail as DetailOsoby } from "./osoby/Detail";
+import { NovaOsoba } from "./osoby/Nova";
+import { SeznamOsob } from "./osoby/Seznam";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
@@ -23,9 +26,12 @@ export function App() {
       <Route element={<Prihlaseny />}>
         <Route element={<SHlavickou />}>
           <Route index element={<Lety />} />
+          <Route path="/osoby" element={<SeznamOsob />} />
         </Route>
         <Route path="/novy-let" element={<Pruvodce />} />
         <Route path="/let/:id" element={<Detail />} />
+        <Route path="/osoba/nova" element={<NovaOsoba />} />
+        <Route path="/osoba/:id" element={<DetailOsoby />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -1,0 +1,63 @@
+# Modul: osoby (správa osob a jejich nastavení)
+
+Navrženo a odsouhlaseno 7. 10. 2026. Maketa `docs/navrhy/osoby-mobil.html` (mobil; desktop
+později). První funkce aplikace závislá na právu.
+
+## 1. Rozsah
+- Záložka **OSOBY** v menu – jen pro osoby s právem **spravuje osoby** (a admina).
+- **Seznam osob:** hledání (jméno, e-mail, telefon, číslo člena), filtr Aktivní / S účtem /
+  Neaktivní / Vše; u osoby telefon a značky (admin, správce, oprávnění, bez účtu, zablokován,
+  externí). Dole „+ Nová osoba“.
+- **Detail osoby:** údaje (ťuknutím upravit), člen klubu, aktivní; účet a přihlášení
+  (smí se přihlásit, práva, odkaz pro nastavení hesla, přihlásit se jako); oprávnění jako
+  zaškrtávátka ve skupinách podle kategorie letadel; historie změn z auditu.
+- **Nová osoba:** jméno, příjmení, e-mail, telefon, číslo člena, člen klubu.
+- **Mazání osob není** – osoba se jen přepne na neaktivní (nenabízí se v letech, nepřihlásí se).
+
+## 2. Práva
+Práva se přidělují konkrétním osobám (sloupce v `ucet`); **admin má automaticky všechna**.
+
+| Právo | Smí |
+|---|---|
+| `spravuje_osoby` (nové, db/023) | seznam a detail osob, nová osoba, úprava údajů, člen, aktivní, oprávnění; založit účet (smí se přihlásit), zablokovat / povolit účet (ne účet admina), odkaz pro nastavení hesla |
+| `smi_odblokovat` | odblokovat účet zablokovaný po chybných heslech |
+| `admin` | vše; navíc přiděluje práva (admin, smí odblokovat, spravuje osoby) a smí „přihlásit se jako“ |
+
+Pravidla (hlídá server, ne jen skrytím tlačítek): sám sobě nikdo nevypne „aktivní“ ani
+nezablokuje účet; admin si neodebere admina; účet admina smí měnit jen admin.
+
+## 3. Data
+- `lov_osoba` – beze změny (jméno, příjmení, e-mail, telefon, číslo člena, člen, aktivní).
+  Telefon se ukládá jako `+420…` (server převede „602 123 456“ i „00420…“), zobrazuje se
+  po trojicích.
+- `ucet.spravuje_osoby boolean NOT NULL DEFAULT false` (db/023), v auditu „spravuje osoby“.
+- `lov_osoba_opravneni` – zaškrtávátka oprávnění (db/021).
+
+## 4. Rozhraní (API)
+| Volání | Kdo | Co |
+|---|---|---|
+| `GET /api/osoby` | správce osob | osoby s účtem a oprávněními + číselník oprávnění (s kategoriemi) |
+| `GET /api/osoby/{id}` | správce osob | detail osoby, účet (heslo, pozvánka, poslední přihlášení), historie |
+| `POST /api/osoby` | správce osob | nová osoba |
+| `POST /api/osoby/{id}` | správce osob | změna údajů (jen poslané), člen, aktivní |
+| `POST /api/osoby/{id}/opravneni` | správce osob | `{opravneni_id, ma}` – přidat / odebrat oprávnění |
+| `POST /api/ucty`, `POST /api/ucty/{id}`, `…/pozvanka` | správce osob (práva jen admin) | účet: založit, povolit / zablokovat, práva, odkaz pro heslo |
+| `GET /api/ja` | přihlášený | práva už včetně „admin = vše“ (`admin`, `smi_odblokovat`, `spravuje_osoby`) |
+
+Chyby z databáze (neplatný e-mail, telefon, číslo člena, duplicitní e-mail…) se vrátí jako
+čitelná hláška.
+
+## 5. Obrazovky (mobil)
+- **Seznam** (pod hlavičkou a menu): pole hledání, segmenty filtru, karta s řádky osob
+  (příjmení jméno, telefon vpravo; pod tím štítky). Ťuknutí otevře detail.
+- **Detail** (vlastní horní lišta ← jméno, vpravo stav účtu): bloky jako detail letu – pole
+  ve dvou sloupcích (popisek nad hodnotou, „›“ = upravit, úprava pod polem s Uložit / Zrušit);
+  **zaškrtávátka** = dlaždice 44 px, popisek (a drobné vysvětlení) vlevo, políčko vpravo,
+  zaškrtnuté modře a tučně, dvě vedle sebe; zaškrtnutí se uloží hned. Nedostupná volba
+  (právo jen pro admina) je zašedlá.
+- **Nová osoba**: formulář a Uložit → otevře detail nové osoby.
+
+## 6. Testy
+Server: práva (bez práva 403, správce smí osoby, ne práva; admin vše; sám sobě), nová
+osoba, úpravy a chyby z databáze, převod telefonu, oprávnění, historie. Klikací: záložka
+jen pro správce, hledání, úprava telefonu, oprávnění, nová osoba, neaktivní.

@@ -82,13 +82,15 @@ def osoba(conn):
         ).fetchone()["id"]
         if ucet:
             conn.execute(
-                """INSERT INTO lkkl.ucet (osoba_id, heslo_hash, admin, smi_odblokovat)
-                   VALUES (%s, %s, %s, %s)""",
+                """INSERT INTO lkkl.ucet
+                       (osoba_id, heslo_hash, admin, smi_odblokovat, spravuje_osoby)
+                   VALUES (%s, %s, %s, %s, %s)""",
                 (
                     osoba_id,
                     bezpecnost.otisk_hesla(heslo) if heslo else None,
                     prava.get("admin", False),
                     prava.get("smi_odblokovat", False),
+                    prava.get("spravuje_osoby", False),
                 ),
             )
         return osoba_id

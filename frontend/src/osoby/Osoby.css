@@ -1,0 +1,73 @@
+/* Správa osob (maketa docs/navrhy/osoby-mobil.html): seznam osob, detail – účet a odkaz. */
+
+.filtr-osob {
+  margin: var(--mezera-2) 0;
+}
+
+/* Seznam: řádky v jedné kartě – jméno a telefon, pod nimi štítky */
+.seznam-osob {
+  overflow: hidden;
+  border: var(--ramecek);
+  border-radius: var(--zaobleni);
+  background: var(--barva-karta);
+}
+
+.radek-osoby {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--mezera-1) var(--mezera-2);
+  width: 100%;
+  padding: var(--mezera-2) var(--mezera-3);
+  border: 0;
+  border-top: var(--ramecek);
+  background: none;
+  text-align: left;
+}
+
+.radek-osoby:first-child {
+  border-top: 0;
+}
+
+.radek-osoby-jmeno {
+  font-weight: var(--tloustka-tucna);
+}
+
+.radek-osoby.neaktivni .radek-osoby-jmeno {
+  color: var(--barva-seda);
+  text-decoration: line-through;
+}
+
+.radek-osoby-telefon {
+  color: var(--barva-seda);
+}
+
+.radek-osoby-stitky {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  gap: var(--mezera-1);
+}
+
+/* Detail: informace o účtu, odkaz pro heslo, úprava textu, oznámení dole */
+.info-uctu {
+  padding: var(--mezera-2) var(--mezera-3);
+  border-top: var(--ramecek);
+}
+
+.odkaz-pro-heslo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mezera-2);
+  overflow-wrap: anywhere;
+}
+
+.uprava-textu {
+  display: grid;
+  gap: var(--mezera-2);
+}
+
+.oznameni-dole {
+  position: sticky;
+  bottom: var(--mezera-2);
+}

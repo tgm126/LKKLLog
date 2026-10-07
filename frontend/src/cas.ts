@@ -36,6 +36,12 @@ export function doba(minut: number): string {
   return minut >= 60 ? `${Math.floor(minut / 60)}°${dve(minut % 60)}"` : `${minut}"`;
 }
 
+/** 6. 10. 21:14 (UTC) */
+export function datumCas(cas: string): string {
+  const d = new Date(cas);
+  return `${d.getUTCDate()}. ${d.getUTCMonth() + 1}. ${hodinyMinuty(d)}`;
+}
+
 /** Úterý 6. 10. 2026 (den ve tvaru RRRR-MM-DD) */
 export function denSlovy(den: string): string {
   const d = new Date(`${den}T12:00:00Z`);

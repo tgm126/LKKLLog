@@ -27,8 +27,11 @@ CHYBA_ODKAZU = "Odkaz neplatí nebo vypršel. Požádejte admina o nový."
 
 
 class Prava(BaseModel):
+    """Práva přihlášeného včetně „admin smí vše“ (docs/modul-osoby.md)."""
+
     admin: bool
     smi_odblokovat: bool
+    spravuje_osoby: bool
 
 
 class OsobaKratce(BaseModel):
@@ -73,12 +76,14 @@ class UcetIn(BaseModel):
     osoba_id: int
     admin: bool = False
     smi_odblokovat: bool = False
+    spravuje_osoby: bool = False
 
 
 class UcetZmenaIn(BaseModel):
     aktivni: bool | None = None
     admin: bool | None = None
     smi_odblokovat: bool | None = None
+    spravuje_osoby: bool | None = None
 
 
 class Ucet(OsobaSEmailem):
@@ -86,6 +91,7 @@ class Ucet(OsobaSEmailem):
     smi_se_prihlasit: bool
     admin: bool
     smi_odblokovat: bool
+    spravuje_osoby: bool
     zalozen: datetime
     pozvanka_odeslana: datetime | None
     posledni_prihlaseni: datetime | None
@@ -110,6 +116,7 @@ class Prihlaseny:
     puvodni_osoba_id: int | None
     admin: bool
     smi_odblokovat: bool
+    spravuje_osoby: bool
 
 
 def _nastavit_cookie(response: Response, klic: str) -> None:
@@ -148,7 +155,7 @@ def prihlaseny(
         raise HTTPException(401, "Nejste přihlášen.")
     otisk = bezpecnost.otisk_klice(klic)
     r = conn.execute(
-        """SELECT r.osoba_id, r.puvodni_osoba_id, u.admin, u.smi_odblokovat,
+        """SELECT r.osoba_id, r.puvodni_osoba_id, u.admin, u.smi_odblokovat, u.spravuje_osoby,
                   r.posledni_aktivita < now() - %s AS prodlouzit
            FROM lkkl.relace r
            JOIN lkkl.v_ucet u ON u.osoba_id = r.osoba_id
@@ -180,6 +187,7 @@ def prihlaseny(
         puvodni_osoba_id=r["puvodni_osoba_id"],
         admin=r["admin"],
         smi_odblokovat=r["smi_odblokovat"],
+        spravuje_osoby=r["spravuje_osoby"],
     )
 
 
@@ -195,9 +203,15 @@ def smi_odblokovat(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
     return p
 
 
+def spravuje_osoby(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
+    if not (p.admin or p.spravuje_osoby):
+        raise HTTPException(403, "Na tuto akci nemáte právo.")
+    return p
+
+
 def _ja(conn: Connection, osoba_id: int, puvodni_osoba_id: int | None) -> Ja:
     u = conn.execute(
-        """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat
+        """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat, spravuje_osoby
            FROM lkkl.v_ucet WHERE osoba_id = %s""",
         (osoba_id,),
     ).fetchone()
@@ -212,7 +226,12 @@ def _ja(conn: Connection, osoba_id: int, puvodni_osoba_id: int | None) -> Ja:
         jmeno=u["jmeno"],
         prijmeni=u["prijmeni"],
         email=u["email"],
-        prava=Prava(admin=u["admin"], smi_odblokovat=u["smi_odblokovat"]),
+        # admin má všechna práva
+        prava=Prava(
+            admin=u["admin"],
+            smi_odblokovat=u["admin"] or u["smi_odblokovat"],
+            spravuje_osoby=u["admin"] or u["spravuje_osoby"],
+        ),
         puvodni=OsobaKratce(**puvodni) if puvodni else None,
     )
 
@@ -423,23 +442,34 @@ def heslo_zmenit(
 # --- účty (admin) ---------------------------------------------------------------------------
 
 _UCET_SQL = """SELECT osoba_id, jmeno, prijmeni, email, ma_heslo, smi_se_prihlasit, admin,
-                      smi_odblokovat, zalozen, pozvanka_odeslana, posledni_prihlaseni,
+                      smi_odblokovat, spravuje_osoby, zalozen, pozvanka_odeslana,
+                      posledni_prihlaseni,
                       coalesce(zablokovano_do > now(), false) AS zablokovano
                FROM lkkl.v_ucet"""
 
 
+def _jen_admin_prava(p: Prihlaseny, *prava: bool | None) -> None:
+    """Práva (admin, smí odblokovat, spravuje osoby) přiděluje jen admin."""
+    if not p.admin and any(prava):
+        raise HTTPException(403, "Práva přiděluje jen admin.")
+
+
 @router.get("/ucty", response_model=list[Ucet])
-def ucty(_: Prihlaseny = Depends(admin), conn: Connection = Depends(spojeni)):
+def ucty(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)):
     return conn.execute(_UCET_SQL + " ORDER BY prijmeni, jmeno").fetchall()
 
 
 @router.post("/ucty", response_model=Ucet)
-def ucet_zalozit(data: UcetIn, _: Prihlaseny = Depends(admin), conn: Connection = Depends(spojeni)):
+def ucet_zalozit(
+    data: UcetIn, p: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
+):
+    _jen_admin_prava(p, data.admin, data.smi_odblokovat, data.spravuje_osoby)
     try:
         with conn.transaction():
             conn.execute(
-                "INSERT INTO lkkl.ucet (osoba_id, admin, smi_odblokovat) VALUES (%s, %s, %s)",
-                (data.osoba_id, data.admin, data.smi_odblokovat),
+                """INSERT INTO lkkl.ucet (osoba_id, admin, smi_odblokovat, spravuje_osoby)
+                   VALUES (%s, %s, %s, %s)""",
+                (data.osoba_id, data.admin, data.smi_odblokovat, data.spravuje_osoby),
             )
     except errors.ForeignKeyViolation as e:
         raise HTTPException(404, "Osoba neexistuje.") from e
@@ -454,19 +484,27 @@ def ucet_zalozit(data: UcetIn, _: Prihlaseny = Depends(admin), conn: Connection 
 def ucet_zmenit(
     osoba_id: int,
     data: UcetZmenaIn,
-    p: Prihlaseny = Depends(admin),
+    p: Prihlaseny = Depends(spravuje_osoby),
     conn: Connection = Depends(spojeni),
 ):
+    # odebrat právo je také přidělování práv – jen admin
+    _jen_admin_prava(
+        p, *(v is not None for v in (data.admin, data.smi_odblokovat, data.spravuje_osoby))
+    )
     if osoba_id == p.osoba_id and (data.aktivni is False or data.admin is False):
         raise HTTPException(400, "Sám sobě nemůžete zablokovat účet ani odebrat admina.")
+    cil = conn.execute("SELECT admin FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)).fetchone()
+    if cil is not None and cil["admin"] and not p.admin:
+        raise HTTPException(403, "Účet admina smí měnit jen admin.")
     with conn.transaction():
         zmeneno = conn.execute(
             """UPDATE lkkl.ucet
                SET aktivni = coalesce(%s, aktivni),
                    admin = coalesce(%s, admin),
-                   smi_odblokovat = coalesce(%s, smi_odblokovat)
+                   smi_odblokovat = coalesce(%s, smi_odblokovat),
+                   spravuje_osoby = coalesce(%s, spravuje_osoby)
                WHERE osoba_id = %s RETURNING osoba_id""",
-            (data.aktivni, data.admin, data.smi_odblokovat, osoba_id),
+            (data.aktivni, data.admin, data.smi_odblokovat, data.spravuje_osoby, osoba_id),
         ).fetchone()
         if zmeneno and data.aktivni is False:
             conn.execute(
@@ -480,7 +518,7 @@ def ucet_zmenit(
 
 @router.post("/ucty/{osoba_id}/pozvanka", response_model=Odkaz)
 def ucet_pozvanka(
-    osoba_id: int, _: Prihlaseny = Depends(admin), conn: Connection = Depends(spojeni)
+    osoba_id: int, _: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
 ):
     u = conn.execute(
         """SELECT u.heslo_zmeneno, v.smi_se_prihlasit

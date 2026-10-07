@@ -13,7 +13,7 @@ import { useJa } from "../uzivatel";
 import { useAkceLetu, type Provedeno } from "./akce";
 import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from "./api";
 import { PolovinaPasku, tridaPasku } from "./Pasek";
-import { Udaj, Udaje } from "./Udaje";
+import { Udaj, Udaje } from "../komponenty/Udaje";
 import {
   PIC_NAZEV,
   rychlaVolba,

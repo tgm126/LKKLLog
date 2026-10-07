@@ -12,7 +12,7 @@ import { useJa } from "../uzivatel";
 import { oznamitAkci, type Provedeno } from "./akce";
 import { useNabidky, type LetadloNabidka, type Nabidky, type Ucel } from "./api";
 import { PolovinaPasku, type LetPasku } from "./Pasek";
-import { Udaj, Udaje } from "./Udaje";
+import { Udaj, Udaje } from "../komponenty/Udaje";
 import {
   jmeno,
   PIC_NAZEV,

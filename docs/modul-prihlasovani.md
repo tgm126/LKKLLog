@@ -16,7 +16,7 @@ a odhlášení zařízení, ochrana proti hádání hesla.
 e-maily neposílají – odkaz pro nastavení hesla dostane admin a předá ho osobě sám), passkey,
 auditní log (zatím neexistuje tabulka – kde má modul zapisovat, je v textu označeno *audit*).
 
-**Práva:** `admin` (smí všechno) a `smi_odblokovat` (smí odblokovat účet zablokovaný po
+**Práva:** `admin` (smí všechno), `spravuje_osoby` (správa osob, docs/modul-osoby.md) a `smi_odblokovat` (smí odblokovat účet zablokovaný po
 neúspěšných pokusech; skript `db/006_odblokovani.sql`).
 
 ## 2. Pojmy

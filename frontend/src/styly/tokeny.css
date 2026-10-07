@@ -43,6 +43,8 @@
   --dotyk: 44px;              /* nejmenší tlačítko ovládané palcem */
   --dotyk-hlavni: 52px;       /* hlavní akce stránky */
   --kulate: 32px;             /* kulatá tlačítka v hlavičce, viz VÝJIMKA u .kulate */
+  --velikost-policka: 22px;   /* políčko zaškrtávátka (dlaždice je 44 px) */
+  --zaobleni-policka: 6px;
 
   /* Pásek letu: čas vpravo (vejdou se i stopky přes 10 hodin, 10:59:59) a pozice štítků
      účel · způsob vzletu · POB · úloha – šířka podle nejdelšího textu ve znacích písma štítku

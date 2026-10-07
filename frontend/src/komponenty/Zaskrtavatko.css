@@ -1,0 +1,68 @@
+/* Zaškrtávátka: dlaždice 44 px, dvě vedle sebe, přepážky = mezera 1 px nad barvou čáry
+   (jako pole údajů); lichá poslední dlaždice se roztáhne přes celou šířku. */
+.zaskrtavatka {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ramecek-sirka);
+  border-top: var(--ramecek);
+  background: var(--barva-cara);
+}
+
+.zaskrtavatka > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.zaskrtavatka-nadpis {
+  padding: var(--mezera-1) var(--mezera-3);
+  border-top: var(--ramecek);
+  background: var(--barva-karta);
+  font-size: var(--pismo-s);
+  color: var(--barva-seda);
+}
+
+.zaskrtavatko {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mezera-2);
+  min-height: var(--dotyk);
+  padding: var(--mezera-1) var(--mezera-3);
+  border: 0;
+  background: var(--barva-karta);
+  text-align: left;
+}
+
+.zaskrtavatko[aria-checked="true"] {
+  font-weight: var(--tloustka-tucna);
+}
+
+.zaskrtavatko:disabled {
+  opacity: var(--pruhlednost-neaktivni);
+  cursor: not-allowed;
+}
+
+.zaskrtavatko-pod {
+  display: block;
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka);
+  color: var(--barva-seda);
+}
+
+/* Políčko: rámeček, zaškrtnuté plně modře s bílým ✓ */
+.zaskrtavatko-policko {
+  display: grid;
+  place-items: center;
+  width: var(--velikost-policka);
+  height: var(--velikost-policka);
+  border: var(--obrys-sirka) solid var(--barva-prepazka);
+  border-radius: var(--zaobleni-policka);
+  color: transparent;
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+
+.zaskrtavatko[aria-checked="true"] .zaskrtavatko-policko {
+  border-color: var(--barva-akce-modra);
+  background: var(--barva-akce-modra);
+  color: var(--barva-na-akci);
+}

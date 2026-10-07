@@ -46,7 +46,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_osoba_opravneni` | vazba | kdo má jaké oprávnění (zadává správce v databázi); sleduje se v auditu | 021 |
 | `v_osoba_smi` | pohled | role, které osoba smí zastat (účel, funkce, kategorie letadla) – nabídky osob v průvodci a detailu | 021, 022 |
 | `v_osoba_opravneni` | pohled | přehled oprávnění osob v jednom řádku (kontrola zadání) | 021 |
-| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin` a `smi_odblokovat`, pozvánka, ochrana proti hádání hesla | 005, 006 |
+| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, aktivní, práva `admin`, `smi_odblokovat` a `spravuje_osoby` (admin má všechna automaticky), pozvánka, ochrana proti hádání hesla | 005, 006, 023 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
 | `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
 | `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
