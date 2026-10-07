@@ -112,6 +112,11 @@
   font-size: var(--pismo-s);
 }
 
+/* Štítek vyplní svou pozici (stejně široké štítky téhož typu pod sebou) */
+.stitky-pasku > span {
+  display: grid;
+}
+
 .vysledek-letu {
   justify-self: end;
   font-size: var(--pismo-m);

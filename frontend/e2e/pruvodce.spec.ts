@@ -32,6 +32,10 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   // Pilot kluzáku nesmí vlekat – v nabídce vlekaře není.
   await expect(vlekar.getByRole("button", { name: /Adam Admin/ })).toHaveCount(0);
   await vlekar.getByRole("button", { name: "Nela Nová" }).click();
+  // Po výběru z hledání zpět na rychlou volbu: vybraná osoba a Hledat…
+  await expect(vlekar.getByLabel("Hledat osobu")).toBeHidden();
+  await expect(vlekar.getByRole("button", { name: "Nela Nová" })).toHaveAttribute("aria-pressed", "true");
+  await expect(vlekar.getByRole("button", { name: "Hledat…" })).toBeVisible();
 
   // Vlečná v rozpracovaném pásku nahoře.
   await expect(page.locator(".let.rozpracovany .let-cas")).toContainText("OK-CRA");

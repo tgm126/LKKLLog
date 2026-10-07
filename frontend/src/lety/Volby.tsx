@@ -70,7 +70,12 @@ export function VolbaOsoby({
             key={o.id}
             varianta="obrys"
             aria-pressed={o.id === vybrana}
-            onClick={() => vybrat(o.id)}
+            onClick={() => {
+              // po výběru z hledání zpět na rychlou volbu (vybraná osoba + Hledat…)
+              setHledam(false);
+              setText("");
+              vybrat(o.id);
+            }}
           >
             {o.id === jaId ? `Já (${jmeno(o)})` : jmeno(o)}
           </Tlacitko>

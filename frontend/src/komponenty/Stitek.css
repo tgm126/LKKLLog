@@ -1,6 +1,9 @@
-/* Štítek (pilulka): barevné varianty mění jen výplň a barvu textu. */
+/* Štítek (pilulka): barevné varianty mění jen výplň a barvu textu. Text uprostřed pilulky
+   (řádkování písma, zarovnání do středu v obou směrech). */
 .stitek {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--mezera-1) var(--mezera-2);
   border: var(--ramecek-sirka) solid var(--stitek-okraj, transparent);
   border-radius: var(--zaobleni-pilulka);
@@ -8,7 +11,7 @@
   color: var(--stitek-barva, var(--barva-neutralni-text));
   font-size: var(--pismo-s);
   font-weight: var(--tloustka-tucna);
-  line-height: var(--radkovani-tesne);
+  line-height: var(--radkovani);
   white-space: nowrap;
 }
 
