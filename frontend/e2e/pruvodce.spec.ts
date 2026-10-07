@@ -50,6 +50,7 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   await expect(page.locator(".let.rozpracovany .let-cas")).toContainText("OK-CRA");
 
   await page.getByRole("button", { name: /^Místo vzletu/ }).click();
+  await page.locator(".uprava").getByRole("button", { name: "Hledat…" }).click();
   await page.getByLabel("Hledat letiště (kód nebo název)").fill("LKLT");
   await page.getByRole("button", { name: "LKLT Letňany" }).click();
   await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT Letňany/ })).toBeVisible();
@@ -88,7 +89,14 @@ test("průvodce: naplánovaný přelet – místo přistání předem, trasa na 
   await page.getByRole("button", { name: "Dál" }).click();
   await page.getByRole("button", { name: "Naviják", exact: true }).click();
   await page.getByRole("button", { name: /^Místo přistání/ }).click();
-  await page.getByRole("button", { name: "LKLT Letňany" }).click();
+  // Rychlá volba jen letiště s příznakem (a moje); ostatní najde Hledat…
+  const mista = page.locator(".uprava");
+  await expect(mista.getByRole("button", { name: "LKVO Vodochody" })).toHaveCount(0);
+  await mista.getByRole("button", { name: "Hledat…" }).click();
+  await page.getByLabel("Hledat letiště (kód nebo název)").fill("vodo");
+  await expect(mista.getByRole("button", { name: "LKVO Vodochody" })).toBeVisible();
+  await page.getByLabel("Hledat letiště (kód nebo název)").fill("");
+  await mista.getByRole("button", { name: "LKLT Letňany" }).click();
   await expect(page.getByRole("button", { name: /Místo přistání\s*LKLT Letňany/ })).toBeVisible();
   await page.getByRole("button", { name: "Naplánovat" }).click();
 

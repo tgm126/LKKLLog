@@ -21,7 +21,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_typ` | číselník | typy letadel → kategorie, počet míst | 001, 002, 008 |
 | `lov_letadlo` | trvalá data | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz | 001, 002, 013, 017 |
 | `v_lov_letadlo` | pohled | letadla s typem, kategorií a počtem míst; pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017 |
-| `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft] | 003, 008 |
+| `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft], rychlá volba (nabízí se hned, ostatní přes Hledat…) | 003, 008, 028 |
 | `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` | 008, 016 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK, PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008 |

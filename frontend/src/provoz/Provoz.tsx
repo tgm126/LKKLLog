@@ -6,6 +6,7 @@ import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { Zaskrtavatka, Zaskrtavatko } from "../komponenty/Zaskrtavatko";
 import { useNabidky } from "../lety/api";
+import { VolbaLetiste } from "../lety/VyberMista";
 import { proHledani } from "../text";
 import { useMujProvoz, useZmenitProvoz } from "./api";
 import "../komponenty/Volby.css";
@@ -21,14 +22,13 @@ function useZpet() {
   return () => (odkud.key === "default" ? navigate("/") : navigate(-1));
 }
 
-/** Letiště pro dnešek: domovské, nebo jiné (hledání podle kódu nebo názvu); ťuknutí uloží
- *  a vrátí zpět. */
+/** Letiště pro dnešek: domovské, nebo jiné (rychlá volba, ostatní přes Hledat…); ťuknutí
+ *  uloží a vrátí zpět. */
 export function LetisteProDnesek() {
   const zpet = useZpet();
   const nabidky = useNabidky().data;
   const provoz = useMujProvoz().data;
   const zmenit = useZmenitProvoz();
-  const [hledat, setHledat] = useState("");
   if (!nabidky || !provoz) {
     return <Obrazovka zpet={zpet} zpetPopis="Zpět" nadpis="Letiště pro dnešek">{null}</Obrazovka>;
   }
@@ -36,11 +36,6 @@ export function LetisteProDnesek() {
   const vybrat = (letiste_id: number | null) =>
     zmenit.mutate({ cesta: "/letiste", data: { letiste_id } }, { onSuccess: zpet });
   const domovske = nabidky.letiste.find((l) => l.domovske);
-  const h = proHledani(hledat.trim());
-  const jina = nabidky.letiste
-    .filter((l) => !l.domovske && (!h || proHledani(`${l.kod} ${l.nazev}`).includes(h)))
-    .sort((a, b) => Number(b.id === mojeId) - Number(a.id === mojeId))
-    .slice(0, 20);
   return (
     <Obrazovka zpet={zpet} zpetPopis="Zpět" nadpis="Letiště pro dnešek">
       {domovske && (
@@ -56,19 +51,11 @@ export function LetisteProDnesek() {
       )}
       <Blok nadpis="Jiné letiště" vpravo="platí do konce dne">
         <BlokTelo>
-          <Pole
-            popisek="Hledat letiště (kód nebo název)"
-            value={hledat}
-            onChange={(e) => setHledat(e.target.value)}
-            autoCapitalize="characters"
+          <VolbaLetiste
+            letiste={nabidky.letiste.filter((l) => !l.domovske)}
+            vybrane={mojeId}
+            vybrat={vybrat}
           />
-          <div className="cipy">
-            {jina.map((l) => (
-              <Tlacitko key={l.id} aria-pressed={l.id === mojeId} onClick={() => vybrat(l.id)}>
-                {l.kod} {l.nazev}
-              </Tlacitko>
-            ))}
-          </div>
         </BlokTelo>
       </Blok>
       <p className="male seda">

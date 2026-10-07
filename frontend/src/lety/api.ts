@@ -115,7 +115,8 @@ export type Nabidky = {
   pic_id: number;
   zpusoby: { id: number; kod: string; nazev: string }[];
   duvody_zruseni: { id: number; kod: string; nazev: string }[];
-  letiste: { id: number; kod: string; nazev: string; domovske: boolean }[];
+  /** rychla_volba = nabízí se hned, ostatní přes Hledat… (db/028) */
+  letiste: { id: number; kod: string; nazev: string; domovske: boolean; rychla_volba: boolean }[];
   osoby: Osoba[];
   ulohy: Uloha[];
   zpusob_kluzaku: string | null;

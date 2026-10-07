@@ -41,9 +41,10 @@ FROM (VALUES ('OK-2817', 'L13', false, NULL), ('OK-3819', 'L13', false, NULL),
              ('OK-CUO 78', 'SKYLANE', true, NULL)) AS v(rejstrik, typ, vlecne, max_doba)
 JOIN lkkl.lov_typ t ON t.kod = v.typ;
 
-INSERT INTO lkkl.lov_letiste (kod, nazev, domovske, zem_sirka, zem_delka, poradi)
-VALUES ('LKKL', 'Kladno', true, 50.1128, 14.0897, 10),
-       ('LKLT', 'Letňany', false, 50.1314, 14.5257, 20);
+INSERT INTO lkkl.lov_letiste (kod, nazev, domovske, zem_sirka, zem_delka, poradi, rychla_volba)
+VALUES ('LKKL', 'Kladno', true, 50.1128, 14.0897, 10, true),
+       ('LKLT', 'Letňany', false, 50.1314, 14.5257, 20, true),
+       ('LKVO', 'Vodochody', false, 50.2166, 14.3958, 30, false);
 """
 
 

@@ -218,3 +218,7 @@ frontend/
    v řádku štítků, jen jedna strana – kam letí („→ LKMB“), jinak odkud („LKMB →“); jen když
    místo není moje letiště. Dlouhý popis místa se zkrátí („→ pole …“). Ukončený let trasu
    nemá (vpravo doba letu).
+10. **Rychlá volba letišť** (7. 10. 2026, `db/028`): při výběru místa (průvodce, detail, letiště
+    pro dnešek) se hned nabízí jen letiště s příznakem `lov_letiste.rychla_volba` (domovské,
+    LKPC, LKSZ, LKCH, LKRK, LKHV, LKPS – mění správce v databázi) a moje letiště; ostatní
+    najde „Hledat…“ podle kódu nebo názvu bez diakritiky.

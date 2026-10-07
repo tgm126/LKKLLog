@@ -421,8 +421,8 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
             "SELECT id, kod, nazev FROM lkkl.v_lov_duvod_zruseni"
         ).fetchall(),
         "letiste": conn.execute(
-            """SELECT l.id, l.kod, l.nazev, s.domovske
-               FROM lkkl.v_lov_letiste l JOIN lkkl.lov_letiste s ON s.id = l.id"""
+            # rychlá volba = nabízí se hned, ostatní přes Hledat… (db/028)
+            "SELECT id, kod, nazev, domovske, rychla_volba FROM lkkl.v_lov_letiste"
         ).fetchall(),
         # u osoby role, které smí zastat podle oprávnění (účel – prázdný = vlečný let, funkce,
         # kategorie letadla); průvodce podle nich nabízí osoby do posádky

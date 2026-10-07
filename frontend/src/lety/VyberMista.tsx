@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useMujProvoz } from "../provoz/api";
+import { proHledani } from "../text";
 import type { Nabidky } from "./api";
 import "../komponenty/Volby.css";
 
@@ -21,8 +22,60 @@ export function useMojeLetisteId(): number | undefined {
   return useMujProvoz().data?.letiste?.id;
 }
 
-/** Letiště (hledání podle kódu nebo názvu; moje letiště první) nebo jiné místo popisem
- *  (přistání do terénu). */
+/** Letiště ťuknutím: rychlá volba (příznak v číselníku) a moje letiště (první); ostatní přes
+ *  „Hledat…“ podle kódu nebo názvu (bez diakritiky). */
+export function VolbaLetiste({
+  letiste,
+  vybrane,
+  vybrat,
+}: {
+  letiste: Nabidky["letiste"];
+  /** Vybrané letiště (zvýrazněné a vždy nabízené); bez něj se nic nezvýrazní. */
+  vybrane?: number;
+  vybrat: (id: number) => void;
+}) {
+  const [hledam, setHledam] = useState(false);
+  const [hledat, setHledat] = useState("");
+  const mojeId = useMojeLetisteId();
+  const h = proHledani(hledat.trim());
+  const nabidka = (
+    hledam
+      ? letiste.filter((l) => !h || proHledani(`${l.kod} ${l.nazev}`).includes(h)).slice(0, 12)
+      : letiste.filter((l) => l.rychla_volba || l.id === mojeId || l.id === vybrane)
+  ).sort((a, b) => Number(b.id === mojeId) - Number(a.id === mojeId));
+  return (
+    <>
+      {hledam && (
+        <Pole
+          popisek="Hledat letiště (kód nebo název)"
+          value={hledat}
+          onChange={(e) => setHledat(e.target.value)}
+          autoCapitalize="characters"
+          autoFocus
+        />
+      )}
+      <div className="cipy">
+        {nabidka.map((l) => (
+          <Tlacitko
+            key={l.id}
+            aria-pressed={vybrane === undefined ? undefined : l.id === vybrane}
+            onClick={() => vybrat(l.id)}
+          >
+            {l.kod} {l.nazev}
+          </Tlacitko>
+        ))}
+        {!hledam && (
+          <Tlacitko className="hledat" onClick={() => setHledam(true)}>
+            Hledat…
+          </Tlacitko>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** Místo: letiště (rychlá volba, ostatní přes Hledat…) nebo jiné místo popisem (přistání
+ *  do terénu). */
 export function VyberMista({
   nabidky,
   ulozit,
@@ -30,29 +83,10 @@ export function VyberMista({
   nabidky: Nabidky;
   ulozit: (id: number | null, popis: string | null) => void;
 }) {
-  const [hledat, setHledat] = useState("");
   const [popis, setPopis] = useState("");
-  const mojeId = useMojeLetisteId();
-  const h = hledat.trim().toLocaleLowerCase("cs-CZ");
-  const letiste = [...nabidky.letiste]
-    .sort((a, b) => Number(b.id === mojeId) - Number(a.id === mojeId))
-    .filter((x) => !h || `${x.kod} ${x.nazev}`.toLocaleLowerCase("cs-CZ").includes(h))
-    .slice(0, 12);
   return (
     <>
-      <Pole
-        popisek="Hledat letiště (kód nebo název)"
-        value={hledat}
-        onChange={(e) => setHledat(e.target.value)}
-        autoCapitalize="characters"
-      />
-      <div className="cipy">
-        {letiste.map((x) => (
-          <Tlacitko key={x.id} onClick={() => ulozit(x.id, null)}>
-            {x.kod} {x.nazev}
-          </Tlacitko>
-        ))}
-      </div>
+      <VolbaLetiste letiste={nabidky.letiste} vybrat={(id) => ulozit(id, null)} />
       <Pole
         popisek="Jiné místo (přistání do terénu)"
         value={popis}

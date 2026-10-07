@@ -63,9 +63,10 @@ test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa"
   await page.getByRole("button", { name: "II/2 Let po okruhu" }).click();
   await expect(page.getByRole("button", { name: /Úloha\s*II\/2 Let po okruhu/ })).toBeVisible();
 
-  // Místo vzletu hledáním letiště.
+  // Místo vzletu hledáním letiště (bez diakritiky).
   await page.getByRole("button", { name: /^Místo vzletu/ }).click();
-  await page.getByLabel("Hledat letiště (kód nebo název)").fill("letň");
+  await page.locator(".uprava").getByRole("button", { name: "Hledat…" }).click();
+  await page.getByLabel("Hledat letiště (kód nebo název)").fill("letn");
   await page.getByRole("button", { name: "LKLT Letňany" }).click();
   await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT/ })).toBeVisible();
 
