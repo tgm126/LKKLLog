@@ -12,14 +12,6 @@
   grid-column: 1 / -1;
 }
 
-.zaskrtavatka-nadpis {
-  padding: var(--mezera-1) var(--mezera-3);
-  border-top: var(--ramecek);
-  background: var(--barva-karta);
-  font-size: var(--pismo-s);
-  color: var(--barva-seda);
-}
-
 .zaskrtavatko {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -48,6 +48,45 @@
   gap: var(--mezera-1);
 }
 
+/* Oprávnění (maketa osoby-mobil-v2.html): řádek = oprávnění, pod názvem čipy kategorií
+   letadel; přepážky = mezera 1 px nad barvou čáry. Nepoužité oprávnění šedě. */
+.opravneni {
+  display: grid;
+  gap: var(--ramecek-sirka);
+  background: var(--barva-cara);
+}
+
+.opravneni-radek {
+  display: grid;
+  gap: var(--mezera-1);
+  padding: var(--mezera-2) var(--mezera-3);
+  background: var(--barva-karta);
+}
+
+.opravneni-zkratka {
+  font-weight: var(--tloustka-tucna);
+}
+
+.opravneni-radek.nema .opravneni-zkratka {
+  font-weight: var(--tloustka);
+  color: var(--barva-seda);
+}
+
+/* „omezený“ (instruktor pod dohledem) vpravo, čárkovaně; zapnutý oranžově = upozornění */
+.cipy .tl.omezeny {
+  --tl-styl-okraje: dashed;
+  --tl-barva: var(--barva-seda);
+
+  margin-left: auto;
+}
+
+.cipy .tl.omezeny[aria-pressed="true"] {
+  --tl-styl-okraje: solid;
+  --tl-vypln: var(--barva-oranzova-vypln);
+  --tl-okraj: var(--barva-oranzova);
+  --tl-barva: var(--barva-oranzova);
+}
+
 /* Detail: informace o účtu, odkaz pro heslo, úprava textu, oznámení dole */
 .info-uctu {
   padding: var(--mezera-2) var(--mezera-3);

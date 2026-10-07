@@ -409,7 +409,7 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
                FROM lkkl.v_lov_letiste l JOIN lkkl.lov_letiste s ON s.id = l.id"""
         ).fetchall(),
         # u osoby role, které smí zastat podle oprávnění (účel – prázdný = vlečný let, funkce,
-        # kategorie letadla – prázdná = všechny); průvodce podle nich nabízí osoby do posádky
+        # kategorie letadla); průvodce podle nich nabízí osoby do posádky
         "osoby": conn.execute(
             """SELECT o.id, o.jmeno, o.prijmeni,
                       coalesce(json_agg(json_build_object('ucel', s.ucel_kod,

@@ -73,27 +73,70 @@ def test_nova_osoba_upravy_a_chyby(osoba, prihlasit):
     assert odpoved.json()["detail"] == "Číslo člena má jen člen klubu."
 
 
-def test_opravneni_a_historie(conn, osoba, prihlasit):
+def test_opravneni_a_historie(conn, osoba, prihlasit, flotila):
+    """Oprávnění po kategoriích letadel (db/024): první kategorie oprávnění přidá, poslední
+    odebere; jen povolené kategorie; omezení u oprávnění osoby."""
     osoba("Spravce", spravuje_osoby=True)
     pilot = osoba("Pilot", ucet=False)
     k = prihlasit("spravce@example.cz")
+    kat = {r["kod"]: r["id"] for r in conn.execute("SELECT kod, id FROM lkkl.lov_kategorie")}
     vlekar = conn.execute("SELECT id FROM lkkl.lov_opravneni WHERE kod = 'VLEKAR'").fetchone()["id"]
+    fi = conn.execute(
+        """INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi)
+           VALUES ('FI_S', 'FI(S)', 10) RETURNING id"""
+    ).fetchone()["id"]
+    conn.execute(
+        "INSERT INTO lkkl.lov_opravneni_kategorie VALUES (%s, %s), (%s, %s)",
+        (vlekar, kat["LETOUN"], fi, kat["KLUZAK"]),
+    )
+    conn.execute(
+        """INSERT INTO lkkl.lov_opravneni_role
+           SELECT %s, id FROM lkkl.lov_role WHERE kod IN ('INSTRUKTOR', 'DOZOR')""",
+        (fi,),
+    )
 
-    seznam = k.get("/api/osoby").json()
-    assert {"id": vlekar, "nazev": "Vlekař", "omezene": False, "kategorie": []} in seznam[
-        "opravneni"
-    ]
+    seznam = {o["id"]: o for o in k.get("/api/osoby").json()["opravneni"]}
+    assert seznam[vlekar] == {
+        "id": vlekar,
+        "nazev": "Vlekař",
+        "lze_omezit": False,
+        "kategorie": [{"id": kat["LETOUN"], "nazev": "Letoun"}],
+    }
+    assert seznam[fi]["lze_omezit"]
 
-    o = k.post(f"/api/osoby/{pilot}/opravneni", json={"opravneni_id": vlekar, "ma": True}).json()
-    assert o["opravneni"] == [vlekar]
-    o = k.post(f"/api/osoby/{pilot}", json={"telefon": "+420602000111"}).json()
-    o = k.post(f"/api/osoby/{pilot}/opravneni", json={"opravneni_id": vlekar, "ma": False}).json()
-    assert o["opravneni"] == []
+    def zmenit(opravneni, kategorie, ma):
+        return k.post(
+            f"/api/osoby/{pilot}/opravneni",
+            json={"opravneni_id": opravneni, "kategorie_id": kat[kategorie], "ma": ma},
+        )
+
+    o = zmenit(vlekar, "LETOUN", True).json()
+    assert o["opravneni"] == [{"id": vlekar, "omezene": False, "kategorie": [kat["LETOUN"]]}]
+    odpoved = zmenit(vlekar, "KLUZAK", True)
+    assert odpoved.status_code == 400
+    assert odpoved.json()["detail"] == "Toto oprávnění se pro tuto kategorii nevydává."
+    k.post(f"/api/osoby/{pilot}", json={"telefon": "+420602000111"})
+    o = zmenit(vlekar, "LETOUN", False).json()
+    assert o["opravneni"] == []  # s poslední kategorií zmizí i oprávnění
+
+    # Omezení: jen u oprávnění, které osoba má.
+    omezit = {"opravneni_id": fi, "omezene": True}
+    assert k.post(f"/api/osoby/{pilot}/omezeni", json=omezit).status_code == 404
+    zmenit(fi, "KLUZAK", True)
+    o = k.post(f"/api/osoby/{pilot}/omezeni", json=omezit).json()
+    assert o["opravneni"] == [{"id": fi, "omezene": True, "kategorie": [kat["KLUZAK"]]}]
+
     akce = [z["akce"] for z in o["historie"]]
     assert akce == [
+        "Omezení oprávnění",
+        "Oprávnění: přidání kategorie",
+        "Přidání oprávnění",
         "Odebrání oprávnění",
+        "Oprávnění: odebrání kategorie",
         "Úprava osoby",
+        "Oprávnění: přidání kategorie",
         "Přidání oprávnění",
         "Založení osoby",
     ]
-    assert o["historie"][1]["kdo"] == "Jan Spravce"
+    assert o["historie"][0]["kdo"] == "Jan Spravce"
+    assert o["historie"][1]["popis"] == "oprávnění FI(S), kategorie Kluzák"

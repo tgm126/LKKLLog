@@ -21,12 +21,15 @@ import {
   useUpravitOsobu,
   type DetailOsoby,
   type Opravneni,
+  type OpravneniOsoby,
   type UdajeOsoby,
 } from "./api";
+import "../komponenty/Volby.css";
 import "./Osoby.css";
 
-// Detail osoby (docs/modul-osoby.md, maketa osoby-mobil.html): údaje (ťuknutím upravit),
-// člen a aktivní, účet a přihlášení, oprávnění jako zaškrtávátka, historie změn.
+// Detail osoby (docs/modul-osoby.md, makety osoby-mobil.html a osoby-mobil-v2.html): údaje
+// (ťuknutím upravit), člen a aktivní, účet a přihlášení, oprávnění po kategoriích letadel,
+// historie změn.
 
 export function Detail() {
   const id = Number(useParams().id);
@@ -115,28 +118,17 @@ function DetailObrazovka({
 
       <BlokUctu osoba={o} ja={ja} />
 
-      <Blok nadpis="Oprávnění" vpravo={`${o.opravneni.length} vybraná`}>
-        {skupiny(opravneni).map(([nadpis, polozky]) => (
-          <Zaskrtavatka key={nadpis} nadpis={nadpis}>
-            {polozky.map((p) => {
-              const [zkratka, vysvetleni] = rozdelitNazev(p.nazev);
-              return (
-                <Zaskrtavatko
-                  key={p.id}
-                  popisek={zkratka}
-                  pod={vysvetleni}
-                  zaskrtnuto={o.opravneni.includes(p.id)}
-                  zmenit={(ma) =>
-                    upravit.mutate({
-                      cesta: `/osoby/${o.id}/opravneni`,
-                      data: { opravneni_id: p.id, ma },
-                    })
-                  }
-                />
-              );
-            })}
-          </Zaskrtavatka>
-        ))}
+      <Blok nadpis="Oprávnění" vpravo={`${o.opravneni.length} oprávnění`}>
+        <div className="opravneni">
+          {opravneni.map((p) => (
+            <RadekOpravneni
+              key={p.id}
+              opravneni={p}
+              osoby={o.opravneni.find((x) => x.id === p.id)}
+              zmenit={(cesta, data) => upravit.mutate({ cesta: `/osoby/${o.id}/${cesta}`, data })}
+            />
+          ))}
+        </div>
       </Blok>
 
       {o.historie.length > 0 && (
@@ -166,14 +158,55 @@ function DetailObrazovka({
   );
 }
 
-/** Oprávnění ve skupinách podle kategorií letadel („Kluzák, Motorový kluzák“…). */
-function skupiny(opravneni: Opravneni[]): [string, Opravneni[]][] {
-  const mapa = new Map<string, Opravneni[]>();
-  for (const p of opravneni) {
-    const nadpis = p.kategorie.length ? p.kategorie.join(", ") : "Všechna letadla";
-    mapa.set(nadpis, [...(mapa.get(nadpis) ?? []), p]);
-  }
-  return [...mapa];
+/** Řádek oprávnění (maketa osoby-mobil-v2.html, varianta B): čipy kategorií letadel, pro které
+ *  se smí vydat (zapnutá = osoba ho pro ni má), a u instruktorů, kteří ho mají, „omezený“. */
+function RadekOpravneni({
+  opravneni: p,
+  osoby,
+  zmenit,
+}: {
+  opravneni: Opravneni;
+  osoby: OpravneniOsoby | undefined;
+  zmenit: (cesta: "opravneni" | "omezeni", data: unknown) => void;
+}) {
+  const [zkratka, vysvetleni] = rozdelitNazev(p.nazev);
+  return (
+    <div
+      role="group"
+      aria-label={zkratka}
+      className={osoby ? "opravneni-radek" : "opravneni-radek nema"}
+    >
+      <span>
+        <span className="opravneni-zkratka">{zkratka}</span>
+        {vysvetleni && <span className="male seda"> {vysvetleni}</span>}
+      </span>
+      <div className="cipy">
+        {p.kategorie.map((k) => {
+          const ma = !!osoby?.kategorie.includes(k.id);
+          return (
+            <Tlacitko
+              key={k.id}
+              aria-pressed={ma}
+              onClick={() =>
+                zmenit("opravneni", { opravneni_id: p.id, kategorie_id: k.id, ma: !ma })
+              }
+            >
+              {k.nazev}
+            </Tlacitko>
+          );
+        })}
+        {osoby && p.lze_omezit && (
+          <Tlacitko
+            className="omezeny"
+            aria-pressed={osoby.omezene}
+            onClick={() => zmenit("omezeni", { opravneni_id: p.id, omezene: !osoby.omezene })}
+          >
+            omezený
+          </Tlacitko>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // --- účet a přihlášení -----------------------------------------------------------------------

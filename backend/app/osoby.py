@@ -30,6 +30,14 @@ class UcetOsoby(BaseModel):
     ma_heslo: bool
 
 
+class OpravneniOsoby(BaseModel):
+    """Oprávnění, které osoba má: pro které kategorie letadel a zda omezené."""
+
+    id: int
+    omezene: bool
+    kategorie: list[int]
+
+
 class Osoba(BaseModel):
     id: int
     jmeno: str
@@ -40,15 +48,22 @@ class Osoba(BaseModel):
     clen: bool
     aktivni: bool
     ucet: UcetOsoby | None
-    opravneni: list[int]
+    opravneni: list[OpravneniOsoby]
+
+
+class Kategorie(BaseModel):
+    id: int
+    nazev: str
 
 
 class Opravneni(BaseModel):
+    """Druh oprávnění z číselníku a kategorie, pro které se smí vydat."""
+
     id: int
     nazev: str
-    omezene: bool
-    kategorie: list[str]
-    """Názvy kategorií letadel; prázdné = všechna letadla."""
+    lze_omezit: bool
+    """Dává roli instruktora – jen tam má smysl „omezený“ (pod dohledem)."""
+    kategorie: list[Kategorie]
 
 
 class Seznam(BaseModel):
@@ -105,8 +120,17 @@ class OsobaIn(BaseModel):
 
 
 class OpravneniIn(BaseModel):
+    """Oprávnění pro kategorii: přidat (první kategorie oprávnění přidá) nebo odebrat
+    (s poslední kategorií se odebere i oprávnění)."""
+
     opravneni_id: int
+    kategorie_id: int
     ma: bool
+
+
+class OmezeniIn(BaseModel):
+    opravneni_id: int
+    omezene: bool
 
 
 # --- dotazy ----------------------------------------------------------------------------------
@@ -121,9 +145,17 @@ SELECT o.id, o.jmeno, o.prijmeni, o.email, o.telefon, o.cislo_clena, o.clen, o.a
            'spravuje_osoby', u.spravuje_osoby,
            'zablokovano', coalesce(u.zablokovano_do > now(), false),
            'ma_heslo', u.heslo_hash IS NOT NULL) END AS ucet,
-       coalesce((SELECT array_agg(oo.opravneni_id ORDER BY oo.opravneni_id)
+       coalesce((SELECT json_agg(json_build_object(
+                     'id', oo.opravneni_id,
+                     'omezene', oo.omezene,
+                     'kategorie', (SELECT coalesce(json_agg(x.kategorie_id
+                                                            ORDER BY x.kategorie_id), '[]')
+                                   FROM lkkl.lov_osoba_opravneni_kategorie x
+                                   WHERE x.osoba_id = oo.osoba_id
+                                     AND x.opravneni_id = oo.opravneni_id)
+                 ) ORDER BY oo.opravneni_id)
                  FROM lkkl.lov_osoba_opravneni oo WHERE oo.osoba_id = o.id),
-                '{}'::bigint[]) AS opravneni,
+                '[]') AS opravneni,
        u.heslo_zmeneno, u.pozvanka_odeslana, u.posledni_prihlaseni
 FROM lkkl.lov_osoba o
 LEFT JOIN lkkl.ucet u ON u.osoba_id = o.id
@@ -155,7 +187,8 @@ def _detail(conn: Connection, osoba_id: int) -> DetailOsoby:
     historie = conn.execute(
         """SELECT kdy, kdo, akce, popis FROM lkkl.v_audit
            WHERE (tabulka = 'lov_osoba' AND klic ->> 'id' = %(id)s)
-              OR (tabulka IN ('ucet', 'lov_osoba_opravneni') AND klic ->> 'osoba_id' = %(id)s)
+              OR (tabulka IN ('ucet', 'lov_osoba_opravneni', 'lov_osoba_opravneni_kategorie')
+                  AND klic ->> 'osoba_id' = %(id)s)
            ORDER BY kdy DESC, id DESC
            LIMIT 50""",
         {"id": str(osoba_id)},
@@ -171,14 +204,16 @@ def osoby(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(sp
     return {
         "osoby": conn.execute(_OSOBA_SQL + " ORDER BY o.prijmeni, o.jmeno").fetchall(),
         "opravneni": conn.execute(
-            """SELECT o.id, o.nazev, o.omezene,
-                      coalesce(array_agg(k.nazev::text ORDER BY k.poradi)
-                               FILTER (WHERE k.id IS NOT NULL), '{}'::text[]) AS kategorie
-               FROM lkkl.v_lov_opravneni o
-               LEFT JOIN lkkl.lov_opravneni_kategorie ok ON ok.opravneni_id = o.id
-               LEFT JOIN lkkl.lov_kategorie k ON k.id = ok.kategorie_id
-               GROUP BY o.id, o.nazev, o.omezene, o.poradi
-               ORDER BY o.poradi, o.nazev"""
+            """SELECT o.id, o.nazev,
+                      EXISTS (SELECT 1 FROM lkkl.lov_opravneni_role orl
+                              JOIN lkkl.lov_role r ON r.id = orl.role_id
+                              WHERE orl.opravneni_id = o.id AND r.kod = 'INSTRUKTOR') AS lze_omezit,
+                      coalesce((SELECT json_agg(json_build_object('id', k.id, 'nazev', k.nazev)
+                                                ORDER BY k.poradi, k.nazev)
+                                FROM lkkl.lov_opravneni_kategorie ok
+                                JOIN lkkl.lov_kategorie k ON k.id = ok.kategorie_id
+                                WHERE ok.opravneni_id = o.id), '[]') AS kategorie
+               FROM lkkl.v_lov_opravneni o"""
         ).fetchall(),
     }
 
@@ -254,18 +289,56 @@ def osoba_opravneni(
     _: Prihlaseny = Depends(spravuje_osoby),
     conn: Connection = Depends(spojeni),
 ):
+    k = {"osoba": osoba_id, "opravneni": data.opravneni_id, "kategorie": data.kategorie_id}
     try:
-        if data.ma:
-            conn.execute(
-                """INSERT INTO lkkl.lov_osoba_opravneni (osoba_id, opravneni_id) VALUES (%s, %s)
-                   ON CONFLICT DO NOTHING""",
-                (osoba_id, data.opravneni_id),
-            )
-        else:
-            conn.execute(
-                "DELETE FROM lkkl.lov_osoba_opravneni WHERE osoba_id = %s AND opravneni_id = %s",
-                (osoba_id, data.opravneni_id),
-            )
+        with conn.transaction():
+            if data.ma:
+                conn.execute(
+                    """INSERT INTO lkkl.lov_osoba_opravneni (osoba_id, opravneni_id)
+                       VALUES (%(osoba)s, %(opravneni)s) ON CONFLICT DO NOTHING""",
+                    k,
+                )
+                conn.execute(
+                    """INSERT INTO lkkl.lov_osoba_opravneni_kategorie
+                           (osoba_id, opravneni_id, kategorie_id)
+                       VALUES (%(osoba)s, %(opravneni)s, %(kategorie)s) ON CONFLICT DO NOTHING""",
+                    k,
+                )
+            else:
+                conn.execute(
+                    """DELETE FROM lkkl.lov_osoba_opravneni_kategorie
+                       WHERE osoba_id = %(osoba)s AND opravneni_id = %(opravneni)s
+                         AND kategorie_id = %(kategorie)s""",
+                    k,
+                )
+                conn.execute(  # bez poslední kategorie osoba oprávnění nemá
+                    """DELETE FROM lkkl.lov_osoba_opravneni oo
+                       WHERE osoba_id = %(osoba)s AND opravneni_id = %(opravneni)s
+                         AND NOT EXISTS (SELECT 1 FROM lkkl.lov_osoba_opravneni_kategorie x
+                                         WHERE x.osoba_id = oo.osoba_id
+                                           AND x.opravneni_id = oo.opravneni_id)""",
+                    k,
+                )
     except errors.ForeignKeyViolation as e:
+        if e.diag.constraint_name == "kategorie_povolena":
+            raise HTTPException(400, "Toto oprávnění se pro tuto kategorii nevydává.") from e
         raise HTTPException(404, "Osoba nebo oprávnění neexistuje.") from e
+    return _detail(conn, osoba_id)
+
+
+@router.post("/{osoba_id}/omezeni", response_model=DetailOsoby)
+def osoba_omezeni(
+    osoba_id: int,
+    data: OmezeniIn,
+    _: Prihlaseny = Depends(spravuje_osoby),
+    conn: Connection = Depends(spojeni),
+):
+    """Omezený instruktor (pod dohledem) – vlastnost oprávnění, které osoba má."""
+    upraveno = conn.execute(
+        """UPDATE lkkl.lov_osoba_opravneni SET omezene = %s
+           WHERE osoba_id = %s AND opravneni_id = %s RETURNING osoba_id""",
+        (data.omezene, osoba_id, data.opravneni_id),
+    ).fetchone()
+    if upraveno is None:
+        raise HTTPException(404, "Osoba toto oprávnění nemá.")
     return _detail(conn, osoba_id)

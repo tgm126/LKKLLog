@@ -19,18 +19,18 @@ export const PIC_NAZEV: Record<string, string> = {
 
 export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
 
-// --- kdo se nabízí: podle oprávnění osob (db/021, 022) ----------------------------------------
+// --- kdo se nabízí: podle oprávnění osob a jejich kategorií (db/024) ------------------------
 
 /** Role v letu: účel (null = vlečný let) a funkce osoby na letadle dané kategorie. */
 type Hledana = { ucel: string | null; funkce: string; kategorie: string | undefined };
 
-/** Smí osoba zastat roli (bez kategorie letadla = na čemkoli)? */
+/** Smí osoba zastat roli (letadlo ještě nevybrané = na čemkoli)? */
 const smi = (o: Osoba, h: Hledana) =>
   o.role.some(
     (r) =>
       r.ucel === h.ucel &&
       r.funkce === h.funkce &&
-      (r.kategorie === null || h.kategorie === undefined || r.kategorie === h.kategorie),
+      (h.kategorie === undefined || r.kategorie === h.kategorie),
   );
 
 /** Rychlá volba osoby: kdo smí roli zastat podle oprávnění; když nikdo, záloha (Já,

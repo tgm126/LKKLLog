@@ -1,6 +1,6 @@
 # Návrh: oprávnění osob pro nabídku posádky (čistý model)
 
-> **Návrh k projednání** (větev `navrh-opravneni`, 7. 10. 2026). Vychází z podkladů
+> **Odsouhlaseno 7. 10. 2026** (větev `navrh-opravneni`), realizace skriptem `db/024_opravneni_rozsah.sql`. Vychází z podkladů
 > `podklady/instruktori-a-examinatori.md`, `podklady/prezkouseni.md`, `podklady/tmg-a-sep.md`.
 > Navrženo bez ohledu na dnešní tabulky (skripty 021–022); srovnání se stávajícím modelem
 > až v dalším kroku.

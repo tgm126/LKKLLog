@@ -220,7 +220,7 @@ def test_nabidky(conn, pilot, let):
 
 
 def test_nabidky_opravneni(conn, pilot, osoba, flotila):
-    """U osoby role, které smí zastat podle oprávnění (db/021, 022)."""
+    """U osoby role, které smí zastat podle oprávnění a jeho kategorií (db/024)."""
     pilot_id, k = pilot
     vlekar = osoba("Vlekar", ucet=False)
     nikdo = osoba("Nikdo", ucet=False)
@@ -230,30 +230,41 @@ def test_nabidky_opravneni(conn, pilot, osoba, flotila):
     ).fetchone()["id"]
     conn.execute(
         """INSERT INTO lkkl.lov_opravneni_kategorie
-           SELECT %s, id FROM lkkl.lov_kategorie WHERE kod = 'KLUZAK'""",
+           SELECT o.id, k.id FROM lkkl.lov_opravneni o, lkkl.lov_kategorie k
+           WHERE (o.kod, k.kod) IN (('FI_S', 'KLUZAK'), ('FI_S', 'LETOUN'), ('VLEKAR', 'LETOUN'))"""
+    )
+    conn.execute(
+        """INSERT INTO lkkl.lov_opravneni_role
+           SELECT %s, id FROM lkkl.lov_role WHERE kod = 'INSTRUKTOR'""",
         (instruktor,),
     )
     conn.execute(
-        """INSERT INTO lkkl.lov_opravneni_role (opravneni_id, ucel_id, funkce_id)
-           SELECT %s, (SELECT id FROM lkkl.lov_ucel WHERE kod = 'VYCVIK'),
-                  (SELECT id FROM lkkl.lov_funkce WHERE kod = 'PIC')""",
-        (instruktor,),
-    )
-    conn.execute(
-        """INSERT INTO lkkl.lov_osoba_opravneni VALUES (%s, %s),
-               (%s, (SELECT id FROM lkkl.lov_opravneni WHERE kod = 'VLEKAR'))""",
+        """INSERT INTO lkkl.lov_osoba_opravneni (osoba_id, opravneni_id)
+           VALUES (%s, %s), (%s, (SELECT id FROM lkkl.lov_opravneni WHERE kod = 'VLEKAR'))""",
         (pilot_id, instruktor, vlekar),
+    )
+    # instruktor jen pro kluzáky (letouny smí, ale nemá), vlekař pro letouny
+    conn.execute(
+        """INSERT INTO lkkl.lov_osoba_opravneni_kategorie
+           SELECT oo.osoba_id, oo.opravneni_id, ok.kategorie_id
+           FROM lkkl.lov_osoba_opravneni oo
+           JOIN lkkl.lov_opravneni_kategorie ok ON ok.opravneni_id = oo.opravneni_id
+           JOIN lkkl.lov_kategorie k ON k.id = ok.kategorie_id
+           WHERE NOT (oo.opravneni_id = %s AND k.kod = 'LETOUN')""",
+        (instruktor,),
     )
     osoby = {o["id"]: o for o in k.get("/api/lety/nabidky").json()["osoby"]}
     assert osoby[pilot_id]["role"] == [{"ucel": "VYCVIK", "funkce": "PIC", "kategorie": "KLUZAK"}]
-    # vlekař (role z převodu v 022): vlečný let (bez účelu), PIC, jakákoli kategorie
-    assert osoby[vlekar]["role"] == [{"ucel": None, "funkce": "PIC", "kategorie": None}]
+    # vlekař (role z převodu v 022, 024): vlečný let (bez účelu), PIC, letoun
+    assert osoby[vlekar]["role"] == [{"ucel": None, "funkce": "PIC", "kategorie": "LETOUN"}]
     assert osoby[nikdo]["role"] == []
-    # přidání oprávnění se zapíše do auditu
-    pocet = conn.execute(
-        "SELECT count(*) AS n FROM lkkl.audit WHERE tabulka = 'lov_osoba_opravneni'"
-    ).fetchone()["n"]
-    assert pocet == 2
+    # přidání oprávnění a kategorií se zapíše do auditu
+    pocty = conn.execute(
+        """SELECT count(*) FILTER (WHERE tabulka = 'lov_osoba_opravneni') AS opravneni,
+                  count(*) FILTER (WHERE tabulka = 'lov_osoba_opravneni_kategorie') AS kategorie
+           FROM lkkl.audit"""
+    ).fetchone()
+    assert pocty == {"opravneni": 2, "kategorie": 2}
 
 
 def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):

@@ -104,7 +104,7 @@ function RadekOsoby({
   if (!o.ucet) stitky.push(["bez účtu", "pasek"]);
   if (!o.clen) stitky.push(["externí", "pasek"]);
   for (const p of opravneni) {
-    if (o.opravneni.includes(p.id)) stitky.push([rozdelitNazev(p.nazev)[0], "pasek"]);
+    if (o.opravneni.some((x) => x.id === p.id)) stitky.push([rozdelitNazev(p.nazev)[0], "pasek"]);
   }
   return (
     <button

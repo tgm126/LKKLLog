@@ -22,10 +22,15 @@ test("osoby: hledání, úprava telefonu, oprávnění", async ({ page }) => {
   await page.getByRole("button", { name: "Uložit" }).click();
   await expect(page.getByRole("button", { name: /Telefon\s*\+420 602 123 456/ })).toBeVisible();
 
-  // Oprávnění zaškrtnutím (uloží se hned).
-  const fi = page.getByRole("checkbox", { name: /^FI\(S\)\s*instruktor/ });
-  await fi.click();
-  await expect(fi).toHaveAttribute("aria-checked", "true");
+  // Oprávnění po kategoriích (uloží se hned): FI(S) pro kluzák, pak omezený.
+  const fi = page.getByRole("group", { name: "FI(S)" });
+  await expect(fi.getByRole("button", { name: "omezený" })).toHaveCount(0);
+  const kluzak = fi.getByRole("button", { name: "Kluzák", exact: true });
+  await kluzak.click();
+  await expect(kluzak).toHaveAttribute("aria-pressed", "true");
+  const omezeny = fi.getByRole("button", { name: "omezený" });
+  await omezeny.click();
+  await expect(omezeny).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
   const nela = page.locator(".radek-osoby", { hasText: "Nová Nela" });

@@ -151,6 +151,12 @@ def pripravit() -> None:
                    JOIN lkkl.lov_opravneni o ON o.kod = v.kod""",
                 (admin, nova),
             )
+            c.execute(  # pro všechny kategorie, pro které se oprávnění vydává
+                """INSERT INTO lkkl.lov_osoba_opravneni_kategorie
+                   SELECT oo.osoba_id, oo.opravneni_id, ok.kategorie_id
+                   FROM lkkl.lov_osoba_opravneni oo
+                   JOIN lkkl.lov_opravneni_kategorie ok ON ok.opravneni_id = oo.opravneni_id"""
+            )
             lety(c, admin, nova)
 
 

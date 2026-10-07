@@ -99,14 +99,16 @@ v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · ná
 údaje, ťuknutím se změní (místo: hledání letiště nebo popis místa). Proběhlý let: časy vzletu,
 přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin a minut,
 −1 / +1 a doba letu.
-**Nabídka osob podle oprávnění** (db/021, 022, 7. 10. 2026): oprávnění osoby (FI(S),
-FE(S), vlekař…) opravňuje k **rolím v letu** = účel + funkce (výcvik · PIC, sólo · dozor,
-přezkoušení · PIC, vlečný let · PIC) na letadlech svých kategorií. V rychlé volbě každého
+**Nabídka osob podle oprávnění** (db/021, 022, 024; model `docs/navrh-opravneni.md`):
+oprávnění osoby (FI(S), FE(S), vlekař…) opravňuje k **rolím v letu** (`lov_role`: instruktor =
+výcvik · PIC, dozor = sólo · dozor, examinátor = přezkoušení · PIC, vlekař = vlečný let · PIC)
+na kategoriích letadel, pro které ho osoba má. Přezkoušení jen examinátoři, výcvik a dozor
+instruktoři (i omezení). V rychlé volbě každého
 pole posádky (i vlekaře) se nabídnou osoby, které danou roli smí zastat na kategorii
 vybraného letadla; nesmí-li nikdo, nabídne se Já a naposledy létající. „Hledat…“ vždy hledá
 mezi všemi (výjimky). Nic se nekontroluje ani neblokuje, platnost oprávnění se neeviduje.
-Oprávnění a jejich role zadává správce v databázi (`lov_osoba_opravneni`,
-`lov_opravneni_role`; kontrola v `v_osoba_opravneni`).
+Oprávnění osob zadává správce v aplikaci (Osoby → detail), role oprávnění v databázi
+(`lov_opravneni_role`; kontrola v `v_osoba_opravneni`).
 **Zrušení vleku:** naplánovaný vlek se ruší celý, po vzletu jen zvolený let (kluzák po
 přetrženém laně – vlečná letí dál).
 

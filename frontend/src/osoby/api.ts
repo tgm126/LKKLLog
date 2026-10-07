@@ -24,11 +24,20 @@ export type Osoba = {
   clen: boolean;
   aktivni: boolean;
   ucet: UcetOsoby | null;
-  opravneni: number[];
+  opravneni: OpravneniOsoby[];
 };
 
-/** Oprávnění z číselníku; kategorie = názvy kategorií letadel (prázdné = všechna letadla). */
-export type Opravneni = { id: number; nazev: string; omezene: boolean; kategorie: string[] };
+/** Oprávnění, které osoba má: pro které kategorie letadel (id) a zda omezené. */
+export type OpravneniOsoby = { id: number; omezene: boolean; kategorie: number[] };
+
+/** Oprávnění z číselníku: kategorie letadel, pro které se smí vydat; lze_omezit = dává roli
+ *  instruktora (jen tam má smysl „omezený“). */
+export type Opravneni = {
+  id: number;
+  nazev: string;
+  lze_omezit: boolean;
+  kategorie: { id: number; nazev: string }[];
+};
 
 export type DetailOsoby = Osoba & {
   heslo_zmeneno: string | null;

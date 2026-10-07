@@ -40,12 +40,7 @@ export function Zaskrtavatko({
   );
 }
 
-/** Skupina zaškrtávátek (dvě vedle sebe); volitelně s nadpisem skupiny. */
-export function Zaskrtavatka({ nadpis, children }: { nadpis?: string; children: ReactNode }) {
-  return (
-    <>
-      {nadpis && <div className="zaskrtavatka-nadpis">{nadpis}</div>}
-      <div className="zaskrtavatka">{children}</div>
-    </>
-  );
+/** Skupina zaškrtávátek (dvě vedle sebe). */
+export function Zaskrtavatka({ children }: { children: ReactNode }) {
+  return <div className="zaskrtavatka">{children}</div>;
 }

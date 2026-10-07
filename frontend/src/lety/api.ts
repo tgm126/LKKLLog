@@ -94,9 +94,9 @@ export type LetadloNabidka = {
 
 export type Funkce = { id: number; kod: string; nazev: string; na_palube: boolean };
 export type Ucel = { id: number; kod: string; nazev: string; uloha_povinna: boolean; funkce: Funkce[] };
-/** Role, kterou osoba smí zastat podle oprávnění (db/022): účel (null = vlečný let), funkce,
- *  kategorie letadla (null = všechny). */
-export type Role = { ucel: string | null; funkce: string; kategorie: string | null };
+/** Role, kterou osoba smí zastat podle oprávnění (db/024): účel (null = vlečný let), funkce,
+ *  kategorie letadla. */
+export type Role = { ucel: string | null; funkce: string; kategorie: string };
 export type Osoba = { id: number; jmeno: string; prijmeni: string; role: Role[] };
 export type Uloha = {
   id: number;
