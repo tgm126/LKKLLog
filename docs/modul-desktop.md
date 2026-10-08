@@ -75,10 +75,9 @@ dneška**:
 - letí → běžící čas („letí 0:08“), naplánované → „naplánován“;
 - jinak jen nálet dne („25″“, bez počtu letů – rozhodnuto 8. 10. 2026) nebo „dnes nelétal“;
 - **kde je** (rozhodnuto 8. 10. 2026): poslední evidované přistání (`v_lov_letadlo.poloha`,
-  db/035 – i týden staré, datum nerozhoduje), když není na mém letišti, kódem bez „na“
-  („LKMB“); **oranžově**, když je jinde než na domovském letišti i než na mém letišti (z Můj
-  provoz). Jsem-li dnes v Letňanech, letadla doma v Kladně mají „LKKL“ šedě. Totéž místo je
-  výchozí místo vzletu nového letu s tímto letadlem;
+  db/035 – i týden staré, datum nerozhoduje) **oranžově** kódem bez „na“ („LKMB“), jen když
+  je jinde než na domovském letišti i než na mém letišti (z Můj provoz); jinak nic. Totéž
+  místo je výchozí místo vzletu nového letu s tímto letadlem;
 - mimo provoz přeškrtnuté, nejde vybrat.
 
 Klik na letadlo **na zemi** otevře formulář nového letu s tímto letadlem už vybraným (ušetří

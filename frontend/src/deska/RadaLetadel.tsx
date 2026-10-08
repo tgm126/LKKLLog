@@ -9,8 +9,8 @@ import { useJenCteni } from "../uzivatel";
 
 // Řada letadel pod lištou (docs/modul-desktop.md 3.1): všechna letadla podle kategorie,
 // neutrální rámeček se stavem jen proužkem vlevo (zelený letí, modrý naplánované) a dnešek:
-// běžící čas, nebo počet letů a nálet, a kde letadlo je – poslední evidované přistání
-// (v_lov_letadlo.poloha), když není na mém letišti; oranžově, když není ani na domovském
+// běžící čas, nebo počet letů a nálet, a oranžově kde letadlo je – poslední evidované
+// přistání (v_lov_letadlo.poloha), jen když není na domovském ani na mém letišti
 // (rozhodnuto 8. 10. 2026). Klik na letadlo na zemi = nový let s ním (místo vzletu = poloha);
 // na letící nebo naplánované = detail.
 
@@ -22,9 +22,8 @@ export function RadaLetadel({
   nazvyKategorii,
 }: {
   letadla: LetadloNabidka[];
-  /** Moje letiště (můj provoz) – poloha se ukáže, jen když je jinde. */
+  /** Moje letiště (můj provoz) a domovské – poloha se ukáže, jen když je jinde než obě. */
   mojeKod: string | undefined;
-  /** Domovské letiště – poloha jinde než doma i jinde než na mém letišti je oranžově. */
   domovskeKod: string | undefined;
   /** Dnešní lety (stav letadel je vždy podle dneška). */
   lety: Pasek[];
@@ -57,7 +56,7 @@ export function RadaLetadel({
               const leti = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "VE_VZDUCHU");
               const plan = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "NAPLANOVAN");
               const dnes = lety.filter((l) => l.rejstrik === a.rejstrik && l.stav === "UKONCEN");
-              const poloha = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha;
+              const jinde = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha !== domovskeKod && a.poloha;
               const otevreny = leti ?? plan;
               const stav = a.mimo_provoz ? "mimo" : leti ? "vzduch" : plan ? "naplanovan" : "";
               const popis = a.mimo_provoz
@@ -85,7 +84,7 @@ export function RadaLetadel({
                   <b className="rejstrik-lodi">{a.rejstrik}</b>
                   <span className="male seda cisla">
                     {popis}
-                    {poloha && <span className={poloha !== domovskeKod ? "jinde" : undefined}> · {poloha}</span>}
+                    {jinde && <span className="jinde"> · {jinde}</span>}
                   </span>
                 </button>
               );
