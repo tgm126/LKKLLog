@@ -111,3 +111,18 @@ test("průvodce: naplánovaný přelet – místo přistání předem, trasa na 
   await pasek.locator(".let-hlava").click();
   await expect(page.getByRole("button", { name: /Místo přistání\s*LKLT/ })).toBeVisible();
 });
+
+test("průvodce: místo vzletu = poslední evidované přistání letadla", async ({ page }) => {
+  // OK-CRA dnes přistálo v Letňanech (e2e_priprava) – nový let s ní odtud startuje
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
+  await page.getByRole("button", { name: /^OK-CRA/ }).click();
+  await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  await page.getByRole("button", { name: "Dál" }).click();
+  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT Letňany/ })).toBeVisible();
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
+  // OK-3819 naposledy přistálo doma – místo vzletu moje letiště
+  await page.getByRole("button", { name: /^OK-3819/ }).click();
+  await page.getByRole("button", { name: "Dál" }).click();
+  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKKL Kladno/ })).toBeVisible();
+});

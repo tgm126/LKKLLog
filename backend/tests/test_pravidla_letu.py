@@ -127,8 +127,11 @@ def test_druh_provozu_a_poloha(conn, pilot, osoba, let):
     )
     druh = {p["id"]: p["druh_provozu"] for p in k.get("/api/lety").json()["lety"]}
     assert druh == {kluzak: "PLACHTARSKY", vlecna: "PLACHTARSKY", prelet: "MOTOROVY"}
-    poloha = {a["rejstrik"]: a["poloha"] for a in k.get("/api/lety/nabidky").json()["letadla"]}
-    assert poloha["OK-CRA"] == "LKLT" and poloha["OK-2817"] is None
+    letadla = {a["rejstrik"]: a for a in k.get("/api/lety/nabidky").json()["letadla"]}
+    assert letadla["OK-CRA"]["poloha"] == "LKLT" and letadla["OK-2817"]["poloha"] is None
+    # výchozí místo vzletu nového letu (db/037): letiště posledního přistání
+    assert letadla["OK-CRA"]["poloha_letiste_id"] == _id(conn, "lov_letiste", "LKLT")
+    assert letadla["OK-CRA"]["poloha_popis"] is None
 
 
 def test_prekrocena_doba(conn, pilot, osoba, let):

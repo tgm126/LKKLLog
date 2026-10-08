@@ -7,7 +7,9 @@ Navrženo a odsouhlaseno 7. 10. 2026, skript `db/026_muj_provoz.sql`. Maketa
 Aeroklub se občas přesune jinam (např. na týden na tábor) a na letišti nebývají všichni
 členové. Každý uživatel si proto může **jen pro sebe, na svém zařízení a jen na dnešek**
 nastavit:
-- **letiště** – místo, kde dnes létá (výchozí je domovské letiště z číselníku, LKKL);
+- **letiště** – místo, kde dnes létá (výchozí je domovské letiště z číselníku, LKKL); je
+  výchozím místem přistání nového letu a místem vzletu u letadla bez evidovaného přistání
+  (jinak se startuje z posledního místa přistání letadla – 8. 10. 2026);
 - **osoby v provozu** – kdo je dnes na letišti; slouží jako filtr nabídky osob v posádce.
 
 Nic se neblokuje: „Hledat…“ v posádce dál hledá mezi všemi osobami a místo letu jde vždy

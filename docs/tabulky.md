@@ -27,7 +27,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_kategorie` | číselník | kategorie letadel | 001, 008 |
 | `lov_typ` | číselník | typy letadel → kategorie, počet míst | 001, 002, 008 |
 | `lov_letadlo` | trvalá data | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz (dočasně), platné (ne = vyřazené) | 001, 002, 013, 017, 031 |
-| `v_lov_letadlo` | pohled | platná letadla s typem, kategorií, počtem míst a **polohou** (místo posledního přistání vůbec – kód letiště nebo popis); pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017, 031, 035 |
+| `v_lov_letadlo` | pohled | platná letadla s typem, kategorií, počtem míst a **polohou** (poslední evidované přistání – `poloha` kód letiště nebo popis, zvlášť `poloha_letiste_id` / `poloha_popis`: výchozí místo vzletu nového letu); pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017, 031, 035, 037 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft], rychlá volba (nabízí se hned, ostatní přes Hledat…) | 003, 008, 028 |
 | `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` | 008, 016 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |

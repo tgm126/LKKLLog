@@ -425,7 +425,8 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
     """Vše pro průvodce novým letem v jednom dotazu (nabídky z pohledů v_lov_*)."""
     letadla = conn.execute(
         """SELECT a.id, a.rejstrik, a.typ, a.kategorie, a.kategorie_kod, a.pocet_mist,
-                  a.vlecne, a.soukrome, a.mimo_provoz, a.poloha,
+                  a.vlecne, a.soukrome, a.mimo_provoz,
+                  a.poloha, a.poloha_letiste_id, a.poloha_popis,
                   (SELECT min(v.cas_vzletu) FROM lkkl.v_let v
                    WHERE v.letadlo_id = a.id AND v.stav = 'VE_VZDUCHU') AS leti_od,
                   EXISTS (SELECT 1 FROM lkkl.v_let v

@@ -37,7 +37,7 @@ export type Novy = {
   vlekar?: number;
   uloha?: number;
   platce?: number | "aeroklub";
-  /** prázdné = moje letiště */
+  /** Výchozí = poslední evidované přistání letadla; prázdné = moje letiště. */
   mistoVzletu?: Misto;
   /** Místo přistání (plán, u aerovleku pro kluzák i vlečnou); prázdné = moje letiště. */
   mistoPristani?: Misto;
@@ -55,7 +55,9 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
   const mojeId = provoz?.letiste?.id;
   const [novy, setNovy] = useState<Novy>(() => {
     const a = nabidky.letadla.find((x) => x.id === letadloId && !x.mimo_provoz);
-    return a ? { osoby: {}, pob: 1, letadlo: a, zpusob: vychoziZpusob(nabidky) } : { osoby: {}, pob: 1 };
+    return a
+      ? { osoby: {}, pob: 1, letadlo: a, zpusob: vychoziZpusob(nabidky), mistoVzletu: vychoziMistoVzletu(a) }
+      : { osoby: {}, pob: 1 };
   });
   const [upravuji, setUpravuji] = useState<string | null>(null);
   const zmenit = (zmena: Partial<Novy>) => {
@@ -119,6 +121,7 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
       pob: Math.min(novy.pob, a.pocet_mist),
       zpusob: novy.zpusob ?? vychoziZpusob(nabidky),
       uloha: undefined,
+      mistoVzletu: vychoziMistoVzletu(a),
     });
   };
 
@@ -217,6 +220,13 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
 }
 
 export type NovyLet = ReturnType<typeof useNovyLet>;
+
+/** Výchozí místo vzletu: kde letadlo naposledy evidovaně přistálo (letiště, nebo místo
+ *  v terénu); bez přistání moje letiště (prázdné). */
+const vychoziMistoVzletu = (a: LetadloNabidka): Misto | undefined =>
+  a.poloha_letiste_id !== null || a.poloha_popis !== null
+    ? { id: a.poloha_letiste_id, popis: a.poloha_popis }
+    : undefined;
 
 /** Výchozí způsob vzletu kluzáku podle posledního (db: zpusob_kluzaku), jinak naviják. */
 const vychoziZpusob = (nabidky: Nabidky) =>

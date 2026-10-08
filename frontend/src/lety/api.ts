@@ -121,8 +121,11 @@ export type LetadloNabidka = {
   vlecne: boolean;
   soukrome: boolean;
   mimo_provoz: boolean;
-  /** Místo posledního přistání (kód letiště nebo popis), db/035. */
+  /** Poslední evidované přistání (kód letiště nebo popis), db/035; zvlášť id letiště, nebo
+   *  popis místa v terénu – výchozí místo vzletu nového letu (db/037). */
   poloha: string | null;
+  poloha_letiste_id: number | null;
+  poloha_popis: string | null;
   leti_od: string | null;
   naplanovan: boolean;
   /** Naposledy létající na letadle (id osob, od posledního). */

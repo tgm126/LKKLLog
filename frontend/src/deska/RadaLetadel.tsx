@@ -9,19 +9,23 @@ import { useJenCteni } from "../uzivatel";
 
 // Řada letadel pod lištou (docs/modul-desktop.md 3.1): všechna letadla podle kategorie,
 // neutrální rámeček se stavem jen proužkem vlevo (zelený letí, modrý naplánované) a dnešek:
-// běžící čas, nebo počet letů a nálet, oranžově kde letadlo je (poloha z databáze = místo
-// posledního přistání vůbec, když není moje letiště). Klik na letadlo na zemi = nový let
-// s ním; na letící nebo naplánované = detail.
+// běžící čas, nebo počet letů a nálet, a kde letadlo je – poslední evidované přistání
+// (v_lov_letadlo.poloha), když není na mém letišti; oranžově, když není ani na domovském
+// (rozhodnuto 8. 10. 2026). Klik na letadlo na zemi = nový let s ním (místo vzletu = poloha);
+// na letící nebo naplánované = detail.
 
 export function RadaLetadel({
   letadla,
   lety,
   mojeKod,
+  domovskeKod,
   nazvyKategorii,
 }: {
   letadla: LetadloNabidka[];
-  /** Moje letiště – letadlo jinde se označí oranžově. */
+  /** Moje letiště (můj provoz) – poloha se ukáže, jen když je jinde. */
   mojeKod: string | undefined;
+  /** Domovské letiště – poloha jinde než doma i jinde než na mém letišti je oranžově. */
+  domovskeKod: string | undefined;
   /** Dnešní lety (stav letadel je vždy podle dneška). */
   lety: Pasek[];
   /** Názvy kategorií (na notebooku jen přepážky). */
@@ -53,7 +57,7 @@ export function RadaLetadel({
               const leti = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "VE_VZDUCHU");
               const plan = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "NAPLANOVAN");
               const dnes = lety.filter((l) => l.rejstrik === a.rejstrik && l.stav === "UKONCEN");
-              const jinde = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha;
+              const poloha = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha;
               const otevreny = leti ?? plan;
               const stav = a.mimo_provoz ? "mimo" : leti ? "vzduch" : plan ? "naplanovan" : "";
               const popis = a.mimo_provoz
@@ -81,7 +85,7 @@ export function RadaLetadel({
                   <b className="rejstrik-lodi">{a.rejstrik}</b>
                   <span className="male seda cisla">
                     {popis}
-                    {jinde && <span className="jinde"> · {jinde}</span>}
+                    {poloha && <span className={poloha !== domovskeKod ? "jinde" : undefined}> · {poloha}</span>}
                   </span>
                 </button>
               );

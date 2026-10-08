@@ -107,8 +107,9 @@ s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, 
 („Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
 a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má
 v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. **Místo vzletu**,
-**místo přistání** a **plátce** jsou předvyplněné řádky v bloku Další údaje (místa = moje
-letiště), ťuknutím se změní (místo: hledání letiště nebo popis místa); u aerovleku platí
+**místo přistání** a **plátce** jsou předvyplněné řádky v bloku Další údaje – **místo vzletu
+= poslední evidované přistání letadla** (`v_lov_letadlo.poloha`, db/037; bez přistání moje
+letiště), místo přistání = moje letiště (rozhodnuto 8. 10. 2026) – ťuknutím se změní (místo: hledání letiště nebo popis místa); u aerovleku platí
 místo přistání pro kluzák i vlečnou. Proběhlý let: časy vzletu,
 přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin a minut,
 −1 / +1 a doba letu.

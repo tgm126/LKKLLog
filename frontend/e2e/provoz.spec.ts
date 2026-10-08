@@ -19,12 +19,14 @@ test("můj provoz: letiště pro dnešek", async ({ page }) => {
   await expect(stitek).toBeVisible();
   await expect(page.locator(".hlavicka")).toContainText(/[A-ZÚČŘŠŽ][a-zěščřžýáíéůú]+ \d+\. \d+\. \d{4}/);
 
-  // Nový let má místo vzletu moje letiště.
+  // Nový let: místo vzletu tam, kde letadlo naposledy přistálo (OK-3819 doma), místo
+  // přistání moje letiště.
   await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
-  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT Letňany/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKKL Kladno/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Místo přistání\s*LKLT Letňany/ })).toBeVisible();
   await page.goto("/"); // z průvodce zpět na přehled
 
   // Ťuknutím na štítek zpět na domovské.
