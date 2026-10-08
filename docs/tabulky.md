@@ -47,7 +47,8 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_letadlo_volne` | trigger (před zápisem letu) | letadlo nemůže mít dva překrývající se lety – hláška „OK-… už letí (vzlet 10:42 UTC, PIC …)“; omezení `letadlo_bez_prekryvu` zůstává jako pojistka pro souběh | 025 |
 | `cas_hlasky()`, `let_popis_hlasky()` | funkce | čas v UTC a popis druhého letu (vzlet / doba, PIC) do chybových hlášek | 025 |
 | `let_doplnit_misto` | trigger | nezadané místo vzletu i přistání = domovské letiště (aplikace posílá moje letiště) | 009, 027 |
-| `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat ani vyprázdnit | 009, 017 |
+| `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat (jen procedurou `smazat_lety_dne`) ani vyprázdnit | 009, 017, 033 |
+| `smazat_lety_dne(den)` | procedura | admin přímo v databázi: `CALL lkkl.smazat_lety_dne('RRRR-MM-DD');` smaže všechny lety dne (datum vzletu, u nevzlétnutého založení; UTC) ve všech stavech s posádkou a T&G, u vleku celou dvojici; vrátí počet (`smazano`). Audit zůstává („Smazání letu“ se starými hodnotami) | 033 |
 | `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, platná (v aplikaci „aktivní“, do 031 sloupec `aktivni`; příznak vlekař převeden do oprávnění) | 004, 015, 017, 021, 031 |
 | `lov_role` | číselník | role v letu, do které se nabízejí osoby podle oprávnění: INSTRUKTOR (výcvik · PIC), DOZOR (sólo · dozor), EXAMINATOR (přezkoušení · PIC), VLEKAR (vlečný let · PIC); kódy používá program | 024 |
 | `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FI(A), CRI(A), FE(A), CRE(A), instruktor a inspektor ULL, vlekař) | 021, 024 |
