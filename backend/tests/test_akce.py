@@ -2,6 +2,9 @@
 
 import re
 
+import psycopg
+import pytest
+
 from .conftest import _id
 
 
@@ -176,6 +179,27 @@ def test_novy_let_vycvik(conn, pilot, osoba, flotila):
     stav = _stav(conn, odpoved.json()["let_id"])
     assert stav["stav"] == "NAPLANOVAN" and stav["platce_id"] == zak  # u výcviku platí žák
     assert stav["pob"] == 2  # z posádky
+
+
+def test_aerovlek_jen_s_vlecnou(conn, pilot, let):
+    """Aerovlek vždy s letem vlečné (db/032) – i cizí vlečná je v letadlech."""
+    pilot_id, k = pilot
+    data = _novy(conn, rejstrik="OK-3819", zpusob="VLEK", posadka={"PIC": pilot_id}, pob=1)
+    odpoved = k.post("/api/lety", json={**data, "akce": "naplanovat"})
+    assert odpoved.status_code == 400
+    assert odpoved.json()["detail"] == "při vzletu aerovlekem chybí let vlečné."
+
+    # ani přímo v databázi: změna způsobu vzletu na aerovlek bez vlečné
+    kluzak = let("OK-3819", {"PIC": pilot_id}, zpusob="NAVIJAK")
+    with (
+        pytest.raises(psycopg.errors.RaiseException, match="chybí let vlečné"),
+        conn.transaction(),
+    ):
+        conn.execute(
+            "UPDATE lkkl.let SET zpusob_vzletu_id = %s WHERE id = %s",
+            (_id(conn, "lov_zpusob_vzletu", "VLEK"), kluzak),
+        )
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
 
 
 def test_novy_probehly_aerovlek(conn, pilot, osoba, flotila):

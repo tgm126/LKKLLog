@@ -53,7 +53,9 @@ Pravidla, která hlídá databáze (jeden PIC, funkce podle účelu, POB, vlek, 
 T&G, nemazání, doplnění domovského letiště), server neopakuje – chybu z databáze převede na
 srozumitelnou hlášku. Server navíc: **plátce** předvyplní podle účelu (normální → PIC, výcvik
 a sólo → žák, přezkoušení → přezkoušený), **vlek** založí jako dva propojené lety v jedné
-transakci (vlečný let bez účelu, plátce = plátce kluzáku).
+transakci (vlečný let bez účelu, plátce = plátce kluzáku). **Aerovlek je vždy s letem
+vlečné** (db/032, 8. 10. 2026): cizí vlečné se zakládají v `lov_letadlo` jako soukromé
+a vlečné, jejich piloti jako externí osoby – výjimka pro „vlečnou mimo evidenci“ není.
 
 **Proběhlý aerovlek** se zadává i s časem přistání vlečné (vlečný let je samostatný let
 s vlastní dobou); vzlet je u obou stejný. **Vlekař** nemůže být zároveň v posádce kluzáku

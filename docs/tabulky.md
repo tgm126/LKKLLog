@@ -42,7 +42,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
 | `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
-| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek, časy T&G, úloha (povinnost, účel, kategorie) | 009, 011, 016 |
+| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek (vlečný let jen u aerovleku a jen vlečné letadlo; **aerovlek vždy s letem vlečné** – i cizí vlečná je v `lov_letadlo` jako soukromá a vlečná), časy T&G, úloha (povinnost, účel, kategorie) | 009, 011, 016, 019, 032 |
 | `let_osoby_bez_prekryvu()` | funkce (v `let_kontrola`) | osoba na palubě nemůže být ve vzduchu ve dvou letech zároveň (plánování volné, dozor na zemi se nepočítá); hláška s rejstříkem a časem druhého letu | 018, 025 |
 | `let_letadlo_volne` | trigger (před zápisem letu) | letadlo nemůže mít dva překrývající se lety – hláška „OK-… už letí (vzlet 10:42 UTC, PIC …)“; omezení `letadlo_bez_prekryvu` zůstává jako pojistka pro souběh | 025 |
 | `cas_hlasky()`, `let_popis_hlasky()` | funkce | čas v UTC a popis druhého letu (vzlet / doba, PIC) do chybových hlášek | 025 |
