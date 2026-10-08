@@ -9,6 +9,7 @@ import { useAkceLetu } from "../lety/akce";
 import { useLety, type Pasek, type Stav } from "../lety/api";
 import { Denik, PasekNaplanovany, PasekVeVzduchu } from "../lety/Pasek";
 import { dvojice, podle } from "../lety/poradi";
+import { useJenCteni } from "../uzivatel";
 
 /** Přehled letů dne: ve vzduchu, naplánované (pásky), ukončené a zrušené (deník) –
  *  maketa docs/navrhy/lety-mobil-v4.html. */
@@ -16,12 +17,15 @@ export function Lety() {
   const { data: lety, error, dataUpdatedAt } = useLety();
   const { provest, pristat, dialog, probiha } = useAkceLetu();
   const navigate = useNavigate();
+  const jenCteni = useJenCteni();
   const dole = (
     <div className="dole">
       <Oznameni />
-      <Tlacitko varianta="modre" hlavni onClick={() => navigate("/novy-let")}>
-        + Nový let
-      </Tlacitko>
+      {!jenCteni && (
+        <Tlacitko varianta="modre" hlavni onClick={() => navigate("/novy-let")}>
+          + Nový let
+        </Tlacitko>
+      )}
     </div>
   );
   if (!lety) {

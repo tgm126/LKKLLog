@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { prihlasit, pripravitData } from "./pomocne";
+import { prihlasit, prihlasitJenCteni, pripravitData } from "./pomocne";
 
 // Provozní deska na desktopu (docs/modul-desktop.md) v rozměru věže 1920 × 1080 a notebooku
 // 1366 × 768, ovládání myší; lety z e2e_priprava.py.
@@ -117,4 +117,26 @@ test("deska na notebooku: souhrny za tlačítkem, jiný den bez pásků", async 
   // Pod 1200 px mobilní přehled (pásky pod sebou)
   await page.setViewportSize({ width: 1100, height: 768 });
   await expect(page.locator(".let.problem", { hasText: "OK-MFV" })).toBeVisible();
+});
+
+test("deska jen ke čtení: bez akcí, N ani letadlo na zemi nic nezaloží, detail bez úprav", async ({
+  page,
+  context,
+}) => {
+  await context.clearCookies();
+  await prihlasitJenCteni(page);
+  await expect(page.locator(".lista-desky")).toContainText("Jen ke čtení");
+  const pasky = page.getByRole("region", { name: "Pásky" });
+  await expect(pasky.locator(".pasek-deska").first()).toBeVisible();
+  await expect(pasky.getByRole("button")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Nový let/ })).toHaveCount(0);
+
+  await page.keyboard.press("n");
+  await page.getByRole("navigation", { name: "Letadla" }).getByRole("button", { name: /OK-CUO 78/ }).click();
+  await expect(page.getByRole("complementary", { name: "Nový let" })).toHaveCount(0);
+
+  await pasky.locator(".pasek-deska", { hasText: "OK-MFV" }).getByText("Olga Pilotka").click();
+  const detail = page.getByRole("complementary", { name: "Detail letu" });
+  await expect(detail).toContainText("OK-MFV");
+  await expect(detail.getByRole("button", { name: /Poznámka|Přistál|Zrušit/ })).toHaveCount(0);
 });

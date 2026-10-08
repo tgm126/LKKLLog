@@ -9,6 +9,16 @@ export function pripravitData() {
   execSync("uv run python -m tests.e2e_priprava", { cwd: "../backend", stdio: "inherit" });
 }
 
+/** Přihlášení jen ke čtení (sdílený počítač) – bez ovládání se zápisem. */
+export async function prihlasitJenCteni(page: Page) {
+  await page.goto("/prihlaseni");
+  await page.getByLabel("E-mail").fill("admin@example.cz");
+  await page.getByLabel("Heslo", { exact: true }).fill(HESLO_ADMINA);
+  await page.getByRole("checkbox", { name: /Jen ke čtení/ }).click();
+  await page.getByRole("button", { name: "Přihlásit" }).click();
+  await expect(page.getByText(/jen (ke )?čtení/i).first()).toBeVisible();
+}
+
 export async function prihlasit(page: Page) {
   await page.goto("/prihlaseni");
   await page.getByLabel("E-mail").fill("admin@example.cz");

@@ -7,6 +7,7 @@ import { Hlaska } from "../komponenty/Hlaska";
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { Vstupni } from "../komponenty/Vstupni";
+import { Zaskrtavatko } from "../komponenty/Zaskrtavatko";
 import { adresaPoPrihlaseni, useJa, zmenitUzivatele } from "../uzivatel";
 
 export function Prihlaseni() {
@@ -17,10 +18,11 @@ export function Prihlaseni() {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [heslo, setHeslo] = useState("");
+  const [jenCteni, setJenCteni] = useState(false);
   const poleHeslo = useRef<HTMLInputElement>(null);
 
   const prihlasit = useMutation({
-    mutationFn: () => poslat<Ja>("/prihlaseni", { email, heslo }),
+    mutationFn: () => poslat<Ja>("/prihlaseni", { email, heslo, jen_cteni: jenCteni }),
     onSuccess: (prihlaseny) => {
       zmenitUzivatele(qc, prihlaseny);
       navigate(kam, { replace: true });
@@ -61,6 +63,13 @@ export function Prihlaseni() {
           ref={poleHeslo}
           value={heslo}
           onChange={(e) => setHeslo(e.target.value)}
+        />
+        {/* sdílený počítač (klubovna): nikdo pak nemůže nic změnit pod mým jménem */}
+        <Zaskrtavatko
+          popisek="Jen ke čtení"
+          pod="sdílený počítač – nic nejde změnit"
+          zaskrtnuto={jenCteni}
+          zmenit={setJenCteni}
         />
         <Hlaska>{prihlasit.error?.message}</Hlaska>
         <Tlacitko type="submit" varianta="modre" hlavni disabled={prihlasit.isPending}>

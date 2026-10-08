@@ -22,6 +22,10 @@ export function useJa() {
   });
 }
 
+/** Přihlášeno jen ke čtení (sdílený počítač): aplikace skryje všechno ovládání se zápisem
+ *  (zápisy hlídá server). */
+export const useJenCteni = () => useJa().data?.jen_cteni ?? false;
+
 /** Přihlášení, odhlášení, „přihlásit se jako“: nový uživatel a zahodit data předchozího. */
 export function zmenitUzivatele(qc: QueryClient, ja: Ja | null): void {
   qc.removeQueries({ predicate: (q) => !["ja", "aplikace"].includes(String(q.queryKey[0])) });

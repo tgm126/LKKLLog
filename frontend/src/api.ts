@@ -56,6 +56,9 @@ export type Ja = OsobaKratce & {
   };
   /** Skutečný admin, pokud je přihlášen jako jiná osoba. */
   puvodni: OsobaKratce | null;
+  /** Přihlášeno jen ke čtení (sdílený počítač): zápisy server odmítne, práva vypnutá
+   *  (docs/modul-desktop.md 6.1). */
+  jen_cteni: boolean;
 };
 
 export type Aplikace = { verze: string; pruh: string };

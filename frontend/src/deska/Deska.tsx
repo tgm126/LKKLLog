@@ -47,7 +47,7 @@ export function Deska() {
       const vPoli = (e.target as HTMLElement).closest("input, textarea, select");
       if (vPoli || e.altKey || e.metaKey) return;
       if (e.key === "Escape" && panel) navigate("/");
-      else if (e.key.toLowerCase() === "n" && !e.ctrlKey) {
+      else if (e.key.toLowerCase() === "n" && !e.ctrlKey && !ja.jen_cteni) {
         e.preventDefault();
         navigate("/novy-let");
       } else if (e.key.toLowerCase() === "z" && e.ctrlKey && zprava?.zpet) {
@@ -58,7 +58,7 @@ export function Deska() {
     };
     document.addEventListener("keydown", klavesa);
     return () => document.removeEventListener("keydown", klavesa);
-  }, [panel, navigate, zprava, oznamit]);
+  }, [panel, navigate, zprava, oznamit, ja.jen_cteni]);
 
   const jinyDen = den !== undefined;
   const lety = letyDne.data ?? [];

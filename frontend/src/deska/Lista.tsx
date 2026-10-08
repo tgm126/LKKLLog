@@ -68,6 +68,11 @@ export function Lista({
         {ja.prava.spravuje_osoby && <NavLink to="/osoby">Osoby</NavLink>}
         {ja.prava.spravuje_letadla && <NavLink to="/letadla">Letadla</NavLink>}
       </nav>
+      {ja.jen_cteni && (
+        <span title="Sdílený počítač – nic nejde změnit; pro změny se odhlaste a přihlaste znovu">
+          <Stitek barva="oranzovy">Jen ke čtení</Stitek>
+        </span>
+      )}
       <div className="den-desky">
         <Tlacitko varianta="bez-ramu" aria-label="Předchozí den" onClick={() => zmenitDen(posunDne(den.den, -1))}>
           ‹
@@ -82,7 +87,8 @@ export function Lista({
           ›
         </Tlacitko>
       </div>
-      {jinde && (
+      {jinde && ja.jen_cteni && <Stitek barva="oranzovy">{jinde.kod}</Stitek>}
+      {jinde && !ja.jen_cteni && (
         <button
           type="button"
           className="letiste-desky"

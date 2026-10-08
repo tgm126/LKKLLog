@@ -9,7 +9,7 @@ import { Blok, Obrazovka } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
 import { Stitek, type BarvaStitku } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
-import { useJa } from "../uzivatel";
+import { useJa, useJenCteni } from "../uzivatel";
 import { useAkceLetu, type Provedeno } from "./akce";
 import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from "./api";
 import { PolovinaPasku, tridaPasku } from "./Pasek";
@@ -124,7 +124,9 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
   });
   const ulozit = (zmeny: Record<string, unknown>) => upravit.mutate(zmeny);
 
-  const lzeUpravit = l.stav !== "ZRUSEN";
+  // zrušený let jde jen obnovit; v relaci jen ke čtení se neupravuje nic
+  const jenCteni = useJenCteni();
+  const lzeUpravit = l.stav !== "ZRUSEN" && !jenCteni;
   const pristal = l.stav === "UKONCEN";
   const u = (klic: string, povoleno = true) =>
     lzeUpravit && povoleno ? { upravit: prepnout(klic), otevreno: upravuji === klic } : {};
@@ -432,6 +434,7 @@ export function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
   const oznamit = useOznamit();
   const [rusim, setRusim] = useState(false);
   const zaneprazdnen = probiha?.letId === l.id;
+  const jenCteni = useJenCteni();
 
   const prikaz = useMutation({
     mutationFn: (a: { cesta: string; data?: unknown }) =>
@@ -446,6 +449,8 @@ export function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
     },
     onError: (e) => oznamit({ text: e.message, chyba: true }),
   });
+
+  if (jenCteni) return null;
 
   if (rusim) {
     return (

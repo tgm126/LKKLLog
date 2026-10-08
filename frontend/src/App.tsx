@@ -22,7 +22,7 @@ import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
 import { useDeska } from "./rozvrzeni";
-import { useJa, zmenitUzivatele } from "./uzivatel";
+import { useJa, useJenCteni, zmenitUzivatele } from "./uzivatel";
 
 export function App() {
   // Provoz (přehled, detail letu, nový let): na desktopu provozní deska s panelem zprava,
@@ -38,14 +38,18 @@ export function App() {
           <Route path="/" element={<Deska />}>
             <Route index element={null} />
             <Route path="let/:id" element={<PanelDetailu />} />
-            <Route path="novy-let" element={<PanelNovehoLetu />} />
+            <Route element={<SeZapisem />}>
+              <Route path="novy-let" element={<PanelNovehoLetu />} />
+            </Route>
           </Route>
         ) : (
           <>
             <Route element={<SHlavickou />}>
               <Route index element={<Lety />} />
             </Route>
-            <Route path="/novy-let" element={<Pruvodce />} />
+            <Route element={<SeZapisem />}>
+              <Route path="/novy-let" element={<Pruvodce />} />
+            </Route>
             <Route path="/let/:id" element={<Detail />} />
           </>
         )}
@@ -55,8 +59,10 @@ export function App() {
         </Route>
         <Route path="/osoba/nova" element={<NovaOsoba />} />
         <Route path="/osoba/:id" element={<DetailOsoby />} />
-        <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
-        <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />
+        <Route element={<SeZapisem />}>
+          <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
+          <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
@@ -90,6 +96,11 @@ function Prihlaseny() {
       <Outlet />
     </OznameniProvider>
   );
+}
+
+/** Obrazovky, které jen zapisují (nový let, můj provoz): v relaci jen ke čtení zpět na přehled. */
+function SeZapisem() {
+  return useJenCteni() ? <Navigate to="/" replace /> : <Outlet />;
 }
 
 /** Obrazovky s hlavičkou a menu (průvodce a detail mají vlastní horní lištu). */

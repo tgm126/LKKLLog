@@ -11,7 +11,7 @@ světlý i tmavý režim). Starší `provoz-desktop.html`, `-v2` až `-v6` jsou 
 |---|---|---|---|
 | Věž | služba na věži, časoměřič | vidět všechno, co letí, a rychle stisknout VZLET / PŘISTÁL; hodiny UTC, soumrak, počasí | monitor 1920 × 1080, myš, často celý den otevřené |
 | Kancelář / doma | účetní | projít a opravit lety, plátce, doby, i za jiné dny; později deník za období a export | notebook 1366 × 768 (nebo 1920 při zvětšení 125–150 %) |
-| Klubovna | piloti, instruktoři | podívat se na provoz; občas založit nebo naplánovat let | sdílený počítač, myš (přihlášení jen ke čtení odloženo, 6.1) |
+| Klubovna | piloti, instruktoři | podívat se na provoz; občas založit nebo naplánovat let | sdílený počítač, myš, **přihlášení jen ke čtení** (6.1) |
 
 Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes celou obrazovku,
 **co nejvíc informací najednou** (místa je dost).
@@ -61,7 +61,7 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
   šipkami** (3.6), sluneční časy se zbývajícím časem do konce soumraku (oranžově), hodiny UTC se
   sekundami, nabídka uživatele (Můj provoz, Režim zobrazení, Odhlásit – jako na mobilu).
   Jiné než domovské letiště = oranžový štítek s kódem jako na mobilu. Při přihlášení jen ke
-  čtení (odloženo) oranžový štítek „Jen ke čtení“ a tlačítko „Přihlásit k úpravám“ (3.7).
+  čtení oranžový štítek „Jen ke čtení“ (3.7).
 - **Sloupce se posouvají každý zvlášť**, lišta, řada letadel a časová osa zůstávají.
 
 ### 3.1 Řada letadel
@@ -170,9 +170,10 @@ současný stav. Úpravy letů jiného dne stejně jako dnes (omezí je až uzá
 `GET /api/lety?den=` a `GET /api/den?den=` už existuje.
 
 ### 3.7 Přihlášení jen ke čtení (pro klubovnu)
-**Odloženo** (6.1). Až se bude dělat, na desktopu v režimu jen ke čtení: chybí „+ Nový let“, akce na páscích a v detailu,
-pole v detailu nejdou upravit, klik na letadlo na zemi nic nezaloží; v liště oranžový štítek
-„Jen ke čtení“ a „Přihlásit k úpravám“. Totéž na mobilu.
+Viz 6.1. Na desktopu i na mobilu v relaci jen ke čtení: chybí „+ Nový let“ (i klávesa `N`
+a adresa `/novy-let`), akce na páscích a v detailu, pole v detailu nejdou upravit, klik na
+letadlo na zemi nic nezaloží, Můj provoz nejde měnit, záložky Osoby a Letadla nejsou. V liště
+oranžový štítek „Jen ke čtení“; v nabídce uživatele zůstává režim zobrazení a Odhlásit.
 
 ### 3.8 Detail letu a nový let – panel zprava
 - Panely sahají od řady letadel **až dolů přes časovou osu** (víc místa, méně posouvání).
@@ -223,8 +224,8 @@ pole v detailu nejdou upravit, klik na letadlo na zemi nic nezaloží; v liště
 2. **Osoby a Letadla na desktopu** – seznam vlevo, detail vpravo (vlastní krátký návrh).
 3. **Můj provoz na desktopu** – v nabídce uživatele (malá úprava).
 4. **Počasí** – zdroj, stanice, mezipaměť na serveru (vlastní návrh).
-5. Později: přihlášení jen ke čtení (6.1), deník za období (účetní), uzávěrky, export, velký
-   displej.
+5. **Přihlášení jen ke čtení** (6.1) – rozhodnuto 8. 10. 2026, dělá se hned po desce.
+6. Později: deník za období (účetní), uzávěrky, export, velký displej.
 
 ## 6. Rozhodnutí a otázky
 
@@ -235,36 +236,28 @@ a textu v hlavičce), TMG do motorového provozu, bez karty Piloti dnes; deník 
 v detailu; pásek bez „⋯“; klidnější deska (na pásku žádné barevné písmo kromě tlačítek PŘISTÁL a VZLET, T&G bílé
 s černým textem i na mobilu, detail bez lišty s rejstříkem, neutrální řada
 letadel s proužkem stavu, trasa jen mimo moje letiště, výrazný vybraný pásek, jemnější osa,
-panely až dolů); časová osa podle dne s pásmy soumraku; přihlášení jen ke čtení
-odloženo.
+panely až dolů); časová osa podle dne s pásmy soumraku. 8. 10. 2026: přihlášení jen ke čtení ano (6.1).
 
-### 6.1 Přihlášení jen ke čtení – ODLOŽENO (7. 10. 2026: zatím se nedělá)
-Návrh zůstává pro pozdější rozhodnutí včetně otázek níže.
-
+### 6.1 Přihlášení jen ke čtení – rozhodnuto 8. 10. 2026
 Problém: na sdíleném počítači (klubovna) platí přihlášení 30 dní a kolemjdoucí by jednal pod
 cizím jménem – audit by zapsal nesprávnou osobu.
 
 - U přihlášení zaškrtávátko **„Jen ke čtení (sdílený počítač)“**. Je to vlastnost **relace**
-  (zařízení), ne účtu:
+  (zařízení), ne účtu (`db/030`):
   ```sql
   ALTER TABLE lkkl.relace ADD COLUMN jen_cteni boolean NOT NULL DEFAULT false;
   ```
   Bez auditu (relace audit nemají); přihlášení se zapisuje jako dosud.
-- **Hlídá server:** každý zápis (`POST` mimo přihlášení a odhlášení) v relaci jen ke čtení
-  vrátí 403 „Přihlášeno jen ke čtení“ – jedna společná kontrola pro všechny endpointy, test,
-  že ji žádný zápis neobejde. Skrytí tlačítek ve frontendu je jen pohodlí.
+- **Hlídá server:** v relaci jen ke čtení odmítne závislost `prihlaseny` každý požadavek
+  kromě čtení (`GET`) hláškou 403 „Přihlášeno jen ke čtení…“ – jedna kontrola pro všechny
+  endpointy; test projde všechny zápisy aplikace, že žádný kontrolu neobejde. Odhlásit se
+  jde vždy. Skrytí ovládání v aplikaci (3.7) je jen pohodlí.
+- **Bez práv:** v relaci jen ke čtení se práva (admin, správa osob a letadel…) neuplatní,
+  `GET /api/ja` je vrátí vypnutá a s příznakem `jen_cteni`.
 - Relace jen ke čtení platí 30 dní jako ostatní (počítač v klubovně zůstane přihlášený).
-- `GET /api/ja` vrátí `jen_cteni`; podle něj frontend skryje ovládání (3.7).
-- „Můj provoz“ (letiště, osoby v provozu) zůstává i v relaci jen ke čtení povolený? Je to
-  nastavení zařízení, ne údaj letu. *Doporučuji ano* (je to jediný zápis, který se povolí).
-
-*Otázka:* co udělá **„Přihlásit k úpravám“**?
-- **a) Jednoduše** (doporučuji na začátek): běžné přihlášení vlastním e-mailem a heslem
-  nahradí relaci jen ke čtení; po práci se člověk odhlásí a kdokoli přihlásí počítač znovu
-  jen ke čtení. Riziko: zapomene se odhlásit.
-- **b) Dočasně:** úpravové přihlášení platí jen 15 minut od poslední aktivity a pak se
-  zařízení samo vrátí do relace jen ke čtení (dvě relace na zařízení). Bezpečnější, ale
-  složitější; jde doplnit později bez změny a).
+- **Nejsou** (rozhodnuto 8. 10. 2026, zatím ne): tlačítko „Přihlásit k úpravám“ – kdo chce
+  zapisovat, odhlásí se a přihlásí se znovu bez zaškrtnutí; ani **Můj provoz** se v relaci jen
+  ke čtení nemění (je to také zápis).
 
 ### 6.2 Další otázky
 1. **Písmo 12 / 15 / 20 px i na desktopu.** Na věži z dálky stačí zvětšení prohlížeče

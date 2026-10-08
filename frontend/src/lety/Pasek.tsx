@@ -5,6 +5,7 @@ import { doba, hodinyMinuty, stopky } from "../cas";
 import { Stitek } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useTik } from "../tik";
+import { useJenCteni } from "../uzivatel";
 import type { Akce, LetKPristani } from "./akce";
 import type { Pasek as PasekLetu, Stav } from "./api";
 import "./Pasek.css";
@@ -211,19 +212,22 @@ export function PasekVeVzduchu({
   pristat,
   zaneprazdnen,
 }: { lety: PasekLetu[] } & AkcePasku) {
+  const jenCteni = useJenCteni();
   return (
     <div className={`let ${tridaPasku(lety)}`}>
       {lety.map((l) => (
         <Polovina key={l.id} let={l}>
           {/* T&G jen motorová letadla, TMG a UL, ne vlečná (při vleku nedělá); počet na tlačítku */}
-          {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
+          {!jenCteni && l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
             <Tlacitko varianta="obrys" disabled={zaneprazdnen} onClick={() => provest(l.id, "tg")}>
               T&amp;G <span className="cisla">{l.pocet_tg}</span>
             </Tlacitko>
           )}
-          <Tlacitko varianta="zelene" hlavni disabled={zaneprazdnen} onClick={() => pristat(l)}>
-            Přistál
-          </Tlacitko>
+          {!jenCteni && (
+            <Tlacitko varianta="zelene" hlavni disabled={zaneprazdnen} onClick={() => pristat(l)}>
+              Přistál
+            </Tlacitko>
+          )}
         </Polovina>
       ))}
     </div>
@@ -232,22 +236,25 @@ export function PasekVeVzduchu({
 
 /** Naplánovaný let; vlek jako dvojitý pásek (kluzák a vlečná startují společně). */
 export function PasekNaplanovany({ lety, provest, zaneprazdnen }: { lety: PasekLetu[] } & AkcePasku) {
+  const jenCteni = useJenCteni();
   return (
     <div className="let naplanovan">
       {lety.map((l) => (
         <Polovina key={l.id} let={l} />
       ))}
       {/* VZLET pod páskem přes celou šířku (jako PŘISTÁL); u vleku jeden pro oba lety */}
-      <div className="let-akce">
-        <Tlacitko
-          varianta="modre"
-          hlavni
-          disabled={zaneprazdnen}
-          onClick={() => provest(lety[0]!.id, "vzlet")}
-        >
-          Vzlet
-        </Tlacitko>
-      </div>
+      {!jenCteni && (
+        <div className="let-akce">
+          <Tlacitko
+            varianta="modre"
+            hlavni
+            disabled={zaneprazdnen}
+            onClick={() => provest(lety[0]!.id, "vzlet")}
+          >
+            Vzlet
+          </Tlacitko>
+        </div>
+      )}
     </div>
   );
 }

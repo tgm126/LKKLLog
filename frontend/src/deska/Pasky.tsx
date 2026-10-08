@@ -5,6 +5,7 @@ import { Tlacitko } from "../komponenty/Tlacitko";
 import type { useAkceLetu } from "../lety/akce";
 import type { Pasek, Stav } from "../lety/api";
 import { dvojice, podle } from "../lety/poradi";
+import { useJenCteni } from "../uzivatel";
 import { PasekDeska } from "./PasekDeska";
 
 // Sloupec pásků (docs/modul-desktop.md 3.2): ve vzduchu (nejdéle letící nahoře), pod nimi
@@ -24,6 +25,7 @@ export function Pasky({
   akce: Akce;
 }) {
   const navigate = useNavigate();
+  const jenCteni = useJenCteni();
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
   const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu)));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
@@ -42,7 +44,8 @@ export function Pasky({
         vybrany={l.id === vybranyId}
         onClick={otevrit(l.id)}
       >
-        {obsah(l, i)}
+        {/* jen ke čtení: bez akcí (přihrádka zůstane prázdná) */}
+        {!jenCteni && obsah(l, i)}
       </PasekDeska>
     ));
     return (

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { doba, stopky } from "../cas";
 import type { LetadloNabidka, Pasek } from "../lety/api";
 import { useTik } from "../tik";
+import { useJenCteni } from "../uzivatel";
 
 // Řada letadel pod lištou (docs/modul-desktop.md 3.1): všechna letadla podle kategorie,
 // neutrální rámeček se stavem jen proužkem vlevo (zelený letí, modrý naplánované) a dnešek:
@@ -30,12 +31,15 @@ export function RadaLetadel({
 }) {
   const navigate = useNavigate();
   const ted = useTik();
+  const jenCteni = useJenCteni();
   const kategorie = [...new Map(letadla.map((a) => [a.kategorie_kod, a.kategorie]))];
   return (
     <nav className="rada-letadel" aria-label="Letadla">
-      <button type="button" className="novy-let" onClick={() => navigate("/novy-let")}>
-        + Nový let <kbd>N</kbd>
-      </button>
+      {!jenCteni && (
+        <button type="button" className="novy-let" onClick={() => navigate("/novy-let")}>
+          + Nový let <kbd>N</kbd>
+        </button>
+      )}
       {kategorie.map(([kod, nazev]) => (
         <div key={kod} className="skupina-lodi">
           {nazvyKategorii && <span className="nadpisek">{nazev}</span>}
@@ -64,11 +68,11 @@ export function RadaLetadel({
                   className={["lod", stav].filter(Boolean).join(" ")}
                   disabled={a.mimo_provoz}
                   title={[a.typ, a.vlecne && "vlečná", a.soukrome && "soukromé"].filter(Boolean).join(" · ")}
-                  onClick={() =>
-                    otevreny
-                      ? navigate(`/let/${otevreny.id}`)
-                      : navigate("/novy-let", { state: { letadloId: a.id } })
-                  }
+                  onClick={() => {
+                    if (otevreny) navigate(`/let/${otevreny.id}`);
+                    // jen ke čtení: letadlo na zemi nic nezaloží
+                    else if (!jenCteni) navigate("/novy-let", { state: { letadloId: a.id } });
+                  }}
                 >
                   <b className="rejstrik-lodi">{a.rejstrik}</b>
                   <span className="male seda cisla">

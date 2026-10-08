@@ -49,11 +49,15 @@ class Ja(OsobaSEmailem):
     prava: Prava
     puvodni: OsobaKratce | None
     """Skutečný admin, pokud je přihlášen jako jiná osoba."""
+    jen_cteni: bool
+    """Relace jen ke čtení (sdílený počítač): zápisy server odmítne, práva vypnutá."""
 
 
 class PrihlaseniIn(BaseModel):
     email: str
     heslo: str
+    jen_cteni: bool = False
+    """Sdílený počítač (klubovna): relace jen ke čtení (docs/modul-desktop.md 6.1)."""
 
 
 class Zarizeni(BaseModel):
@@ -122,6 +126,10 @@ class Prihlaseny:
     smi_odblokovat: bool
     spravuje_osoby: bool
     spravuje_letadla: bool
+    jen_cteni: bool
+
+
+JEN_CTENI = "Přihlášeno jen ke čtení – pro změny se odhlaste a přihlaste znovu."
 
 
 def _nastavit_cookie(response: Response, klic: str) -> None:
@@ -156,13 +164,13 @@ def smazat_relace(conn: Connection, podminka: str, parametry: tuple) -> int:
         ).rowcount
 
 
-def _nova_relace(conn: Connection, osoba_id: int, request: Request) -> str:
+def _nova_relace(conn: Connection, osoba_id: int, request: Request, jen_cteni: bool = False) -> str:
     klic, otisk = bezpecnost.novy_klic_relace()
     zarizeni = request.headers.get("user-agent", "")[:200] or None
     conn.execute(
-        """INSERT INTO lkkl.relace (id, osoba_id, plati_do, zarizeni)
-           VALUES (%s, %s, now() + %s, %s)""",
-        (otisk, osoba_id, PLATNOST_RELACE, zarizeni),
+        """INSERT INTO lkkl.relace (id, osoba_id, plati_do, zarizeni, jen_cteni)
+           VALUES (%s, %s, now() + %s, %s, %s)""",
+        (otisk, osoba_id, PLATNOST_RELACE, zarizeni, jen_cteni),
     )
     return klic
 
@@ -170,14 +178,16 @@ def _nova_relace(conn: Connection, osoba_id: int, request: Request) -> str:
 def prihlaseny(
     request: Request, response: Response, conn: Connection = Depends(spojeni)
 ) -> Prihlaseny:
-    """Závislost: platná relace z cookie, jinak 401. Relaci průběžně prodlužuje."""
+    """Závislost: platná relace z cookie, jinak 401. Relaci průběžně prodlužuje.
+    Relace jen ke čtení smí jen číst – každý jiný požadavek odmítne (403) a práva vypne;
+    všechny zápisy aplikace jdou přes tuto závislost (test test_jen_cteni_zadny_zapis)."""
     klic = request.cookies.get(COOKIE)
     if not klic:
         raise HTTPException(401, "Nejste přihlášen.")
     otisk = bezpecnost.otisk_klice(klic)
     r = conn.execute(
-        """SELECT r.osoba_id, r.puvodni_osoba_id, u.admin, u.smi_odblokovat, u.spravuje_osoby,
-                  u.spravuje_letadla,
+        """SELECT r.osoba_id, r.puvodni_osoba_id, r.jen_cteni, u.admin, u.smi_odblokovat,
+                  u.spravuje_osoby, u.spravuje_letadla,
                   r.posledni_aktivita < now() - %s AS prodlouzit
            FROM lkkl.relace r
            JOIN lkkl.v_ucet u ON u.osoba_id = r.osoba_id
@@ -202,15 +212,19 @@ def prihlaseny(
             (PLATNOST_RELACE, otisk),
         )
         _nastavit_cookie(response, klic)
+    jen_cteni = r["jen_cteni"]
+    if jen_cteni and request.method not in ("GET", "HEAD"):
+        raise HTTPException(403, JEN_CTENI)
     nastavit_kontext(conn, r["osoba_id"], r["puvodni_osoba_id"])  # pro audit
     return Prihlaseny(
         relace_id=otisk,
         osoba_id=r["osoba_id"],
         puvodni_osoba_id=r["puvodni_osoba_id"],
-        admin=r["admin"],
-        smi_odblokovat=r["smi_odblokovat"],
-        spravuje_osoby=r["spravuje_osoby"],
-        spravuje_letadla=r["spravuje_letadla"],
+        admin=r["admin"] and not jen_cteni,
+        smi_odblokovat=r["smi_odblokovat"] and not jen_cteni,
+        spravuje_osoby=r["spravuje_osoby"] and not jen_cteni,
+        spravuje_letadla=r["spravuje_letadla"] and not jen_cteni,
+        jen_cteni=jen_cteni,
     )
 
 
@@ -238,7 +252,9 @@ def spravuje_letadla(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
     return p
 
 
-def _ja(conn: Connection, osoba_id: int, puvodni_osoba_id: int | None) -> Ja:
+def _ja(
+    conn: Connection, osoba_id: int, puvodni_osoba_id: int | None, jen_cteni: bool = False
+) -> Ja:
     u = conn.execute(
         """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat, spravuje_osoby,
                   spravuje_letadla
@@ -256,14 +272,15 @@ def _ja(conn: Connection, osoba_id: int, puvodni_osoba_id: int | None) -> Ja:
         jmeno=u["jmeno"],
         prijmeni=u["prijmeni"],
         email=u["email"],
-        # admin má všechna práva
+        # admin má všechna práva; v relaci jen ke čtení žádná
         prava=Prava(
-            admin=u["admin"],
-            smi_odblokovat=u["admin"] or u["smi_odblokovat"],
-            spravuje_osoby=u["admin"] or u["spravuje_osoby"],
-            spravuje_letadla=u["admin"] or u["spravuje_letadla"],
+            admin=u["admin"] and not jen_cteni,
+            smi_odblokovat=(u["admin"] or u["smi_odblokovat"]) and not jen_cteni,
+            spravuje_osoby=(u["admin"] or u["spravuje_osoby"]) and not jen_cteni,
+            spravuje_letadla=(u["admin"] or u["spravuje_letadla"]) and not jen_cteni,
         ),
         puvodni=OsobaKratce(**puvodni) if puvodni else None,
+        jen_cteni=jen_cteni,
     )
 
 
@@ -319,7 +336,7 @@ def prihlaseni(
                    WHERE osoba_id = %s""",
                 (osoba_id,),
             )
-            klic = _nova_relace(conn, osoba_id, request)
+            klic = _nova_relace(conn, osoba_id, request, data.jen_cteni)
     if vysledek == "blokace":
         raise HTTPException(
             429,
@@ -329,7 +346,7 @@ def prihlaseni(
     if vysledek != "ok":
         raise HTTPException(401, CHYBA_PRIHLASENI)
     _nastavit_cookie(response, klic)
-    return _ja(conn, osoba_id, None)
+    return _ja(conn, osoba_id, None, data.jen_cteni)
 
 
 @router.post("/odhlaseni", status_code=204)
@@ -344,7 +361,7 @@ def odhlaseni(request: Request, conn: Connection = Depends(spojeni)):
 
 @router.get("/ja", response_model=Ja)
 def ja(p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
-    return _ja(conn, p.osoba_id, p.puvodni_osoba_id)
+    return _ja(conn, p.osoba_id, p.puvodni_osoba_id, p.jen_cteni)
 
 
 @router.get("/zarizeni", response_model=list[Zarizeni])

@@ -33,7 +33,7 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
 
 | Metoda a adresa | Kdo | Co dělá |
 |---|---|---|
-| `POST /api/prihlaseni` | kdokoli | `{email, heslo}` → založí relaci, nastaví cookie, vrátí „kdo jsem“ |
+| `POST /api/prihlaseni` | kdokoli | `{email, heslo, jen_cteni}` → založí relaci (jen ke čtení: sdílený počítač, 4.2), nastaví cookie, vrátí „kdo jsem“ |
 | `POST /api/odhlaseni` | přihlášený | ukončí aktuální relaci, smaže cookie |
 | `GET /api/ja` | přihlášený | jméno, e-mail, práva (`admin`), případně „přihlášen jako“ (kdo je skutečný admin) |
 | `GET /api/zarizeni` | přihlášený | moje relace: zařízení, poslední aktivita, které je aktuální |
@@ -73,6 +73,10 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
 - **Prodlužování:** `posledni_aktivita` a `plati_do` (+30 dní) se zapíší nejvýš jednou za
   hodinu, aby se do databáze nezapisovalo při každém kliknutí.
 - Prošlé relace maže úklid (příkaz pro cron, později na serveru).
+- **Jen ke čtení** (`relace.jen_cteni`, db/030; docs/modul-desktop.md 6.1): zaškrtávátko
+  u přihlášení pro sdílený počítač. V takové relaci závislost `prihlaseny` odmítne každý
+  požadavek kromě čtení (403), práva se neuplatní a `GET /api/ja` vrací `jen_cteni`. Odhlásit
+  se jde vždy; k zápisu je potřeba se přihlásit znovu bez zaškrtnutí.
 
 ### 4.3 Ochrana proti podvrženým požadavkům (CSRF)
 Rozhraní přijímá jen JSON. Každý požadavek, který něco mění (POST), musí mít hlavičku

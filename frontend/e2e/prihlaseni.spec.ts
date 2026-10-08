@@ -1,6 +1,7 @@
 import { expect, request, test, type Page } from "@playwright/test";
 
 import { ADRESA } from "../playwright.config";
+import { prihlasitJenCteni } from "./pomocne";
 
 const HESLO_ADMINA = "heslo-pro-e2e-test"; // backend/tests/e2e_priprava.py
 
@@ -38,6 +39,34 @@ test("přihlášení s chybou a odhlášení", async ({ page }) => {
   await uzivatel.click();
   await page.getByRole("button", { name: "Odhlásit" }).click();
   await expect(page.getByRole("heading", { name: "AK Kladno Log" })).toBeVisible();
+  await expect(page).toHaveURL(/\/prihlaseni$/);
+});
+
+test("přihlášení jen ke čtení: přehled bez ovládání, odhlásit jde", async ({ page }) => {
+  await prihlasitJenCteni(page);
+  const mfv = page.locator(".let.problem", { hasText: "OK-MFV" });
+  await expect(mfv).toBeVisible();
+  await expect(page.getByRole("button", { name: /Přistál|Vzlet|T&G/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "+ Nový let" })).toHaveCount(0);
+  // práva se neuplatní – admin nevidí správu osob ani letadel
+  await expect(page.getByRole("link", { name: "Osoby" })).toHaveCount(0);
+
+  // Detail bez akcí a bez úprav na místě
+  await mfv.getByText("Olga Pilotka").click();
+  await expect(page.locator(".obrazovka .let-hlava")).toContainText("OK-MFV");
+  await expect(page.getByRole("button", { name: /Zrušit let|Přistál/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Poznámka/ })).toHaveCount(0);
+
+  // Obrazovky se zápisem adresou nejdou – zpět na přehled
+  await page.goto("/novy-let");
+  await expect(page).toHaveURL(`${ADRESA}/`);
+  await page.goto("/muj-provoz/letiste");
+  await expect(page).toHaveURL(`${ADRESA}/`);
+
+  const uzivatel = page.getByRole("button", { name: "Nabídka uživatele" });
+  await uzivatel.click();
+  await expect(page.getByText("Můj provoz · dnes")).toHaveCount(0);
+  await page.getByRole("button", { name: "Odhlásit" }).click();
   await expect(page).toHaveURL(/\/prihlaseni$/);
 });
 

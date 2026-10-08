@@ -8,7 +8,7 @@ import { useDen } from "../lety/api";
 import { useMujProvoz } from "../provoz/api";
 import { useTik } from "../tik";
 import { nacistRezim, nastavitRezim, REZIMY, type Rezim } from "../rezim";
-import { inicialy, zmenitUzivatele } from "../uzivatel";
+import { inicialy, useJenCteni, zmenitUzivatele } from "../uzivatel";
 import { Stitek } from "./Stitek";
 import { Tlacitko } from "./Tlacitko";
 import "./Volby.css";
@@ -63,21 +63,29 @@ export function CasUtc() {
 function DenASlunce() {
   const den = useDen().data;
   const navigate = useNavigate();
+  const jenCteni = useJenCteni();
   if (!den) return null;
   const { tb, sr, ss, te } = den.slunce;
   const casy: [string, string | null][] = [["TB", tb], ["SR", sr], ["SS", ss], ["TE", te]];
   const jinde = den.letiste && !den.letiste.domovske ? den.letiste : null;
   return (
     <div className="hlavicka-radek cisla">
-      {jinde ? (
+      {jinde || jenCteni ? (
         <span className="hlavicka-letiste">
-          <button
-            type="button"
-            aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
-            onClick={() => navigate("/muj-provoz/letiste")}
-          >
-            <Stitek barva="oranzovy">{jinde.kod}</Stitek>
-          </button>
+          {/* přihlášeno jen ke čtení (sdílený počítač) – nic nejde změnit, ani letiště */}
+          {jenCteni && <Stitek barva="oranzovy">jen čtení</Stitek>}
+          {jinde &&
+            (jenCteni ? (
+              <Stitek barva="oranzovy">{jinde.kod}</Stitek>
+            ) : (
+              <button
+                type="button"
+                aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
+                onClick={() => navigate("/muj-provoz/letiste")}
+              >
+                <Stitek barva="oranzovy">{jinde.kod}</Stitek>
+              </button>
+            ))}
           {denKratce(den.den)}
         </span>
       ) : (
@@ -135,28 +143,36 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
               {ja.jmeno} {ja.prijmeni}
             </span>
             <span className="male seda">{ja.email}</span>
-          </div>
-          <div className="nabidka-oddil">
-            <span className="nadpisek">Můj provoz · dnes</span>
-            <Tlacitko
-              varianta="bez-ramu"
-              className="nabidka-polozka"
-              onClick={() => navigate("/muj-provoz/letiste")}
-            >
-              Letiště
-              <span className={letiste && !letiste.domovske ? "jinde" : undefined}>
-                {letiste ? `${letiste.kod} ${letiste.nazev}` : "—"}
+            {ja.jen_cteni && (
+              <span className="male">
+                <Stitek barva="oranzovy">Jen ke čtení</Stitek> sdílený počítač – pro změny se
+                odhlaste a přihlaste znovu
               </span>
-            </Tlacitko>
-            <Tlacitko
-              varianta="bez-ramu"
-              className="nabidka-polozka"
-              onClick={() => navigate("/muj-provoz/osoby")}
-            >
-              Osoby v provozu
-              <span>{provoz?.osoby.length || "všechny"}</span>
-            </Tlacitko>
+            )}
           </div>
+          {!ja.jen_cteni && (
+            <div className="nabidka-oddil">
+              <span className="nadpisek">Můj provoz · dnes</span>
+              <Tlacitko
+                varianta="bez-ramu"
+                className="nabidka-polozka"
+                onClick={() => navigate("/muj-provoz/letiste")}
+              >
+                Letiště
+                <span className={letiste && !letiste.domovske ? "jinde" : undefined}>
+                  {letiste ? `${letiste.kod} ${letiste.nazev}` : "—"}
+                </span>
+              </Tlacitko>
+              <Tlacitko
+                varianta="bez-ramu"
+                className="nabidka-polozka"
+                onClick={() => navigate("/muj-provoz/osoby")}
+              >
+                Osoby v provozu
+                <span>{provoz?.osoby.length || "všechny"}</span>
+              </Tlacitko>
+            </div>
+          )}
           <div className="nabidka-oddil">
             <span className="nadpisek">Režim zobrazení</span>
             <div className="segmenty">

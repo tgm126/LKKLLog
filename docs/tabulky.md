@@ -54,7 +54,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `relace_provoz` | tabulka | můj provoz: nastavení relace na jeden den (UTC) – letiště (prázdné = domovské); jiný den se nebere v úvahu | 026 |
 | `relace_provoz_osoba` | tabulka | osoby v provozu relace (filtr nabídky osob v posádce); žádný řádek = bez filtru | 026 |
 | `v_relace_letiste`, `v_relace_osoba` | pohled | dnešní letiště relace (zvolené, jinak domovské) a dnešní osoby v provozu | 026 |
-| `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`) | 005 |
+| `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`), jen ke čtení (`jen_cteni` – sdílený počítač, server odmítne zápisy) | 005, 030 |
 | `v_ucet` | pohled | účty s údaji osoby a příznakem „smí se přihlásit“ (bez otisku hesla) | 005, 006 |
 | `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
 | `lov_osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005, 017 |

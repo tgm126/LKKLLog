@@ -5,6 +5,7 @@ import { Panel } from "../komponenty/Panel";
 import { useDetail, useNabidky } from "../lety/api";
 import { AkceDetailu, DetailBloky } from "../lety/Detail";
 import { useMujProvoz } from "../provoz/api";
+import { useJenCteni } from "../uzivatel";
 import { PasekDeska } from "./PasekDeska";
 
 // Detail letu v panelu zprava (docs/modul-desktop.md 3.8): nahoře pásek a vedle něj
@@ -17,6 +18,7 @@ export function PanelDetailu() {
   const nabidky = useNabidky().data;
   const mojeKod = useMujProvoz().data?.letiste?.kod;
   const navigate = useNavigate();
+  const jenCteni = useJenCteni();
   const zavrit = () => navigate("/");
   if (!l || !nabidky) {
     return (
@@ -42,7 +44,7 @@ export function PanelDetailu() {
           vPanelu
         />
       }
-      pata={<AkceDetailu let_={l} nabidky={nabidky} />}
+      pata={jenCteni ? undefined : <AkceDetailu let_={l} nabidky={nabidky} />}
     >
       <DetailBloky let_={l} nabidky={nabidky} />
     </Panel>
