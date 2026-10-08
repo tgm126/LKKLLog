@@ -150,6 +150,8 @@ karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
    Zařazení podle letu: let kluzáku nebo vlečný let (let s vazbou na kluzák) = plachtařský;
    ostatní = motorový, včetně **TMG** (rozhodnuto 7. 10. 2026) a vlastních letů vlečné mimo vlek.
    Zařazení určuje databáze (`v_let.druh_provozu`, db/035) – pro uzávěrku a účetnictví stejné.
+   Řádky tabulek počítá databáze (`v_souhrn_dne`, db/036; přicházejí spolu s lety dne),
+   frontend sečte jen patičku.
    Součet obou dohromady se neukazuje.
 3. **Počasí – METAR/TAF** (později, samostatný modul): v maketě jen ukázka místa. Kladno
    METAR nevydává, nabízí se nejbližší stanice (LKPR Ruzyně, případně další), surová zpráva
@@ -157,7 +159,7 @@ karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
 4. **Další zdroje** (prázdné místo): NOTAM, AUP/UUP (aktivace prostorů), GAMET, radar srážek,
    stav letadel z údržby…
 
-Karty 1 a 2 se počítají z letů dne (pohledem nebo dotazem nad `v_let`), nic se neukládá.
+Karty 1 a 2 se počítají z letů dne (pohled `v_souhrn_dne` nad `v_let`), nic se neukládá.
 Karta „Piloti dnes“ z v2 vypuštěna (7. 10. 2026 – nemá praktický užitek). Kde letadlo je,
 ukazuje řada letadel (3.1).
 

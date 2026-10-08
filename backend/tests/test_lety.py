@@ -95,13 +95,12 @@ def test_varovani():
     te = datetime(2026, 10, 6, 17, 4, tzinfo=UTC)
     ve_vzduchu = {"stav": "VE_VZDUCHU", "cas_vzletu": datetime(2026, 10, 6, 16, 0, tzinfo=UTC)}
     pozde = datetime(2026, 10, 6, 17, 10, tzinfo=UTC)
-    assert lety.varovani({**ve_vzduchu, "max_doba_min": None}, pozde, te) == (
-        "Po konci občanského soumraku (TE 17:04)"
-    )
-    assert lety.varovani({**ve_vzduchu, "max_doba_min": 45}, pozde, None) == (
-        'Přes maximální dobu letu (45")'
-    )
-    assert lety.varovani({**ve_vzduchu, "max_doba_min": None}, te, te) is None
+    bez_limitu = {**ve_vzduchu, "max_doba_min": None, "prekrocena_doba": False}
+    assert lety.varovani(bez_limitu, pozde, te) == "Po konci občanského soumraku (TE 17:04)"
+    # překročenou dobu určuje databáze (v_let.prekrocena_doba), server jen složí text
+    prekroceno = {**ve_vzduchu, "max_doba_min": 45, "prekrocena_doba": True}
+    assert lety.varovani(prekroceno, pozde, None) == 'Přes maximální dobu letu (45")'
+    assert lety.varovani(bez_limitu, te, te) is None
     assert lety.varovani({"stav": "UKONCEN"}, pozde, te) is None
 
 

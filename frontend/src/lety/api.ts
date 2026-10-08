@@ -71,16 +71,42 @@ export function useDen(den?: string) {
 
 /** Lety dne; obnovují se samy každých 10 s a po návratu do aplikace (docs/modul-lety.md 3.2).
  *  Bez dne dnešek (i vše, co je ve vzduchu), jinak lety zvoleného dne (desktop). */
-export function useLety(den?: string) {
+/** Souhrn dne po druhu provozu a letadle – ukončené lety (v_souhrn_dne, db/036). */
+export type RadekSouhrnu = {
+  druh_provozu: "PLACHTARSKY" | "MOTOROVY";
+  rejstrik: string;
+  /** Vlečná ve vleku (vleky) – zvlášť od jejích vlastních letů. */
+  je_vlecny: boolean;
+  lety: number;
+  pristani: number;
+  minut: number;
+};
+
+type LetyDne = { ted: string; lety: Pasek[]; souhrn: RadekSouhrnu[] };
+
+/** Lety dne a souhrn jedním dotazem (obnoví se spolu); každý háček vybere svou část. */
+function useLetyDne<T>(den: string | undefined, vybrat: (d: LetyDne) => T) {
   return useQuery({
     queryKey: ["lety", den ?? "dnes"],
     queryFn: async () => {
-      const lety = await ziskat<{ ted: string; lety: Pasek[] }>(sDnem("/lety", den));
+      const lety = await ziskat<LetyDne>(sDnem("/lety", den));
       nastavitCasServeru(lety.ted);
-      return lety.lety;
+      return lety;
     },
+    select: vybrat,
     refetchInterval: 10_000,
   });
+}
+
+const jenLety = (d: LetyDne) => d.lety;
+const jenSouhrn = (d: LetyDne) => d.souhrn;
+
+export function useLety(den?: string) {
+  return useLetyDne(den, jenLety);
+}
+
+export function useSouhrnDne(den?: string) {
+  return useLetyDne(den, jenSouhrn);
 }
 
 // --- průvodce novým letem --------------------------------------------------------------------

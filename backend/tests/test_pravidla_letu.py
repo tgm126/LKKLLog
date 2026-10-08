@@ -1,4 +1,4 @@
-"""Pravidla a výpočty přenesené z aplikace do databáze (db/035)."""
+"""Pravidla a výpočty přenesené z aplikace do databáze (db/035, 036)."""
 
 import psycopg
 import pytest
@@ -129,3 +129,56 @@ def test_druh_provozu_a_poloha(conn, pilot, osoba, let):
     assert druh == {kluzak: "PLACHTARSKY", vlecna: "PLACHTARSKY", prelet: "MOTOROVY"}
     poloha = {a["rejstrik"]: a["poloha"] for a in k.get("/api/lety/nabidky").json()["letadla"]}
     assert poloha["OK-CRA"] == "LKLT" and poloha["OK-2817"] is None
+
+
+def test_prekrocena_doba(conn, pilot, osoba, let):
+    pilot_id, k = pilot
+    conn.execute("UPDATE lkkl.lov_letadlo SET max_doba_min = 30 WHERE rejstrik = 'OK-CRA'")
+    dlouho = let(
+        "OK-CRA", {"PIC": pilot_id}, zpusob="VLASTNI", vzlet="now() - interval '40 minutes'"
+    )
+    kratce = let("OK-2817", {"PIC": osoba("Druha")}, vzlet="now() - interval '40 minutes'")
+    prekroceno = {
+        r["id"]: r["prekrocena_doba"]
+        for r in conn.execute("SELECT id, prekrocena_doba FROM lkkl.v_let").fetchall()
+    }
+    assert prekroceno == {dlouho: True, kratce: False}
+    pasky = {p["id"]: p["varovani"] or "" for p in k.get("/api/lety").json()["lety"]}
+    assert 'Přes maximální dobu letu (30")' in pasky[dlouho]
+    assert "maximální" not in pasky[kratce]
+
+
+def test_souhrn_dne(conn, pilot, osoba, let):
+    pilot_id, k = pilot
+    vlecna = let(
+        "OK-CRA",
+        {"PIC": osoba("Vlekar")},
+        ucel=None,
+        zpusob="VLASTNI",
+        vzlet="now() - interval '3 hours'",
+        pristani="now() - interval '170 minutes'",
+    )
+    let(
+        "OK-3819",
+        {"PIC": pilot_id},
+        zpusob="VLEK",
+        vzlet="now() - interval '3 hours'",
+        pristani="now() - interval '2 hours'",
+        vlecny_let_id=vlecna,
+    )
+    let(
+        "OK-CRA",
+        {"PIC": pilot_id},
+        zpusob="VLASTNI",
+        vzlet="now() - interval '90 minutes'",
+        pristani="now() - interval '60 minutes'",
+    )
+    let("OK-2817", {"PIC": pilot_id})  # naplánovaný se nepočítá
+    souhrn = k.get("/api/lety").json()["souhrn"]
+    assert sorted(
+        (r["druh_provozu"], r["rejstrik"], r["je_vlecny"], r["lety"], r["minut"]) for r in souhrn
+    ) == [
+        ("MOTOROVY", "OK-CRA", False, 1, 30),
+        ("PLACHTARSKY", "OK-3819", False, 1, 60),
+        ("PLACHTARSKY", "OK-CRA", True, 1, 10),
+    ]

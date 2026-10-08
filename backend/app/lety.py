@@ -103,9 +103,21 @@ class Pasek(BaseModel):
     """Proč je pásek červený (po konci soumraku, přes maximální dobu letu)."""
 
 
+class RadekSouhrnu(BaseModel):
+    """Souhrn dne po druhu provozu a letadle (v_souhrn_dne, db/036) – ukončené lety."""
+
+    druh_provozu: str
+    rejstrik: str
+    je_vlecny: bool
+    lety: int
+    pristani: int
+    minut: int
+
+
 class LetyDne(BaseModel):
     ted: datetime
     lety: list[Pasek]
+    souhrn: list[RadekSouhrnu]
 
 
 # --- pomocné --------------------------------------------------------------------------------
@@ -171,7 +183,7 @@ def varovani(let: dict, ted: datetime, te: datetime | None) -> str | None:
     duvody = []
     if te and ted > te:
         duvody.append(f"Po konci občanského soumraku (TE {te:%H:%M})")
-    if let["max_doba_min"] and ted - let["cas_vzletu"] > timedelta(minutes=let["max_doba_min"]):
+    if let["prekrocena_doba"]:  # v_let (db/036)
         duvody.append(f"Přes maximální dobu letu ({doba(let['max_doba_min'])})")
     return " · ".join(duvody) or None
 
@@ -207,7 +219,8 @@ def lety(
                   nullif(v.misto_vzletu, %(moje)s) AS misto_vzletu,
                   nullif(v.misto_pristani, %(moje)s) AS misto_pristani,
                   v.cas_vzletu, v.cas_pristani, v.doba_uctovana_min, v.pocet_pristani,
-                  v.pob, v.uloha, a.max_doba_min, v.duvod_zruseni, v.zruseno, v.dodatecne,
+                  v.pob, v.uloha, a.max_doba_min, v.prekrocena_doba, v.duvod_zruseni,
+                  v.zruseno, v.dodatecne,
                   v.zalozeno,
                   (SELECT count(*) FROM lkkl.let_tg t WHERE t.let_id = v.id) AS pocet_tg,
                   coalesce((SELECT json_agg(json_build_object(
@@ -230,7 +243,14 @@ def lety(
         {"den": den, "moje": moje_kod},
     ).fetchall()
     te = slunce(letiste, den).te
-    return LetyDne(ted=ted, lety=[Pasek(**r, varovani=varovani(r, ted, te)) for r in radky])
+    souhrn = conn.execute(
+        """SELECT druh_provozu, rejstrik, je_vlecny, lety, pristani, minut
+           FROM lkkl.v_souhrn_dne WHERE den = %s ORDER BY rejstrik, je_vlecny""",
+        (den,),
+    ).fetchall()
+    return LetyDne(
+        ted=ted, lety=[Pasek(**r, varovani=varovani(r, ted, te)) for r in radky], souhrn=souhrn
+    )
 
 
 # --- akce letu: vzlet, přistání, T&G, zpět ---------------------------------------------------
@@ -648,7 +668,7 @@ def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = 
     """Všechny údaje letu, posádka, časy T&G a historie z auditu (docs/modul-lety.md 3.5)."""
     let = conn.execute(
         """SELECT v.id, v.verze, v.stav, v.letadlo_id, v.rejstrik, v.typ, v.kategorie,
-                  v.kategorie_kod, t.pocet_mist, a.max_doba_min,
+                  v.kategorie_kod, t.pocet_mist, a.max_doba_min, v.prekrocena_doba,
                   v.ucel_id, v.ucel, v.ucel_kod, v.uloha_id, v.uloha,
                   v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
                   l.misto_vzletu_id, l.misto_vzletu_popis, v.misto_vzletu,

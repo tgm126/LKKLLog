@@ -6,7 +6,7 @@ import { Hlaska } from "../komponenty/Hlaska";
 import { Oznameni, useZprava } from "../komponenty/Oznameni";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useAkceLetu } from "../lety/akce";
-import { useDen, useLety, useNabidky } from "../lety/api";
+import { useDen, useLety, useNabidky, useSouhrnDne } from "../lety/api";
 import { useSirokaDeska } from "../rozvrzeni";
 import { useJa } from "../uzivatel";
 import { CasovaOsa } from "./CasovaOsa";
@@ -31,6 +31,7 @@ export function Deska() {
   const zobrazeny = useDen(den).data;
   const dnesniLety = useLety();
   const letyDne = useLety(den);
+  const souhrnDne = useSouhrnDne(den);
   const nabidky = useNabidky().data;
   const siroka = useSirokaDeska();
   const [souhrny, setSouhrny] = useState(false);
@@ -106,7 +107,7 @@ export function Deska() {
           </section>
           {(siroka || souhrny) && (
             <aside className={siroka ? "deska-sloupec" : "deska-sloupec souhrny-vysunute"} aria-label="Souhrny dne">
-              <Souhrny lety={lety} poradi={poradi} />
+              <Souhrny souhrn={souhrnDne.data ?? []} poradi={poradi} />
             </aside>
           )}
         </div>
