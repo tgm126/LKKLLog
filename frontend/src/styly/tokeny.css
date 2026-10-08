@@ -86,13 +86,13 @@
   --mista-stitku-deska: calc(6ch + 2 * var(--mezera-2)) calc(8ch + 2 * var(--mezera-2));
   --sirka-letadla-panelu: 140px; /* přihrádka letadla na pásku v panelu (OK-CUO 78) */
 
-  /* Deník: letadlo · posádka · vzlet · přistání · doba · přistání (jeden řádek na let) */
-  --sloupce-deniku-deska: 92px minmax(0, 1fr) 5ch 5ch 6ch 2ch;
+  /* Deník: letadlo · posádka · vzlet · přistání · P · doba (jeden řádek na let) */
+  --sloupce-deniku-deska: 92px minmax(0, 1fr) 5ch 5ch 2ch 6ch;
   --sirka-lodi: 96px;         /* letadlo v řadě letadel */
   --vyska-osy: 18px;          /* řádek časové osy (jedno letadlo) */
   --sirka-popisku-osy: 92px;  /* rejstřík vlevo od časové osy */
   --prouzek-stavu: 4px;      /* stav letadla v řadě letadel (proužek vlevo) */
-  --prstenec: 3px;           /* zvýraznění pásku: pod myší šedě, vybraný (detail) v barvě textu */
+  --prstenec: 3px;           /* vybraný pásek (otevřený detail) v barvě textu */
   --prstenec-mezera: 2px;    /* mezera mezi páskem a prstencem vybraného */
 
   /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. Kontrast textu

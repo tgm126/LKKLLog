@@ -42,6 +42,12 @@ export function Hlavicka({ ja }: { ja: Ja }) {
             Letadla
           </NavLink>
         )}
+        {/* sdílený počítač: v řádku menu (datum a sluneční časy v hlavičce zůstanou celé) */}
+        {ja.jen_cteni && (
+          <span className="menu-vpravo">
+            <Stitek barva="oranzovy">Jen ke čtení</Stitek>
+          </span>
+        )}
       </nav>
     </>
   );
@@ -65,27 +71,25 @@ function DenASlunce() {
   const navigate = useNavigate();
   const jenCteni = useJenCteni();
   if (!den) return null;
+  // jen ke čtení: štítek letiště jen ukazuje (letiště pro dnešek nejde změnit)
   const { tb, sr, ss, te } = den.slunce;
   const casy: [string, string | null][] = [["TB", tb], ["SR", sr], ["SS", ss], ["TE", te]];
   const jinde = den.letiste && !den.letiste.domovske ? den.letiste : null;
   return (
     <div className="hlavicka-radek cisla">
-      {jinde || jenCteni ? (
+      {jinde ? (
         <span className="hlavicka-letiste">
-          {/* přihlášeno jen ke čtení (sdílený počítač) – nic nejde změnit, ani letiště */}
-          {jenCteni && <Stitek barva="oranzovy">jen čtení</Stitek>}
-          {jinde &&
-            (jenCteni ? (
+          {jenCteni ? (
+            <Stitek barva="oranzovy">{jinde.kod}</Stitek>
+          ) : (
+            <button
+              type="button"
+              aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
+              onClick={() => navigate("/muj-provoz/letiste")}
+            >
               <Stitek barva="oranzovy">{jinde.kod}</Stitek>
-            ) : (
-              <button
-                type="button"
-                aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
-                onClick={() => navigate("/muj-provoz/letiste")}
-              >
-                <Stitek barva="oranzovy">{jinde.kod}</Stitek>
-              </button>
-            ))}
+            </button>
+          )}
           {denKratce(den.den)}
         </span>
       ) : (

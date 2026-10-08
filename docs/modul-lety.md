@@ -91,7 +91,9 @@ dvojice otevře detail jejího letu.
 
 **Průvodce:** nahoře ukazatel postupu (tři díly) a od kroku 2 **rozpracovaný pásek** letu
 (čárkovaný okraj = ještě neuložený), který se plní s každou volbou. Krok 1: dlaždice letadel
-ve skupinách podle kategorie (barva podle stavu jako v přehledu). Volby v blocích (karta
+ve skupinách podle kategorie (barva podle stavu jako v přehledu), všechny stejně vysoké – tři
+řádky: rejstřík · typ · stav (mimo provoz, letí, naplánován; jinak prázdný); „vlečná“ se
+neuvádí, soukromé letadlo má lehce šedou výplň (8. 10. 2026). Volby v blocích (karta
 s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
 („Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
 a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má

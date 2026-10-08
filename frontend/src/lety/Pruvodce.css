@@ -71,6 +71,11 @@
   font-weight: var(--tloustka-tucna);
 }
 
+/* Soukromé letadlo: lehce šedá výplň (stav letu ji přebije) */
+.dlazdice.soukrome {
+  --dlazdice-vypln: var(--barva-neutralni);
+}
+
 .dlazdice.leti {
   --dlazdice-vypln: var(--barva-zelena-vypln);
   --dlazdice-stav: var(--barva-zelena);

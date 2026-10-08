@@ -125,15 +125,6 @@
   white-space: nowrap;
 }
 
-kbd {
-  margin-left: var(--mezera-1);
-  padding: 0 var(--mezera-1);
-  border: var(--ramecek-sirka) solid currentcolor;
-  border-radius: var(--zaobleni-policka);
-  font-family: var(--pismo);
-  font-size: var(--pismo-s);
-}
-
 .skupina-lodi {
   display: flex;
   flex: none;
@@ -369,31 +360,10 @@ kbd {
   background: var(--barva-neutralni);
 }
 
-.cisla-souhrnu {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  padding: var(--mezera-2) 0;
-  text-align: center;
-}
-
-.cisla-souhrnu > div {
-  display: grid;
-}
-
 .tabulka-souhrnu {
   width: 100%;
   margin-bottom: var(--mezera-2);
   border-collapse: collapse;
-}
-
-/* Odsazení od okraje karty (tabulka s otevřenými čarami nemá vlastní odsazení) */
-.tabulka-souhrnu :is(th, td):first-child {
-  padding-left: var(--mezera-3);
-}
-
-.tabulka-souhrnu :is(th, td):last-child {
-  padding-right: var(--mezera-3);
 }
 
 .tabulka-souhrnu th {
@@ -408,9 +378,23 @@ kbd {
   text-align: right;
 }
 
-.tabulka-souhrnu th:first-child,
-.tabulka-souhrnu td:first-child {
+/* Odsazení od okraje karty (tabulka s otevřenými čarami nemá vlastní odsazení) */
+.tabulka-souhrnu :is(th, td):first-child {
+  padding-left: var(--mezera-3);
   text-align: left;
+}
+
+.tabulka-souhrnu :is(th, td):last-child {
+  padding-right: var(--mezera-3);
+}
+
+/* Patička (celkem) jako u deníku dne: oddělená, hodnoty tučně */
+.tabulka-souhrnu tfoot td {
+  font-weight: var(--tloustka-tucna);
+}
+
+.tabulka-souhrnu tfoot tr:first-child td {
+  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
 }
 
 /* --- časová osa ---------------------------------------------------------------------------- */

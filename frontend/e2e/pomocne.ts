@@ -24,5 +24,5 @@ export async function prihlasit(page: Page) {
   await page.getByLabel("E-mail").fill("admin@example.cz");
   await page.getByLabel("Heslo", { exact: true }).fill(HESLO_ADMINA);
   await page.getByRole("button", { name: "Přihlásit" }).click();
-  await expect(page.getByRole("button", { name: "+ Nový let" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Nový let/ }).first()).toBeVisible();
 }

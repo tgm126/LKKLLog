@@ -36,8 +36,8 @@ export function RadaLetadel({
   return (
     <nav className="rada-letadel" aria-label="Letadla">
       {!jenCteni && (
-        <button type="button" className="novy-let" onClick={() => navigate("/novy-let")}>
-          + Nový let <kbd>N</kbd>
+        <button type="button" className="novy-let" title="Nový let (klávesa N)" onClick={() => navigate("/novy-let")}>
+          Nový let
         </button>
       )}
       {kategorie.map(([kod, nazev]) => (
@@ -59,7 +59,7 @@ export function RadaLetadel({
                   : plan
                     ? "naplánován"
                     : dnes.length > 0
-                      ? `${dnes.length}× ${doba(dnes.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0))}`
+                      ? doba(dnes.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0))
                       : "dnes nelétal";
               return (
                 <button

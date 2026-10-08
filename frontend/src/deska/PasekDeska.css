@@ -29,17 +29,13 @@
   border-style: dashed;
 }
 
-/* Klik kamkoli mimo tlačítka otevře detail; pod myší šedý prstenec, otevřený v barvě textu */
+/* Klik kamkoli mimo tlačítka otevře detail (bez zvýraznění pod myší); otevřený má prstenec
+   v barvě textu */
 .pasek-deska.otevira {
   cursor: pointer;
 }
 
-.pasek-deska.otevira:hover {
-  box-shadow: 0 0 0 var(--prstenec) var(--barva-prepazka);
-}
-
-.pasek-deska.vybrany,
-.pasek-deska.vybrany:hover {
+.pasek-deska.vybrany {
   box-shadow:
     0 0 0 var(--prstenec-mezera) var(--barva-pozadi),
     0 0 0 calc(var(--prstenec-mezera) + var(--prstenec)) var(--barva-text);

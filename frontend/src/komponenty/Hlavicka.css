@@ -136,3 +136,9 @@
   --nadpisek-barva: var(--barva-modra);
   --zalozka-cara: var(--barva-modra);
 }
+
+/* Štítek „Jen ke čtení“ vpravo v řádku menu */
+.menu-vpravo {
+  align-self: center;
+  margin-left: auto;
+}

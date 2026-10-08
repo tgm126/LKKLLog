@@ -70,14 +70,15 @@ přepážky). Rámečky jsou **neutrální**; stav ukazuje jen **proužek vlevo*
 naplánované) – barevnou plochou je jen pásek. Každé letadlo má dva řádky: rejstřík a **stav
 dneška**:
 - letí → běžící čas („letí 0:08“), naplánované → „naplánován“;
-- jinak počet letů a nálet dne („3× 25″“) nebo „dnes nelétal“;
+- jinak jen nálet dne („25″“, bez počtu letů – rozhodnuto 8. 10. 2026) nebo „dnes nelétal“;
 - **kde je**: přistálo-li naposledy jinde než na mém letišti, oranžově „na LKMB“ (odvozeno
   z místa posledního přistání, nic se neukládá);
 - mimo provoz přeškrtnuté, nejde vybrat.
 
 Klik na letadlo **na zemi** otevře formulář nového letu s tímto letadlem už vybraným (ušetří
-výběr letadla); klik na letící nebo naplánované ukáže jeho pásek a detail. Tlačítko „+ Nový
-let“ (`N`) otevře formulář bez letadla. Větší flotila se posouvá do strany.
+výběr letadla); klik na letící nebo naplánované ukáže jeho pásek a detail. Tlačítko „Nový
+let“ (bez „+“ a bez značky klávesy, klávesa `N` funguje dál) otevře formulář bez letadla.
+Větší flotila se posouvá do strany.
 
 ### 3.2 Pásek (desktop)
 Vodorovná řada přihrádek se svislými přepážkami – jako papírový strip ŘLP:
@@ -100,31 +101,33 @@ Vodorovná řada přihrádek se svislými přepážkami – jako papírový stri
   Štítky jsou **vždy stejný typ na stejném místě** vodorovně i svisle: prázdná pozice má šířku
   i výšku štítku (oba řádky štítků stejně vysoké), takže chybějící účel a způsob vzletu POB
   neposune nahoru.
-- Klik kamkoli mimo tlačítka = detail letu. **Vybraný pásek** (otevřený detail) má výrazný
-  prstenec v barvě textu s mezerou – vidět v obou režimech; stejně vybraný let na časové ose. Samostatné tlačítko
+- Klik kamkoli mimo tlačítka = detail letu. Pod myší se pásek nezvýrazňuje (rozhodnuto
+  8. 10. 2026). **Vybraný pásek** (otevřený detail) má výrazný prstenec v barvě textu
+  s mezerou – vidět v obou režimech; stejně vybraný let na časové ose. Samostatné tlačítko
   pro detail („⋯“) není – bylo by nadbytečné (rozhodnuto 7. 10. 2026).
 - Pořadí: ve vzduchu podle času vzletu (nejdéle letící nahoře), naplánované podle založení.
 
 ### 3.3 Deník dne
 - **Jeden řádek na let** (rozhodnuto 7. 10. 2026): Letadlo · Posádka (PIC · druhá osoba
-  s funkcí) · ↑ · ↓ · Doba · P. Ostatní údaje (účel, způsob vzletu, úloha, POB, trasa, plátce,
+  s funkcí) · ↑ · ↓ · P · Doba. Ostatní údaje (účel, způsob vzletu, úloha, POB, trasa, plátce,
   poznámka, u zrušeného důvod) jsou v **detailu** po kliknutí na řádek. Na monitoru věže je
   vidět celý den bez posouvání.
 - Stejně i u **jiného dne** (3.6) – deník je jen širší (zabere i místo pásků).
 - Ukončené od posledního přistání, pod nimi oddíl Zrušené (přeškrtnutý rejstřík).
-  Patička: lety, doba, přistání. Celá posádka s funkcemi v popisku řádku.
+  Patička: lety, přistání, doba. Celá posádka s funkcemi v popisku řádku.
+- **Pořadí počtů ve všech třech tabulkách** (deník, oba souhrny; rozhodnuto 8. 10. 2026):
+  počet letů · počet přistání (P) · doba.
 
 ### 3.4 Souhrny (pravý sloupec)
 Svislý sloupec **karet**; každá karta je samostatný zdroj, přidávají se postupně (zatím jen
 karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
-1. **Plachtařský provoz:** nahoře **P** (počet přistání kluzáků), **doba letů** kluzáků
-   a **doba vleků**; pod tím tabulka kluzáků a vlečných (Letadlo · Doba · P).
-2. **Motorový provoz:** nahoře **P** a **doba letů**; pod tím tabulka letadel (Letadlo ·
-   Doba · P).
+1. **Plachtařský provoz:** tabulka kluzáků a vlečných (vleky) – Letadlo · Lety · P · Doba;
+   celkem dole v patičce jako u deníku, **dva řádky: kluzáky a vleky**.
+2. **Motorový provoz:** tabulka letadel Letadlo · Lety · P · Doba, dole řádek Celkem.
 
-   Počet letů se v souhrnech neuvádí, jen počet přistání (P jako v deníku). Hlavička karty
-   má jen název; rozpad podle startů a účelu ani sloupec „kde je“ není (rozhodnuto
-   7. 10. 2026; kde letadlo je, ukazuje řada letadel).
+   Souhrnné hodnoty jsou dole, ne nahoře (rozhodnuto 8. 10. 2026). Hlavička karty má jen
+   název; rozpad podle startů a účelu ani sloupec „kde je“ není (kde letadlo je, ukazuje
+   řada letadel).
 
    Zařazení podle letu: let kluzáku nebo vlečný let (let s vazbou na kluzák) = plachtařský;
    ostatní = motorový, včetně **TMG** (rozhodnuto 7. 10. 2026) a vlastních letů vlečné mimo vlek.
@@ -172,8 +175,9 @@ současný stav. Úpravy letů jiného dne stejně jako dnes (omezí je až uzá
 ### 3.7 Přihlášení jen ke čtení (pro klubovnu)
 Viz 6.1. Na desktopu i na mobilu v relaci jen ke čtení: chybí „+ Nový let“ (i klávesa `N`
 a adresa `/novy-let`), akce na páscích a v detailu, pole v detailu nejdou upravit, klik na
-letadlo na zemi nic nezaloží, Můj provoz nejde měnit, záložky Osoby a Letadla nejsou. V liště
-oranžový štítek „Jen ke čtení“; v nabídce uživatele zůstává režim zobrazení a Odhlásit.
+letadlo na zemi nic nezaloží, Můj provoz nejde měnit, záložky Osoby a Letadla nejsou.
+Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na mobilu vpravo v řádku menu
+(datum v hlavičce zůstává celé). V nabídce uživatele zůstává režim zobrazení a Odhlásit.
 
 ### 3.8 Detail letu a nový let – panel zprava
 - Panely sahají od řady letadel **až dolů přes časovou osu** (víc místa, méně posouvání).

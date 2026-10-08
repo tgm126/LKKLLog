@@ -258,18 +258,22 @@ function Dlazdice({
   vybrat: () => void;
 }) {
   const stav = a.mimo_provoz ? "mimo" : a.leti_od ? "leti" : a.naplanovan ? "planovan" : "";
-  const typ = [a.typ, a.vlecne && "vlečná", a.soukrome && "soukromé"].filter(Boolean).join(" · ");
+  // tři řádky: rejstřík · typ · stav (mimo provoz, letí, naplánován); soukromé lehce šedé
   return (
     <button
       type="button"
-      className={["dlazdice", stav, vybrana && "vybrana"].filter(Boolean).join(" ")}
+      title={a.soukrome ? "soukromé letadlo" : undefined}
+      className={["dlazdice", a.soukrome && "soukrome", stav, vybrana && "vybrana"]
+        .filter(Boolean)
+        .join(" ")}
       disabled={a.mimo_provoz}
       aria-pressed={vybrana}
       onClick={vybrat}
     >
       <span className="dlazdice-rejstrik">{a.rejstrik}</span>
-      <span className="dlazdice-typ male seda">{typ}</span>
-      {/* řádek stavu mají všechny dlaždice (i prázdný) – stejná výška bez ohledu na obsah */}
+      <span className="dlazdice-typ male seda">{a.typ}</span>
+      {/* řádek stavu mají všechny dlaždice (prázdný = nezlomitelná mezera, jinak by se
+          ztratil) – stejná výška bez ohledu na obsah */}
       <span className="dlazdice-stav cisla">
         {a.mimo_provoz
           ? "mimo provoz"
@@ -277,7 +281,7 @@ function Dlazdice({
             ? `letí ${stopky(a.leti_od, ted()).slice(0, -3)}`
             : a.naplanovan
               ? "naplánován"
-              : " "}
+              : " "}
       </span>
     </button>
   );

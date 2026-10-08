@@ -5,8 +5,8 @@ import type { Pasek } from "../lety/api";
 import { podle } from "../lety/poradi";
 
 // Deník dne (docs/modul-desktop.md 3.3): jeden řádek na let – letadlo · posádka (PIC · druhá
-// osoba s funkcí) · vzlet · přistání · doba · přistání; ostatní údaje jsou v detailu. Ukončené
-// od posledního přistání, pod nimi zrušené; patička s celkem.
+// osoba s funkcí) · vzlet · přistání · P · doba; ostatní údaje jsou v detailu. Ukončené
+// od posledního přistání, pod nimi zrušené; patička s celkem (lety · přistání · doba).
 
 function Radek({ let: l, vybrany }: { let: Pasek; vybrany: boolean }) {
   const navigate = useNavigate();
@@ -31,8 +31,8 @@ function Radek({ let: l, vybrany }: { let: Pasek; vybrany: boolean }) {
       </span>
       <span className="cisla">{l.cas_vzletu && hodinyMinuty(l.cas_vzletu)}</span>
       <span className="cisla">{l.cas_pristani && hodinyMinuty(l.cas_pristani)}</span>
-      <span className="cisla vpravo tucne">{!zrusen && doba(l.doba_uctovana_min ?? 0)}</span>
       <span className="cisla vpravo">{!zrusen && l.pocet_pristani}</span>
+      <span className="cisla vpravo tucne">{!zrusen && doba(l.doba_uctovana_min ?? 0)}</span>
     </button>
   );
 }
@@ -56,8 +56,8 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
           <span>Posádka</span>
           <span>↑</span>
           <span>↓</span>
-          <span className="vpravo">Doba</span>
           <span className="vpravo">P</span>
+          <span className="vpravo">Doba</span>
         </div>
         <div className="denik-radky">
           {ukoncene.length === 0 && <p className="prazdny-sloupec male seda">Zatím žádný ukončený let.</p>}
@@ -74,10 +74,10 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
             Lety <b className="cisla">{ukoncene.length}</b>
           </span>
           <span>
-            Doba <b className="cisla">{doba(minut)}</b>
+            Přistání <b className="cisla">{pristani}</b>
           </span>
           <span>
-            Přistání <b className="cisla">{pristani}</b>
+            Doba <b className="cisla">{doba(minut)}</b>
           </span>
           <span className="vpravo-auto">doba = účtovaná, nejméně 1 minuta</span>
         </p>
