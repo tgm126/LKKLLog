@@ -9,23 +9,19 @@ import { useJenCteni } from "../uzivatel";
 
 // Řada letadel pod lištou (docs/modul-desktop.md 3.1): všechna letadla podle kategorie,
 // neutrální rámeček se stavem jen proužkem vlevo (zelený letí, modrý naplánované) a dnešek:
-// běžící čas, nebo počet letů a nálet, oranžově kde letadlo je (přistálo jinde než na mém
-// letišti). Klik na letadlo na zemi = nový let s ním; na letící nebo naplánované = detail.
-
-/** Kde letadlo je: místo posledního dnešního přistání, když není moje letiště (jinak null). */
-function kdeJe(lety: Pasek[], rejstrik: string): string | null {
-  const posledni = lety
-    .filter((l) => l.rejstrik === rejstrik && l.stav === "UKONCEN" && l.cas_pristani)
-    .sort((a, b) => b.cas_pristani!.localeCompare(a.cas_pristani!))[0];
-  return posledni?.misto_pristani ?? null;
-}
+// běžící čas, nebo počet letů a nálet, oranžově kde letadlo je (poloha z databáze = místo
+// posledního přistání vůbec, když není moje letiště). Klik na letadlo na zemi = nový let
+// s ním; na letící nebo naplánované = detail.
 
 export function RadaLetadel({
   letadla,
   lety,
+  mojeKod,
   nazvyKategorii,
 }: {
   letadla: LetadloNabidka[];
+  /** Moje letiště – letadlo jinde se označí oranžově. */
+  mojeKod: string | undefined;
   /** Dnešní lety (stav letadel je vždy podle dneška). */
   lety: Pasek[];
   /** Názvy kategorií (na notebooku jen přepážky). */
@@ -57,7 +53,7 @@ export function RadaLetadel({
               const leti = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "VE_VZDUCHU");
               const plan = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "NAPLANOVAN");
               const dnes = lety.filter((l) => l.rejstrik === a.rejstrik && l.stav === "UKONCEN");
-              const jinde = !leti && kdeJe(lety, a.rejstrik);
+              const jinde = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha;
               const otevreny = leti ?? plan;
               const stav = a.mimo_provoz ? "mimo" : leti ? "vzduch" : plan ? "naplanovan" : "";
               const popis = a.mimo_provoz

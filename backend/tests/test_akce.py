@@ -159,14 +159,14 @@ def test_novy_let_vycvik(conn, pilot, osoba, flotila):
     # Teď úloha pro výcvik na kluzáku existuje – bez ní to databáze odmítne (bez „Let 12:“).
     odpoved = k.post("/api/lety", json=data)
     assert odpoved.status_code == 400
-    assert odpoved.json()["detail"] == "u tohoto účelu je úloha povinná."
+    assert odpoved.json()["detail"] == "U tohoto účelu je úloha povinná."
     # Úloha jiného účelu nebo pro jinou kategorii neprojde.
     solo_let = _novy(
         conn, rejstrik="OK-2817", ucel="VYCVIK_SOLO", posadka={"PIC": zak, "DOZOR": pilot_id},
         akce="naplanovat", uloha_id=uloha,
     )  # fmt: skip
     odpoved = k.post("/api/lety", json=solo_let)
-    assert odpoved.json()["detail"] == "úloha nepatří k účelu letu nebo ke kategorii letadla."
+    assert odpoved.json()["detail"] == "Úloha nepatří k účelu letu nebo ke kategorii letadla."
     # Na letounu (kategorie bez osnovy) výcvik bez úlohy jde.
     letoun = _novy(
         conn, rejstrik="OK-CRA", ucel="VYCVIK", zpusob="VLASTNI",
@@ -187,7 +187,7 @@ def test_aerovlek_jen_s_vlecnou(conn, pilot, let):
     data = _novy(conn, rejstrik="OK-3819", zpusob="VLEK", posadka={"PIC": pilot_id}, pob=1)
     odpoved = k.post("/api/lety", json={**data, "akce": "naplanovat"})
     assert odpoved.status_code == 400
-    assert odpoved.json()["detail"] == "při vzletu aerovlekem chybí let vlečné."
+    assert odpoved.json()["detail"] == "Při vzletu aerovlekem chybí let vlečné."
 
     # ani přímo v databázi: změna způsobu vzletu na aerovlek bez vlečné
     kluzak = let("OK-3819", {"PIC": pilot_id}, zpusob="NAVIJAK")

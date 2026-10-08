@@ -88,7 +88,7 @@ export function Deska() {
           </Tlacitko>
         </div>
       )}
-      {nabidky && <RadaLetadel letadla={nabidky.letadla} lety={dnesniLety.data ?? []} nazvyKategorii={siroka} />}
+      {nabidky && <RadaLetadel letadla={nabidky.letadla} lety={dnesniLety.data ?? []} mojeKod={mojeKod} nazvyKategorii={siroka} />}
       <div className="deska-spodek">
         {letyDne.error && (
           <Hlaska>

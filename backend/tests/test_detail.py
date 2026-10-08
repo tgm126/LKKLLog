@@ -64,7 +64,7 @@ def test_upravy(conn, osoba, prihlasit, let):
 
     # Pravidla databáze platí i pro úpravy.
     chyba = k.post(f"/api/lety/{let_id}", json={"verze": d["verze"], "posadka": []})
-    assert chyba.status_code == 400 and chyba.json()["detail"] == "musí mít právě jednoho PIC."
+    assert chyba.status_code == 400 and chyba.json()["detail"] == "Musí mít právě jednoho PIC."
 
 
 def test_zruseny_nejde_upravit(conn, osoba, prihlasit, let):

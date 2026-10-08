@@ -25,6 +25,8 @@ export type Pasek = {
   rejstrik: string;
   typ: string;
   kategorie_kod: string;
+  /** Plachtařský (kluzák a vlečný let) nebo motorový provoz – podle databáze (db/035). */
+  druh_provozu: "PLACHTARSKY" | "MOTOROVY";
   ucel: string | null;
   ucel_kod: string | null;
   zpusob_vzletu: string;
@@ -93,6 +95,8 @@ export type LetadloNabidka = {
   vlecne: boolean;
   soukrome: boolean;
   mimo_provoz: boolean;
+  /** Místo posledního přistání (kód letiště nebo popis), db/035. */
+  poloha: string | null;
   leti_od: string | null;
   naplanovan: boolean;
   /** Naposledy létající na letadle (id osob, od posledního). */

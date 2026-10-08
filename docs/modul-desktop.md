@@ -75,7 +75,8 @@ dneška**:
 - letí → běžící čas („letí 0:08“), naplánované → „naplánován“;
 - jinak jen nálet dne („25″“, bez počtu letů – rozhodnuto 8. 10. 2026) nebo „dnes nelétal“;
 - **kde je**: přistálo-li naposledy jinde než na mém letišti, oranžově kód letiště („LKMB“,
-  bez „na“ – 8. 10. 2026; odvozeno z místa posledního přistání, nic se neukládá);
+  bez „na“ – 8. 10. 2026); poloha z databáze (`v_lov_letadlo.poloha` = místo posledního
+  přistání vůbec, i včerejšího – db/035), nic se neukládá;
 - mimo provoz přeškrtnuté, nejde vybrat.
 
 Klik na letadlo **na zemi** otevře formulář nového letu s tímto letadlem už vybraným (ušetří
@@ -148,6 +149,7 @@ karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
 
    Zařazení podle letu: let kluzáku nebo vlečný let (let s vazbou na kluzák) = plachtařský;
    ostatní = motorový, včetně **TMG** (rozhodnuto 7. 10. 2026) a vlastních letů vlečné mimo vlek.
+   Zařazení určuje databáze (`v_let.druh_provozu`, db/035) – pro uzávěrku a účetnictví stejné.
    Součet obou dohromady se neukazuje.
 3. **Počasí – METAR/TAF** (později, samostatný modul): v maketě jen ukázka místa. Kladno
    METAR nevydává, nabízí se nejbližší stanice (LKPR Ruzyně, případně další), surová zpráva

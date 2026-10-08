@@ -4,7 +4,8 @@ import "../komponenty/Tabulka.css";
 import type { Pasek } from "../lety/api";
 
 // Souhrny dne v pravém sloupci (docs/modul-desktop.md 3.4): plachtařský provoz (kluzáky
-// a vleky) a motorový provoz (vše ostatní, i TMG a vlastní lety vlečné mimo vlek). Tabulka
+// a vleky) a motorový provoz (vše ostatní, i TMG a vlastní lety vlečné mimo vlek) – zařazení
+// určuje databáze (v_let.druh_provozu, db/035). Tabulka
 // letadel Lety · (P) · Doba (pořadí jako v deníku dne), celkem dole v patičce – u plachtařů
 // zvlášť kluzáky a vleky, bez přistání (u kluzáku je přistání vždy jedno). Jen ukončené
 // lety; počítá se z letů dne, nic se neukládá.
@@ -90,9 +91,10 @@ function Tabulka({
 
 export function Souhrny({ lety, poradi }: { lety: Pasek[]; poradi: string[] }) {
   const ukoncene = lety.filter((l) => l.stav === "UKONCEN");
-  const kluzaky = ukoncene.filter((l) => l.kategorie_kod === "KLUZAK");
-  const vleky = ukoncene.filter((l) => l.je_vlecny);
-  const motor = ukoncene.filter((l) => l.kategorie_kod !== "KLUZAK" && !l.je_vlecny);
+  const plachtari = ukoncene.filter((l) => l.druh_provozu === "PLACHTARSKY");
+  const kluzaky = plachtari.filter((l) => !l.je_vlecny);
+  const vleky = plachtari.filter((l) => l.je_vlecny);
+  const motor = ukoncene.filter((l) => l.druh_provozu === "MOTOROVY");
   return (
     <>
       <Blok nadpis="Plachtařský provoz" popis="Plachtařský provoz">

@@ -69,6 +69,8 @@ class Pasek(BaseModel):
     rejstrik: str
     typ: str
     kategorie_kod: str
+    druh_provozu: str
+    """PLACHTARSKY (kluzák a vlečný let) | MOTOROVY – souhrny dne (db/035)."""
     ucel: str | None
     ucel_kod: str | None
     zpusob_vzletu: str
@@ -198,8 +200,9 @@ def lety(
     den, ted, letiste = _den_a_letiste(conn, den, p.relace_id)
     moje_kod = letiste["kod"] if letiste else None
     radky = conn.execute(
-        """SELECT v.id, v.stav, v.rejstrik, v.typ, v.kategorie_kod, v.ucel, v.ucel_kod,
-                  v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny, v.vlecny_let_id,
+        """SELECT v.id, v.stav, v.rejstrik, v.typ, v.kategorie_kod, v.druh_provozu,
+                  v.ucel, v.ucel_kod, v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
+                  v.vlecny_let_id,
                   v.vleceny_let_id, coalesce(av.rejstrik, ak.rejstrik) AS vlek_rejstrik,
                   nullif(v.misto_vzletu, %(moje)s) AS misto_vzletu,
                   nullif(v.misto_pristani, %(moje)s) AS misto_pristani,
@@ -248,7 +251,8 @@ def zmena(conn: Connection) -> Iterator[None]:
             yield
             conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
     except errors.RaiseException as e:
-        raise HTTPException(400, re.sub(r"^Let \d+: ", "", e.diag.message_primary or "")) from e
+        zprava = re.sub(r"^Let \d+: ", "", e.diag.message_primary or "")
+        raise HTTPException(400, zprava[:1].upper() + zprava[1:]) from e
     except errors.ExclusionViolation as e:
         raise HTTPException(409, PREKRYV) from e
 
@@ -401,7 +405,7 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
     """Vše pro průvodce novým letem v jednom dotazu (nabídky z pohledů v_lov_*)."""
     letadla = conn.execute(
         """SELECT a.id, a.rejstrik, a.typ, a.kategorie, a.kategorie_kod, a.pocet_mist,
-                  a.vlecne, a.soukrome, a.mimo_provoz,
+                  a.vlecne, a.soukrome, a.mimo_provoz, a.poloha,
                   (SELECT min(v.cas_vzletu) FROM lkkl.v_let v
                    WHERE v.letadlo_id = a.id AND v.stav = 'VE_VZDUCHU') AS leti_od,
                   EXISTS (SELECT 1 FROM lkkl.v_let v
@@ -561,17 +565,12 @@ def novy_let(
     probehly = data.akce == "probehly"
     if data.vlecna_id is not None and data.vlekar_id is None:
         raise HTTPException(400, "U aerovleku chybí vlekař.")
-    if data.vlekar_id in {c.osoba_id for c in data.posadka}:
-        raise HTTPException(400, "Vlekař nemůže být zároveň v posádce kluzáku.")
     if probehly:
         casy = [data.cas_vzletu, data.cas_pristani]
         if data.vlecna_id is not None:
             casy.append(data.cas_pristani_vlecne)
         if any(c is None for c in casy):
             raise HTTPException(400, "Chybí čas vzletu nebo přistání.")
-        ted = conn.execute("SELECT now() AS t").fetchone()["t"]
-        if any(c > ted for c in casy if c is not None):
-            raise HTTPException(400, "Čas nesmí být v budoucnosti.")
     pic_id = conn.execute("SELECT id FROM lkkl.lov_funkce WHERE kod = 'PIC'").fetchone()["id"]
     platce_id = data.platce_id
     if platce_id is None and not data.plati_aeroklub:
@@ -811,6 +810,12 @@ def upravit(
             f"UPDATE lkkl.let SET {nastavit} WHERE id = %(id)s",  # noqa: S608
             {**zmeny, "id": let_id},
         )
+        if "cas_vzletu" in zmeny:  # kluzák a vlečná vzlétají společně (db/035)
+            conn.execute(
+                f"""UPDATE lkkl.let SET cas_vzletu = %(cas)s
+                    WHERE id IN ({DVOJICE}) AND id <> %(id)s""",  # noqa: S608 – pevný text
+                {"cas": zmeny["cas_vzletu"], "id": let_id},
+            )
         if data.posadka is not None:
             nove = {(c.osoba_id, c.funkce_id) for c in data.posadka}
             stare = {

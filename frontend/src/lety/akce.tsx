@@ -29,6 +29,7 @@ export function useAkceLetu() {
   const obnovit = () => {
     qc.invalidateQueries({ queryKey: ["lety"] });
     qc.invalidateQueries({ queryKey: ["let"] });
+    qc.invalidateQueries({ queryKey: ["nabidky"] }); // stav a poloha letadel
   };
 
   const zpet = useMutation({

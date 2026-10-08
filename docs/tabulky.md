@@ -27,7 +27,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_kategorie` | číselník | kategorie letadel | 001, 008 |
 | `lov_typ` | číselník | typy letadel → kategorie, počet míst | 001, 002, 008 |
 | `lov_letadlo` | trvalá data | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz (dočasně), platné (ne = vyřazené) | 001, 002, 013, 017, 031 |
-| `v_lov_letadlo` | pohled | platná letadla s typem, kategorií a počtem míst; pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017, 031 |
+| `v_lov_letadlo` | pohled | platná letadla s typem, kategorií, počtem míst a **polohou** (místo posledního přistání vůbec – kód letiště nebo popis); pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017, 031, 035 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft], rychlá volba (nabízí se hned, ostatní přes Hledat…) | 003, 008, 028 |
 | `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` | 008, 016 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
@@ -41,8 +41,9 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místo vzletu i přistání vždy (letiště nebo popis; místo přistání do přistání = plán), časy UTC, doba (počítá DB, nejméně 1 minuta), počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
-| `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem a příznakem „dodatečně“ | 009, 011, 014 |
-| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek (vlečný let jen u aerovleku a jen vlečné letadlo; **aerovlek vždy s letem vlečné** – i cizí vlečná je v `lov_letadlo` jako soukromá a vlečná), časy T&G, úloha (povinnost, účel, kategorie) | 009, 011, 016, 019, 032 |
+| `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem, příznakem „dodatečně“ a **druhem provozu** (`PLACHTARSKY` = kluzák a vlečný let, `MOTOROVY` = ostatní, i TMG) | 009, 011, 014, 035 |
+| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek (vlečný let jen u aerovleku a jen vlečné letadlo; **aerovlek vždy s letem vlečné** – i cizí vlečná je v `lov_letadlo` jako soukromá a vlečná; dvojice `vlek_zkontrolovat()`: stejný čas vzletu, naplánovaný vlek se ruší i obnovuje celý, vlekař není v posádce kluzáku), způsob vzletu podle kategorie (kluzák naviják / aerovlek, ostatní vlastní), T&G jen u motorového letadla (ne kluzák, ne vlečná) a v době letu, úloha (povinnost, účel, kategorie) | 009, 011, 016, 019, 032, 035 |
+| `let_cas_ne_v_budoucnosti`, `let_tg_cas_ne_v_budoucnosti` | trigger | čas vzletu, přistání ani T&G nesmí být v budoucnosti | 035 |
 | `let_osoby_bez_prekryvu()` | funkce (v `let_kontrola`) | osoba na palubě nemůže být ve vzduchu ve dvou letech zároveň (plánování volné, dozor na zemi se nepočítá); hláška s rejstříkem a časem druhého letu | 018, 025 |
 | `let_letadlo_volne` | trigger (před zápisem letu) | letadlo nemůže mít dva překrývající se lety – hláška „OK-… už letí (vzlet 10:42 UTC, PIC …)“; omezení `letadlo_bez_prekryvu` zůstává jako pojistka pro souběh | 025 |
 | `cas_hlasky()`, `let_popis_hlasky()` | funkce | čas v UTC a popis druhého letu (vzlet / doba, PIC) do chybových hlášek | 025 |

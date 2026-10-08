@@ -115,6 +115,7 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
     onSuccess: (novy) => {
       qc.setQueryData(["let", l.id], novy);
       qc.invalidateQueries({ queryKey: ["lety"] });
+      qc.invalidateQueries({ queryKey: ["nabidky"] }); // poloha letadla (místo přistání)
       setUpravuji(null);
     },
     onError: (e) => {
@@ -444,6 +445,7 @@ export function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
       // nebyl vidět starý stav.
       await qc.invalidateQueries({ queryKey: ["lety"], refetchType: "all" });
       qc.invalidateQueries({ queryKey: ["let"] });
+      qc.invalidateQueries({ queryKey: ["nabidky"] });
       setRusim(false);
       oznamit({ text: `${p.rejstrik} ${a.cesta === "zrusit" ? "zrušen" : "obnoven"}` });
     },
