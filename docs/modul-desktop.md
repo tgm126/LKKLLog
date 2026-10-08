@@ -43,7 +43,7 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
 ## 3. Rozvržení
 
 ```
-┌ žlutý pruh fáze provozu ──────────────────────────────────────────────────────────────┐
+┌ žlutý pruh testovacího provozu ───────────────────────────────────────────────────────┐
 │ AK Kladno Log                       ‹ Středa 7. 10. 2026 ›  TB SR SS TE do TE 2:40  14:21:05 UTC  TM │
 │ [+ Nový let N]  KLUZÁKY [OK-0914 letí 4:16] [OK-2817 3× 25″] …  UL [OK-NUA 21 1× 37″ · na LKMB] │
 ├───────────────────────────────────┬────────────────────────────┬──────────────────────┤

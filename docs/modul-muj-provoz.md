@@ -56,7 +56,7 @@ server místo z aplikace ukládá vždy výslovně (nový let, proběhlý let, p
 doplněné přistání v detailu).
 
 ## 5. Data
-Provozní tabulky (zahájení ostrého provozu je vyprázdní spolu s relacemi), bez auditu –
+Provozní tabulky (smažou se spolu s relací při odhlášení a úklidu prošlých relací), bez auditu –
 nastavení zařízení, ne údaje letu (místo letu se zapisuje do letu a to audit má).
 
 ```sql

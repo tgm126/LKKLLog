@@ -45,8 +45,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    kaskádového mazání; pravidla v databázi (CHECK, UNIQUE, EXCLUDE).
 10. **Auditní log triggerem v databázi** (zachytí i přímou opravu v databázi).
     **Předpona `lov_` = trvalá data** (číselníky, osoby, letadla, osnovy, popisky auditu
-    i vazební tabulky mezi nimi); ostatní tabulky jsou provozní data a zahájení ostrého
-    provozu je vyprázdní (mimo technické `ucet`, `migrace`, `provoz`).
+    i vazební tabulky mezi nimi); ostatní tabulky jsou provozní data (lety, audit, relace)
+    a technické (`ucet`, `migrace`, `nastaveni`).
     **Standard jednoduchého číselníku:** `id` (vazby mezi tabulkami **vždy přes id**), `kod`
     (jedinečný, jen pro program, nikde se nezobrazuje), `nazev` (text pro zobrazení – jde měnit
     a nemusí být jedinečný), `poradi`, `platny` (přepínač „používat“; nemaže se, zneplatní se;
@@ -118,14 +118,13 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     Nouzové opravy přímo v databázi.
 
 ## Testování
-16. Každá funkce prochází **třemi fázemi**:
-    1. **testuje jen uživatel** (správce projektu);
-    2. **testují vybraní pilotní uživatelé**;
-    3. **rollout na všechny**.
-    Do ostrého spuštění běží vše v jedné databázi; fázi ukazuje tabulka `provoz` (žlutý pruh).
-    Pilot = aktivace účtů vybraných osob. **Zahájení ostrého provozu** jednorázově smaže
-    testovací a pilotní záznamy (vše mimo `lov_` a technické tabulky, i audit a přihlášení):
-    po záloze příkazem `uv run python -m app.prikazy ostry-provoz --potvrzuji`.
+16. **Testovací a ostrý provoz bez automatiky** (revidováno 8. 10. 2026): hobby aplikace
+    nahrazuje sešit, data jdou dál do účetního programu – nic se nezamyká ani hromadně
+    nevyprazdňuje podle fáze. Funkce zkouší nejdřív uživatel (správce projektu), pak vybraní
+    piloti (= aktivace jejich účtů), pak všichni – organizačně, ne v databázi. Vše běží v jedné
+    databázi. **Žlutý pruh** „TESTOVACÍ PROVOZ“ řídí jen `lkkl.nastaveni.testovaci_provoz`
+    (přepíná se přímo v databázi, oběma směry). Zkušební lety smaže admin po dnech:
+    `CALL lkkl.smazat_lety_dne('RRRR-MM-DD');` (audit zůstává).
     *K projednání:* jak testovat nové funkce po ostrém spuštění (např. příznak u účtu).
     Automatické testy u mě běží při každé změně.
 

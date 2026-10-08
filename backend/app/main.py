@@ -80,16 +80,19 @@ def health(conn: Connection = Depends(db.spojeni)):
     return {"stav": "ok", "verze": nastaveni.verze}
 
 
-# Text žlutého pruhu podle fáze provozu (lkkl.provoz); v ostrém provozu bez pruhu.
-PRUH = {"testovani": "TESTOVACÍ PROVOZ", "pilot": "PILOTNÍ PROVOZ", "ostry": ""}
+# Žlutý pruh: testovací provoz podle nastavení v databázi (lkkl.nastaveni), lokálně vývoj.
+PRUH_TEST = "TESTOVACÍ PROVOZ"
 PRUH_VYVOJ = "VÝVOJ – lokální databáze"
 
 
 @app.get("/api/aplikace")
 def aplikace(conn: Connection = Depends(db.spojeni)):
-    """Co obrazovky ukazují i bez přihlášení: verze a text pruhu (fáze provozu)."""
-    faze = conn.execute("SELECT faze FROM lkkl.provoz").fetchone()["faze"]
-    return {"verze": nastaveni.verze, "pruh": PRUH_VYVOJ if nastaveni.vyvoj else PRUH[faze]}
+    """Co obrazovky ukazují i bez přihlášení: verze a text pruhu (testovací provoz)."""
+    test = conn.execute("SELECT testovaci_provoz FROM lkkl.nastaveni").fetchone()[
+        "testovaci_provoz"
+    ]
+    pruh = PRUH_VYVOJ if nastaveni.vyvoj else PRUH_TEST if test else ""
+    return {"verze": nastaveni.verze, "pruh": pruh}
 
 
 def pripojit_frontend(aplikace: FastAPI, slozka: Path) -> None:
