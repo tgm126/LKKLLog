@@ -124,7 +124,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     piloti (= aktivace jejich účtů), pak všichni – organizačně, ne v databázi. Vše běží v jedné
     databázi. **Žlutý pruh** „TESTOVACÍ PROVOZ“ řídí jen `lkkl.nastaveni.testovaci_provoz`
     (přepíná se přímo v databázi, oběma směry). Zkušební lety smaže admin po dnech:
-    `CALL lkkl.smazat_lety_dne('RRRR-MM-DD');` (audit zůstává).
+    `CALL lkkl.smazat_lety_dne('RRRR-MM-DD');` (`DELETE` se zápisem do auditu). Celou tabulku
+    letů ani audit nejde vyprázdnit příkazem `TRUNCATE` – obešel by audit.
     *K projednání:* jak testovat nové funkce po ostrém spuštění (např. příznak u účtu).
     Automatické testy u mě běží při každé změně.
 

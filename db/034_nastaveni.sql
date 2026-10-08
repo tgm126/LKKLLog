@@ -4,8 +4,9 @@
 -- „zpět nejde“ se ruší. Zbývá jediný řádek nastavení; testovací provoz zatím řídí jen žlutý
 -- pruh v aplikaci a přepíná se přímo v databázi:
 --     UPDATE lkkl.nastaveni SET testovaci_provoz = false;
--- Zkušební lety se mažou po dnech: CALL lkkl.smazat_lety_dne('RRRR-MM-DD'); (033).
--- Lety a audit dál nejde vyprázdnit (TRUNCATE) – už bez výjimky.
+-- Zkušební lety se mažou po dnech: CALL lkkl.smazat_lety_dne('RRRR-MM-DD'); (033) – DELETE
+-- vybraných řádků se zápisem do auditu. Celou tabulku letů a audit dál nejde vyprázdnit
+-- příkazem TRUNCATE (obešel by audit) – výjimka pro zahájení ostrého provozu se ruší.
 
 CREATE TABLE lkkl.nastaveni (
     jediny           boolean PRIMARY KEY DEFAULT true CHECK (jediny),

@@ -70,7 +70,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); zakládá ji spouštěč `app/migrace.py` | – |
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
 | `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, lov_osoba_opravneni_kategorie, ucet, lov_letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
-| `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit (bez výjimky) | 012, 017, 034 |
+| `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit; `TRUNCATE` letů ani auditu nejde nikdy (obešel by audit – lety se mažou jen procedurou `smazat_lety_dne`) | 012, 017, 034 |
 | `lov_audit_popisek` | číselník | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012, 017 |
 | `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |
 | `v_historie_letu` | pohled | historie letu: jedna akce (let + posádka + T&G v jedné transakci) = jeden řádek | 012 |
