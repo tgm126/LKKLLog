@@ -11,8 +11,9 @@ function ukazatBlok(e: MouseEvent) {
   requestAnimationFrame(() => blok?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
 }
 
-/** Desktop: panel zprava přes desku (detail letu, nový let) – nahoře hlava a zavírací
- *  křížek, uprostřed posuvný obsah, dole akce. Deska pod ním zůstává ovladatelná. */
+/** Desktop: panel zprava přes desku (detail letu, nový let) – nahoře hlava (pásek letu
+ *  přes celou šířku), uprostřed posuvný obsah, dole akce a vpravo Zavřít (i klávesa Esc).
+ *  Deska pod ním zůstává ovladatelná. */
 export function Panel({
   nadpis,
   hlava,
@@ -32,18 +33,16 @@ export function Panel({
 }) {
   return (
     <aside className={siroky ? "panel siroky" : "panel"} aria-label={nadpis}>
-      <div className="panel-hlava">
-        <div className="panel-hlava-obsah">{hlava}</div>
-        <Tlacitko varianta="bez-ramu" className="panel-zavrit" aria-label="Zavřít (Esc)" title="Zavřít (Esc)" onClick={zavrit}>
-          <svg className="ikona" viewBox="0 0 24 24" aria-hidden>
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </Tlacitko>
-      </div>
+      <div className="panel-hlava">{hlava}</div>
       <div className="panel-telo" onClick={ukazatBlok}>
         {children}
       </div>
-      {pata && <div className="panel-pata">{pata}</div>}
+      <div className="panel-pata">
+        <div className="panel-akce">{pata}</div>
+        <Tlacitko varianta="obrys" title="Zavřít (Esc)" onClick={zavrit}>
+          Zavřít
+        </Tlacitko>
+      </div>
     </aside>
   );
 }

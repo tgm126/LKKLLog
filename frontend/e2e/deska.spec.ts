@@ -96,6 +96,10 @@ test("deska: nový let klávesou N a z řady letadel, VZLET TEĎ", async ({ page
   await expect(novy).toContainText("Nejdřív vyberte letadlo.");
   await page.keyboard.press("Escape");
   await expect(novy).toBeHidden();
+  // Zavřít vpravo v patičce panelu (vedle pásku křížek není)
+  await page.keyboard.press("n");
+  await novy.locator(".panel-pata").getByRole("button", { name: "Zavřít" }).click();
+  await expect(novy).toBeHidden();
 
   // Klik na letadlo na zemi = formulář s tímto letadlem
   await page.getByRole("navigation", { name: "Letadla" }).getByRole("button", { name: /OK-CUO 78/ }).click();

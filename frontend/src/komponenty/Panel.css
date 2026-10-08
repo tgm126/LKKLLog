@@ -19,30 +19,18 @@
   width: var(--sirka-noveho);
 }
 
+/* Hlava: pásek letu přes celou šířku, nebo nadpis s popisem */
 .panel-hlava {
   display: flex;
-  align-items: flex-start;
-  gap: var(--mezera-2);
-  padding: var(--mezera-3) var(--mezera-2) var(--mezera-3) var(--mezera-4);
+  align-items: baseline;
+  gap: var(--mezera-3);
+  padding: var(--mezera-3) var(--mezera-4);
   border-bottom: var(--ramecek);
   background: var(--barva-karta);
 }
 
-.panel-hlava-obsah {
-  display: flex;
+.panel-hlava > .pasek-deska {
   flex: 1;
-  align-items: baseline;
-  gap: var(--mezera-3);
-  min-width: 0;
-}
-
-.panel-hlava-obsah > .pasek-deska {
-  flex: 1;
-}
-
-.panel-zavrit {
-  --tl-min-sirka: var(--klik);
-  --tl-odsazeni: 0;
 }
 
 .panel-telo {
@@ -52,17 +40,26 @@
   padding: var(--mezera-3) var(--mezera-4);
 }
 
+/* Patička: akce panelu (zalomí se), vpravo vždy Zavřít */
 .panel-pata {
   --akce-vedle-zobrazeni: contents;
   --akce-vedle-tlacitko: none;
 
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--mezera-2);
   padding: var(--mezera-3) var(--mezera-4);
   border-top: var(--ramecek);
   background: var(--barva-karta);
+}
+
+.panel-akce {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mezera-2);
+  min-width: 0;
 }
 
 .panel-pata .tl {

@@ -203,7 +203,8 @@ Oranžový štítek „Jen ke čtení“: na desktopu v liště za názvem, na m
   stejné jako na mobilu (`modul-lety.md` 3.5): pásek nahoře, bloky Posádka a let · Časy
   a místa · Platba a poznámka · Evidence s historií (u zrušeného i důvod zrušení). **Bez horní
   lišty s rejstříkem** (rozhodnuto 7. 10. 2026 – rejstřík je hned v pásku): pásek je úplně
-  nahoře a vedle něj vpravo zavírací křížek (a `Esc`); pásek se vejde na jeden řádek i s trasou.
+  nahoře přes celou šířku panelu. **Zavírá se tlačítkem „Zavřít“ vpravo v patičce** (a `Esc`)
+  – křížek vedle pásku zrušen 8. 10. 2026; stejně i panel nového letu.
   Úprava **na místě stejně jako na mobilu** – klik na pole otevře pod ním volby nebo pole
   k zápisu (stejné komponenty, jen menší). Akce v patičce.
 - **Nový let** (820 px) je **jeden formulář místo průvodce** (rozhodnuto 7. 10. 2026): nahoře
