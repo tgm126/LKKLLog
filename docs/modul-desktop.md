@@ -44,7 +44,7 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
 
 ```
 ┌ žlutý pruh fáze provozu ──────────────────────────────────────────────────────────────┐
-│ AK Kladno Log  Provoz · Osoby · Letadla · (Deník)  ‹ Středa 7. 10. 2026 ›  TB SR SS TE do TE 2:40  14:21:05 UTC  TM │
+│ AK Kladno Log                       ‹ Středa 7. 10. 2026 ›  TB SR SS TE do TE 2:40  14:21:05 UTC  TM │
 │ [+ Nový let N]  KLUZÁKY [OK-0914 letí 4:16] [OK-2817 3× 25″] …  UL [OK-NUA 21 1× 37″ · na LKMB] │
 ├───────────────────────────────────┬────────────────────────────┬──────────────────────┤
 │ VE VZDUCHU 5                      │ DENÍK DNE                  │ PLACHTAŘSKÝ PROVOZ   │
@@ -57,9 +57,11 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
           detail letu / nový let = panel zprava přes deník a informace; pásky zůstanou vidět
 ```
 
-- **Horní lišta:** název, navigace stejná jako mobilní menu (PROVOZ · OSOBY · LETADLA,
-  verzálky s podtržením), datum normálním písmem 15 px, **den se
-  šipkami** (3.6), sluneční časy se zbývajícím časem do konce soumraku (oranžově), hodiny UTC se
+- **Desktop je jedna stránka** (rozhodnuto 8. 10. 2026): jen provozní deska, **bez menu**.
+  Správa osob a letadel je jen na mobilu (na desktopu adresa `/osoby`, `/letadla` vede na
+  desku); můj provoz zatím jako sloupec uprostřed z nabídky uživatele.
+- **Horní lišta:** název, datum normálním písmem 15 px, **den se
+  šipkami** (3.6), všechny údaje na jednom účaří písma, sluneční časy se zbývajícím časem do konce soumraku (oranžově), hodiny UTC se
   sekundami, nabídka uživatele (Můj provoz, Režim zobrazení, Odhlásit – jako na mobilu).
   Jiné než domovské letiště = oranžový štítek s kódem jako na mobilu. Při přihlášení jen ke
   čtení oranžový štítek „Jen ke čtení“ (3.7).
@@ -82,18 +84,20 @@ let“ (bez „+“ a bez značky klávesy, klávesa `N` funguje dál) otevře f
 Větší flotila se posouvá do strany.
 
 ### 3.2 Pásek (desktop)
-Vodorovná řada přihrádek se svislými přepážkami – jako papírový strip ŘLP – a pod ní řádek
-štítků (upraveno 8. 10. 2026: štítky z vlastní přihrádky do třetího řádku, přihrádka trasy
-zrušena, posádka má víc místa):
+Vodorovná řada přihrádek – jako papírový strip ŘLP – a pod ní řádek štítků (upraveno
+8. 10. 2026: štítky z vlastní přihrádky do třetího řádku, přihrádka trasy zrušena, posádka
+má víc místa; **bez svislých přepážek**, trasa pod časem, sloupec pásků nejvýš 760 px):
 
 | Letadlo | Posádka | Čas | Akce |
 |---|---|---|---|
 | rejstřík 20 px, typ (u vleku „vlečná“) | osoba na řádek s funkcí (bere všechno zbylé místo) | stopky + ↗ čas vzletu; u naplánovaného „plán“ a kdy byl založen (po najetí kdo) | T&G n · PŘISTÁL / VZLET |
 
 - **Třetí řádek přes celou šířku:** štítky v pevných pozicích zleva účel · způsob vzletu ·
-  POB · úloha (po najetí celý název) – stejná komponenta jako na mobilu; **vpravo vždy trasa**
-  odkud → kam jako štítek (moje letiště šedě, jiné tučně; výrazná kreslená šipka jako u časů).
-- Posádka je v přihrádce **nahoře** (jeden pilot v řádku s rejstříkem, ne uprostřed výšky).
+  POB · úloha (po najetí celý název) – stejná komponenta jako na mobilu; **pod časem vždy
+  trasa** odkud → kam jako štítek (moje letiště šedě, jiné tučně; výrazná kreslená šipka jako
+  u časů). Akce jsou vpravo svisle uprostřed přes oba řádky.
+- Přihrádky odshora, první řádky na jednom účaří: rejstřík, první z posádky a stopky (jeden
+  pilot je v řádku s rejstříkem, ne uprostřed výšky).
 - Akce nemají přepážku – tlačítka mají vlastní okraj; T&G se nelepí na čáru (8. 10. 2026).
   Sloupec akcí má pevnou šířku, aby PŘISTÁL / VZLET byly u všech pásků pod sebou.
 - Barvy, okraje, varovný řádek, dvojitý pásek vleku a pravidla zobrazení (běžné hodnoty se
@@ -118,7 +122,8 @@ zrušena, posádka má víc místa):
 
 ### 3.3 Deník dne
 - **Jeden řádek na let** (rozhodnuto 7. 10. 2026): Letadlo · Posádka (PIC · druhá osoba
-  s funkcí) · ↗ vzlet · ↘ přistání · P · Doba. Ostatní údaje (účel, způsob vzletu, úloha, POB, trasa, plátce,
+  s funkcí) · ↗ vzlet · ↘ přistání · P · Doba (záhlaví časů a P na střed nad hodnotou, doba
+  vpravo; šířky sloupců pevné, nezávislé na písmu záhlaví). Ostatní údaje (účel, způsob vzletu, úloha, POB, trasa, plátce,
   poznámka, u zrušeného důvod) jsou v **detailu** po kliknutí na řádek. Na monitoru věže je
   vidět celý den bez posouvání.
 - Stejně i u **jiného dne** (3.6) – deník je jen širší (zabere i místo pásků).
@@ -188,7 +193,7 @@ současný stav. Úpravy letů jiného dne stejně jako dnes (omezí je až uzá
 Viz 6.1. Na desktopu i na mobilu v relaci jen ke čtení: chybí „Nový let“ (i klávesa `N`
 a adresa `/novy-let`), akce na páscích a v detailu, pole v detailu nejdou upravit, klik na
 letadlo na zemi nic nezaloží, Můj provoz nejde měnit, záložky Osoby a Letadla nejsou.
-Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na mobilu vpravo v řádku menu
+Oranžový štítek „Jen ke čtení“: na desktopu v liště za názvem, na mobilu vpravo v řádku menu
 (datum v hlavičce zůstává celé). V nabídce uživatele zůstává režim zobrazení a Odhlásit.
 
 ### 3.8 Detail letu a nový let – panel zprava
@@ -237,7 +242,7 @@ Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na
   stav letu → výplň a barva jen v `lety/PanelLetu.css` (pásek mobilu, pásek desky, dlaždice
   letadla, proužek v řadě letadel); karty jen `Blok` / `.karta` (bloky, deník, souhrny, časová
   osa); záhlaví a patička tabulek jen `komponenty/Tabulka.css`; hlavní tlačítko `Tlacitko`;
-  navigace desky je mobilní menu (`.menu`); poloha nabídky uživatele a akce vedle sebe přes
+  poloha nabídky uživatele a akce vedle sebe přes
   proměnné komponent; rozměry pro myš v `tokeny.css` (sada `.deska`). Desktopové komponenty
   mají vlastní CSS jen pro rozvržení.
 - **Testy:** klikací testy `e2e/deska.spec.ts` v rozměru 1920 × 1080 a 1366 × 768: deska
@@ -248,8 +253,9 @@ Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na
 ## 5. Postup (malé moduly) – odsouhlaseno 7. 10. 2026
 
 1. **Provozní deska** – vše v kap. 3 kromě 3.7 a počasí. (Tento návrh.)
-2. **Osoby a Letadla na desktopu** – seznam vlevo, detail vpravo (vlastní krátký návrh).
-3. **Můj provoz na desktopu** – v nabídce uživatele (malá úprava).
+2. ~~Osoby a Letadla na desktopu~~ – zrušeno 8. 10. 2026: desktop je jedna stránka, správa
+   osob a letadel jen na mobilu.
+3. **Můj provoz na desktopu** – v nabídce uživatele (malá úprava; jako panel, ne stránka).
 4. **Počasí** – zdroj, stanice, mezipaměť na serveru (vlastní návrh).
 5. **Přihlášení jen ke čtení** (6.1) – rozhodnuto 8. 10. 2026, dělá se hned po desce.
 6. Později: deník za období (účetní), uzávěrky, export, velký displej.

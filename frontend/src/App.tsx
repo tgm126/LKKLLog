@@ -27,7 +27,8 @@ import { useJa, useJenCteni, zmenitUzivatele } from "./uzivatel";
 export function App() {
   // Provoz (přehled, detail letu, nový let): na desktopu provozní deska s panelem zprava,
   // jinak mobilní obrazovky (docs/modul-desktop.md). Adresy jsou stejné – odkaz funguje
-  // na obou. Ostatní obrazovky zatím jen v mobilní podobě (sloupec uprostřed).
+  // na obou. Desktop je jedna stránka: správa osob a letadel je jen v mobilní podobě
+  // (na desktopu adresa vede na desku); můj provoz zatím jako sloupec uprostřed.
   const deska = useDeska();
   return (
     <Routes>
@@ -53,12 +54,16 @@ export function App() {
             <Route path="/let/:id" element={<Detail />} />
           </>
         )}
-        <Route element={<SHlavickou />}>
-          <Route path="/osoby" element={<SeznamOsob />} />
-          <Route path="/letadla" element={<SeznamLetadel />} />
-        </Route>
-        <Route path="/osoba/nova" element={<NovaOsoba />} />
-        <Route path="/osoba/:id" element={<DetailOsoby />} />
+        {!deska && (
+          <>
+            <Route element={<SHlavickou />}>
+              <Route path="/osoby" element={<SeznamOsob />} />
+              <Route path="/letadla" element={<SeznamLetadel />} />
+            </Route>
+            <Route path="/osoba/nova" element={<NovaOsoba />} />
+            <Route path="/osoba/:id" element={<DetailOsoby />} />
+          </>
+        )}
         <Route element={<SeZapisem />}>
           <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
           <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />

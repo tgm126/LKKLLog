@@ -1,13 +1,14 @@
-/* Pásek na desktopu = panel letu (PanelLetu.css: okraj, výplň podle stavu) jako řada přihrádek
-   se svislými přepážkami (strip ŘLP): letadlo · posádka (zbytek) · čas · akce; pod nimi přes
-   celou šířku řádek štítků (Pasek.css) a varování. Písmo v barvě textu. Pásek v panelu bez
-   akcí nechá jejich sloupec nulový (--pasek-akce). */
+/* Pásek na desktopu = panel letu (PanelLetu.css: okraj, výplň podle stavu) jako strip ŘLP bez
+   svislých přepážek: letadlo · posádka (zbytek) · čas, pod nimi řádek štítků (Pasek.css)
+   s trasou vpravo pod časem; akce vpravo přes oba řádky; dole varování. Písmo v barvě textu.
+   Pásek v panelu bez akcí nechá jejich sloupec nulový (--pasek-akce). */
 .pasek-deska {
   --stitek-odsazeni: 0 var(--mezera-2);
   --pasek-akce: var(--sirka-akci-pasku);
 
   display: grid;
   grid-template-columns: var(--sirka-letadla-pasku) minmax(0, 1fr) var(--sirka-casu) var(--pasek-akce);
+  align-items: baseline;
 }
 
 .pasek-deska.v-panelu {
@@ -26,21 +27,12 @@
     0 0 0 calc(var(--prstenec-mezera) + var(--prstenec)) var(--barva-text);
 }
 
+/* Přihrádky odshora; první řádky (rejstřík, první z posádky, stopky) na jednom účaří –
+   jeden pilot je v řádku s rejstříkem, ne uprostřed */
 .prihradka {
   display: grid;
-  align-content: center;
   min-width: 0;
   padding: var(--mezera-1) var(--mezera-3);
-  border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
-}
-
-.prihradka:first-child {
-  border-left: 0;
-}
-
-/* Posádka od horního okraje (jeden pilot je v řádku s rejstříkem, ne uprostřed) */
-.pasek-posadka {
-  align-content: start;
 }
 
 .prihradka > * {
@@ -62,10 +54,12 @@
   font-weight: var(--tloustka-tucna);
 }
 
-/* Akce: T&G bílé s černým textem, PŘISTÁL zeleně a VZLET modře plné, pevná šířka. Bez
-   přepážky – tlačítka mají vlastní okraj a nelepí se na čáru. */
+/* Akce: T&G bílé s černým textem, PŘISTÁL zeleně a VZLET modře plné, pevná šířka; svisle
+   uprostřed přes přihrádky i řádek štítků */
 .pasek-akce {
   display: flex;
+  grid-row: span 2;
+  align-self: center;
   align-items: center;
   justify-content: flex-end;
   gap: var(--mezera-2);
@@ -97,9 +91,9 @@
   font-weight: var(--tloustka-tucna);
 }
 
-/* Řádek štítků přes celou šířku pod přihrádkami (bez přepážky jako na mobilu) */
+/* Řádek štítků pod přihrádkami až po čas (trasa vpravo končí pod časem), jako na mobilu */
 .pasek-deska > .stitky-pasku {
-  grid-column: 1 / -1;
+  grid-column: 1 / 4;
 }
 
 /* Vlek: kluzák a vlečná jako dvojitý pásek, mezi nimi čárkovaná přepážka */

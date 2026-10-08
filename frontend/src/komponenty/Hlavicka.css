@@ -103,9 +103,9 @@
 .menu {
   display: flex;
   gap: var(--mezera-4);
-  padding: var(--menu-odsazeni, 0 var(--okraj-stranky));
-  border-bottom: var(--menu-cara, var(--ramecek));
-  background: var(--menu-vypln, var(--barva-karta));
+  padding: 0 var(--okraj-stranky);
+  border-bottom: var(--ramecek);
+  background: var(--barva-karta);
   overflow-x: auto;
   scrollbar-width: none;
 }

@@ -18,16 +18,14 @@
 
 /* --- lišta ----------------------------------------------------------------------------------- */
 
-/* Lišta: menu bez okraje a pozadí (jsou v liště), nabídka uživatele u okraje lišty */
+/* Lišta: všechny údaje na jedné účaří (různé velikosti písma i tlačítka), nabídka uživatele
+   u okraje lišty */
 .lista-desky {
-  --menu-odsazeni: 0;
-  --menu-cara: 0;
-  --menu-vypln: transparent;
   --nabidka-vpravo: var(--mezera-4);
 
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--mezera-4);
   padding: var(--mezera-2) var(--mezera-4);
   border-bottom: var(--ramecek);
@@ -37,7 +35,7 @@
 
 .den-desky {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--mezera-1);
   margin-left: auto;
 }
@@ -271,6 +269,14 @@
 
 .radek-deniku.zrusen > :first-child {
   text-decoration: line-through;
+}
+
+/* Časy a počet přistání na střed sloupce (záhlaví nad hodnotou), doba vpravo (jednotky pod
+   sebou); šířky sloupců v px – záhlaví má menší písmo, sloupce musí být stejné */
+.radek-deniku > :nth-child(3),
+.radek-deniku > :nth-child(4),
+.radek-deniku > :nth-child(5) {
+  text-align: center;
 }
 
 /* Záhlaví deníku (vzhled záhlaví tabulky: Tabulka.css) – bez čáry nahoře, bez najetí */

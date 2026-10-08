@@ -7,9 +7,9 @@ import { useTik } from "../tik";
 import "../lety/PanelLetu.css";
 import "./PasekDeska.css";
 
-// Pásek na desktopu (docs/modul-desktop.md 3.2): vodorovná řada přihrádek se svislými
-// přepážkami jako papírový strip ŘLP – letadlo · posádka · čas, vpravo akce; pod nimi řádek
-// štítků v pevných pozicích (jako na mobilu) a vpravo vždy trasa odkud → kam (i moje
+// Pásek na desktopu (docs/modul-desktop.md 3.2): vodorovná řada přihrádek jako papírový
+// strip ŘLP (bez svislých přepážek) – letadlo · posádka · čas, vpravo akce; pod nimi řádek
+// štítků v pevných pozicích (jako na mobilu) a pod časem vždy trasa odkud → kam (i moje
 // letiště, šedě – na desktopu je místo; rozhodnuto 8. 10. 2026). Stav letu říká jen
 // výplň pásku; písmo v barvě textu (kromě varování a tlačítek). V panelu (detail, nový let)
 // je pásek sám – bez akcí nezabírá místo pro tlačítka.

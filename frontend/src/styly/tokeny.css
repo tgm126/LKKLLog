@@ -78,7 +78,7 @@
   --klik: 32px;               /* běžný ovládací prvek (segment, čip, ikona) */
   --klik-hlavni: 40px;        /* akce na pásku a v patičce panelu */
   --zaobleni-ovladace: 8px;   /* tlačítka a rámečky na desktopu */
-  --sirka-pasku: 880px;       /* sloupec pásků nejvýš (posádka se vejde i na notebooku) */
+  --sirka-pasku: 760px;       /* sloupec pásků nejvýš (letadlo · posádka · čas · akce) */
   --sirka-info: 320px;        /* pravý sloupec souhrnů (od 1500 px) */
   --sirka-panelu: 620px;      /* detail letu (pásek s trasou se vejde vedle křížku) */
   --sirka-noveho: 820px;      /* nový let – formulář ve dvou sloupcích */
@@ -90,7 +90,7 @@
   --sirka-cisla-souhrnu: 10ch; /* sloupce Lety, P, Doba v souhrnech stejně široké (doba 12°34") */
 
   /* Deník: letadlo · posádka · vzlet · přistání · P · doba (jeden řádek na let) */
-  --sloupce-deniku-deska: 92px minmax(0, 1fr) 5ch 5ch 2ch 6ch;
+  --sloupce-deniku-deska: 92px minmax(0, 1fr) 48px 48px 24px 56px;
   --sirka-lodi: 96px;         /* letadlo v řadě letadel */
   --vyska-osy: 18px;          /* řádek časové osy (jedno letadlo) */
   --sirka-popisku-osy: 92px;  /* rejstřík vlevo od časové osy */
@@ -109,7 +109,7 @@
   --barva-cara:           light-dark(#d9dde2, #2c333c);
   --barva-pozadi:         light-dark(#eef0f3, #0d1015);   /* stránka – karty z ní vystoupí */
   --barva-karta:          light-dark(#fff, #171b21);
-  --barva-neutralni:      light-dark(#e4e8ed, #1f252c);   /* pás údajů, hlavička bloku (odliší se od stránky) */
+  --barva-neutralni:      light-dark(#dce1e7, #1f252c);   /* pás údajů, hlavička bloku (odliší se od stránky) */
   --barva-neutralni-text: light-dark(#495057, #c3c9d0);
   --barva-obrys:          light-dark(#2b3138, #7d8894);   /* okraj pásku (v tmavém světlý) */
   --barva-prepazka:       light-dark(#aab2bb, #3f4852);   /* přepážky, okraj štítku v pásku */

@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 import type { Ja } from "../api";
 import { denSlovy, hodinyMinuty } from "../cas";
@@ -8,8 +8,9 @@ import { Tlacitko } from "../komponenty/Tlacitko";
 import type { Den } from "../lety/api";
 import { useTik } from "../tik";
 
-// Horní lišta desky (docs/modul-desktop.md 3): název, navigace, den se šipkami, sluneční časy
-// se zbývajícím časem do konce soumraku, hodiny UTC a nabídka uživatele (jako na mobilu).
+// Horní lišta desky (docs/modul-desktop.md 3): název, den se šipkami, sluneční časy se
+// zbývajícím časem do konce soumraku, hodiny UTC a nabídka uživatele (jako na mobilu).
+// Desktop je jedna stránka – bez menu (osoby a letadla se spravují na mobilu).
 
 /** Den o `o` dní dál (RRRR-MM-DD). */
 export function posunDne(den: string, o: number): string {
@@ -59,23 +60,6 @@ export function Lista({
   return (
     <header className="lista-desky">
       <span className="velke tucne">AK Kladno Log</span>
-      {/* záložky jako mobilní menu; deska je vždy Provoz (i s panelem /let/…, /novy-let) */}
-      <nav className="menu">
-        <NavLink className="nadpisek active" to="/">
-          Provoz
-        </NavLink>
-        {/* správa osob a letadel jen pro toho, kdo má právo (server ho hlídá také) */}
-        {ja.prava.spravuje_osoby && (
-          <NavLink className="nadpisek" to="/osoby">
-            Osoby
-          </NavLink>
-        )}
-        {ja.prava.spravuje_letadla && (
-          <NavLink className="nadpisek" to="/letadla">
-            Letadla
-          </NavLink>
-        )}
-      </nav>
       {ja.jen_cteni && (
         <span title="Sdílený počítač – nic nejde změnit; pro změny se odhlaste a přihlaste znovu">
           <Stitek barva="oranzovy">Jen ke čtení</Stitek>

@@ -130,6 +130,12 @@ test("deska na notebooku: souhrny za tlačítkem, jiný den bez pásků", async 
   await page.getByRole("button", { name: "Zpět na dnešek" }).click();
   await expect(page.getByRole("region", { name: "Pásky" })).toBeVisible();
 
+  // Desktop je jedna stránka: bez menu, správa osob a letadel jen na mobilu
+  await expect(page.getByRole("link", { name: "Osoby" })).toHaveCount(0);
+  await page.goto("/osoby");
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("region", { name: "Pásky" })).toBeVisible();
+
   // Pod 1200 px mobilní přehled (pásky pod sebou)
   await page.setViewportSize({ width: 1100, height: 768 });
   await expect(page.locator(".let.problem", { hasText: "OK-MFV" })).toBeVisible();

@@ -34,7 +34,7 @@ function Radek({ let: l, vybrany }: { let: Pasek; vybrany: boolean }) {
       </span>
       <span className="cisla">{l.cas_vzletu && hodinyMinuty(l.cas_vzletu)}</span>
       <span className="cisla">{l.cas_pristani && hodinyMinuty(l.cas_pristani)}</span>
-      <span className="cisla vpravo">{!zrusen && l.pocet_pristani}</span>
+      <span className="cisla">{!zrusen && l.pocet_pristani}</span>
       <span className="cisla vpravo tucne">{!zrusen && doba(l.doba_uctovana_min ?? 0)}</span>
     </button>
   );
@@ -56,7 +56,7 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
           <span>
             <Sipka smer="pristani" />
           </span>
-          <span className="vpravo">P</span>
+          <span>P</span>
           <span className="vpravo">Doba</span>
         </div>
         <div className="denik-radky">
