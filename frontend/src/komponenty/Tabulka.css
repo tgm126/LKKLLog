@@ -1,0 +1,21 @@
+/* Tabulky údajů (deník dne na mobilu i desce, souhrny provozu): záhlaví sloupců a patička
+   s celkem – definované jen tady; rozložení sloupců má každá tabulka svoje. */
+.zahlavi-tabulky {
+  background: var(--barva-neutralni);
+  color: var(--barva-seda);
+  font-size: var(--pismo-s);
+  font-weight: var(--tloustka-tucna);
+}
+
+/* Patička s celkem: oddělená čarou, popisky šedě, hodnoty (b) tučně v barvě textu */
+.pata-tabulky {
+  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
+  color: var(--barva-seda);
+  font-size: var(--pismo-s);
+}
+
+.pata-tabulky b {
+  color: var(--barva-text);
+  font-size: var(--pismo-m);
+  font-weight: var(--tloustka-tucna);
+}

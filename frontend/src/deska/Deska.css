@@ -1,6 +1,6 @@
-/* Provozní deska – desktop (docs/modul-desktop.md, maketa provoz-desktop-v7.html). Jen tokeny.
-   Ovládání myší: uvnitř desky mají dotykové rozměry hodnoty pro myš, takže sdílené volby,
-   čipy a pole (stejné jako na mobilu) se zmenší samy. */
+/* Provozní deska – desktop (docs/modul-desktop.md, maketa provoz-desktop-v7.html). Jen tokeny
+   (rozměry pro myš: tokeny.css, sada .deska). Karty = Blok, tabulky = Tabulka.css, menu
+   a nabídka uživatele jako na mobilu (Hlavicka.css) – tady jen rozvržení desky. */
 
 /* Deska přes celé okno (ostatní obrazovky zůstávají sloupcem mobilní šířky) */
 #aplikace:has(> .deska) {
@@ -9,9 +9,6 @@
 }
 
 .deska {
-  --dotyk: var(--klik);
-  --dotyk-hlavni: var(--klik-hlavni);
-
   position: relative;
   display: flex;
   flex: 1;
@@ -20,7 +17,14 @@
 }
 
 /* --- lišta ----------------------------------------------------------------------------------- */
+
+/* Lišta: menu bez okraje a pozadí (jsou v liště), nabídka uživatele u okraje lišty */
 .lista-desky {
+  --menu-odsazeni: 0;
+  --menu-cara: 0;
+  --menu-vypln: transparent;
+  --nabidka-vpravo: var(--mezera-4);
+
   position: relative;
   display: flex;
   align-items: center;
@@ -31,33 +35,17 @@
   white-space: nowrap;
 }
 
-.navigace-desky {
-  display: flex;
-  gap: var(--mezera-1);
-}
-
-.navigace-desky a {
-  padding: var(--mezera-1) var(--mezera-3);
-  border-radius: var(--zaobleni-ovladace);
-  color: var(--barva-text);
-  text-decoration: none;
-}
-
-.navigace-desky a:hover {
-  background: var(--barva-neutralni);
-}
-
-.navigace-desky a.active {
-  background: var(--barva-modra-vypln);
-  color: var(--barva-modra);
-  font-weight: var(--tloustka-tucna);
-}
-
 .den-desky {
   display: flex;
   align-items: center;
   gap: var(--mezera-1);
   margin-left: auto;
+}
+
+/* Datum jako obsah lišty (15 px, normální) – mobil ho má menší v řádku pod názvem */
+.den-desky-text {
+  min-width: 17ch;
+  text-align: center;
 }
 
 .den-desky .tl {
@@ -84,11 +72,6 @@
   font-weight: var(--tloustka-tucna);
 }
 
-/* Nabídka uživatele: stejná komponenta jako na mobilu, u pravého okraje lišty */
-.lista-desky .nabidka {
-  right: var(--mezera-4);
-}
-
 /* --- jiný den ------------------------------------------------------------------------------ */
 .pruh-jineho-dne {
   display: flex;
@@ -103,7 +86,11 @@
 }
 
 /* --- řada letadel -------------------------------------------------------------------------- */
+
+/* Řada letadel; Nový let = hlavní tlačítko (Tlacitko) výšky hlavní akce */
 .rada-letadel {
+  --tl-vyska: var(--dotyk-hlavni);
+
   display: flex;
   align-items: center;
   gap: var(--mezera-4);
@@ -115,13 +102,6 @@
 
 .novy-let {
   flex: none;
-  height: var(--klik-hlavni);
-  padding: 0 var(--mezera-4);
-  border: 0;
-  border-radius: var(--zaobleni-ovladace);
-  background: var(--barva-akce-modra);
-  color: var(--barva-na-akci);
-  font-weight: var(--tloustka-tucna);
   white-space: nowrap;
 }
 
@@ -142,7 +122,7 @@
   border-left: var(--ramecek-sirka) solid var(--barva-prepazka);
 }
 
-/* Letadlo: neutrální rámeček, stav jen proužkem vlevo */
+/* Letadlo: neutrální rámeček, stav jen proužkem vlevo (barva stavu z PanelLetu.css) */
 .lod {
   display: grid;
   min-width: var(--sirka-lodi);
@@ -150,6 +130,7 @@
   border: var(--ramecek-sirka) solid var(--barva-prepazka);
   border-radius: var(--zaobleni-ovladace);
   background: var(--barva-karta);
+  box-shadow: inset var(--prouzek-stavu) 0 0 var(--stav-barva, transparent);
   text-align: left;
   white-space: nowrap;
 }
@@ -165,14 +146,6 @@
 
 .lod:hover:not(:disabled) {
   border-color: var(--barva-obrys);
-}
-
-.lod.vzduch {
-  box-shadow: inset var(--prouzek-stavu) 0 0 var(--barva-zelena);
-}
-
-.lod.naplanovan {
-  box-shadow: inset var(--prouzek-stavu) 0 0 var(--barva-modra);
 }
 
 .jinde {
@@ -258,17 +231,6 @@
   overflow: hidden;
 }
 
-.denik-deska {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  border: var(--ramecek);
-  border-radius: var(--zaobleni);
-  background: var(--barva-karta);
-}
-
 .denik-radky {
   flex: 1;
   min-height: 0;
@@ -311,12 +273,10 @@
   text-decoration: line-through;
 }
 
-.radek-deniku.zahlavi {
+/* Záhlaví deníku (vzhled záhlaví tabulky: Tabulka.css) – bez čáry nahoře, bez najetí */
+.radek-deniku.zahlavi,
+.radek-deniku.zahlavi:hover {
   border-top: 0;
-  background: var(--barva-neutralni);
-  color: var(--barva-seda);
-  font-size: var(--pismo-s);
-  font-weight: var(--tloustka-tucna);
   cursor: default;
 }
 
@@ -324,58 +284,36 @@
   text-align: right;
 }
 
+/* Mezititulek Zrušené (vzhled záhlaví tabulky) */
 .mezititulek {
   margin: 0;
   padding: var(--mezera-1) var(--mezera-3);
   border-top: var(--ramecek);
-  background: var(--barva-neutralni);
 }
 
+/* Patička deníku (vzhled patičky tabulky: Tabulka.css) – celkem v řádku */
 .denik-pata {
   display: flex;
   gap: var(--mezera-4);
   margin: 0;
   padding: var(--mezera-2) var(--mezera-3);
-  border-top: var(--ramecek);
 }
 
-.denik-pata b {
-  color: var(--barva-text);
-  font-size: var(--pismo-m);
-}
-
-/* --- souhrny ------------------------------------------------------------------------------- */
-.karta-souhrnu {
-  margin-bottom: var(--mezera-3);
-  overflow: hidden;
-  border: var(--ramecek);
-  border-radius: var(--zaobleni);
-  background: var(--barva-karta);
-}
-
-.karta-souhrnu > .nadpisek {
-  margin: 0;
-  padding: var(--mezera-2) var(--mezera-3);
-  border-bottom: var(--ramecek);
-  background: var(--barva-neutralni);
-}
-
+/* --- souhrny (karta = Blok, záhlaví a patička = Tabulka.css) ------------------------------- */
 .tabulka-souhrnu {
   width: 100%;
   margin-bottom: var(--mezera-2);
   border-collapse: collapse;
 }
 
-.tabulka-souhrnu th {
-  color: var(--barva-seda);
-  font-size: var(--pismo-s);
+.tabulka-souhrnu th,
+.tabulka-souhrnu td {
+  padding: var(--mezera-1) 0;
   text-align: right;
 }
 
-.tabulka-souhrnu td {
-  padding: var(--mezera-1) 0;
+.tabulka-souhrnu tbody td {
   border-top: var(--ramecek);
-  text-align: right;
 }
 
 /* Odsazení od okraje karty (tabulka s otevřenými čarami nemá vlastní odsazení) */
@@ -388,34 +326,21 @@
   padding-right: var(--mezera-3);
 }
 
-/* Patička (celkem) jako u deníku dne: oddělená, hodnoty tučně */
-.tabulka-souhrnu tfoot td {
-  font-weight: var(--tloustka-tucna);
-}
-
-.tabulka-souhrnu tfoot tr:first-child td {
-  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
-}
-
 /* --- časová osa ---------------------------------------------------------------------------- */
+
+/* Časová osa = Blok pod sloupci; nadpis je tlačítko sbalení */
 .casova-osa {
   flex: none;
-  margin: 0 var(--mezera-4) var(--mezera-3);
-  overflow: hidden;
-  border: var(--ramecek);
-  border-radius: var(--zaobleni);
-  background: var(--barva-karta);
+  margin: 0 var(--mezera-4) var(--mezera-1);
 }
 
 .osa-hlava {
-  display: flex;
-  align-items: center;
-  gap: var(--mezera-4);
-  width: 100%;
-  padding: var(--mezera-1) var(--mezera-3);
+  padding: 0;
   border: 0;
   background: none;
-  text-align: left;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
 }
 
 .osa-legenda {

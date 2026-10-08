@@ -8,6 +8,8 @@ import { useTik } from "../tik";
 import { useJenCteni } from "../uzivatel";
 import type { Akce, LetKPristani } from "./akce";
 import type { Pasek as PasekLetu, Stav } from "./api";
+import "../komponenty/Tabulka.css";
+import "./PanelLetu.css";
 import "./Pasek.css";
 
 // Pásky letů podle maket docs/navrhy/lety-mobil-v4.html a pasek-mobil-v5.html.
@@ -214,7 +216,7 @@ export function PasekVeVzduchu({
 }: { lety: PasekLetu[] } & AkcePasku) {
   const jenCteni = useJenCteni();
   return (
-    <div className={`let ${tridaPasku(lety)}`}>
+    <div className={`let panel-letu ${tridaPasku(lety)}`}>
       {lety.map((l) => (
         <Polovina key={l.id} let={l}>
           {/* T&G jen motorová letadla, TMG a UL, ne vlečná (při vleku nedělá); počet na tlačítku */}
@@ -238,7 +240,7 @@ export function PasekVeVzduchu({
 export function PasekNaplanovany({ lety, provest, zaneprazdnen }: { lety: PasekLetu[] } & AkcePasku) {
   const jenCteni = useJenCteni();
   return (
-    <div className="let naplanovan">
+    <div className="let panel-letu naplanovan">
       {lety.map((l) => (
         <Polovina key={l.id} let={l} />
       ))}
@@ -304,9 +306,9 @@ function RadekDeniku({ let: l }: { let: PasekLetu }) {
 /** Ukončené (nebo zrušené – bez záhlaví) lety jako deník v jedné kartě. */
 export function Denik({ lety, zahlavi = true }: { lety: PasekLetu[]; zahlavi?: boolean }) {
   return (
-    <div className="denik">
+    <div className="denik karta">
       {zahlavi && (
-        <div className="denik-radek zahlavi" aria-hidden>
+        <div className="denik-radek zahlavi zahlavi-tabulky" aria-hidden>
           <span>Letadlo</span>
           <span>Posádka</span>
           <span className="denik-cas">Čas</span>

@@ -16,6 +16,7 @@ import type { LetPasku } from "./Pasek";
 import { jmeno, PIC_NAZEV, rychlaVolba, VolbaOsoby, VolbaPoctu, VolbaUlohy } from "./Volby";
 import { denUtc, hhmm, minutyUtc, VolbaCasu } from "./VyberCasu";
 import { nazevMista, VyberMista, type Misto } from "./VyberMista";
+import "./PanelLetu.css";
 
 // Nový let: rozpracovaný let, pravidla voleb a uložení (docs/modul-lety.md 3.1). Sdílí ho
 // mobilní průvodce po krocích (Pruvodce.tsx, maketa pruvodce-mobil-v4.html) a desktopový
@@ -257,13 +258,13 @@ function Dlazdice({
   vybrana: boolean;
   vybrat: () => void;
 }) {
-  const stav = a.mimo_provoz ? "mimo" : a.leti_od ? "leti" : a.naplanovan ? "planovan" : "";
-  // tři řádky: rejstřík · typ · stav (mimo provoz, letí, naplánován); soukromé lehce šedé
+  const stav = a.mimo_provoz ? "mimo" : a.leti_od ? "vzduch" : a.naplanovan ? "naplanovan" : "";
+  // tři řádky: rejstřík · typ · stav (mimo provoz, letí, naplánován); soukromé = šedý rejstřík
   return (
     <button
       type="button"
       title={a.soukrome ? "soukromé letadlo" : undefined}
-      className={["dlazdice", a.soukrome && "soukrome", stav, vybrana && "vybrana"]
+      className={["dlazdice", "panel-letu", a.soukrome && "soukrome", stav, vybrana && "vybrana"]
         .filter(Boolean)
         .join(" ")}
       disabled={a.mimo_provoz}

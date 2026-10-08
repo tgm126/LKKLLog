@@ -90,7 +90,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
   }
 
   const pasek = (cas?: ReactNode) => (
-    <div className="let rozpracovany">
+    <div className="let panel-letu rozpracovany">
       <PolovinaPasku
         let={rozpracovany}
         cas={

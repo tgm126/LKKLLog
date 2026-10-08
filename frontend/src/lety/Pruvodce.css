@@ -36,7 +36,7 @@
   gap: var(--mezera-2);
 }
 
-/* Dlaždice letadla: panel s okrajem jako pásek, výplň podle stavu */
+/* Dlaždice letadla = panel letu (PanelLetu.css: okraj, výplň podle stavu) */
 .dlazdice {
   display: flex;
   flex-direction: column;
@@ -44,14 +44,12 @@
   width: 100%;
   min-height: var(--dotyk-hlavni);
   padding: var(--mezera-1) var(--mezera-2);
-  border: var(--okraj-pasku) solid var(--barva-obrys);
-  border-radius: var(--zaobleni);
-  background: var(--dlazdice-vypln, var(--barva-karta));
   text-align: left;
   container-type: inline-size; /* písmo rejstříku podle šířky dlaždice */
 }
 
 .dlazdice-rejstrik {
+  color: var(--dlazdice-rejstrik, inherit);
   font-size: var(--pismo-dlazdice);
   font-weight: var(--tloustka-tucna);
   white-space: nowrap;
@@ -66,29 +64,14 @@
 }
 
 .dlazdice-stav {
-  color: var(--dlazdice-stav, var(--barva-seda));
+  color: var(--stav-barva, var(--barva-seda));
   font-size: var(--pismo-s);
   font-weight: var(--tloustka-tucna);
 }
 
-/* Soukromé letadlo: lehce šedá výplň (stav letu ji přebije) */
+/* Soukromé letadlo: bílá dlaždice, šedý rejstřík */
 .dlazdice.soukrome {
-  --dlazdice-vypln: var(--barva-neutralni);
-}
-
-.dlazdice.leti {
-  --dlazdice-vypln: var(--barva-zelena-vypln);
-  --dlazdice-stav: var(--barva-zelena);
-}
-
-.dlazdice.planovan {
-  --dlazdice-vypln: var(--barva-modra-vypln);
-  --dlazdice-stav: var(--barva-modra);
-}
-
-.dlazdice.mimo {
-  --dlazdice-vypln: var(--barva-oranzova-vypln);
-  --dlazdice-stav: var(--barva-oranzova);
+  --dlazdice-rejstrik: var(--barva-seda);
 }
 
 .dlazdice.vybrana {

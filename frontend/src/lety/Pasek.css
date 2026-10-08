@@ -1,31 +1,8 @@
-/* Pásek letu = barevný panel s výrazným okrajem (strip ŘLP); dole štítky v pevných pozicích.
-   Varianta stavu mění jen výplň panelu; písmo (i stopky) je v barvě textu. */
+/* Pásek letu (mobil) = panel letu (PanelLetu.css: okraj, výplň podle stavu); dole štítky
+   v pevných pozicích. Písmo (i stopky) je v barvě textu. */
 .let {
-  --let-vypln: var(--barva-karta);
-
   margin-bottom: var(--mezera-2);
   overflow: hidden;
-  border: var(--okraj-pasku) solid var(--barva-obrys);
-  border-radius: var(--zaobleni);
-  background: var(--let-vypln);
-}
-
-.let.vzduch {
-  --let-vypln: var(--barva-zelena-vypln);
-}
-
-.let.problem {
-  --let-vypln: var(--barva-cervena-vypln);
-}
-
-.let.naplanovan,
-.let.rozpracovany {
-  --let-vypln: var(--barva-modra-vypln);
-}
-
-/* Rozpracovaný let v průvodci: čárkovaný okraj = ještě neuložený */
-.let.rozpracovany {
-  border-style: dashed;
 }
 
 /* Polovina pásku: rejstřík a typ · posádka | čas; pod tím štítky přes celou šířku */
@@ -164,14 +141,6 @@
 }
 
 /* --- deník ukončených a zrušených letů: řádky v jedné kartě --------------------------- */
-.denik {
-  margin-bottom: var(--mezera-2);
-  overflow: hidden;
-  border: var(--ramecek);
-  border-radius: var(--zaobleni);
-  background: var(--barva-karta);
-}
-
 .denik-radek {
   display: grid;
   grid-template-columns: var(--sloupce-deniku);
@@ -182,13 +151,11 @@
   cursor: pointer;
 }
 
+/* Záhlaví deníku (vzhled záhlaví tabulky: Tabulka.css) – nižší řádek bez čáry nahoře */
 .denik-radek.zahlavi {
   padding-top: var(--mezera-1);
   padding-bottom: var(--mezera-1);
   border-top: 0;
-  background: var(--barva-neutralni);
-  font-size: var(--pismo-s);
-  color: var(--barva-seda);
   cursor: default;
 }
 

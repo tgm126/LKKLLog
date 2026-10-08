@@ -57,7 +57,8 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
           detail letu / nový let = panel zprava přes deník a informace; pásky zůstanou vidět
 ```
 
-- **Horní lišta:** název, navigace (Provoz, Osoby, Letadla; Deník šedě „později“), **den se
+- **Horní lišta:** název, navigace stejná jako mobilní menu (PROVOZ · OSOBY · LETADLA,
+  verzálky s podtržením), datum normálním písmem 15 px, **den se
   šipkami** (3.6), sluneční časy se zbývajícím časem do konce soumraku (oranžově), hodiny UTC se
   sekundami, nabídka uživatele (Můj provoz, Režim zobrazení, Odhlásit – jako na mobilu).
   Jiné než domovské letiště = oranžový štítek s kódem jako na mobilu. Při přihlášení jen ke
@@ -216,7 +217,13 @@ Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na
 - **Desktopové** (`deska/`): `Deska.tsx` (stránka, klávesy), `Lista.tsx`, `RadaLetadel.tsx`,
   `Pasky.tsx` a `PasekDeska.tsx` (pásek v řadě přihrádek), `DenikDne.tsx`, `Souhrny.tsx`,
   `CasovaOsa.tsx`, `PanelDetailu.tsx`, `PanelNovehoLetu.tsx`; `komponenty/Panel.tsx`.
-- Styly dál jen z tokenů; desktopové komponenty mají vlastní CSS. Kontrola stylů beze změny.
+- Styly dál jen z tokenů a **každá vlastnost jednou** (pravidlo 14, sjednoceno 8. 10. 2026):
+  stav letu → výplň a barva jen v `lety/PanelLetu.css` (pásek mobilu, pásek desky, dlaždice
+  letadla, proužek v řadě letadel); karty jen `Blok` / `.karta` (bloky, deník, souhrny, časová
+  osa); záhlaví a patička tabulek jen `komponenty/Tabulka.css`; hlavní tlačítko `Tlacitko`;
+  navigace desky je mobilní menu (`.menu`); poloha nabídky uživatele a akce vedle sebe přes
+  proměnné komponent; rozměry pro myš v `tokeny.css` (sada `.deska`). Desktopové komponenty
+  mají vlastní CSS jen pro rozvržení.
 - **Testy:** klikací testy `e2e/deska.spec.ts` v rozměru 1920 × 1080 a 1366 × 768: deska
   (pásky, řada letadel, deník, souhrny, časová osa), akce z pásku a Ctrl+Z, detail v panelu
   s úpravou a zároveň akce na jiném pásku, Esc, nový let klávesou N a z řady letadel až po

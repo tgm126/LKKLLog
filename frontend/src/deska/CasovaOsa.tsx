@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { hodinyMinuty, ted } from "../cas";
+import { Blok } from "../komponenty/Obrazovka";
 import type { Den, Pasek } from "../lety/api";
 import { useSirokaDeska } from "../rozvrzeni";
 import { useTik } from "../tik";
@@ -92,20 +93,26 @@ export function CasovaOsa({
   );
 
   return (
-    <section className={sbalena ? "casova-osa sbalena" : "casova-osa"} aria-label="Časová osa dne">
-      <button type="button" className="osa-hlava" aria-expanded={!sbalena} onClick={() => setSbalena(!sbalena)}>
-        <span className="nadpisek">{sbalena ? "▸" : "▾"} Časová osa dne</span>
-        <span className="osa-legenda male seda">
-          <span><i className="vzorek ukonceny" />ukončený</span>
-          <span><i className="vzorek letici" />ve vzduchu</span>
-          <span><i className="vzorek ted" />teď</span>
-          <span>
-            soumrak <i className="vzorek obcansky" />občanský <i className="vzorek nauticky" />nautický{" "}
-            <i className="vzorek astronomicky" />astronomický <i className="vzorek noc" />noc
+    <section className="casova-osa" aria-label="Časová osa dne">
+      <Blok
+        nadpis={
+          <button type="button" className="osa-hlava" aria-expanded={!sbalena} onClick={() => setSbalena(!sbalena)}>
+            {sbalena ? "▸" : "▾"} Časová osa dne
+          </button>
+        }
+        vpravo={
+          <span className="osa-legenda male seda">
+            <span><i className="vzorek ukonceny" />ukončený</span>
+            <span><i className="vzorek letici" />ve vzduchu</span>
+            <span><i className="vzorek ted" />teď</span>
+            <span>
+              soumrak <i className="vzorek obcansky" />občanský <i className="vzorek nauticky" />nautický{" "}
+              <i className="vzorek astronomicky" />astronomický <i className="vzorek noc" />noc
+            </span>
+            <span>· klik na let = detail</span>
           </span>
-        </span>
-        <span className="male seda vpravo-auto">klik na let = detail</span>
-      </button>
+        }
+      >
       {!sbalena && (
         <div className="osa-telo">
           <div className="osa-radek">
@@ -159,6 +166,7 @@ export function CasovaOsa({
           {letadla.length === 0 && <p className="prazdny-sloupec male seda">Ten den zatím nikdo neletěl.</p>}
         </div>
       )}
+      </Blok>
     </section>
   );
 }

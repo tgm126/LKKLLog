@@ -60,23 +60,33 @@
   --tl-vyska: var(--dotyk-hlavni);
 }
 
-/* Dvě akce vedle sebe (Naplánovat / Proběhlý let) */
+/* Dvě akce vedle sebe (Naplánovat / Proběhlý let); v patičce panelu desky stojí v řadě
+   s ostatními podle obsahu (proměnné nastaví panel) */
 .akce-vedle {
-  display: flex;
+  display: var(--akce-vedle-zobrazeni, flex);
   gap: var(--mezera-2);
 }
 
 .akce-vedle .tl {
-  flex: 1;
+  flex: var(--akce-vedle-tlacitko, 1);
 }
 
-/* Blok: karta s hlavičkou (pruh s nadpisem) – volby průvodce, údaje detailu */
-.blok {
+/* Karta: bílá plocha se stínem – bloky, deník, souhrny, časová osa (jediná definice karty) */
+.karta {
   margin-bottom: var(--mezera-2);
   overflow: hidden;
   border-radius: var(--zaobleni);
   background: var(--barva-karta);
   box-shadow: var(--stin-karty);
+}
+
+/* Blok: karta s hlavičkou (pruh s nadpisem) – volby průvodce, údaje detailu, karty desky.
+   Roztažený vyplní výšku sloupce a obsah se posouvá uvnitř (deník dne na desce). */
+.blok.roztazeny {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .blok-nadpis {

@@ -139,5 +139,13 @@
   --barva-oznameni:    #24292f;   /* lišta „Zpět“ – tmavá v obou režimech, aby vystoupila */
   --ramecek: var(--ramecek-sirka) solid var(--barva-cara);
 }
+
+/* Deska (desktop): ovládání myší – dotykové rozměry mají hodnoty pro myš, takže sdílené
+   volby, čipy, pole a tlačítka z mobilu se uvnitř desky zmenší samy. */
+.deska {
+  --dotyk: var(--klik);
+  --dotyk-hlavni: var(--klik-hlavni);
+}
+
 :root[data-rezim="svetly"] { color-scheme: light; }
 :root[data-rezim="tmavy"]  { color-scheme: dark; }

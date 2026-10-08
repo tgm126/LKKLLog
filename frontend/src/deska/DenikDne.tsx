@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty } from "../cas";
+import { Blok } from "../komponenty/Obrazovka";
+import "../komponenty/Tabulka.css";
 import type { Pasek } from "../lety/api";
 import { podle } from "../lety/poradi";
 
@@ -43,15 +45,8 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
   const minut = ukoncene.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0);
   const pristani = ukoncene.reduce((s, l) => s + (l.pocet_pristani ?? 0), 0);
   return (
-    <>
-      <h2 className="nadpis-sloupce">
-        <span className="nadpisek">Deník dne</span>
-        <span className="male seda">
-          ukončené {ukoncene.length} · zrušené {zrusene.length}
-        </span>
-      </h2>
-      <div className="denik-deska">
-        <div className="radek-deniku zahlavi" aria-hidden>
+    <Blok nadpis="Deník dne" vpravo={`ukončené ${ukoncene.length} · zrušené ${zrusene.length}`} roztazeny>
+        <div className="radek-deniku zahlavi zahlavi-tabulky" aria-hidden>
           <span>Letadlo</span>
           <span>Posádka</span>
           <span>↑</span>
@@ -64,12 +59,12 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
           {ukoncene.map((l) => (
             <Radek key={l.id} let={l} vybrany={l.id === vybranyId} />
           ))}
-          {zrusene.length > 0 && <p className="mezititulek nadpisek">Zrušené {zrusene.length}</p>}
+          {zrusene.length > 0 && <p className="mezititulek zahlavi-tabulky nadpisek">Zrušené {zrusene.length}</p>}
           {zrusene.map((l) => (
             <Radek key={l.id} let={l} vybrany={l.id === vybranyId} />
           ))}
         </div>
-        <p className="denik-pata male seda">
+        <p className="denik-pata pata-tabulky">
           <span>
             Lety <b className="cisla">{ukoncene.length}</b>
           </span>
@@ -81,7 +76,6 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
           </span>
           <span className="vpravo-auto">doba = účtovaná, nejméně 1 minuta</span>
         </p>
-      </div>
-    </>
+    </Blok>
   );
 }

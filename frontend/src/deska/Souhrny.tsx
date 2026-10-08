@@ -1,4 +1,6 @@
 import { doba } from "../cas";
+import { Blok } from "../komponenty/Obrazovka";
+import "../komponenty/Tabulka.css";
 import type { Pasek } from "../lety/api";
 
 // Souhrny dne v pravém sloupci (docs/modul-desktop.md 3.4): plachtařský provoz (kluzáky
@@ -9,12 +11,17 @@ import type { Pasek } from "../lety/api";
 const minut = (lety: Pasek[]) => lety.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0);
 const pristani = (lety: Pasek[]) => lety.reduce((s, l) => s + (l.pocet_pristani ?? 0), 0);
 
-/** Řádek tabulky: lety · přistání · doba. */
-function Hodnoty({ lety }: { lety: Pasek[] }) {
+/** Řádek tabulky: lety · přistání · doba (v patičce všechno tučně). */
+function Hodnoty({ lety, celkem = false }: { lety: Pasek[]; celkem?: boolean }) {
+  const Hodnota = celkem ? "b" : "span";
   return (
     <>
-      <td>{lety.length}</td>
-      <td>{pristani(lety)}</td>
+      <td>
+        <Hodnota>{lety.length}</Hodnota>
+      </td>
+      <td>
+        <Hodnota>{pristani(lety)}</Hodnota>
+      </td>
       <td>
         <b>{doba(minut(lety))}</b>
       </td>
@@ -45,7 +52,7 @@ function Tabulka({
   return (
     <table className="tabulka-souhrnu cisla">
       <thead>
-        <tr>
+        <tr className="zahlavi-tabulky">
           <th>Letadlo</th>
           <th>Lety</th>
           <th title="Počet přistání">P</th>
@@ -65,9 +72,9 @@ function Tabulka({
       </tbody>
       <tfoot>
         {celkem.map(([popis, x]) => (
-          <tr key={popis}>
-            <td className="male seda">{popis}</td>
-            <Hodnoty lety={x} />
+          <tr key={popis} className="pata-tabulky">
+            <td>{popis}</td>
+            <Hodnoty lety={x} celkem />
           </tr>
         ))}
       </tfoot>
@@ -82,8 +89,7 @@ export function Souhrny({ lety, poradi }: { lety: Pasek[]; poradi: string[] }) {
   const motor = ukoncene.filter((l) => l.kategorie_kod !== "KLUZAK" && !l.je_vlecny);
   return (
     <>
-      <section className="karta-souhrnu" aria-label="Plachtařský provoz">
-        <h2 className="nadpisek">Plachtařský provoz</h2>
+      <Blok nadpis="Plachtařský provoz" popis="Plachtařský provoz">
         <Tabulka
           lety={[...kluzaky, ...vleky]}
           poradi={poradi}
@@ -92,11 +98,10 @@ export function Souhrny({ lety, poradi }: { lety: Pasek[]; poradi: string[] }) {
             ["Vleky", vleky],
           ]}
         />
-      </section>
-      <section className="karta-souhrnu" aria-label="Motorový provoz">
-        <h2 className="nadpisek">Motorový provoz</h2>
+      </Blok>
+      <Blok nadpis="Motorový provoz" popis="Motorový provoz">
         <Tabulka lety={motor} poradi={poradi} celkem={[["Celkem", motor]]} />
-      </section>
+      </Blok>
     </>
   );
 }

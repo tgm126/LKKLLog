@@ -51,7 +51,7 @@
 .nabidka {
   position: absolute;
   top: 100%;
-  right: var(--okraj-stranky);
+  right: var(--nabidka-vpravo, var(--okraj-stranky));
   z-index: var(--vrstva-nabidky);
   width: var(--sirka-nabidky);
   overflow: hidden;
@@ -115,12 +115,14 @@
 }
 
 /* Menu: záložky v řádku, při nedostatku místa se posouvá do strany */
+
+/* Menu (záložky): pod hlavičkou na mobilu, v liště desky (tam bez okraje a pozadí) */
 .menu {
   display: flex;
   gap: var(--mezera-4);
-  padding: 0 var(--okraj-stranky);
-  border-bottom: var(--ramecek);
-  background: var(--barva-karta);
+  padding: var(--menu-odsazeni, 0 var(--okraj-stranky));
+  border-bottom: var(--menu-cara, var(--ramecek));
+  background: var(--menu-vypln, var(--barva-karta));
   overflow-x: auto;
   scrollbar-width: none;
 }

@@ -81,7 +81,7 @@ function DetailLetuObrazovka({
         </>
       }
     >
-      <div className={`let ${tridaPasku([l])}`}>
+      <div className={`let panel-letu ${tridaPasku([l])}`}>
         {/* trasa na pásku jen tam, kde místo není moje letiště (jako v přehledu) */}
         <PolovinaPasku
           let={{

@@ -11,6 +11,7 @@ import {
   type LetPasku,
 } from "../lety/Pasek";
 import { useTik } from "../tik";
+import "../lety/PanelLetu.css";
 import "./PasekDeska.css";
 
 // Pásek na desktopu (docs/modul-desktop.md 3.2, maketa provoz-desktop-v7.html): vodorovná
@@ -86,6 +87,7 @@ export function PasekDeska({
     kod ? <b>{kod}</b> : <span className="seda">{mojeKod}</span>;
   const trida = [
     "pasek-deska",
+    "panel-letu",
     tridaPasku([l]),
     vPanelu && "v-panelu",
     vybrany && "vybrany",

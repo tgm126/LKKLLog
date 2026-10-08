@@ -1,32 +1,10 @@
-/* Pásek na desktopu: řada přihrádek se svislými přepážkami (strip ŘLP). Stav mění jen výplň
-   pásku (zelená ve vzduchu, modrá naplánovaný, červená problém); písmo v barvě textu. */
+/* Pásek na desktopu = panel letu (PanelLetu.css: okraj, výplň podle stavu) jako řada přihrádek
+   se svislými přepážkami (strip ŘLP); písmo v barvě textu. */
 .pasek-deska {
-  --pasek-vypln: var(--barva-karta);
   --stitek-odsazeni: 0 var(--mezera-2);
 
   display: grid;
   grid-template-columns: var(--sloupce-pasku-deska);
-  border: var(--okraj-pasku) solid var(--barva-obrys);
-  border-radius: var(--zaobleni);
-  background: var(--pasek-vypln);
-}
-
-.pasek-deska.vzduch {
-  --pasek-vypln: var(--barva-zelena-vypln);
-}
-
-.pasek-deska.problem {
-  --pasek-vypln: var(--barva-cervena-vypln);
-}
-
-.pasek-deska.naplanovan,
-.pasek-deska.rozpracovany {
-  --pasek-vypln: var(--barva-modra-vypln);
-}
-
-/* Rozpracovaný let v novém letu: čárkovaný okraj = ještě neuložený */
-.pasek-deska.rozpracovany {
-  border-style: dashed;
 }
 
 /* Klik kamkoli mimo tlačítka otevře detail (bez zvýraznění pod myší); otevřený má prstenec

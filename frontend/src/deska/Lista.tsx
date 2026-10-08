@@ -59,14 +59,22 @@ export function Lista({
   return (
     <header className="lista-desky">
       <span className="velke tucne">AK Kladno Log</span>
-      <nav className="navigace-desky">
-        {/* deska je vždy Provoz (i s otevřeným panelem /let/…, /novy-let) */}
-        <NavLink to="/" className="active">
+      {/* záložky jako mobilní menu; deska je vždy Provoz (i s panelem /let/…, /novy-let) */}
+      <nav className="menu">
+        <NavLink className="nadpisek active" to="/">
           Provoz
         </NavLink>
         {/* správa osob a letadel jen pro toho, kdo má právo (server ho hlídá také) */}
-        {ja.prava.spravuje_osoby && <NavLink to="/osoby">Osoby</NavLink>}
-        {ja.prava.spravuje_letadla && <NavLink to="/letadla">Letadla</NavLink>}
+        {ja.prava.spravuje_osoby && (
+          <NavLink className="nadpisek" to="/osoby">
+            Osoby
+          </NavLink>
+        )}
+        {ja.prava.spravuje_letadla && (
+          <NavLink className="nadpisek" to="/letadla">
+            Letadla
+          </NavLink>
+        )}
       </nav>
       {ja.jen_cteni && (
         <span title="Sdílený počítač – nic nejde změnit; pro změny se odhlaste a přihlaste znovu">
@@ -77,7 +85,7 @@ export function Lista({
         <Tlacitko varianta="bez-ramu" aria-label="Předchozí den" onClick={() => zmenitDen(posunDne(den.den, -1))}>
           ‹
         </Tlacitko>
-        <b>{denSlovy(den.den)}</b>
+        <span className="den-desky-text">{denSlovy(den.den)}</span>
         <Tlacitko
           varianta="bez-ramu"
           aria-label="Další den"

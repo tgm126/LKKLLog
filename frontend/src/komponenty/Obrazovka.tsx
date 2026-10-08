@@ -51,14 +51,20 @@ export function Obrazovka({
 export function Blok({
   nadpis,
   vpravo,
+  popis,
+  roztazeny = false,
   children,
 }: {
   nadpis: ReactNode;
   vpravo?: ReactNode;
+  /** Název oblasti pro čtečky a testy (karty desky). */
+  popis?: string;
+  /** Vyplní výšku sloupce, obsah se posouvá uvnitř (deník dne na desce). */
+  roztazeny?: boolean;
   children: ReactNode;
 }) {
   return (
-    <section className="blok">
+    <section className={roztazeny ? "blok karta roztazeny" : "blok karta"} aria-label={popis}>
       <h2 className="blok-nadpis nadpisek">
         {nadpis}
         {vpravo && <span className="blok-vpravo">{vpravo}</span>}

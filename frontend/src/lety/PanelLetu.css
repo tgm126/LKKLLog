@@ -1,0 +1,36 @@
+/* Panel letu – společný základ pásku (mobil i deska) a dlaždice letadla: výrazný okraj jako
+   papírový strip ŘLP, výplň podle stavu letu. Stav letu → barva je definovaný jen tady
+   (docs/modul-lety.md 3.1, docs/modul-desktop.md 3.2). */
+.panel-letu {
+  border: var(--okraj-pasku) solid var(--barva-obrys);
+  border-radius: var(--zaobleni);
+  background: var(--stav-vypln, var(--barva-karta));
+}
+
+/* Rozpracovaný let (průvodce, nový let): čárkovaný okraj = ještě neuložený */
+.panel-letu.rozpracovany {
+  border-style: dashed;
+}
+
+/* Stav letu: výplň panelu a barva stavu (text „letí 0:12“ na dlaždici, proužek v řadě
+   letadel). Ukončený a zrušený let výplň nemá. */
+.vzduch {
+  --stav-vypln: var(--barva-zelena-vypln);
+  --stav-barva: var(--barva-zelena);
+}
+
+.problem {
+  --stav-vypln: var(--barva-cervena-vypln);
+  --stav-barva: var(--barva-cervena);
+}
+
+.naplanovan,
+.rozpracovany {
+  --stav-vypln: var(--barva-modra-vypln);
+  --stav-barva: var(--barva-modra);
+}
+
+.mimo {
+  --stav-vypln: var(--barva-oranzova-vypln);
+  --stav-barva: var(--barva-oranzova);
+}

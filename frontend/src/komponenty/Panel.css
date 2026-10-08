@@ -53,6 +53,9 @@
 }
 
 .panel-pata {
+  --akce-vedle-zobrazeni: contents;
+  --akce-vedle-tlacitko: none;
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -62,18 +65,7 @@
   background: var(--barva-karta);
 }
 
-/* Akce vedle sebe (Naplánovat, Proběhlý let) patří do řady s ostatními */
-.panel-pata .akce-vedle {
-  display: contents;
-}
-
 .panel-pata .tl {
   --tl-vyska: var(--klik-hlavni);
   --tl-zaobleni: var(--zaobleni-ovladace);
-}
-
-/* VÝJIMKA: na mobilu se akce vedle sebe roztáhnou na šířku displeje; v patičce panelu stojí
-   v řadě s ostatními podle obsahu (tlačítko flex nemá jako proměnnou). */
-.panel-pata .akce-vedle .tl {
-  flex: none;
 }

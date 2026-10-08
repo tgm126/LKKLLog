@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router";
 
 import { doba, stopky } from "../cas";
+import { Tlacitko } from "../komponenty/Tlacitko";
 import type { LetadloNabidka, Pasek } from "../lety/api";
+import "../lety/PanelLetu.css";
 import { useTik } from "../tik";
 import { useJenCteni } from "../uzivatel";
 
@@ -36,9 +38,15 @@ export function RadaLetadel({
   return (
     <nav className="rada-letadel" aria-label="Letadla">
       {!jenCteni && (
-        <button type="button" className="novy-let" title="Nový let (klávesa N)" onClick={() => navigate("/novy-let")}>
+        <Tlacitko
+          varianta="modre"
+          hlavni
+          className="novy-let"
+          title="Nový let (klávesa N)"
+          onClick={() => navigate("/novy-let")}
+        >
           Nový let
-        </button>
+        </Tlacitko>
       )}
       {kategorie.map(([kod, nazev]) => (
         <div key={kod} className="skupina-lodi">
