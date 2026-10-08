@@ -18,6 +18,7 @@ import { NovaOsoba } from "./osoby/Nova";
 import { SeznamLetadel } from "./letadla/Seznam";
 import { SeznamOsob } from "./osoby/Seznam";
 import { LetisteProDnesek, OsobyVProvozu } from "./provoz/Provoz";
+import { NastaveniSystemu, SmazatLetyDne } from "./sprava/Sprava";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
@@ -67,6 +68,10 @@ export function App() {
         <Route element={<SeZapisem />}>
           <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
           <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />
+          <Route element={<JenAdmin />}>
+            <Route path="/sprava/smazat-lety" element={<SmazatLetyDne />} />
+            <Route path="/sprava/nastaveni" element={<NastaveniSystemu />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
@@ -106,6 +111,11 @@ function Prihlaseny() {
 /** Obrazovky, které jen zapisují (nový let, můj provoz): v relaci jen ke čtení zpět na přehled. */
 function SeZapisem() {
   return useJenCteni() ? <Navigate to="/" replace /> : <Outlet />;
+}
+
+/** Správa systému jen pro admina (server ji hlídá také). */
+function JenAdmin() {
+  return useJa().data?.prava.admin ? <Outlet /> : <Navigate to="/" replace />;
 }
 
 /** Obrazovky s hlavičkou a menu (průvodce a detail mají vlastní horní lištu). */

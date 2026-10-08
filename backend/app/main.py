@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from psycopg import Connection
 
-from . import db, letadla, lety, muj_provoz, osoby, prihlasovani
+from . import db, letadla, lety, muj_provoz, osoby, prihlasovani, sprava
 from .nastaveni import nastaveni
 
 BEZPECNE_METODY = {"GET", "HEAD", "OPTIONS"}
@@ -71,6 +71,7 @@ app.include_router(lety.router)
 app.include_router(osoby.router)
 app.include_router(muj_provoz.router)
 app.include_router(letadla.router)
+app.include_router(sprava.router)
 
 
 @app.get("/api/health")

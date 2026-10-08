@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router";
 
-import { Blok, BlokTelo, Obrazovka } from "../komponenty/Obrazovka";
+import { Blok, BlokTelo, Obrazovka, useZpet } from "../komponenty/Obrazovka";
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { Zaskrtavatka, Zaskrtavatko } from "../komponenty/Zaskrtavatko";
@@ -15,12 +14,6 @@ import "./Provoz.css";
 // Můj provoz (docs/modul-muj-provoz.md, maketa muj-provoz-mobil.html): letiště a osoby
 // v provozu na dnešek, jen pro tuto relaci. Otevírá se z nabídky uživatele (a štítku letiště
 // v hlavičce); Zpět vrací tam, odkud uživatel přišel.
-
-function useZpet() {
-  const navigate = useNavigate();
-  const odkud = useLocation();
-  return () => (odkud.key === "default" ? navigate("/") : navigate(-1));
-}
 
 /** Letiště pro dnešek: domovské, nebo jiné (rychlá volba, ostatní přes Hledat…); ťuknutí
  *  uloží a vrátí zpět. */

@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router";
 
 import { Tlacitko } from "./Tlacitko";
 import "./Obrazovka.css";
+
+/** Zpět tam, odkud uživatel přišel (nabídka uživatele, štítek v hlavičce); otevřeno přímo
+ *  adresou = na přehled. */
+export function useZpet() {
+  const navigate = useNavigate();
+  const odkud = useLocation();
+  return () => (odkud.key === "default" ? navigate("/") : navigate(-1));
+}
 
 /** Obrazovka přes celý displej: ✕ / ← vlevo nahoře, nadpis, vpravo stav; akce dole. */
 export function Obrazovka({

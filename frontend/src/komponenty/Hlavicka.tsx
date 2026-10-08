@@ -178,6 +178,25 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
               </Tlacitko>
             </div>
           )}
+          {ja.prava.admin && !ja.jen_cteni && (
+            <div className="nabidka-oddil">
+              <span className="nadpisek">Správa</span>
+              <Tlacitko
+                varianta="bez-ramu"
+                className="nabidka-polozka"
+                onClick={() => navigate("/sprava/smazat-lety")}
+              >
+                Smazat lety dne…
+              </Tlacitko>
+              <Tlacitko
+                varianta="bez-ramu"
+                className="nabidka-polozka"
+                onClick={() => navigate("/sprava/nastaveni")}
+              >
+                Nastavení
+              </Tlacitko>
+            </div>
+          )}
           <div className="nabidka-oddil">
             <span className="nadpisek">Režim zobrazení</span>
             <div className="segmenty">

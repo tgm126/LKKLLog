@@ -1,0 +1,50 @@
+/* Správa: kalendář letů (docs/modul-sprava.md) – měsíc se šipkami nad mřížkou, týden od pondělí,
+   dny s lety tučně s počtem letů, ostatní šedě a nejdou vybrat; dnešek orámovaný. */
+.kalendar-mesic {
+  --tl-min-sirka: var(--dotyk);
+  --tl-odsazeni: 0;
+  --tl-pismo: var(--pismo-l);
+  --tl-barva: var(--barva-seda);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mezera-3);
+}
+
+.kalendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--mezera-1);
+}
+
+.kalendar-den-tydne {
+  text-align: center;
+}
+
+.kalendar-den {
+  display: grid;
+  justify-items: center;
+  min-height: var(--dotyk);
+  padding: var(--mezera-1) 0;
+  border: var(--ramecek-sirka) solid transparent;
+  border-radius: var(--zaobleni-ovladace);
+  background: none;
+  color: var(--barva-seda);
+}
+
+.kalendar-den.s-lety {
+  border-color: var(--barva-cara);
+  background: var(--barva-karta);
+  color: var(--barva-text);
+  font-weight: var(--tloustka-tucna);
+  cursor: pointer;
+}
+
+.kalendar-den.dnes {
+  border-color: var(--barva-text);
+}
+
+.kalendar-pocet {
+  color: var(--barva-seda);
+}
