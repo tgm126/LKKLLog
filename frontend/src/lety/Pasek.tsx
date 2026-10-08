@@ -2,6 +2,7 @@ import { type MouseEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
+import { Sipka } from "../komponenty/Sipka";
 import { Stitek } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { useTik } from "../tik";
@@ -85,8 +86,31 @@ export function Posadka({ clenove }: { clenove: LetPasku["posadka"] }) {
   ));
 }
 
-/** Štítek na své pozici; bez údaje zůstane pozice prázdná. */
-const pozice = (text: ReactNode) => <span>{text && <Stitek barva="pasek">{text}</Stitek>}</span>;
+/** Štítek na své pozici; bez údaje zůstane pozice prázdná (šířka i výška štítku). */
+const pozice = (text: ReactNode, popis?: string | null) => (
+  <span title={popis ?? undefined}>{text && <Stitek barva="pasek">{text}</Stitek>}</span>
+);
+
+/** Řádek štítků pásku (mobil i desktop): účel · způsob vzletu · POB · úloha v pevných
+ *  pozicích, vpravo trasa a případně výsledek letu. */
+export function StitkyPasku({ let: l, trasa, children }: { let: LetPasku; trasa?: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="stitky-pasku">
+      {pozice(ucelKratce(l))}
+      {pozice(zpusobKratce(l))}
+      {pozice(l.pob !== null && `POB ${l.pob}`)}
+      {pozice(ulohaKratce(l.uloha), l.uloha)}
+      {trasa && (
+        <span className="trasa-pasku">
+          <Stitek barva="pasek" zkratit>
+            {trasa}
+          </Stitek>
+        </span>
+      )}
+      {children}
+    </div>
+  );
+}
 
 /** Přihrádka času vpravo podle stavu: stopky a vzlet / vzlet nad přistáním / plán. */
 function CasLetu({ let: l }: { let: LetPasku }) {
@@ -95,7 +119,9 @@ function CasLetu({ let: l }: { let: LetPasku }) {
     return (
       <>
         <span className="let-stopky">{stopky(l.cas_vzletu, ted)}</span>
-        <span className="male seda">↑ {hodinyMinuty(l.cas_vzletu)}</span>
+        <span className="male seda">
+          <Sipka smer="vzlet" /> {hodinyMinuty(l.cas_vzletu)}
+        </span>
       </>
     );
   }
@@ -144,25 +170,14 @@ export function PolovinaPasku({
         <Posadka clenove={l.posadka} />
       </div>
       <div className="let-cas cisla">{cas ?? <CasLetu let={l} />}</div>
-      <div className="stitky-pasku">
-        {pozice(ucelKratce(l))}
-        {pozice(zpusobKratce(l))}
-        {pozice(l.pob !== null && `POB ${l.pob}`)}
-        {pozice(ulohaKratce(l.uloha))}
-        {kam && (
-          <span className="trasa-pasku">
-            <Stitek barva="pasek" zkratit>
-              {kam}
-            </Stitek>
-          </span>
-        )}
+      <StitkyPasku let={l} trasa={kam}>
         {ukoncen && (
           <b className="vysledek-letu cisla">
             {doba(l.doba_uctovana_min ?? 0)}
             <span className="pocet-pristani">{l.pocet_pristani}×</span>
           </b>
         )}
-      </div>
+      </StitkyPasku>
       {l.varovani && <div className="let-varovani">{l.varovani}</div>}
       {children && <div className="let-akce">{children}</div>}
     </div>

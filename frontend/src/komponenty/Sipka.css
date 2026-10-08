@@ -1,0 +1,11 @@
+/* Šipka vzletu / přistání u času: velikost podle písma okolního textu, čára jako ikony */
+.sipka {
+  width: var(--velikost-sipky);
+  height: var(--velikost-sipky);
+  vertical-align: var(--posun-sipky);
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: var(--tloustka-sipky);
+}

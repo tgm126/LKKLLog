@@ -300,10 +300,13 @@
 }
 
 /* --- souhrny (karta = Blok, záhlaví a patička = Tabulka.css) ------------------------------- */
+
+/* Letadlo bere zbytek, číselné sloupce (Lety, P, Doba) jsou stejně široké */
 .tabulka-souhrnu {
   width: 100%;
   margin-bottom: var(--mezera-2);
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .tabulka-souhrnu th,
@@ -320,6 +323,15 @@
 .tabulka-souhrnu :is(th, td):first-child {
   padding-left: var(--mezera-3);
   text-align: left;
+}
+
+.tabulka-souhrnu th:not(:first-child) {
+  width: var(--sirka-cisla-souhrnu);
+}
+
+/* Poslední sloupec má navíc odsazení od okraje karty */
+.tabulka-souhrnu th:last-child {
+  width: calc(var(--sirka-cisla-souhrnu) + var(--mezera-3));
 }
 
 .tabulka-souhrnu :is(th, td):last-child {

@@ -5,23 +5,26 @@ import type { Pasek } from "../lety/api";
 
 // Souhrny dne v pravém sloupci (docs/modul-desktop.md 3.4): plachtařský provoz (kluzáky
 // a vleky) a motorový provoz (vše ostatní, i TMG a vlastní lety vlečné mimo vlek). Tabulka
-// letadel Lety · P · Doba (pořadí jako v deníku dne), celkem dole v patičce – u plachtařů
-// zvlášť kluzáky a vleky. Jen ukončené lety; počítá se z letů dne, nic se neukládá.
+// letadel Lety · (P) · Doba (pořadí jako v deníku dne), celkem dole v patičce – u plachtařů
+// zvlášť kluzáky a vleky, bez přistání (u kluzáku je přistání vždy jedno). Jen ukončené
+// lety; počítá se z letů dne, nic se neukládá.
 
 const minut = (lety: Pasek[]) => lety.reduce((s, l) => s + (l.doba_uctovana_min ?? 0), 0);
 const pristani = (lety: Pasek[]) => lety.reduce((s, l) => s + (l.pocet_pristani ?? 0), 0);
 
-/** Řádek tabulky: lety · přistání · doba (v patičce všechno tučně). */
-function Hodnoty({ lety, celkem = false }: { lety: Pasek[]; celkem?: boolean }) {
+/** Řádek tabulky: lety · přistání (jen motorový) · doba (v patičce všechno tučně). */
+function Hodnoty({ lety, sPristanim, celkem = false }: { lety: Pasek[]; sPristanim: boolean; celkem?: boolean }) {
   const Hodnota = celkem ? "b" : "span";
   return (
     <>
       <td>
         <Hodnota>{lety.length}</Hodnota>
       </td>
-      <td>
-        <Hodnota>{pristani(lety)}</Hodnota>
-      </td>
+      {sPristanim && (
+        <td>
+          <Hodnota>{pristani(lety)}</Hodnota>
+        </td>
+      )}
       <td>
         <b>{doba(minut(lety))}</b>
       </td>
@@ -32,10 +35,13 @@ function Hodnoty({ lety, celkem = false }: { lety: Pasek[]; celkem?: boolean }) 
 function Tabulka({
   lety,
   poradi,
+  sPristanim,
   celkem,
 }: {
   lety: Pasek[];
   poradi: string[];
+  /** Sloupec P (počet přistání) – jen motorový provoz. */
+  sPristanim: boolean;
   /** Řádky patičky: popis a lety, které sečte. */
   celkem: [string, Pasek[]][];
 }) {
@@ -55,7 +61,7 @@ function Tabulka({
         <tr className="zahlavi-tabulky">
           <th>Letadlo</th>
           <th>Lety</th>
-          <th title="Počet přistání">P</th>
+          {sPristanim && <th title="Počet přistání">P</th>}
           <th>Doba</th>
         </tr>
       </thead>
@@ -66,7 +72,7 @@ function Tabulka({
               <b>{r.rejstrik}</b>
               {r.vleky && <span className="male seda"> vleky</span>}
             </td>
-            <Hodnoty lety={r.lety} />
+            <Hodnoty lety={r.lety} sPristanim={sPristanim} />
           </tr>
         ))}
       </tbody>
@@ -74,7 +80,7 @@ function Tabulka({
         {celkem.map(([popis, x]) => (
           <tr key={popis} className="pata-tabulky">
             <td>{popis}</td>
-            <Hodnoty lety={x} celkem />
+            <Hodnoty lety={x} sPristanim={sPristanim} celkem />
           </tr>
         ))}
       </tfoot>
@@ -93,6 +99,7 @@ export function Souhrny({ lety, poradi }: { lety: Pasek[]; poradi: string[] }) {
         <Tabulka
           lety={[...kluzaky, ...vleky]}
           poradi={poradi}
+          sPristanim={false}
           celkem={[
             ["Kluzáky", kluzaky],
             ["Vleky", vleky],
@@ -100,7 +107,7 @@ export function Souhrny({ lety, poradi }: { lety: Pasek[]; poradi: string[] }) {
         />
       </Blok>
       <Blok nadpis="Motorový provoz" popis="Motorový provoz">
-        <Tabulka lety={motor} poradi={poradi} celkem={[["Celkem", motor]]} />
+        <Tabulka lety={motor} poradi={poradi} sPristanim celkem={[["Celkem", motor]]} />
       </Blok>
     </>
   );

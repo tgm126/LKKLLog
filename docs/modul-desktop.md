@@ -82,12 +82,19 @@ let“ (bez „+“ a bez značky klávesy, klávesa `N` funguje dál) otevře f
 Větší flotila se posouvá do strany.
 
 ### 3.2 Pásek (desktop)
-Vodorovná řada přihrádek se svislými přepážkami – jako papírový strip ŘLP:
+Vodorovná řada přihrádek se svislými přepážkami – jako papírový strip ŘLP – a pod ní řádek
+štítků (upraveno 8. 10. 2026: štítky z vlastní přihrádky do třetího řádku, přihrádka trasy
+zrušena, posádka má víc místa):
 
-| Letadlo | Posádka | Štítky | Trasa | Čas | Akce |
-|---|---|---|---|---|---|
-| rejstřík 20 px, typ (u vleku „vlečná“) | osoba na řádek s funkcí | 2 × 2 v pevných pozicích: účel · způsob vzletu / POB · úloha (po najetí celý název) | jen když let není z mého letiště na moje: odkud nahoře, → kam dole; moje letiště šedě, jiné tučně (jinak prázdná) | stopky + ↑ čas vzletu; u naplánovaného „plán“ a kdy byl založen (po najetí kdo) | T&G n · PŘISTÁL / VZLET |
+| Letadlo | Posádka | Čas | Akce |
+|---|---|---|---|
+| rejstřík 20 px, typ (u vleku „vlečná“) | osoba na řádek s funkcí (bere všechno zbylé místo) | stopky + ↗ čas vzletu; u naplánovaného „plán“ a kdy byl založen (po najetí kdo) | T&G n · PŘISTÁL / VZLET |
 
+- **Třetí řádek přes celou šířku:** štítky v pevných pozicích zleva účel · způsob vzletu ·
+  POB · úloha (po najetí celý název) – stejná komponenta jako na mobilu; **vpravo trasa**
+  odkud → kam jako štítek, jen když let není z mého letiště na moje (moje letiště šedě).
+- Akce nemají přepážku – tlačítka mají vlastní okraj; T&G se nelepí na čáru (8. 10. 2026).
+  Sloupec akcí má pevnou šířku, aby PŘISTÁL / VZLET byly u všech pásků pod sebou.
 - Barvy, okraje, varovný řádek, dvojitý pásek vleku a pravidla zobrazení (běžné hodnoty se
   nevypisují, prázdná pozice zůstane prázdná) **beze změny proti mobilu** (`modul-lety.md` 3.1).
   Trasa jako na mobilu – jen když nejde o moje letiště (rozhodnuto 7. 10. 2026; „LKKL → LKKL“
@@ -99,9 +106,8 @@ Vodorovná řada přihrádek se svislými přepážkami – jako papírový stri
   plné s bílým textem (na pásku pevná šířka 112 px), **T&G** bílé s černým textem – na pásku
   i v detailu, na desktopu i na mobilu.
 - Přihrádky mají pevnou šířku, takže stejný údaj je u všech pásků pod sebou; posádka bere zbytek.
-  Štítky jsou **vždy stejný typ na stejném místě** vodorovně i svisle: prázdná pozice má šířku
-  i výšku štítku (oba řádky štítků stejně vysoké), takže chybějící účel a způsob vzletu POB
-  neposune nahoru.
+  Štítky jsou **vždy stejný typ na stejném místě**: prázdná pozice má šířku štítku, takže
+  chybějící účel a způsob vzletu POB neposune doleva.
 - Klik kamkoli mimo tlačítka = detail letu. Pod myší se pásek nezvýrazňuje (rozhodnuto
   8. 10. 2026). **Vybraný pásek** (otevřený detail) má výrazný prstenec v barvě textu
   s mezerou – vidět v obou režimech; stejně vybraný let na časové ose. Samostatné tlačítko
@@ -110,21 +116,23 @@ Vodorovná řada přihrádek se svislými přepážkami – jako papírový stri
 
 ### 3.3 Deník dne
 - **Jeden řádek na let** (rozhodnuto 7. 10. 2026): Letadlo · Posádka (PIC · druhá osoba
-  s funkcí) · ↑ · ↓ · P · Doba. Ostatní údaje (účel, způsob vzletu, úloha, POB, trasa, plátce,
+  s funkcí) · ↗ vzlet · ↘ přistání · P · Doba. Ostatní údaje (účel, způsob vzletu, úloha, POB, trasa, plátce,
   poznámka, u zrušeného důvod) jsou v **detailu** po kliknutí na řádek. Na monitoru věže je
   vidět celý den bez posouvání.
 - Stejně i u **jiného dne** (3.6) – deník je jen širší (zabere i místo pásků).
 - Ukončené od posledního přistání, pod nimi oddíl Zrušené (přeškrtnutý rejstřík).
   Patička: lety, přistání, doba. Celá posádka s funkcemi v popisku řádku.
 - **Pořadí počtů ve všech třech tabulkách** (deník, oba souhrny; rozhodnuto 8. 10. 2026):
-  počet letů · počet přistání (P) · doba.
+  počet letů · počet přistání (P) · doba; plachtařský souhrn přistání nemá.
 
 ### 3.4 Souhrny (pravý sloupec)
 Svislý sloupec **karet**; každá karta je samostatný zdroj, přidávají se postupně (zatím jen
 karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
-1. **Plachtařský provoz:** tabulka kluzáků a vlečných (vleky) – Letadlo · Lety · P · Doba;
-   celkem dole v patičce jako u deníku, **dva řádky: kluzáky a vleky**.
+1. **Plachtařský provoz:** tabulka kluzáků a vlečných (vleky) – Letadlo · Lety · Doba (bez
+   přistání, 8. 10. 2026); celkem dole v patičce jako u deníku, **dva řádky: kluzáky a vleky**.
 2. **Motorový provoz:** tabulka letadel Letadlo · Lety · P · Doba, dole řádek Celkem.
+
+   Číselné sloupce (Lety, P, Doba) jsou v obou tabulkách stejně široké (8. 10. 2026).
 
    Souhrnné hodnoty jsou dole, ne nahoře (rozhodnuto 8. 10. 2026). Hlavička karty má jen
    název; rozpad podle startů a účelu ani sloupec „kde je“ není (kde letadlo je, ukazuje

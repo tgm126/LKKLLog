@@ -18,6 +18,14 @@ test("deska: pásky, řada letadel, deník, souhrny a časová osa", async ({ pa
   await expect(mfv).toContainText("Přes maximální dobu letu");
   await expect(mfv.getByRole("button", { name: /T&G/ })).toHaveText("T&G 1");
   await expect(pasky.locator(".pasek-deska", { hasText: "OK-2817" }).getByRole("button", { name: /T&G/ })).toHaveCount(0);
+  // Řádek štítků pod přihrádkami v pevných pozicích jako na mobilu; u vzletu šipka
+  await expect(pasky.locator(".pasek-deska", { hasText: "OK-2817" }).locator(".stitky-pasku > span")).toHaveText([
+    "",
+    "naviják",
+    "POB 2",
+    "",
+  ]);
+  await expect(mfv.getByRole("img", { name: "vzlet" })).toBeVisible();
   // Vlek naplánovaný jako dvojice, VZLET jen u kluzáku
   const vlek = pasky.locator(".dvojice-deska", { hasText: "OK-6722" });
   await expect(vlek.locator(".pasek-deska")).toHaveCount(2);
@@ -36,8 +44,13 @@ test("deska: pásky, řada letadel, deník, souhrny a časová osa", async ({ pa
   await expect(denik.locator(".radek-deniku.zrusen")).toContainText("OK-2817");
 
   // Souhrny: plachtařský (kluzáky a vleky) a motorový provoz zvlášť
-  await expect(page.getByRole("region", { name: "Plachtařský provoz" })).toContainText("OK-3819");
-  await expect(page.getByRole("region", { name: "Motorový provoz" })).toContainText("OK-CRA");
+  // (přistání jen u motorového – kluzák přistává jednou)
+  const plachtari = page.getByRole("region", { name: "Plachtařský provoz" });
+  await expect(plachtari).toContainText("OK-3819");
+  await expect(plachtari.locator("thead th")).toHaveText(["Letadlo", "Lety", "Doba"]);
+  const motorovy = page.getByRole("region", { name: "Motorový provoz" });
+  await expect(motorovy).toContainText("OK-CRA");
+  await expect(motorovy.locator("thead th")).toHaveText(["Letadlo", "Lety", "P", "Doba"]);
 
   // Časová osa: úsečka za každý let, který letěl nebo letí
   const osa = page.getByRole("region", { name: "Časová osa dne" });

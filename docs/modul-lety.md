@@ -69,7 +69,7 @@ dvojice otevře detail jejího letu.
 - **Ve vzduchu a naplánované = pásek** jako papírový strip: barevný panel podle stavu (zelený
   ve vzduchu, modrý naplánovaný, červený problém) s výrazným okrajem (ve světlém režimu téměř
   černým, v tmavém světle šedým): rejstřík a typ · posádka (**každá osoba na vlastním
-  řádku**) · vpravo čas (stopky a čas vzletu) · dole **štítky v pevných pozicích** účel ·
+  řádku**) · vpravo čas (stopky a čas vzletu se šikmou šipkou ↗) · dole **štítky v pevných pozicích** účel ·
   způsob vzletu · POB · úloha (maketa `pasek-mobil-v5.html`, 7. 10. 2026). Každý typ má stálé
   místo a šířku podle nejdelšího textu; chybí-li údaj, místo zůstane prázdné a nic se
   neposune. Běžné hodnoty se nevypisují: účel „normální“ a způsob vzletu „vlastní“ (ten
@@ -79,6 +79,8 @@ dvojice otevře detail jejího letu.
   VZLET přes celou šířku). **Barvy písma a tlačítek** (sjednoceno s desktopem 7. 10. 2026):
   stopky v barvě textu (stav říká výplň pásku); PŘISTÁL zelené a VZLET modré plné s bílým
   textem; T&G bílé s černým textem (pásek i detail).
+- **Šipky u časů** (8. 10. 2026, mobil i desktop): vzlet šikmo nahoru ↗, přistání šikmo dolů ↘,
+  kreslené (komponenta `Sipka`) – výraznější než znak písma a na každém zařízení stejné.
 - **Ukončené a zrušené = deník**: řádky v jedné kartě, sloupce Letadlo · Posádka · Čas (vzlet
   nad přistáním) · Doba · P (počet přistání). **První dva řádky** patří posádce (osoba na
   řádek; je-li jen jedna, druhý zůstane prázdný), **třetí řádek** šedě vždy POB a odchylky od
@@ -93,7 +95,8 @@ dvojice otevře detail jejího letu.
 (čárkovaný okraj = ještě neuložený), který se plní s každou volbou. Krok 1: dlaždice letadel
 ve skupinách podle kategorie (barva podle stavu jako v přehledu), všechny stejně vysoké – tři
 řádky: rejstřík · typ · stav (mimo provoz, letí, naplánován; jinak prázdný); „vlečná“ se
-neuvádí, soukromé letadlo má bílou dlaždici a šedý rejstřík (8. 10. 2026). Volby v blocích (karta
+neuvádí, soukromé letadlo má bílou dlaždici a **světle šedý** rejstřík (8. 10. 2026; tlumená
+šedá `--barva-seda-svetla`, běžná šedá se od černé málo lišila). Volby v blocích (karta
 s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
 („Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
 a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má

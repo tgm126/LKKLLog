@@ -1,29 +1,17 @@
 import { type MouseEvent, type ReactNode } from "react";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
-import { Stitek } from "../komponenty/Stitek";
-import {
-  Posadka,
-  tridaPasku,
-  ucelKratce,
-  ulohaKratce,
-  zpusobKratce,
-  type LetPasku,
-} from "../lety/Pasek";
+import { Sipka } from "../komponenty/Sipka";
+import { Posadka, StitkyPasku, tridaPasku, type LetPasku } from "../lety/Pasek";
 import { useTik } from "../tik";
 import "../lety/PanelLetu.css";
 import "./PasekDeska.css";
 
-// Pásek na desktopu (docs/modul-desktop.md 3.2, maketa provoz-desktop-v7.html): vodorovná
-// řada přihrádek se svislými přepážkami jako papírový strip ŘLP – letadlo · posádka · štítky
-// 2 × 2 v pevných pozicích (účel a způsob vzletu nahoře, POB a úloha dole) · trasa · čas ·
-// akce. Stav letu říká jen výplň pásku; písmo v barvě textu (kromě varování a tlačítek).
-// V panelu (detail, nový let) je pásek sám – prázdné přihrádky se vynechají.
-
-/** Štítek na své pozici; bez údaje zůstane pozice prázdná (šířka i výška štítku). */
-const pozice = (text: ReactNode, popis?: string | null) => (
-  <span title={popis ?? undefined}>{text && <Stitek barva="pasek">{text}</Stitek>}</span>
-);
+// Pásek na desktopu (docs/modul-desktop.md 3.2): vodorovná řada přihrádek se svislými
+// přepážkami jako papírový strip ŘLP – letadlo · posádka · čas, vpravo akce; pod nimi řádek
+// štítků v pevných pozicích (jako na mobilu) a vpravo trasa odkud → kam. Stav letu říká jen
+// výplň pásku; písmo v barvě textu (kromě varování a tlačítek). V panelu (detail, nový let)
+// je pásek sám – bez akcí nezabírá místo pro tlačítka.
 
 /** Přihrádka času: stopky a vzlet / plán a kdy založen / vzlet–přistání a doba. */
 function CasLetu({ let: l }: { let: LetPasku }) {
@@ -32,7 +20,9 @@ function CasLetu({ let: l }: { let: LetPasku }) {
     return (
       <>
         <span className="pasek-stopky">{stopky(l.cas_vzletu, ted)}</span>
-        <span className="male seda">↑ {hodinyMinuty(l.cas_vzletu)}</span>
+        <span className="male seda">
+          <Sipka smer="vzlet" /> {hodinyMinuty(l.cas_vzletu)}
+        </span>
       </>
     );
   }
@@ -74,7 +64,7 @@ export function PasekDeska({
   mojeKod: string | undefined;
   /** Otevřený v detailu – výrazný prstenec. */
   vybrany?: boolean;
-  /** Pásek v panelu: bez prázdných přihrádek, nejde na něj kliknout. */
+  /** Pásek v panelu: bez prázdné přihrádky akcí, nejde na něj kliknout. */
   vPanelu?: boolean;
   /** Obsah přihrádky času (jinak podle stavu letu). */
   cas?: ReactNode;
@@ -110,24 +100,18 @@ export function PasekDeska({
       <div className="prihradka pasek-posadka">
         {l.posadka.length > 0 ? <Posadka clenove={l.posadka} /> : <span className="seda">— pilot —</span>}
       </div>
-      <div className="prihradka pasek-stitky">
-        {pozice(ucelKratce(l))}
-        {pozice(zpusobKratce(l))}
-        {pozice(l.pob !== null && `POB ${l.pob}`)}
-        {pozice(ulohaKratce(l.uloha), l.uloha)}
-      </div>
-      {(trasa || !vPanelu) && (
-        <div className="prihradka pasek-trasa">
-          {trasa && (
-            <>
-              <span className="male">{misto(l.misto_vzletu)}</span>
-              <span>→ {misto(l.misto_pristani)}</span>
-            </>
-          )}
-        </div>
-      )}
       <div className="prihradka pasek-cas cisla">{cas ?? <CasLetu let={l} />}</div>
-      {(children || !vPanelu) && <div className="prihradka pasek-akce">{children}</div>}
+      {(children || !vPanelu) && <div className="pasek-akce">{children}</div>}
+      <StitkyPasku
+        let={l}
+        trasa={
+          trasa && (
+            <>
+              {misto(l.misto_vzletu)} → {misto(l.misto_pristani)}
+            </>
+          )
+        }
+      />
       {l.varovani && <div className="pasek-varovani">{l.varovani}</div>}
     </div>
   );

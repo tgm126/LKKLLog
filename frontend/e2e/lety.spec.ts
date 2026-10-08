@@ -28,7 +28,8 @@ test("přehled letů dne", async ({ page }) => {
     page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-2817" }).locator(".stitky-pasku > span"),
   ).toHaveText(["", "naviják", "POB 2", ""]);
   await expect(mfv.locator(".stitky-pasku > span")).toHaveText(["", "", "POB 1", ""]);
-  await expect(mfv.locator(".let-cas")).toContainText(/↑ \d\d:\d\d/);
+  await expect(mfv.locator(".let-cas")).toContainText(/\d\d:\d\d/);
+  await expect(mfv.locator(".let-cas").getByRole("img", { name: "vzlet" })).toBeVisible();
 
   // Naplánované: vlek jako jeden dvojitý pásek.
   await expect(page.getByRole("heading", { name: "Naplánované 2" })).toBeVisible();

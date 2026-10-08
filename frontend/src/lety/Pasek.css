@@ -77,16 +77,20 @@
   font-weight: var(--tloustka-tucna);
 }
 
-/* Štítky v pevných pozicích (účel · způsob vzletu · POB · úloha); prázdná pozice zůstane
-   prázdná. U ukončeného letu vpravo doba tučně a počet přistání. */
+/* Řádek štítků (mobil i desktop) v pevných pozicích (účel · způsob vzletu · POB · úloha);
+   prázdná pozice zůstane prázdná. Vpravo trasa, u ukončeného letu doba tučně a počet
+   přistání. Kde řádek v pásku leží, určuje pásek. */
 .stitky-pasku {
   display: grid;
-  grid-area: stitky;
   grid-template-columns: var(--mista-stitku) minmax(0, 1fr);
   align-items: center;
   gap: var(--mezera-1);
   padding: 0 var(--mezera-3) var(--mezera-2);
   font-size: var(--pismo-s);
+}
+
+.let-par > .stitky-pasku {
+  grid-area: stitky;
 }
 
 /* Štítek vyplní svou pozici (stejně široké štítky téhož typu pod sebou) */

@@ -47,6 +47,9 @@
   --velikost-policka: 22px;   /* políčko zaškrtávátka (dlaždice je 44 px) */
   --velikost-ikony: 24px;     /* ikona v tlačítku (Zpět, Zavřít) */
   --tloustka-ikony: 2.5;      /* tloušťka čáry ikony (jednotky obrázku 24 × 24) */
+  --velikost-sipky: 1.15em;   /* šipka vzletu / přistání u času – podle písma textu */
+  --tloustka-sipky: 3.5;      /* výraznější než ikona (šipka je menší) */
+  --posun-sipky: -.2em;       /* šipka sedí na účaří textu jako číslice */
   --zaobleni-policka: 6px;
 
   /* Pásek letu: čas vpravo (vejdou se i stopky přes 10 hodin, 10:59:59) a pozice štítků
@@ -81,10 +84,10 @@
   --sirka-noveho: 820px;      /* nový let – formulář ve dvou sloupcích */
   --sirka-akce: 112px;        /* PŘISTÁL / VZLET na pásku */
 
-  /* Pásek = přihrádky: letadlo · posádka · štítky 2 × 2 · trasa · čas · akce (T&G + PŘISTÁL) */
-  --sloupce-pasku-deska: 140px minmax(0, 1fr) auto 84px var(--sirka-casu) 212px;
-  --mista-stitku-deska: calc(6ch + 2 * var(--mezera-2)) calc(8ch + 2 * var(--mezera-2));
-  --sirka-letadla-panelu: 140px; /* přihrádka letadla na pásku v panelu (OK-CUO 78) */
+  /* Pásek = přihrádky letadlo · posádka (zbytek) · čas · akce, pod nimi řádek štítků */
+  --sirka-letadla-pasku: 140px; /* rejstřík a typ (OK-CUO, „L 13 · vlečná“) */
+  --sirka-akci-pasku: 228px;  /* T&G n + PŘISTÁL s odstupem – akce pod sebou zarovnané */
+  --sirka-cisla-souhrnu: 7ch; /* sloupce Lety, P, Doba v souhrnech stejně široké */
 
   /* Deník: letadlo · posádka · vzlet · přistání · P · doba (jeden řádek na let) */
   --sloupce-deniku-deska: 92px minmax(0, 1fr) 5ch 5ch 2ch 6ch;
@@ -99,6 +102,10 @@
      na kartě i na barevných plochách ≥ 4,3 : 1 (výpočet v návrhu lety-mobil-v4.html). */
   --barva-text:           light-dark(#1a1d21, #e8eaed);
   --barva-seda:           light-dark(#5b6570, #9aa4af);
+
+  /* VÝJIMKA kontrastu: soukromé letadlo v dlaždicích – záměrně tlumené (nižší kontrast než
+     4,3 : 1), aby se na první pohled odlišilo od klubových; rejstřík je velký a tučný. */
+  --barva-seda-svetla:    light-dark(#a3abb4, #5c6570);
   --barva-cara:           light-dark(#d9dde2, #2c333c);
   --barva-pozadi:         light-dark(#eef0f3, #0d1015);   /* stránka – karty z ní vystoupí */
   --barva-karta:          light-dark(#fff, #171b21);

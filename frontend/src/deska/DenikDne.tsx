@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty } from "../cas";
 import { Blok } from "../komponenty/Obrazovka";
+import { Sipka } from "../komponenty/Sipka";
 import "../komponenty/Tabulka.css";
 import type { Pasek } from "../lety/api";
 import { podle } from "../lety/poradi";
@@ -49,8 +50,12 @@ export function DenikDne({ lety, vybranyId }: { lety: Pasek[]; vybranyId: number
         <div className="radek-deniku zahlavi zahlavi-tabulky" aria-hidden>
           <span>Letadlo</span>
           <span>Posádka</span>
-          <span>↑</span>
-          <span>↓</span>
+          <span>
+            <Sipka smer="vzlet" />
+          </span>
+          <span>
+            <Sipka smer="pristani" />
+          </span>
           <span className="vpravo">P</span>
           <span className="vpravo">Doba</span>
         </div>
