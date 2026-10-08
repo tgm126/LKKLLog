@@ -432,7 +432,7 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
            FROM lkkl.v_lov_ucel u
            JOIN lkkl.lov_ucel lu ON lu.id = u.id
            LEFT JOIN lkkl.lov_ucel_funkce uf ON uf.ucel_id = u.id
-           LEFT JOIN lkkl.lov_funkce f ON f.id = uf.funkce_id
+           LEFT JOIN lkkl.v_lov_funkce f ON f.id = uf.funkce_id
            GROUP BY u.id, u.kod, u.nazev, u.poradi, lu.uloha_povinna
            ORDER BY u.poradi, u.nazev"""
     ).fetchall()
@@ -458,7 +458,7 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
                                FILTER (WHERE s.osoba_id IS NOT NULL), '[]') AS role
                FROM lkkl.lov_osoba o
                LEFT JOIN lkkl.v_osoba_smi s ON s.osoba_id = o.id
-               WHERE o.aktivni
+               WHERE o.platny
                GROUP BY o.id
                ORDER BY o.prijmeni, o.jmeno"""
         ).fetchall(),
@@ -544,7 +544,7 @@ def _vychozi_platce(conn: Connection, posadka: list[ClenIn], pic_id: int) -> int
     jine = {
         r["id"]
         for r in conn.execute(
-            "SELECT id FROM lkkl.lov_funkce WHERE na_palube AND kod <> 'PIC'"
+            "SELECT id FROM lkkl.v_lov_funkce WHERE na_palube AND kod <> 'PIC'"
         ).fetchall()
     }
     kandidati = [c for c in posadka if c.funkce_id in jine] or [

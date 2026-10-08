@@ -54,6 +54,13 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     s platnými položkami seřazenými podle pořadí). Pravidla sloupců jsou v doménách `lkkl.kod`, `lkkl.nazev`,
     `lkkl.poradi`, `lkkl.platny` – definovaná jednou. Hodnoty, podle jejichž kódu program
     uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
+    **Platnost záznamu** (od 8. 10. 2026, skript 031): **každá tabulka `lov_` s vlastním `id`**
+    (číselníky i osoby, letadla) má sloupec `platny lkkl.platny`. Neplatný záznam zůstává
+    jen kvůli starým vazbám: **nikde se nenabízí** (pohledy `v_lov_*`, správa osob ukazuje
+    i neplatné, aby šly vrátit) a **nejde nově použít** – hlídá trigger
+    `kontrola_platnosti` na každém cizím klíči do `lov_` (stará vazba při úpravě jiného
+    údaje projde). Platnost se nedědí. Bez platnosti jsou vazební tabulky a `lov_audit_popisek`.
+    Nová tabulka `lov_` = sloupec `platny`, pohled `v_lov_…` a triggery na vazby do ní.
 11. Časy v UTC. Doménové názvy česky bez diakritiky, technické anglicky.
     **Tabulky ve schématu databáze `lkkl`**; tabulky první verze byly 6. 10. 2026 smazány
     (ve `public` zůstává jen rozšíření `btree_gist`).

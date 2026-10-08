@@ -47,7 +47,7 @@ class Osoba(BaseModel):
     telefon: str | None
     cislo_clena: str | None
     clen: bool
-    aktivni: bool
+    platny: bool
     ucet: UcetOsoby | None
     opravneni: list[OpravneniOsoby]
 
@@ -107,7 +107,7 @@ class OsobaIn(BaseModel):
     telefon: str | None = None
     cislo_clena: str | None = None
     clen: bool | None = None
-    aktivni: bool | None = None
+    platny: bool | None = None
 
     @field_validator("jmeno", "prijmeni", "email", "cislo_clena")
     @classmethod
@@ -137,9 +137,9 @@ class OmezeniIn(BaseModel):
 # --- dotazy ----------------------------------------------------------------------------------
 
 _OSOBA_SQL = """
-SELECT o.id, o.jmeno, o.prijmeni, o.email, o.telefon, o.cislo_clena, o.clen, o.aktivni,
+SELECT o.id, o.jmeno, o.prijmeni, o.email, o.telefon, o.cislo_clena, o.clen, o.platny,
        CASE WHEN u.osoba_id IS NOT NULL THEN json_build_object(
-           'smi_se_prihlasit', u.aktivni AND o.aktivni,
+           'smi_se_prihlasit', u.aktivni AND o.platny,
            'aktivni', u.aktivni,
            'admin', u.admin,
            'smi_odblokovat', u.smi_odblokovat,
@@ -213,7 +213,7 @@ def osoby(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(sp
                       coalesce((SELECT json_agg(json_build_object('id', k.id, 'nazev', k.nazev)
                                                 ORDER BY k.poradi, k.nazev)
                                 FROM lkkl.lov_opravneni_kategorie ok
-                                JOIN lkkl.lov_kategorie k ON k.id = ok.kategorie_id
+                                JOIN lkkl.v_lov_kategorie k ON k.id = ok.kategorie_id
                                 WHERE ok.opravneni_id = o.id), '[]') AS kategorie
                FROM lkkl.v_lov_opravneni o"""
         ).fetchall(),
@@ -261,7 +261,7 @@ def osoba_zmenit(
     for k in ("email", "cislo_clena"):  # prázdný text = smazat
         if k in zmeny and not zmeny[k]:
             zmeny[k] = None
-    if zmeny.get("aktivni") is False:
+    if zmeny.get("platny") is False:
         if osoba_id == p.osoba_id:
             raise HTTPException(400, "Sám sebe nemůžete vypnout.")
         admin = conn.execute(

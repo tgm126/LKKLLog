@@ -296,7 +296,7 @@ def prihlaseni(
     with conn.transaction():
         u = conn.execute(
             """SELECT u.osoba_id, u.heslo_hash, u.neuspesne_pokusy,
-                      u.aktivni AND o.aktivni AS smi,
+                      u.aktivni AND o.platny AS smi,
                       coalesce(u.zablokovano_do > now(), false) AS zablokovano,
                       ceil(extract(epoch FROM u.zablokovano_do - now()) / 60)::int AS minut
                FROM lkkl.ucet u

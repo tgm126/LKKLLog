@@ -23,7 +23,8 @@ export type Osoba = {
   telefon: string | null;
   cislo_clena: string | null;
   clen: boolean;
-  aktivni: boolean;
+  /** Platná osoba (v aplikaci „aktivní“): nabízí se v letech, smí se přihlásit. */
+  platny: boolean;
   ucet: UcetOsoby | null;
   opravneni: OpravneniOsoby[];
 };
@@ -48,7 +49,7 @@ export type DetailOsoby = Osoba & {
 };
 
 export type UdajeOsoby = Partial<
-  Pick<Osoba, "jmeno" | "prijmeni" | "email" | "telefon" | "cislo_clena" | "clen" | "aktivni">
+  Pick<Osoba, "jmeno" | "prijmeni" | "email" | "telefon" | "cislo_clena" | "clen" | "platny">
 >;
 
 export function useOsoby() {

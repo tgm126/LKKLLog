@@ -16,9 +16,9 @@ import "./Osoby.css";
 type Filtr = "aktivni" | "ucet" | "neaktivni" | "vse";
 
 const FILTRY: [Filtr, string, (o: Osoba) => boolean][] = [
-  ["aktivni", "Aktivní", (o) => o.aktivni],
+  ["aktivni", "Aktivní", (o) => o.platny],
   ["ucet", "S účtem", (o) => o.ucet !== null],
-  ["neaktivni", "Neaktivní", (o) => !o.aktivni],
+  ["neaktivni", "Neaktivní", (o) => !o.platny],
   ["vse", "Vše", () => true],
 ];
 
@@ -109,7 +109,7 @@ function RadekOsoby({
   return (
     <button
       type="button"
-      className={o.aktivni ? "radek-osoby" : "radek-osoby neaktivni"}
+      className={o.platny ? "radek-osoby" : "radek-osoby neaktivni"}
       onClick={otevrit}
     >
       <span className="radek-osoby-jmeno">

@@ -49,7 +49,7 @@ export function Detail() {
 
 /** Stav osoby a účtu do štítku v horní liště. */
 function stav(o: DetailOsoby): [string, "zeleny" | "cerveny" | undefined] {
-  if (!o.aktivni) return ["neaktivní", undefined];
+  if (!o.platny) return ["neaktivní", undefined];
   if (!o.ucet) return ["bez účtu", undefined];
   if (o.ucet.zablokovano) return ["zablokován", "cerveny"];
   return o.ucet.aktivni ? ["účet aktivní", "zeleny"] : ["účet vypnutý", undefined];
@@ -109,9 +109,9 @@ function DetailObrazovka({
           <Zaskrtavatko
             popisek="Aktivní"
             pod="nabízí se v letech, smí se přihlásit"
-            zaskrtnuto={o.aktivni}
+            zaskrtnuto={o.platny}
             zakazano={o.id === ja.osoba_id}
-            zmenit={(aktivni) => zmenit({ aktivni })}
+            zmenit={(platny) => zmenit({ platny })}
           />
         </Zaskrtavatka>
       </Blok>
@@ -271,7 +271,7 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
       <Zaskrtavatka>
         <Zaskrtavatko
           popisek="Smí se přihlásit"
-          pod={!u ? "nemá účet (potřebuje e-mail)" : !o.aktivni ? "osoba je neaktivní" : undefined}
+          pod={!u ? "nemá účet (potřebuje e-mail)" : !o.platny ? "osoba je neaktivní" : undefined}
           zaskrtnuto={!!u?.aktivni}
           zakazano={o.id === ja.osoba_id || (u?.admin && !ja.prava.admin)}
           zmenit={(aktivni) => ucet({ aktivni })}

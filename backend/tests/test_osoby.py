@@ -31,8 +31,8 @@ def test_spravce_nesmi_na_admina_ani_sam_sebe(osoba, prihlasit):
     spravce = osoba("Spravce", spravuje_osoby=True)
     k = prihlasit("spravce@example.cz")
     assert k.post(f"/api/ucty/{admin}", json={"aktivni": False}).status_code == 403
-    assert k.post(f"/api/osoby/{admin}", json={"aktivni": False}).status_code == 403
-    odpoved = k.post(f"/api/osoby/{spravce}", json={"aktivni": False})
+    assert k.post(f"/api/osoby/{admin}", json={"platny": False}).status_code == 403
+    odpoved = k.post(f"/api/osoby/{spravce}", json={"platny": False})
     assert odpoved.status_code == 400 and "Sám sebe" in odpoved.json()["detail"]
 
 

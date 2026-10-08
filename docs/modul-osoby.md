@@ -34,7 +34,8 @@ Pravidla (hlídá server, ne jen skrytím tlačítek): sám sobě nikdo nevypne 
 nezablokuje účet; admin si neodebere admina; účet admina smí měnit jen admin.
 
 ## 3. Data
-- `lov_osoba` – beze změny (jméno, příjmení, e-mail, telefon, číslo člena, člen, aktivní).
+- `lov_osoba` – beze změny (jméno, příjmení, e-mail, telefon, číslo člena, člen, aktivní –
+  od 031 sloupec `platny` podle standardu platnosti, v aplikaci dál „aktivní“).
   Telefon se ukládá jako `+420…` (server převede „602 123 456“ i „00420…“), zobrazuje se
   po trojicích.
 - `ucet.spravuje_osoby boolean NOT NULL DEFAULT false` (db/023), v auditu „spravuje osoby“.
