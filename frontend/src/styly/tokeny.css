@@ -87,7 +87,7 @@
   /* Pásek = přihrádky letadlo · posádka (zbytek) · čas · akce, pod nimi řádek štítků */
   --sirka-letadla-pasku: 140px; /* rejstřík a typ (OK-CUO, „L 13 · vlečná“) */
   --sirka-akci-pasku: 228px;  /* T&G n + PŘISTÁL s odstupem – akce pod sebou zarovnané */
-  --sirka-cisla-souhrnu: 7ch; /* sloupce Lety, P, Doba v souhrnech stejně široké */
+  --sirka-cisla-souhrnu: 10ch; /* sloupce Lety, P, Doba v souhrnech stejně široké (doba 12°34") */
 
   /* Deník: letadlo · posádka · vzlet · přistání · P · doba (jeden řádek na let) */
   --sloupce-deniku-deska: 92px minmax(0, 1fr) 5ch 5ch 2ch 6ch;
@@ -109,7 +109,7 @@
   --barva-cara:           light-dark(#d9dde2, #2c333c);
   --barva-pozadi:         light-dark(#eef0f3, #0d1015);   /* stránka – karty z ní vystoupí */
   --barva-karta:          light-dark(#fff, #171b21);
-  --barva-neutralni:      light-dark(#f1f3f5, #1f252c);   /* pás údajů, hlavička bloku */
+  --barva-neutralni:      light-dark(#e4e8ed, #1f252c);   /* pás údajů, hlavička bloku (odliší se od stránky) */
   --barva-neutralni-text: light-dark(#495057, #c3c9d0);
   --barva-obrys:          light-dark(#2b3138, #7d8894);   /* okraj pásku (v tmavém světlý) */
   --barva-prepazka:       light-dark(#aab2bb, #3f4852);   /* přepážky, okraj štítku v pásku */

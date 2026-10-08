@@ -1,8 +1,15 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import { Tlacitko } from "./Tlacitko";
 import "./Obrazovka.css";
 import "./Panel.css";
+
+/** Po kliknutí v obsahu panelu (otevřená volba, Hledat…, úprava údaje) se blok posune tak,
+ *  aby byl celý vidět – nic se neotevře pod spodním okrajem. Volá se po vykreslení změny. */
+function ukazatBlok(e: MouseEvent) {
+  const blok = (e.target as Element).closest(".blok");
+  requestAnimationFrame(() => blok?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+}
 
 /** Desktop: panel zprava přes desku (detail letu, nový let) – nahoře hlava a zavírací
  *  křížek, uprostřed posuvný obsah, dole akce. Deska pod ním zůstává ovladatelná. */
@@ -33,7 +40,9 @@ export function Panel({
           </svg>
         </Tlacitko>
       </div>
-      <div className="panel-telo">{children}</div>
+      <div className="panel-telo" onClick={ukazatBlok}>
+        {children}
+      </div>
       {pata && <div className="panel-pata">{pata}</div>}
     </aside>
   );

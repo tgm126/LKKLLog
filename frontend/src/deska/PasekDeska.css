@@ -38,6 +38,11 @@
   border-left: 0;
 }
 
+/* Posádka od horního okraje (jeden pilot je v řádku s rejstříkem, ne uprostřed) */
+.pasek-posadka {
+  align-content: start;
+}
+
 .prihradka > * {
   overflow: hidden;
   text-overflow: ellipsis;

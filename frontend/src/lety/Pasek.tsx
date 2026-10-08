@@ -56,10 +56,21 @@ export type LetPasku = Pick<
 
 /** Trasa na pásek (maketa mista-letu-mobil.html, varianta B): jen jedna strana – kam letí
  *  („→ LKMB“), jinak odkud („LKMB →“); jen naplánovaný let a let ve vzduchu. */
-function trasa(l: LetPasku): string | null {
+function trasa(l: LetPasku): ReactNode {
   if (l.stav !== "VE_VZDUCHU" && l.stav !== "NAPLANOVAN") return null;
-  if (l.misto_pristani) return `→ ${l.misto_pristani}`;
-  return l.misto_vzletu ? `${l.misto_vzletu} →` : null;
+  if (l.misto_pristani)
+    return (
+      <>
+        <Sipka smer="kam" /> {l.misto_pristani}
+      </>
+    );
+  return (
+    l.misto_vzletu && (
+      <>
+        {l.misto_vzletu} <Sipka smer="kam" />
+      </>
+    )
+  );
 }
 
 /** Účel do pole pásku; běžný (normální) se nevypisuje, vlečná má „vlek“. */

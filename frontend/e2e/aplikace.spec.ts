@@ -23,7 +23,7 @@ test("pruh vývoje a nabídka nové verze po nasazení", async ({ page }) => {
   await expect(novaVerze).toBeVisible();
   await page.unroute("**/api/aplikace");
   await page.getByRole("button", { name: "Načíst" }).click();
-  await expect(page.getByRole("button", { name: "+ Nový let" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Nový let", exact: true })).toBeVisible();
   await expect(novaVerze).toBeHidden();
 });
 
@@ -57,7 +57,7 @@ test("neznámá adresa vede na přehled letů", async ({ page }) => {
   await prihlasit(page);
   await page.goto("/neexistuje");
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("button", { name: "+ Nový let" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Nový let", exact: true })).toBeVisible();
 });
 
 test("nedostupný server: srozumitelná hláška místo obecné chyby", async ({ page }) => {

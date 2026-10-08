@@ -23,7 +23,7 @@ export function Lety() {
       <Oznameni />
       {!jenCteni && (
         <Tlacitko varianta="modre" hlavni onClick={() => navigate("/novy-let")}>
-          + Nový let
+          Nový let
         </Tlacitko>
       )}
     </div>

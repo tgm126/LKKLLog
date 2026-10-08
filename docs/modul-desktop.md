@@ -72,8 +72,8 @@ naplánované) – barevnou plochou je jen pásek. Každé letadlo má dva řád
 dneška**:
 - letí → běžící čas („letí 0:08“), naplánované → „naplánován“;
 - jinak jen nálet dne („25″“, bez počtu letů – rozhodnuto 8. 10. 2026) nebo „dnes nelétal“;
-- **kde je**: přistálo-li naposledy jinde než na mém letišti, oranžově „na LKMB“ (odvozeno
-  z místa posledního přistání, nic se neukládá);
+- **kde je**: přistálo-li naposledy jinde než na mém letišti, oranžově kód letiště („LKMB“,
+  bez „na“ – 8. 10. 2026; odvozeno z místa posledního přistání, nic se neukládá);
 - mimo provoz přeškrtnuté, nejde vybrat.
 
 Klik na letadlo **na zemi** otevře formulář nového letu s tímto letadlem už vybraným (ušetří
@@ -91,14 +91,16 @@ zrušena, posádka má víc místa):
 | rejstřík 20 px, typ (u vleku „vlečná“) | osoba na řádek s funkcí (bere všechno zbylé místo) | stopky + ↗ čas vzletu; u naplánovaného „plán“ a kdy byl založen (po najetí kdo) | T&G n · PŘISTÁL / VZLET |
 
 - **Třetí řádek přes celou šířku:** štítky v pevných pozicích zleva účel · způsob vzletu ·
-  POB · úloha (po najetí celý název) – stejná komponenta jako na mobilu; **vpravo trasa**
-  odkud → kam jako štítek, jen když let není z mého letiště na moje (moje letiště šedě).
+  POB · úloha (po najetí celý název) – stejná komponenta jako na mobilu; **vpravo vždy trasa**
+  odkud → kam jako štítek (moje letiště šedě, jiné tučně; výrazná kreslená šipka jako u časů).
+- Posádka je v přihrádce **nahoře** (jeden pilot v řádku s rejstříkem, ne uprostřed výšky).
 - Akce nemají přepážku – tlačítka mají vlastní okraj; T&G se nelepí na čáru (8. 10. 2026).
   Sloupec akcí má pevnou šířku, aby PŘISTÁL / VZLET byly u všech pásků pod sebou.
 - Barvy, okraje, varovný řádek, dvojitý pásek vleku a pravidla zobrazení (běžné hodnoty se
   nevypisují, prázdná pozice zůstane prázdná) **beze změny proti mobilu** (`modul-lety.md` 3.1).
-  Trasa jako na mobilu – jen když nejde o moje letiště (rozhodnuto 7. 10. 2026; „LKKL → LKKL“
-  na každém pásku byl jen šum).
+  Trasa na desktopu **vždy** (rozhodnuto 8. 10. 2026 – ve třetím řádku je místo; nahrazuje
+  rozhodnutí 7. 10. ukazovat ji jen mimo moje letiště). Na mobilu dál jen jedna strana mimo
+  moje letiště (`modul-lety.md`).
 - **Na pásku žádné barevné písmo** (rozhodnuto 7. 10. 2026): stav letu říká jen **výplň pásku**
   (zelená ve vzduchu, modrá naplánovaný, červená problém). Stopky jsou v barvě textu (i na
   mobilu); jedinou výjimkou je **text varování – červeně** jako na mobilu.
@@ -132,7 +134,8 @@ karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
    přistání, 8. 10. 2026); celkem dole v patičce jako u deníku, **dva řádky: kluzáky a vleky**.
 2. **Motorový provoz:** tabulka letadel Letadlo · Lety · P · Doba, dole řádek Celkem.
 
-   Číselné sloupce (Lety, P, Doba) jsou v obou tabulkách stejně široké (8. 10. 2026).
+   Číselné sloupce (Lety, P, Doba) jsou v obou tabulkách stejně široké – podle nejdelší doby
+   „12°34″“ s odstupem; letadlo bere zbytek (8. 10. 2026).
 
    Souhrnné hodnoty jsou dole, ne nahoře (rozhodnuto 8. 10. 2026). Hlavička karty má jen
    název; rozpad podle startů a účelu ani sloupec „kde je“ není (kde letadlo je, ukazuje
@@ -182,7 +185,7 @@ současný stav. Úpravy letů jiného dne stejně jako dnes (omezí je až uzá
 `GET /api/lety?den=` a `GET /api/den?den=` už existuje.
 
 ### 3.7 Přihlášení jen ke čtení (pro klubovnu)
-Viz 6.1. Na desktopu i na mobilu v relaci jen ke čtení: chybí „+ Nový let“ (i klávesa `N`
+Viz 6.1. Na desktopu i na mobilu v relaci jen ke čtení: chybí „Nový let“ (i klávesa `N`
 a adresa `/novy-let`), akce na páscích a v detailu, pole v detailu nejdou upravit, klik na
 letadlo na zemi nic nezaloží, Můj provoz nejde měnit, záložky Osoby a Letadla nejsou.
 Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na mobilu vpravo v řádku menu
@@ -204,6 +207,11 @@ Oranžový štítek „Jen ke čtení“: na desktopu v liště za navigací, na
   údaje (místa, plátce, poznámka). Chybějící povinná volba má v hlavičce bloku „vyberte“
   a patička vypíše „Chybí: …“. Patička: VZLET TEĎ · NAPLÁNOVAT · PROBĚHLÝ LET… (ukáže pole časů).
   Pravidla a nabídky stejné jako průvodce; na mobilu průvodce zůstává.
+  **Vybrané letadlo se sbalí** do jednoho řádku (kategorie, rejstřík a typ; klik = znovu
+  dlaždice), aby se formulář vešel i na notebook 1366 × 768 (8. 10. 2026).
+- **Otevřená volba se posune do zorného pole** (detail i nový let): po kliknutí v bloku se
+  panel posune tak, aby byl blok celý vidět – Hledat…, úprava místa ani úloha se neotevře pod
+  spodním okrajem (8. 10. 2026).
 - **Osoby:** rychlá volba čipy podle oprávnění a mého provozu a „Hledat…“ (pole přímo v bloku,
   bez diakritiky) – stejná komponenta jako v průvodci.
 - Adresy zůstávají (`/let/:id`, `/novy-let`): na desktopu otevřou panel nad deskou, na mobilu

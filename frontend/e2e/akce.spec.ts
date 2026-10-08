@@ -64,7 +64,7 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
 
 test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
   // Petr Pilot letí na OK-2817 – jako PIC dalšího letu ho server při vzletu odmítne.
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Hledat…" }).click();
   await page.getByLabel("Hledat osobu").fill("petr");
@@ -88,7 +88,7 @@ test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
 });
 
 test("průvodce: VZLET TEĎ", async ({ page }) => {
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Nový let" })).toBeVisible();
   await page.getByRole("button", { name: /^OK-6722/ }).click();
 
@@ -125,7 +125,7 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
 });
 
 test("průvodce: proběhlý let s časy prstem", async ({ page }) => {
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-CRA/ }).click();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
@@ -147,7 +147,7 @@ test("průvodce: proběhlý let s časy prstem", async ({ page }) => {
 });
 
 test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page }) => {
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Výcvik", exact: true }).click();
   // Za instruktora se rychle nabízí jen kdo má oprávnění instruktora kluzáků (FI(S)).

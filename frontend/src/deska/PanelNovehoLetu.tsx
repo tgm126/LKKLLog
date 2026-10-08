@@ -5,6 +5,7 @@ import { Hlaska } from "../komponenty/Hlaska";
 import { Blok, BlokTelo } from "../komponenty/Obrazovka";
 import { Panel } from "../komponenty/Panel";
 import { Tlacitko } from "../komponenty/Tlacitko";
+import { Udaj, Udaje } from "../komponenty/Udaje";
 import { useNabidky, type Nabidky } from "../lety/api";
 import {
   BlokDalsichUdaju,
@@ -29,6 +30,8 @@ import "../lety/Pruvodce.css";
 // Nový let v panelu zprava (docs/modul-desktop.md 3.8): jeden formulář místo průvodce –
 // nahoře rozpracovaný pásek (u aerovleku dvojice), vlevo letadlo, účel, způsob vzletu a vlek,
 // vpravo posádka, úloha a další údaje; v patičce VZLET TEĎ · Naplánovat · Proběhlý let.
+// Vybrané letadlo se sbalí do jednoho řádku (mřížka dlaždic by vytlačila účel a vlek pod
+// okraj okna na notebooku); klik na řádek mřížku zase rozbalí.
 // Stav, pravidla a bloky jsou stejné jako v mobilním průvodci (lety/novyLet.tsx).
 
 export function PanelNovehoLetu() {
@@ -68,6 +71,7 @@ function Formular({
 }) {
   const n = useNovyLet(nabidky, zavrit, letadloId);
   const [probehly, setProbehly] = useState(false);
+  const [menimLetadlo, setMenimLetadlo] = useState(false);
   const letiste = useMujProvoz().data?.letiste;
   const mojeKod = letiste?.kod;
   const hlava = (
@@ -157,9 +161,24 @@ function Formular({
       <div className="formular-deska">
         <div>
           <Blok nadpis="Letadlo" vpravo={chybi(!n.letadlo)}>
-            <BlokTelo>
-              <DlazdiceLetadel n={n} />
-            </BlokTelo>
+            {n.letadlo && !menimLetadlo ? (
+              <Udaje>
+                <Udaj
+                  popisek={n.letadlo.kategorie}
+                  hodnota={
+                    <>
+                      <b>{n.letadlo.rejstrik}</b> <span className="seda">{n.letadlo.typ}</span>
+                    </>
+                  }
+                  cely
+                  upravit={() => setMenimLetadlo(true)}
+                />
+              </Udaje>
+            ) : (
+              <BlokTelo>
+                <DlazdiceLetadel n={n} poVyberu={() => setMenimLetadlo(false)} />
+              </BlokTelo>
+            )}
           </Blok>
           {n.letadlo && (
             <>

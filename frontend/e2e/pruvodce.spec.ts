@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => prihlasit(page));
 const blok = (page: Page, nadpis: string) => page.locator(".blok", { hasText: nadpis });
 
 test("průvodce: Zpět mezi kroky a Zavřít", async ({ page }) => {
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await expect(page.getByText("2 / 3 · Posádka")).toBeVisible();
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
@@ -20,7 +20,7 @@ test("průvodce: Zpět mezi kroky a Zavřít", async ({ page }) => {
 });
 
 test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", async ({ page }) => {
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
   // Po výběru zůstane jen vybraná osoba a Hledat…; ťuknutím na ni se nabídka znovu otevře.
@@ -83,7 +83,7 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
 });
 
 test("průvodce: naplánovaný přelet – místo přistání předem, trasa na pásku", async ({ page }) => {
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
@@ -104,7 +104,9 @@ test("průvodce: naplánovaný přelet – místo přistání předem, trasa na 
   const pasek = page
     .locator(".let.naplanovan", { hasText: "OK-3819" })
     .filter({ hasText: "Adam Admin" });
-  await expect(pasek.getByText("→ LKLT")).toBeVisible();
+  const trasa = pasek.locator(".trasa-pasku");
+  await expect(trasa).toHaveText("LKLT");
+  await expect(trasa.getByRole("img", { name: "do" })).toBeVisible();
   // V detailu jde místo přistání upravit i před přistáním.
   await pasek.locator(".let-hlava").click();
   await expect(page.getByRole("button", { name: /Místo přistání\s*LKLT/ })).toBeVisible();

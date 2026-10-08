@@ -18,13 +18,11 @@ test("deska: pásky, řada letadel, deník, souhrny a časová osa", async ({ pa
   await expect(mfv).toContainText("Přes maximální dobu letu");
   await expect(mfv.getByRole("button", { name: /T&G/ })).toHaveText("T&G 1");
   await expect(pasky.locator(".pasek-deska", { hasText: "OK-2817" }).getByRole("button", { name: /T&G/ })).toHaveCount(0);
-  // Řádek štítků pod přihrádkami v pevných pozicích jako na mobilu; u vzletu šipka
-  await expect(pasky.locator(".pasek-deska", { hasText: "OK-2817" }).locator(".stitky-pasku > span")).toHaveText([
-    "",
-    "naviják",
-    "POB 2",
-    "",
-  ]);
+  // Řádek štítků pod přihrádkami v pevných pozicích jako na mobilu, vpravo vždy trasa; u vzletu šipka
+  const stitky = pasky.locator(".pasek-deska", { hasText: "OK-2817" }).locator(".stitky-pasku");
+  await expect(stitky.locator("> span:not(.trasa-pasku)")).toHaveText(["", "naviják", "POB 2", ""]);
+  await expect(stitky.locator(".trasa-pasku")).toHaveText(/LKKL\s+LKKL/);
+  await expect(stitky.locator(".trasa-pasku").getByRole("img", { name: "do" })).toBeVisible();
   await expect(mfv.getByRole("img", { name: "vzlet" })).toBeVisible();
   // Vlek naplánovaný jako dvojice, VZLET jen u kluzáku
   const vlek = pasky.locator(".dvojice-deska", { hasText: "OK-6722" });
@@ -35,7 +33,7 @@ test("deska: pásky, řada letadel, deník, souhrny a časová osa", async ({ pa
   // Řada letadel: stav dneška, kde letadlo je (OK-CRA přistálo v Letňanech)
   const rada = page.getByRole("navigation", { name: "Letadla" });
   await expect(rada.getByRole("button", { name: /OK-MFV/ })).toContainText("letí");
-  await expect(rada.getByRole("button", { name: /OK-CRA/ })).toContainText("na LKLT");
+  await expect(rada.getByRole("button", { name: /OK-CRA/ })).toContainText("naplánován · LKLT");
   await expect(rada.getByRole("button", { name: /OK-CUO 78/ })).toContainText("dnes nelétal");
 
   // Deník: řádek na let (ukončené, pod nimi zrušené)
@@ -101,7 +99,12 @@ test("deska: nový let klávesou N a z řady letadel, VZLET TEĎ", async ({ page
 
   // Klik na letadlo na zemi = formulář s tímto letadlem
   await page.getByRole("navigation", { name: "Letadla" }).getByRole("button", { name: /OK-CUO 78/ }).click();
+  // vybrané letadlo sbalené do řádku; klik ho rozbalí na dlaždice
+  const letadlo = novy.getByRole("button", { name: /Ultralehký letoun\s*OK-CUO 78/ });
+  await letadlo.click();
   await expect(novy.locator(".dlazdice.vybrana")).toContainText("OK-CUO 78");
+  await novy.locator(".dlazdice.vybrana").click();
+  await expect(letadlo).toBeVisible();
   await expect(novy.locator(".panel-pata")).toContainText("Chybí: pilot");
   await novy.getByRole("button", { name: /^Já/ }).click();
   await expect(novy.locator(".panel-pata")).toContainText("Vše vyplněno");

@@ -9,7 +9,8 @@ import "./PasekDeska.css";
 
 // Pásek na desktopu (docs/modul-desktop.md 3.2): vodorovná řada přihrádek se svislými
 // přepážkami jako papírový strip ŘLP – letadlo · posádka · čas, vpravo akce; pod nimi řádek
-// štítků v pevných pozicích (jako na mobilu) a vpravo trasa odkud → kam. Stav letu říká jen
+// štítků v pevných pozicích (jako na mobilu) a vpravo vždy trasa odkud → kam (i moje
+// letiště, šedě – na desktopu je místo; rozhodnuto 8. 10. 2026). Stav letu říká jen
 // výplň pásku; písmo v barvě textu (kromě varování a tlačítek). V panelu (detail, nový let)
 // je pásek sám – bez akcí nezabírá místo pro tlačítka.
 
@@ -72,7 +73,6 @@ export function PasekDeska({
   /** Akce v přihrádce vpravo (T&G, PŘISTÁL, VZLET). */
   children?: ReactNode;
 }) {
-  const trasa = l.misto_vzletu || l.misto_pristani;
   const misto = (kod: string | null | undefined) =>
     kod ? <b>{kod}</b> : <span className="seda">{mojeKod}</span>;
   const trida = [
@@ -105,11 +105,9 @@ export function PasekDeska({
       <StitkyPasku
         let={l}
         trasa={
-          trasa && (
-            <>
-              {misto(l.misto_vzletu)} → {misto(l.misto_pristani)}
-            </>
-          )
+          <>
+            {misto(l.misto_vzletu)} <Sipka smer="kam" /> {misto(l.misto_pristani)}
+          </>
         }
       />
       {l.varovani && <div className="pasek-varovani">{l.varovani}</div>}

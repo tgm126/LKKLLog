@@ -47,7 +47,7 @@ test("přihlášení jen ke čtení: přehled bez ovládání, odhlásit jde", a
   const mfv = page.locator(".let.problem", { hasText: "OK-MFV" });
   await expect(mfv).toBeVisible();
   await expect(page.getByRole("button", { name: /Přistál|Vzlet|T&G/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "+ Nový let" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Nový let", exact: true })).toHaveCount(0);
   // práva se neuplatní – admin nevidí správu osob ani letadel
   await expect(page.getByRole("link", { name: "Osoby" })).toHaveCount(0);
 

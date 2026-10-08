@@ -34,7 +34,7 @@ export function PanelDetailu() {
       zavrit={zavrit}
       hlava={
         <PasekDeska
-          // trasa jen tam, kde místo není moje letiště (jako v přehledu)
+          // moje letiště v trase šedě (jako v přehledu – server ho u pásků vynechá)
           let={{
             ...l,
             misto_vzletu: l.misto_vzletu === mojeKod ? null : l.misto_vzletu,

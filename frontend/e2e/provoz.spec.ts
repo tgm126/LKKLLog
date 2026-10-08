@@ -20,7 +20,7 @@ test("můj provoz: letiště pro dnešek", async ({ page }) => {
   await expect(page.locator(".hlavicka")).toContainText(/[A-ZÚČŘŠŽ][a-zěščřžýáíéůú]+ \d+\. \d+\. \d{4}/);
 
   // Nový let má místo vzletu moje letiště.
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
@@ -42,7 +42,7 @@ test("můj provoz: osoby v provozu", async ({ page }) => {
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
 
   // Rychlá volba jen z osob v provozu (a Já); Hledat… najde i ostatní.
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   const pic = page.locator(".blok", { hasText: "PIC" });
   await expect(pic.getByText("jen osoby v provozu (1)")).toBeVisible();

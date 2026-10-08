@@ -15,7 +15,7 @@ test("letadla: mimo provoz se v průvodci nedá vybrat", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText(/OK-6722 mimo provoz/);
 
   await page.getByRole("link", { name: "Lety" }).click();
-  await page.getByRole("button", { name: "+ Nový let" }).click();
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await expect(page.getByRole("button", { name: /^OK-6722/ })).toBeDisabled();
   await page.getByRole("button", { name: "Zavřít" }).click();
 

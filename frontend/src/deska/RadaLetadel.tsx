@@ -85,7 +85,7 @@ export function RadaLetadel({
                   <b className="rejstrik-lodi">{a.rejstrik}</b>
                   <span className="male seda cisla">
                     {popis}
-                    {jinde && <span className="jinde"> · na {jinde}</span>}
+                    {jinde && <span className="jinde"> · {jinde}</span>}
                   </span>
                 </button>
               );
