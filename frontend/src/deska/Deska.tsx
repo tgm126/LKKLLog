@@ -93,7 +93,6 @@ export function Deska() {
           letadla={nabidky.letadla}
           lety={dnesniLety.data ?? []}
           mojeKod={mojeKod}
-          domovskeKod={nabidky.letiste.find((l) => l.domovske)?.kod}
           nazvyKategorii={siroka}
         />}
       <div className="deska-spodek">

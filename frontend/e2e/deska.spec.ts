@@ -166,3 +166,17 @@ test("deska jen ke čtení: bez akcí, N ani letadlo na zemi nic nezaloží, det
   await expect(detail).toContainText("OK-MFV");
   await expect(detail.getByRole("button", { name: /Poznámka|Přistál|Zrušit/ })).toHaveCount(0);
 });
+
+test("deska: poloha letadel oranžově podle mého letiště", async ({ page }) => {
+  const rada = page.getByRole("navigation", { name: "Letadla" });
+  // moje letiště LKKL: OK-CRA naposledy přistálo v Letňanech, OK-3819 doma
+  await expect(rada.getByRole("button", { name: /OK-CRA/ }).locator(".jinde")).toHaveText("· LKLT");
+  await expect(rada.getByRole("button", { name: /OK-3819/ }).locator(".jinde")).toHaveCount(0);
+
+  // Můj provoz → Letňany: teď je jinde OK-3819 (v Kladně), OK-CRA ne
+  await page.getByRole("button", { name: "Nabídka uživatele" }).click();
+  await page.getByRole("button", { name: /^Letiště\s*LKKL Kladno/ }).click();
+  await page.getByRole("button", { name: "LKLT Letňany" }).click();
+  await expect(rada.getByRole("button", { name: /OK-3819/ }).locator(".jinde")).toHaveText("· LKKL");
+  await expect(rada.getByRole("button", { name: /OK-CRA/ }).locator(".jinde")).toHaveCount(0);
+});

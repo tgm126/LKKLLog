@@ -10,21 +10,19 @@ import { useJenCteni } from "../uzivatel";
 // Řada letadel pod lištou (docs/modul-desktop.md 3.1): všechna letadla podle kategorie,
 // neutrální rámeček se stavem jen proužkem vlevo (zelený letí, modrý naplánované) a dnešek:
 // běžící čas, nebo počet letů a nálet, a oranžově kde letadlo je – poslední evidované
-// přistání (v_lov_letadlo.poloha), jen když není na domovském ani na mém letišti
-// (rozhodnuto 8. 10. 2026). Klik na letadlo na zemi = nový let s ním (místo vzletu = poloha);
+// přistání (v_lov_letadlo.poloha), když není na mém letišti (z Můj provoz, jinak domovské;
+// rozhodnuto 8. 10. 2026). Klik na letadlo na zemi = nový let s ním (místo vzletu = poloha);
 // na letící nebo naplánované = detail.
 
 export function RadaLetadel({
   letadla,
   lety,
   mojeKod,
-  domovskeKod,
   nazvyKategorii,
 }: {
   letadla: LetadloNabidka[];
-  /** Moje letiště (můj provoz) a domovské – poloha se ukáže, jen když je jinde než obě. */
+  /** Moje letiště (z Můj provoz, jinak domovské) – poloha jinde se ukáže oranžově. */
   mojeKod: string | undefined;
-  domovskeKod: string | undefined;
   /** Dnešní lety (stav letadel je vždy podle dneška). */
   lety: Pasek[];
   /** Názvy kategorií (na notebooku jen přepážky). */
@@ -56,7 +54,7 @@ export function RadaLetadel({
               const leti = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "VE_VZDUCHU");
               const plan = lety.find((l) => l.rejstrik === a.rejstrik && l.stav === "NAPLANOVAN");
               const dnes = lety.filter((l) => l.rejstrik === a.rejstrik && l.stav === "UKONCEN");
-              const jinde = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha !== domovskeKod && a.poloha;
+              const jinde = !leti && a.poloha !== null && a.poloha !== mojeKod && a.poloha;
               const otevreny = leti ?? plan;
               const stav = a.mimo_provoz ? "mimo" : leti ? "vzduch" : plan ? "naplanovan" : "";
               const popis = a.mimo_provoz
