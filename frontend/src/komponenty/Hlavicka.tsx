@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 
 import { poslat, type Ja } from "../api";
-import { denKratce, denSlovy, hodinyMinuty, hodinyMinutySekundy } from "../cas";
+import { denSlovy, hodinyMinuty, hodinyMinutySekundy } from "../cas";
 import { useDen } from "../lety/api";
 import { useMujProvoz } from "../provoz/api";
 import { useTik } from "../tik";
 import { nacistRezim, nastavitRezim, REZIMY, type Rezim } from "../rezim";
-import { inicialy, useJenCteni, zmenitUzivatele } from "../uzivatel";
+import { inicialy, zmenitUzivatele } from "../uzivatel";
 import { Stitek } from "./Stitek";
 import { Tlacitko } from "./Tlacitko";
 import "./Volby.css";
@@ -42,12 +42,7 @@ export function Hlavicka({ ja }: { ja: Ja }) {
             Letadla
           </NavLink>
         )}
-        {/* sdílený počítač: v řádku menu (datum a sluneční časy v hlavičce zůstanou celé) */}
-        {ja.jen_cteni && (
-          <span className="menu-vpravo">
-            <Stitek barva="oranzovy">Jen ke čtení</Stitek>
-          </span>
-        )}
+        <StitkyMenu jenCteni={ja.jen_cteni} />
       </nav>
     </>
   );
@@ -63,38 +58,44 @@ export function CasUtc() {
   );
 }
 
-/** Den a sluneční časy mého letiště (TB začátek a TE konec občanského soumraku). Je-li dnes
- *  jiné než domovské (můj provoz), vlevo oranžový štítek s kódem a datum zkrácené, aby se
- *  vešly všechny časy; ťuknutí na štítek otevře výběr letiště. */
-function DenASlunce() {
+/** Upozornění vpravo v řádku menu (datum a sluneční časy v hlavičce tak zůstanou celé):
+ *  letiště pro dnešek, je-li jiné než domovské (můj provoz; ťuknutí otevře výběr letiště),
+ *  a přihlášení jen ke čtení (sdílený počítač). */
+function StitkyMenu({ jenCteni }: { jenCteni: boolean }) {
   const den = useDen().data;
   const navigate = useNavigate();
-  const jenCteni = useJenCteni();
+  const jinde = den?.letiste && !den.letiste.domovske ? den.letiste : null;
+  if (!jinde && !jenCteni) return null;
+  return (
+    <span className="menu-vpravo">
+      {/* jen ke čtení: štítek letiště jen ukazuje (letiště pro dnešek nejde změnit) */}
+      {jinde &&
+        (jenCteni ? (
+          <Stitek barva="oranzovy">{jinde.kod}</Stitek>
+        ) : (
+          <button
+            type="button"
+            className="menu-letiste"
+            aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
+            onClick={() => navigate("/muj-provoz/letiste")}
+          >
+            <Stitek barva="oranzovy">{jinde.kod}</Stitek>
+          </button>
+        ))}
+      {jenCteni && <Stitek barva="oranzovy">Jen ke čtení</Stitek>}
+    </span>
+  );
+}
+
+/** Den a sluneční časy mého letiště pro dnešek (TB začátek a TE konec občanského soumraku). */
+function DenASlunce() {
+  const den = useDen().data;
   if (!den) return null;
-  // jen ke čtení: štítek letiště jen ukazuje (letiště pro dnešek nejde změnit)
   const { tb, sr, ss, te } = den.slunce;
   const casy: [string, string | null][] = [["TB", tb], ["SR", sr], ["SS", ss], ["TE", te]];
-  const jinde = den.letiste && !den.letiste.domovske ? den.letiste : null;
   return (
     <div className="hlavicka-radek cisla">
-      {jinde ? (
-        <span className="hlavicka-letiste">
-          {jenCteni ? (
-            <Stitek barva="oranzovy">{jinde.kod}</Stitek>
-          ) : (
-            <button
-              type="button"
-              aria-label={`Letiště pro dnešek: ${jinde.kod} ${jinde.nazev}`}
-              onClick={() => navigate("/muj-provoz/letiste")}
-            >
-              <Stitek barva="oranzovy">{jinde.kod}</Stitek>
-            </button>
-          )}
-          {denKratce(den.den)}
-        </span>
-      ) : (
-        <span>{denSlovy(den.den)}</span>
-      )}
+      <span>{denSlovy(den.den)}</span>
       {tb && (
         <span>
           {casy.map(([zkratka, cas], i) => (

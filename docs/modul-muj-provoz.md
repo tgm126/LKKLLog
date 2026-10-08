@@ -30,9 +30,10 @@ změnit. Nastavení ostatních uživatelů se nemění.
 - **Osoby v provozu:** horní lišta ← „Osoby v provozu“ a vpravo počet vybraných; hledání,
   segmenty *Vybrané / Všechny*, řádky aktivních osob se zaškrtávátkem (uloží se hned).
   Dole *Zrušit výběr* (= bez filtru, nabízí se všichni).
-- **Hlavička:** je-li dnes jiné než domovské letiště, ve druhém řádku vlevo **oranžový štítek
-  s kódem letiště** (upozornění, že platí jiné místo) a za ním datum bez dne v týdnu (aby se
-  vešly všechny čtyři sluneční časy); sluneční časy jsou pro toto letiště. Ťuknutí na štítek
+- **Hlavička:** je-li dnes jiné než domovské letiště, vpravo v řádku menu **oranžový štítek
+  s kódem letiště** (upozornění, že platí jiné místo; vedle případného štítku „Jen ke čtení“).
+  Datum v hlavičce zůstane celé i se dnem v týdnu a rokem (8. 10. 2026 – dřív byl štítek
+  před datem a datum se zkracovalo); sluneční časy jsou pro toto letiště. Ťuknutí na štítek
   otevře výběr letiště.
 - **Posádka v průvodci a v detailu letu:** je-li vybraná aspoň jedna osoba v provozu, rychlá
   volba nabízí jen je: kdo roli smí podle oprávnění (instruktor, dozor, examinátor, vlekař),

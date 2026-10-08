@@ -99,23 +99,6 @@
   color: var(--barva-oranzova);
 }
 
-/* Jiné letiště než domovské: štítek s kódem před zkráceným datem */
-.hlavicka-letiste {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mezera-2);
-}
-
-/* VÝJIMKA: štítek letiště je tlačítko menší než --dotyk – je v hlavičce jen jako upozornění,
-   stejná volba je v nabídce uživatele. */
-.hlavicka-letiste button {
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-/* Menu: záložky v řádku, při nedostatku místa se posouvá do strany */
-
 /* Menu (záložky): pod hlavičkou na mobilu, v liště desky (tam bez okraje a pozadí) */
 .menu {
   display: flex;
@@ -139,8 +122,20 @@
   --zalozka-cara: var(--barva-modra);
 }
 
-/* Štítek „Jen ke čtení“ vpravo v řádku menu */
+/* Upozornění vpravo v řádku menu: letiště pro dnešek (jiné než domovské), jen ke čtení */
 .menu-vpravo {
+  display: flex;
   align-self: center;
+  align-items: center;
+  gap: var(--mezera-2);
   margin-left: auto;
+}
+
+/* VÝJIMKA: štítek letiště je tlačítko menší než --dotyk – je v menu jen jako upozornění,
+   stejná volba je v nabídce uživatele. */
+.menu-letiste {
+  display: flex;
+  padding: 0;
+  border: 0;
+  background: none;
 }

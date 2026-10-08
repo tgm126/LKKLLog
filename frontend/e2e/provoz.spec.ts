@@ -14,9 +14,10 @@ test("můj provoz: letiště pro dnešek", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Letiště pro dnešek" })).toBeVisible();
   await page.getByRole("button", { name: "LKLT Letňany" }).click();
 
-  // Zpět na lety; v hlavičce štítek jiného letiště.
-  const stitek = page.getByRole("button", { name: "Letiště pro dnešek: LKLT Letňany" });
+  // Zpět na lety; štítek jiného letiště vpravo v řádku menu, datum v hlavičce zůstane celé.
+  const stitek = page.getByRole("navigation").getByRole("button", { name: "Letiště pro dnešek: LKLT Letňany" });
   await expect(stitek).toBeVisible();
+  await expect(page.locator(".hlavicka")).toContainText(/[A-ZÚČŘŠŽ][a-zěščřžýáíéůú]+ \d+\. \d+\. \d{4}/);
 
   // Nový let má místo vzletu moje letiště.
   await page.getByRole("button", { name: "+ Nový let" }).click();
