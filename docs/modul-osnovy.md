@@ -79,10 +79,13 @@ Server: práva (403), převod kategorií (II/10–12), nabídka podle účelu a 
 letu s novou vazbou, smazání jen nepoužitého, audit. Klikací (desktop): matice, souhrnné
 zaškrtnutí osnovy, náhled, pořadí, nová úloha, zneplatnění.
 
-## 6. K rozhodnutí
-1. **Kategorie osnovy + „také na“ u úlohy** (`lov_uloha_kategorie` jen s dalšími kategoriemi)
-   – souhlas?
-2. **Právo *spravuje osnovy*** – samostatné (doporučuji, např. vedoucí výcviku), nebo jen admin?
-3. **Povinnost úlohy u účelu** (`lov_ucel.uloha_povinna` – dnes výcvik, sólo, přezkoušení):
-   v editoru jen zobrazit (doporučuji), nebo i měnit?
-4. II/10–12 přepnout na TMG už v migraci, nebo ručně v editoru?
+## 6. Rozhodnutí
+1. **Kategorie osnovy + „lze letět i na“ u úlohy** (`lov_uloha_kategorie` jen s dalšími
+   kategoriemi; úloha zůstává ve své osnově) – **otevřené**, uživatel ještě zjišťuje, jak je
+   to s úlohami na TMG.
+2. **Právo *spravuje osnovy*** – **samostatné** na účtu (rozhodnuto 9. 10. 2026; přiděluje
+   admin, např. vedoucímu výcviku).
+3. **Povinnost úlohy u účelu** (`lov_ucel.uloha_povinna`) – v editoru **jen zobrazit**
+   (rozhodnuto 9. 10. 2026; mění se v databázi).
+4. **II/10–12 „lze letět i na TMG“** – nastaví se **ručně v editoru** (rozhodnuto 9. 10. 2026),
+   migrace jen připraví vazbu.
