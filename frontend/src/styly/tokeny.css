@@ -88,6 +88,9 @@
   --sirka-letadla-pasku: 140px; /* rejstřík a typ (OK-CUO, „L 13 · vlečná“) */
   --sirka-akci-pasku: 228px;  /* T&G n + PŘISTÁL s odstupem – akce pod sebou zarovnané */
   --sirka-cisla-souhrnu: 10ch; /* sloupce Lety, P, Doba v souhrnech stejně široké (doba 12°34") */
+  --sirka-dne-listy: 17ch;     /* „Úterý 6. 10. 2026“ v liště desky – šipky se nehýbou */
+  --sirka-kodu-ulohy: 6ch;     /* seznam voleb: kód úlohy (IU/10) před názvem */
+  --sirka-kodu-prezkouseni: 12ch; /* seznam voleb: kód typu přezkoušení (ST-ULL-VLEK) */
 
   /* Deník: letadlo · posádka · vzlet · přistání · P · doba (jeden řádek na let) */
   --sloupce-deniku-deska: 92px minmax(0, 1fr) 48px 48px 24px 56px;

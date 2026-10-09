@@ -13,7 +13,7 @@
    bloku, přepážky = mezera 1 px nad barvou čáry. Šířka kódu podle nejdelšího (IU/10,
    u typů přezkoušení ST-ULL-VLEK). */
 .seznam-voleb {
-  --sirka-kodu: 6ch;
+  --sirka-kodu: var(--sirka-kodu-ulohy);
 
   display: grid;
   gap: var(--ramecek-sirka);
@@ -35,7 +35,7 @@
 }
 
 .seznam-voleb.dlouhe-kody {
-  --sirka-kodu: 12ch;
+  --sirka-kodu: var(--sirka-kodu-prezkouseni);
 }
 
 .seznam-voleb .tl b {

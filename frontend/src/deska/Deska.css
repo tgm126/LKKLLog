@@ -42,7 +42,7 @@
 
 /* Datum jako obsah lišty (15 px, normální) – mobil ho má menší v řádku pod názvem */
 .den-desky-text {
-  min-width: 17ch;
+  min-width: var(--sirka-dne-listy);
   text-align: center;
 }
 

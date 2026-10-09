@@ -9,7 +9,7 @@ export default {
     "color-no-hex": true,
     "color-named": "never",
     "function-disallowed-list": ["rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch", "color", "light-dark"],
-    "unit-disallowed-list": ["px", "em", "rem", "pt", "ms", "s", "vh", "vw", "dvh", "svh"],
+    "unit-disallowed-list": ["px", "em", "rem", "pt", "ch", "ms", "s", "vh", "vw", "dvh", "svh"],
     "declaration-property-value-allowed-list": {
       "font-family": [/^var\(--/, "inherit"],
       "font-size": jenToken,
