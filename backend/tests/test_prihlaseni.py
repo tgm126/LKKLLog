@@ -1,6 +1,6 @@
 """Přihlášení, relace, odhlášení, ochrana proti hádání hesla a CSRF."""
 
-from app.prihlasovani import CHYBA_PRIHLASENI, COOKIE
+from app.prihlasovani import CHYBA_PRIHLASENI, COOKIE, smazat_prosle_relace
 
 from .conftest import HESLO
 
@@ -111,6 +111,34 @@ def test_prosla_relace_se_smaze(osoba, prihlasit, conn):
     )
     assert k.get("/api/ja").status_code == 401
     assert not conn.execute("SELECT 1 FROM lkkl.relace WHERE osoba_id = %s", (osoba_id,)).fetchone()
+
+
+def test_prihlaseni_uklidi_prosle_relace_osoby(osoba, prihlasit, conn):
+    novak, jiny = osoba("Novak"), osoba("Jiny")
+    conn.execute(
+        """INSERT INTO lkkl.relace (id, osoba_id, vytvorena, plati_do)
+           VALUES (repeat('a', 64), %s, now() - interval '40 days', now() - interval '1 day'),
+                  (repeat('b', 64), %s, now() - interval '40 days', now() - interval '1 day')""",
+        (novak, jiny),
+    )
+    prihlasit("novak@example.cz")
+    relace = conn.execute("SELECT osoba_id, plati_do > now() AS plati FROM lkkl.relace").fetchall()
+    assert sorted((r["osoba_id"], r["plati"]) for r in relace) == sorted(
+        [(novak, True), (jiny, False)]
+    )
+
+
+def test_uklid_proslych_relaci_vsech(osoba, prihlasit, conn):
+    """Při startu serveru (lifespan) se smažou prošlé relace všech – bez cronu."""
+    jiny = osoba("Jiny")
+    prihlasit("jiny@example.cz")
+    conn.execute(
+        """INSERT INTO lkkl.relace (id, osoba_id, vytvorena, plati_do)
+           VALUES (repeat('b', 64), %s, now() - interval '40 days', now() - interval '1 day')""",
+        (jiny,),
+    )
+    assert smazat_prosle_relace(conn) == 1
+    assert conn.execute("SELECT count(*) FROM lkkl.relace").fetchone()["count"] == 1
 
 
 def test_relace_se_prodluzuje_nejvys_jednou_za_hodinu(osoba, prihlasit, conn):

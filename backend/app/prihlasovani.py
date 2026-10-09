@@ -174,7 +174,16 @@ def smazat_relace(conn: Connection, podminka: str, parametry: tuple) -> int:
         ).rowcount
 
 
+def smazat_prosle_relace(conn: Connection, osoba_id: int | None = None) -> int:
+    """Úklid prošlých relací (všech, nebo jedné osoby) – aplikace ho dělá sama při startu
+    a při přihlášení, žádný cron není potřeba."""
+    if osoba_id is None:
+        return smazat_relace(conn, "plati_do <= now()", ())
+    return smazat_relace(conn, "plati_do <= now() AND osoba_id = %s", (osoba_id,))
+
+
 def _nova_relace(conn: Connection, osoba_id: int, request: Request, jen_cteni: bool = False) -> str:
+    smazat_prosle_relace(conn, osoba_id)
     klic, otisk = bezpecnost.novy_klic_relace()
     zarizeni = request.headers.get("user-agent", "")[:200] or None
     conn.execute(

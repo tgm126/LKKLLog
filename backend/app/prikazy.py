@@ -10,7 +10,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from .nastaveni import nastaveni
-from .prihlasovani import odkaz_pro_heslo, smazat_relace
+from .prihlasovani import odkaz_pro_heslo, smazat_prosle_relace
 
 
 def odkaz(conn: psycopg.Connection, email: str) -> str:
@@ -28,7 +28,7 @@ def odkaz(conn: psycopg.Connection, email: str) -> str:
 
 
 def uklid(conn: psycopg.Connection) -> int:
-    return smazat_relace(conn, "plati_do <= now()", ())
+    return smazat_prosle_relace(conn)
 
 
 def main(argv: list[str]) -> None:

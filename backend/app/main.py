@@ -1,5 +1,6 @@
 """Aplikace FastAPI. Spuštění pro vývoj: uv run uvicorn app.main:app --reload"""
 
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -25,9 +26,14 @@ CSP = (
 )
 
 
+log = logging.getLogger("lkkl")
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     db.otevrit(nastaveni.databaze)
+    with db.pripojeni() as conn:  # prošlé relace uklízí aplikace sama (i při přihlášení)
+        log.info("Smazáno prošlých relací: %d", prihlasovani.smazat_prosle_relace(conn))
     yield
     db.zavrit()
 

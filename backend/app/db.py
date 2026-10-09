@@ -17,7 +17,7 @@ def otevrit(url: str) -> None:
     _pool = ConnectionPool(
         url,
         min_size=1,
-        max_size=5,
+        max_size=10,
         # Bez připravených dotazů (prepared statements): jejich plán by po ruční změně pohledu
         # nebo tabulky v databázi (a po obnově testovací databáze) skončil chybou „cached plan
         # must not change result type“. Dotazy jsou malé, rozdíl ve výkonu není znát.
@@ -65,8 +65,14 @@ def s_kontextem(conn: Connection) -> Iterator[Connection]:
             _zrusit_kontext(conn)
 
 
+def pripojeni():
+    """Spojení z poolu mimo požadavek (start aplikace): `with db.pripojeni() as conn:`."""
+    if _pool is None:
+        raise RuntimeError("Databáze není otevřená.")
+    return _pool.connection()
+
+
 def spojeni() -> Iterator[Connection]:
     """Závislost FastAPI: spojení z poolu na dobu jednoho požadavku."""
-    assert _pool is not None, "Databáze není otevřená."
-    with _pool.connection() as conn:
+    with pripojeni() as conn:
         yield from s_kontextem(conn)

@@ -82,4 +82,4 @@ než přijde přihlašovací obrazovka s modulem lety, bude na adrese jen rozhra
   `lokalni-lkkllog-cela-2026-10-06-113111.dump`); `btree_gist` zůstává.
 - **Data přenesena** z lokální databáze do schématu `lkkl` na serveru (jedna transakce).
 - Proměnné první verze ve VPS Centru smazané (uživatel).
-- Zbývá: cron nové verze (úklid relací).
+- Cron není potřeba: prošlé relace uklízí aplikace sama (při startu a při přihlášení osoby).
