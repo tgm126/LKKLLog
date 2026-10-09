@@ -34,6 +34,15 @@ def test_zmeneny_skript_se_odhali(cista_db, tmp_path):
         migrace.provest(cista_db, tmp_path)
 
 
+def test_zmizely_provedeny_skript_se_odhali(cista_db, tmp_path):
+    (tmp_path / "001_schema.sql").write_text("CREATE SCHEMA lkkl;", encoding="utf-8")
+    (tmp_path / "002_tabulka.sql").write_text("CREATE TABLE lkkl.x (id int);", encoding="utf-8")
+    migrace.provest(cista_db, tmp_path)
+    (tmp_path / "002_tabulka.sql").unlink()
+    with pytest.raises(migrace.ChybaMigrace, match="002_tabulka.sql"):
+        migrace.provest(cista_db, tmp_path)
+
+
 def test_jen_oznacit(cista_db, tmp_path):
     (tmp_path / "001_schema.sql").write_text("CREATE SCHEMA lkkl;", encoding="utf-8")
     (tmp_path / "002_tabulka.sql").write_text("CREATE TABLE lkkl.x (id int);", encoding="utf-8")

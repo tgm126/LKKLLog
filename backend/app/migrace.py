@@ -1,8 +1,10 @@
 """Spouštěč migrací: provede nové SQL skripty `db/NNN_*.sql` (bez `_data`) v pořadí čísel.
 
-Provedené skripty eviduje tabulka `lkkl.migrace` (skript, kdy, otisk obsahu). Každý skript
-běží ve vlastní transakci; při chybě se skončí (na serveru se pak nespustí aplikace). Změna už
-provedeného skriptu se pozná podle otisku a je to chyba – opravy patří do nového skriptu.
+Provedené skripty eviduje tabulka `lkkl.migrace` (skript, kdy, otisk obsahu) – jediný objekt
+schématu, který nevzniká skriptem (musí existovat dřív než první skript). Každý skript běží
+ve vlastní transakci; při chybě se skončí (na serveru se pak nespustí aplikace). Změna nebo
+zmizení už provedeného skriptu se pozná a je to chyba – opravy patří do nového skriptu.
+Vyžaduje PostgreSQL 17 nebo novější (skripty používají SET EXPRESSION, NULLS NOT DISTINCT).
 
     uv run python -m app.migrace                       provede nové skripty
     uv run python -m app.migrace --oznacit-provedene   jen zapíše skripty jako provedené
@@ -18,12 +20,15 @@ import psycopg
 from .nastaveni import nastaveni
 
 ADRESAR = Path(__file__).resolve().parents[2] / "db"
+NEJNIZSI_VERZE = 170000
 
 _TABULKA = """CREATE TABLE IF NOT EXISTS lkkl.migrace (
     skript text        PRIMARY KEY,
     kdy    timestamptz NOT NULL DEFAULT now(),
     otisk  text        NOT NULL
 )"""
+# Zámek proti dvěma spouštěčům najednou (dva kontejnery při nasazení) – pevné číslo zámku.
+_ZAMEK = 7_428_301
 
 
 class ChybaMigrace(RuntimeError):
@@ -49,13 +54,36 @@ def _provedene(conn: psycopg.Connection) -> dict[str, str]:
     return dict(conn.execute("SELECT skript, otisk FROM lkkl.migrace").fetchall())
 
 
+def _zkontrolovat_verzi(conn: psycopg.Connection) -> None:
+    verze = int(conn.execute("SHOW server_version_num").fetchone()[0])
+    if verze < NEJNIZSI_VERZE:
+        raise ChybaMigrace(
+            f"PostgreSQL {verze // 10000} je příliš starý – skripty vyžadují "
+            f"{NEJNIZSI_VERZE // 10000} nebo novější."
+        )
+
+
 def provest(
     conn: psycopg.Connection, adresar: Path = ADRESAR, jen_oznacit: bool = False
 ) -> list[str]:
     """Provede (nebo jen označí) nové skripty; vrátí jejich jména. Spojení musí mít autocommit."""
+    _zkontrolovat_verzi(conn)
+    conn.execute("SELECT pg_advisory_lock(%s)", (_ZAMEK,))
+    try:
+        return _provest(conn, adresar, jen_oznacit)
+    finally:
+        conn.execute("SELECT pg_advisory_unlock(%s)", (_ZAMEK,))
+
+
+def _provest(conn: psycopg.Connection, adresar: Path, jen_oznacit: bool) -> list[str]:
     provedene = _provedene(conn)
+    dostupne = skripty(adresar)
+    if chybi := sorted(set(provedene) - {s.name for s in dostupne}):
+        raise ChybaMigrace(
+            f"Provedené skripty v db/ chybí: {', '.join(chybi)} – provedený skript se nemaže."
+        )
     nove = []
-    for skript in skripty(adresar):
+    for skript in dostupne:
         otisk = _otisk(skript)
         if skript.name in provedene:
             if provedene[skript.name] != otisk:

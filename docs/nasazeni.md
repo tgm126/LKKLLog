@@ -50,7 +50,9 @@ Kroky 1–3 na serveru proběhnou v jedné SSH relaci, až je uživatel výslovn
 - Spouštěč migrací (`app/migrace.py`) při startu kontejneru projde skripty `db/NNN_*.sql`
   (bez `_data`), porovná je s tabulkou **`lkkl.migrace`** (skript, kdy, otisk obsahu)
   a provede jen nové – každý ve vlastní transakci; při chybě se server nespustí.
-- Změna už provedeného skriptu se odhalí podle otisku (chyba místo tichého rozjetí).
+- Změna už provedeného skriptu se odhalí podle otisku (chyba místo tichého rozjetí); stejně
+  tak skript, který z `db/` zmizel. Dva spouštěče najednou (dva kontejnery) hlídá zámek
+  `pg_advisory_lock`. **Vyžaduje PostgreSQL ≥ 17** (server má 17, lokálně 18).
 - **Lokálně** se `lkkl.migrace` jednou naplní skripty 001–016 (už provedené ručně); dál se
   i lokálně migruje spouštěčem: `uv run python -m app.migrace`.
 

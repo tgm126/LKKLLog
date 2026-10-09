@@ -75,7 +75,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
 | `lov_osoba_email_u_uctu` | trigger | osobě s účtem nejde smazat e-mail | 005, 017 |
 | `kontrola_platnosti()` + `platnost_<sloupec>` | trigger | nová nebo změněná vazba nesmí vést na neplatný záznam `lov_` (let, posádka, můj provoz i vazby mezi číselníky) | 031 |
-| `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); zakládá ji spouštěč `app/migrace.py` | – |
+| `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); jediný objekt, který zakládá spouštěč `app/migrace.py` (musí existovat před prvním skriptem); spouštěč hlídá změnu i zmizení provedeného skriptu, dva spouštěče najednou (zámek) a verzi PostgreSQL ≥ 17 | – |
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
 | `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, lov_osoba_opravneni_kategorie, ucet, lov_letadlo, lov_osnova, lov_uloha, lov_uloha_ucel, lov_prezkouseni, lov_prezkouseni_opravneni) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy`, `poradi` u osnov, úloh a typů přezkoušení | 012, 042 |
 | `vycvik_kontrola` | trigger | editor výcviku nesmí rozbít staré lety: kategorii osnovy ani typu přezkoušení s lety nejde změnit, úlohu s lety nejde přesunout do osnovy jiné kategorie, účel úlohy použitý v letech nejde odebrat; typ přezkoušení jen s oprávněním vydávaným pro jeho kategorii | 042 |
