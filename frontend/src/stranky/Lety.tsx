@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { doba, hodinyMinutySekundy } from "../cas";
@@ -15,6 +16,26 @@ import { useJenCteni } from "../uzivatel";
  *  maketa docs/navrhy/lety-mobil-v4.html. */
 export function Lety() {
   const { data: lety, error, dataUpdatedAt } = useLety();
+  return (
+    <PrehledLetu lety={lety} error={error} dataUpdatedAt={dataUpdatedAt} prazdne="Dnes zatím žádné lety." />
+  );
+}
+
+/** Lety dne v sekcích (sdílí Lety a Moje lety): pásky s akcemi, deník ukončených
+ *  a zrušených; dole oznámení a Nový let. `nahore` = obsah nad sekcemi (výběr dne). */
+export function PrehledLetu({
+  lety,
+  error,
+  dataUpdatedAt,
+  prazdne,
+  nahore,
+}: {
+  lety: Pasek[] | undefined;
+  error: Error | null;
+  dataUpdatedAt: number;
+  prazdne: string;
+  nahore?: ReactNode;
+}) {
   const { provest, pristat, dialog, probiha } = useAkceLetu();
   const navigate = useNavigate();
   const jenCteni = useJenCteni();
@@ -31,7 +52,10 @@ export function Lety() {
   if (!lety) {
     return (
       <>
-        <main className="obsah">{error && <Hlaska>{error.message}</Hlaska>}</main>
+        <main className="obsah">
+          {nahore}
+          {error && <Hlaska>{error.message}</Hlaska>}
+        </main>
         {dole}
       </>
     );
@@ -51,12 +75,13 @@ export function Lety() {
   return (
     <>
     <main className="obsah">
+      {nahore}
       {error && (
         <Hlaska>
           Bez spojení se serverem – údaje z {hodinyMinutySekundy(new Date(dataUpdatedAt))} UTC.
         </Hlaska>
       )}
-      {lety.length === 0 && <p className="seda">Dnes zatím žádné lety.</p>}
+      {lety.length === 0 && <p className="seda">{prazdne}</p>}
       {veVzduchu.length > 0 && (
         <Sekce nadpis={`Ve vzduchu ${veVzduchu.length}`}>
           {veVzduchu.map((d) => (

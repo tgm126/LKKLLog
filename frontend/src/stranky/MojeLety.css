@@ -1,0 +1,25 @@
+/* Moje lety: výběr dne nad seznamem – ‹ datum › (ťuknutí na datum otevře kalendář) */
+.vyber-dne {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--dotyk) minmax(0, 1fr) var(--dotyk);
+  gap: var(--mezera-2);
+  align-items: center;
+  margin-bottom: var(--mezera-3);
+}
+
+.vyber-dne-datum {
+  font-weight: var(--tloustka-tucna);
+}
+
+/* pole kalendáře je neviditelné – otevře ho ťuknutí na datum (showPicker) */
+.vyber-dne-kalendar {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+}

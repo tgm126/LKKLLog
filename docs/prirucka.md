@@ -88,6 +88,10 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 ## B2. Přehled letů (telefon) a provozní deska (počítač)
 - **Telefon:** *Ve vzduchu*, *Naplánované* (pásky) a deník ukončených a zrušených letů; dole
   **Nový let**.
+- **Moje lety** (záložka na telefonu, pro každého): jen lety, kde jsem v posádce (i jako dozor
+  nebo vlekař; u vleku celá dvojice), vždy jeden den – nahoře **‹ datum ›**: šipky skáčou na
+  předchozí / další den, kdy jsem letěl, ťuknutí na datum otevře kalendář. Ťuknutí na let =
+  detail s úpravami jako v Lety; Zpět vrátí na stejný den.
 - **Deska:** nahoře datum se šipkami (‹ › jiný den), sluneční časy, „do TE“ (zbývá do konce
   soumraku), hodiny UTC.
   - **Řada letadel:** stav letadla (letí s časem, naplánován, dnešní nálet); oranžový kód =

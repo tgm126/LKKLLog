@@ -114,6 +114,10 @@ def lety(c, admin: int, nova: int) -> None:
          pristani="now() - interval '3 hours 15 minutes'")  # fmt: skip
     _let(c, admin, {"PIC": nova}, rejstrik="OK-3819", vzlet="now() - interval '3 hours'",
          pristani="now() - interval '2 hours 38 minutes'")  # fmt: skip
+    # starší let admina (Moje lety: šipka na předchozí den s mými lety) – ne včera, včerejšek
+    # na desce zůstává prázdný
+    _let(c, admin, {"PIC": admin}, rejstrik="OK-2817", vzlet="now() - interval '3 days 2 hours'",
+         pristani="now() - interval '3 days 1 hour'")  # fmt: skip
     zruseny = _let(c, admin, {"PIC": nova}, rejstrik="OK-2817")
     c.execute(
         """UPDATE lkkl.let SET zruseni_duvod_id = (SELECT min(id) FROM lkkl.lov_duvod_zruseni),

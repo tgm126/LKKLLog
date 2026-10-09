@@ -90,12 +90,14 @@ export type RadekSouhrnu = {
 
 type LetyDne = { ted: string; lety: Pasek[]; souhrn: RadekSouhrnu[] };
 
-/** Lety dne a souhrn jedním dotazem (obnoví se spolu); každý háček vybere svou část. */
-function useLetyDne<T>(den: string | undefined, vybrat: (d: LetyDne) => T) {
+/** Lety dne a souhrn jedním dotazem (obnoví se spolu); každý háček vybere svou část.
+ *  Moje = jen lety, kde jsem v posádce (docs/modul-moje-lety.md). */
+function useLetyDne<T>(den: string | undefined, vybrat: (d: LetyDne) => T, moje = false) {
   return useQuery({
-    queryKey: ["lety", den ?? "dnes"],
+    queryKey: ["lety", den ?? "dnes", ...(moje ? ["moje"] : [])],
     queryFn: async () => {
-      const lety = await ziskat<LetyDne>(sDnem("/lety", den));
+      const cesta = sDnem("/lety", den);
+      const lety = await ziskat<LetyDne>(moje ? `${cesta}${den ? "&" : "?"}moje=true` : cesta);
       nastavitCasServeru(lety.ted);
       return lety;
     },
@@ -107,8 +109,16 @@ function useLetyDne<T>(den: string | undefined, vybrat: (d: LetyDne) => T) {
 const jenLety = (d: LetyDne) => d.lety;
 const jenSouhrn = (d: LetyDne) => d.souhrn;
 
-export function useLety(den?: string) {
-  return useLetyDne(den, jenLety);
+export function useLety(den?: string, moje = false) {
+  return useLetyDne(den, jenLety, moje);
+}
+
+/** Dny, kdy mám nějaký let (RRRR-MM-DD, vzestupně) – šipky v Moje lety. */
+export function useMojeDny() {
+  return useQuery({
+    queryKey: ["lety", "moje-dny"],
+    queryFn: () => ziskat<string[]>("/lety/moje-dny"),
+  });
 }
 
 export function useSouhrnDne(den?: string) {

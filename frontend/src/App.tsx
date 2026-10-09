@@ -21,6 +21,7 @@ import { LetisteProDnesek, OsobyVProvozu } from "./provoz/Provoz";
 import { NastaveniSystemu, SmazatLetyDne } from "./sprava/Sprava";
 import { EditorVycviku } from "./vycvik/Editor";
 import { Lety } from "./stranky/Lety";
+import { MojeLety } from "./stranky/MojeLety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
 import { useDeska } from "./rozvrzeni";
@@ -52,6 +53,7 @@ export function App() {
           <>
             <Route element={<SHlavickou />}>
               <Route index element={<Lety />} />
+              <Route path="/moje-lety" element={<MojeLety />} />
             </Route>
             <Route element={<SeZapisem />}>
               <Route path="/novy-let" element={<Pruvodce />} />

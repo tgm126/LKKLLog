@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router";
 import { poslat } from "../api";
 import { doba, hodinyMinuty, hodinyMinutySekundy, ted } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
-import { Blok, Obrazovka } from "../komponenty/Obrazovka";
+import { Blok, Obrazovka, useZpet } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
 import { Stitek, type BarvaStitku } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
@@ -46,8 +46,8 @@ export function Detail() {
   const letId = Number(useParams().id);
   const { data: let_, error } = useDetail(letId);
   const nabidky = useNabidky().data;
-  const navigate = useNavigate();
-  const zpet = () => navigate("/");
+  // zpět tam, odkud přišel (Lety, Moje lety na zvoleném dni); otevřeno adresou = přehled
+  const zpet = useZpet();
   if (!let_ || !nabidky) {
     return (
       <Obrazovka zpet={zpet} zpetPopis="Zpět" nadpis="Let">

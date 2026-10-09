@@ -34,6 +34,7 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 |---|---|
 | `GET /api/den?den=RRRR-MM-DD` | den do hlavičky: datum, čas serveru, domovské letiště, sluneční časy (TB, SR, SS, TE) |
 | `GET /api/lety?den=RRRR-MM-DD` | lety dne pro pásky (z `v_let` + posádka, počet T&G, varování) a čas serveru; dnes i vše, co je ve vzduchu |
+| `GET /api/lety?moje=true`, `GET /api/lety/moje-dny` | Moje lety: jen lety, kde je přihlášený v posádce (u vleku celá dvojice); dny s mými lety – docs/modul-moje-lety.md |
 | `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_lov_letadlo` + stav letí / naplánován), účely, způsoby vzletu, osoby s rolemi, které smí zastat (`v_osoba_smi`), a typy přezkoušení, které smí provést (`v_osoba_prezkouseni`), úlohy, typy přezkoušení (`v_lov_prezkouseni`) |
 | `GET /api/lety/nabidka-osob?letadlo_id=` | naposledy létající na letadle (rychlá volba) a poslední vlekař vlečné |
 | `POST /api/lety` | nový let z průvodce: letadlo, účel, posádka, POB, způsob vzletu, vlek (vlečná + vlekař), plátce, úloha, akce `vzlet` / `naplanovat` / `probehly` (s časy a počtem přistání) |

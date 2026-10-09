@@ -212,10 +212,13 @@ def den_info(
 @router.get("/lety", response_model=LetyDne)
 def lety(
     den: date | None = None,
+    moje: bool = False,
     p: Prihlaseny = Depends(prihlaseny),
     conn: Connection = Depends(spojeni),
 ):
-    """Lety dne pro pásky; dnes i všechno, co je ve vzduchu (i kdyby vzlétlo včera)."""
+    """Lety dne pro pásky; dnes i všechno, co je ve vzduchu (i kdyby vzlétlo včera).
+    Moje = jen lety, kde je přihlášená osoba v posádce; u vleku celá dvojice
+    (docs/modul-moje-lety.md)."""
     den, ted, letiste = _den_a_letiste(conn, den, p.relace_id)
     moje_kod = letiste["kod"] if letiste else None
     radky = conn.execute(
@@ -246,10 +249,14 @@ def lety(
            LEFT JOIN lkkl.lov_letadlo av ON av.id = lv.letadlo_id
            LEFT JOIN lkkl.let lk ON lk.id = v.vleceny_let_id
            LEFT JOIN lkkl.lov_letadlo ak ON ak.id = lk.letadlo_id
-           WHERE v.den = %(den)s
-              OR (v.stav = 'VE_VZDUCHU' AND %(den)s = (now() AT TIME ZONE 'UTC')::date)
+           WHERE (v.den = %(den)s
+                  OR (v.stav = 'VE_VZDUCHU' AND %(den)s = (now() AT TIME ZONE 'UTC')::date))
+             AND (NOT %(jen_moje)s
+                  OR EXISTS (SELECT 1 FROM lkkl.posadka ps
+                             WHERE ps.osoba_id = %(osoba)s
+                               AND ps.let_id IN (v.id, v.vlecny_let_id, v.vleceny_let_id)))
            ORDER BY v.id""",
-        {"den": den, "moje": moje_kod},
+        {"den": den, "moje": moje_kod, "jen_moje": moje, "osoba": p.osoba_id},
     ).fetchall()
     te = slunce(letiste, den).te
     souhrn = conn.execute(
@@ -427,6 +434,20 @@ def zpet(
 
 
 # --- průvodce novým letem -------------------------------------------------------------------
+
+
+@router.get("/lety/moje-dny", response_model=list[date])
+def moje_dny(p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+    """Dny, kdy má přihlášená osoba nějaký let (v posádce) – šipky v Moje lety."""
+    return [
+        r["den"]
+        for r in conn.execute(
+            """SELECT DISTINCT v.den FROM lkkl.v_let v
+               JOIN lkkl.posadka ps ON ps.let_id = v.id
+               WHERE ps.osoba_id = %s ORDER BY v.den""",
+            (p.osoba_id,),
+        ).fetchall()
+    ]
 
 
 @router.get("/lety/nabidky")
