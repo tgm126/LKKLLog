@@ -42,7 +42,7 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
 | `POST /api/heslo/nastavit` | kdokoli s odkazem | `{klic, heslo}` → uloží heslo, zneplatní odkaz, rovnou přihlásí |
 | `POST /api/heslo/zmenit` | přihlášený | `{stare, nove}` → změní heslo, odhlásí ostatní zařízení |
 | `POST /api/ucty` | admin | `{osoba_id, admin, smi_odblokovat}` → aktivuje osobu (založí účet) |
-| `POST /api/ucty/{osoba_id}` | admin | změní `aktivni`, `admin`, `smi_odblokovat`; zablokování ukončí všechny relace osoby |
+| `POST /api/ucty/{osoba_id}` | admin | změní `prihlaseni_povoleno`, `admin`, `smi_odblokovat`; vypnutí přihlášení ukončí všechny relace osoby |
 | `POST /api/ucty/{osoba_id}/pozvanka` | admin | vrátí odkaz pro nastavení hesla (admin ho předá osobě), zapíše `pozvanka_odeslana` |
 | `GET /api/ucty` | admin | přehled účtů (z `v_ucet`) |
 | `GET /api/ucty/zablokovane` | admin, `smi_odblokovat` | účty zablokované po neúspěšných pokusech (jen jméno a do kdy) |
@@ -100,8 +100,9 @@ aby cizí stránka poslala požadavek s cookie přihlášeného uživatele.
 
 ### 4.6 Aktivace a blokování (admin)
 - Aktivace = založení účtu (heslo prázdné). Databáze pohlídá, že osoba má e-mail.
-- Zablokování (`aktivni = false`) ukončí všechny relace osoby. Odblokování je vrátí do hry
-  (heslo zůstává). *audit*
+- Vypnutí přihlášení (`prihlaseni_povoleno = false`, do 039 sloupec `aktivni`) ukončí všechny
+  relace osoby; zapnutí ho vrátí (heslo zůstává). Přihlásí se jen platná (aktivní) osoba –
+  `v_ucet.smi_se_prihlasit = prihlaseni_povoleno AND lov_osoba.platny`. *audit*
 - Admin nemůže zablokovat ani odebrat `admin` sám sobě (aby nezůstal systém bez admina).
 
 ### 4.7 Přihlásit se jako

@@ -53,7 +53,7 @@ function stav(o: DetailOsoby): [string, "zeleny" | "cerveny" | undefined] {
   if (!o.platny) return ["neaktivní", undefined];
   if (!o.ucet) return ["bez účtu", undefined];
   if (o.ucet.zablokovano) return ["zablokován", "cerveny"];
-  return o.ucet.aktivni ? ["účet aktivní", "zeleny"] : ["účet vypnutý", undefined];
+  return o.ucet.prihlaseni_povoleno ? ["smí se přihlásit", "zeleny"] : ["přihlášení vypnuto", undefined];
 }
 
 function DetailObrazovka({
@@ -109,7 +109,7 @@ function DetailObrazovka({
           <Zaskrtavatko popisek="Člen klubu" zaskrtnuto={o.clen} zmenit={(clen) => zmenit({ clen })} />
           <Zaskrtavatko
             popisek="Aktivní"
-            pod="nabízí se v letech, smí se přihlásit"
+            pod="ne = už nelétá: nenabízí se v letech a nepřihlásí se"
             zaskrtnuto={o.platny}
             zakazano={o.id === ja.osoba_id}
             zmenit={(platny) => zmenit({ platny })}
@@ -287,10 +287,16 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
       <Zaskrtavatka>
         <Zaskrtavatko
           popisek="Smí se přihlásit"
-          pod={!u ? "nemá účet (potřebuje e-mail)" : !o.platny ? "osoba je neaktivní" : undefined}
-          zaskrtnuto={!!u?.aktivni}
+          pod={
+            !u
+              ? "nemá účet (potřebuje e-mail)"
+              : !o.platny
+                ? "osoba je neaktivní"
+                : "přístup do aplikace; bez něj osoba dál létá"
+          }
+          zaskrtnuto={!!u?.prihlaseni_povoleno}
           zakazano={o.id === ja.osoba_id || (u?.admin && !ja.prava.admin)}
-          zmenit={(aktivni) => ucet({ aktivni })}
+          zmenit={(povoleno) => ucet({ prihlaseni_povoleno: povoleno })}
         />
         {pravo("admin", "Admin", "smí vše")}
         {pravo("spravuje_osoby", "Spravuje osoby")}

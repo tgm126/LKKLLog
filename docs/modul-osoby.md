@@ -36,6 +36,12 @@ nezablokuje účet; admin si neodebere admina; účet admina smí měnit jen adm
 ## 3. Data
 - `lov_osoba` – beze změny (jméno, příjmení, e-mail, telefon, číslo člena, člen, aktivní –
   od 031 sloupec `platny` podle standardu platnosti, v aplikaci dál „aktivní“).
+- Tři zaškrtávátka, tři významy (upřesněno 9. 10. 2026):
+  - **Člen klubu** (`lov_osoba.clen`) – jen evidence člen / externí (číslo člena jen u člena);
+  - **Aktivní** (`lov_osoba.platny`) – „ne = už nelétá: nenabízí se v letech a nepřihlásí se“;
+  - **Smí se přihlásit** (`ucet.prihlaseni_povoleno`, db/039) – „přístup do aplikace; bez něj
+    osoba dál létá“. Přihlásí se jen osoba s povoleným přihlášením **a** aktivní.
+  Štítek v liště detailu: „smí se přihlásit“ / „přihlášení vypnuto“ / „neaktivní“ / „bez účtu“.
   Telefon se ukládá jako `+420…` (server převede „602 123 456“ i „00420…“), zobrazuje se
   po trojicích.
 - `ucet.spravuje_osoby boolean NOT NULL DEFAULT false` (db/023), v auditu „spravuje osoby“.

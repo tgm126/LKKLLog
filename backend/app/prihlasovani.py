@@ -86,7 +86,7 @@ class UcetIn(BaseModel):
 
 
 class UcetZmenaIn(BaseModel):
-    aktivni: bool | None = None
+    prihlaseni_povoleno: bool | None = None
     admin: bool | None = None
     smi_odblokovat: bool | None = None
     spravuje_osoby: bool | None = None
@@ -301,7 +301,7 @@ def prihlaseni(
     with conn.transaction():
         u = conn.execute(
             """SELECT u.osoba_id, u.heslo_hash, u.neuspesne_pokusy,
-                      u.aktivni AND o.platny AS smi,
+                      u.prihlaseni_povoleno AND o.platny AS smi,
                       coalesce(u.zablokovano_do > now(), false) AS zablokovano,
                       ceil(extract(epoch FROM u.zablokovano_do - now()) / 60)::int AS minut
                FROM lkkl.ucet u
@@ -548,7 +548,7 @@ def ucet_zmenit(
     # odebrat právo je také přidělování práv – jen admin
     prava = (data.admin, data.smi_odblokovat, data.spravuje_osoby, data.spravuje_letadla)
     _jen_admin_prava(p, *(v is not None for v in prava))
-    if osoba_id == p.osoba_id and (data.aktivni is False or data.admin is False):
+    if osoba_id == p.osoba_id and (data.prihlaseni_povoleno is False or data.admin is False):
         raise HTTPException(400, "Sám sobě nemůžete zablokovat účet ani odebrat admina.")
     cil = conn.execute("SELECT admin FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)).fetchone()
     if cil is not None and cil["admin"] and not p.admin:
@@ -556,15 +556,15 @@ def ucet_zmenit(
     with conn.transaction():
         zmeneno = conn.execute(
             """UPDATE lkkl.ucet
-               SET aktivni = coalesce(%s, aktivni),
+               SET prihlaseni_povoleno = coalesce(%s, prihlaseni_povoleno),
                    admin = coalesce(%s, admin),
                    smi_odblokovat = coalesce(%s, smi_odblokovat),
                    spravuje_osoby = coalesce(%s, spravuje_osoby),
                    spravuje_letadla = coalesce(%s, spravuje_letadla)
                WHERE osoba_id = %s RETURNING osoba_id""",
-            (data.aktivni, *prava, osoba_id),
+            (data.prihlaseni_povoleno, *prava, osoba_id),
         ).fetchone()
-        if zmeneno and data.aktivni is False:
+        if zmeneno and data.prihlaseni_povoleno is False:
             smazat_relace(conn, "osoba_id = %s OR puvodni_osoba_id = %s", (osoba_id, osoba_id))
     if zmeneno is None:
         raise HTTPException(404, "Účet neexistuje.")

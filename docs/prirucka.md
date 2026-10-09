@@ -130,8 +130,10 @@ v posádce kluzáku; kluzák jen naviják nebo aerovlek; T&G jen motorová; čas
 neaktivní osoba nebo vyřazené letadlo se nenabízí. Hláška vždy řekne, co je špatně.
 
 ## B8. Správa (podle práv)
-- **Osoby** (na telefonu, záložka Osoby): údaje, člen klubu, **aktivní** (neaktivní se
-  nenabízí a nepřihlásí), oprávnění pro kategorie letadel; účet: *Smí se přihlásit*, práva,
+- **Osoby** (na telefonu, záložka Osoby): údaje, **člen klubu** (jen evidence člen /
+  externí), **aktivní** (ne = už nelétá: nenabízí se v letech a nepřihlásí se), oprávnění pro
+  kategorie letadel; účet: **Smí se přihlásit** (přístup do aplikace – bez něj osoba dál létá,
+  jen ji zapisují ostatní), práva,
   odblokování; **Odkaz e-mailem** (jen admin, s potvrzením adresy; téže osobě nejvýš jednou
   za 5 minut) a **Odkaz pro heslo** (zkopírovat a předat). V bloku je vidět, kdy byl odkaz
   vydán a poslán.

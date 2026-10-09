@@ -22,7 +22,8 @@ router = APIRouter(prefix="/api/osoby")
 
 class UcetOsoby(BaseModel):
     smi_se_prihlasit: bool
-    aktivni: bool
+    """Přihlášení povoleno a osoba platná (v_ucet)."""
+    prihlaseni_povoleno: bool
     admin: bool
     smi_odblokovat: bool
     spravuje_osoby: bool
@@ -148,8 +149,8 @@ class OmezeniIn(BaseModel):
 _OSOBA_SQL = """
 SELECT o.id, o.jmeno, o.prijmeni, o.email, o.telefon, o.cislo_clena, o.clen, o.platny,
        CASE WHEN u.osoba_id IS NOT NULL THEN json_build_object(
-           'smi_se_prihlasit', u.aktivni AND o.platny,
-           'aktivni', u.aktivni,
+           'smi_se_prihlasit', u.prihlaseni_povoleno AND o.platny,
+           'prihlaseni_povoleno', u.prihlaseni_povoleno,
            'admin', u.admin,
            'smi_odblokovat', u.smi_odblokovat,
            'spravuje_osoby', u.spravuje_osoby,

@@ -115,14 +115,21 @@ def test_zablokovani_uctu_adminem(osoba, prihlasit):
     novak = osoba("Novak")
     zarizeni = prihlasit("novak@example.cz")
     admin = prihlasit("admin@example.cz")
-    ucet = admin.post(f"/api/ucty/{novak}", json={"aktivni": False}).json()
+    ucet = admin.post(f"/api/ucty/{novak}", json={"prihlaseni_povoleno": False}).json()
     assert not ucet["smi_se_prihlasit"]
     assert zarizeni.get("/api/ja").status_code == 401
     assert admin.post(f"/api/ucty/{novak}/pozvanka").status_code == 400
+    # v historii osoby čitelně (db/039)
+    akce = [h["akce"] for h in admin.get(f"/api/osoby/{novak}").json()["historie"]]
+    assert "Přihlášení vypnuto" in akce
     # Sám sobě admin účet nezablokuje ani admina neodebere.
-    assert admin.post(f"/api/ucty/{admin_id}", json={"aktivni": False}).status_code == 400
+    assert (
+        admin.post(f"/api/ucty/{admin_id}", json={"prihlaseni_povoleno": False}).status_code == 400
+    )
     assert admin.post(f"/api/ucty/{admin_id}", json={"admin": False}).status_code == 400
-    assert admin.post(f"/api/ucty/{novak}", json={"aktivni": True}).json()["smi_se_prihlasit"]
+    assert admin.post(f"/api/ucty/{novak}", json={"prihlaseni_povoleno": True}).json()[
+        "smi_se_prihlasit"
+    ]
 
 
 def test_prihlasit_se_jako(osoba, prihlasit):

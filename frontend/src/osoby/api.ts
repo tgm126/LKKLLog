@@ -6,7 +6,8 @@ import { useOznamit } from "../komponenty/Oznameni";
 
 export type UcetOsoby = {
   smi_se_prihlasit: boolean;
-  aktivni: boolean;
+  /** Přístup do aplikace povolen (ucet.prihlaseni_povoleno); přihlásí se jen platná osoba. */
+  prihlaseni_povoleno: boolean;
   admin: boolean;
   smi_odblokovat: boolean;
   spravuje_osoby: boolean;

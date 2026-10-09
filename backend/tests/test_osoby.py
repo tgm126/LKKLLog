@@ -17,12 +17,16 @@ def test_prava_k_osobam(osoba, prihlasit):
     }
     assert spravce.get("/api/osoby").status_code == 200
     # Správce smí zablokovat účet, ale ne přidělit (ani odebrat) právo.
-    assert spravce.post(f"/api/ucty/{pilot}", json={"aktivni": False}).status_code == 200
+    assert (
+        spravce.post(f"/api/ucty/{pilot}", json={"prihlaseni_povoleno": False}).status_code == 200
+    )
     odpoved = spravce.post(f"/api/ucty/{pilot}", json={"spravuje_osoby": True})
     assert odpoved.status_code == 403
 
     admin = prihlasit("admin@example.cz")
-    odpoved = admin.post(f"/api/ucty/{pilot}", json={"spravuje_osoby": True, "aktivni": True})
+    odpoved = admin.post(
+        f"/api/ucty/{pilot}", json={"spravuje_osoby": True, "prihlaseni_povoleno": True}
+    )
     assert odpoved.status_code == 200 and odpoved.json()["spravuje_osoby"]
 
 
@@ -30,7 +34,7 @@ def test_spravce_nesmi_na_admina_ani_sam_sebe(osoba, prihlasit):
     admin = osoba("Admin", admin=True)
     spravce = osoba("Spravce", spravuje_osoby=True)
     k = prihlasit("spravce@example.cz")
-    assert k.post(f"/api/ucty/{admin}", json={"aktivni": False}).status_code == 403
+    assert k.post(f"/api/ucty/{admin}", json={"prihlaseni_povoleno": False}).status_code == 403
     assert k.post(f"/api/osoby/{admin}", json={"platny": False}).status_code == 403
     odpoved = k.post(f"/api/osoby/{spravce}", json={"platny": False})
     assert odpoved.status_code == 400 and "Sám sebe" in odpoved.json()["detail"]
