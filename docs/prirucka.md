@@ -57,8 +57,9 @@ Přihlásím se se zaškrtnutým **Jen ke čtení** (→ B1): vidím desku, den�
 nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 
 ## A7. Jsem správce
-- **Nový člen:** založím osobu, zaškrtnu *Smí se přihlásit*, vytvořím **Odkaz pro heslo**
-  a předám mu ho (aplikace e-maily neposílá); dám oprávnění (→ B8).
+- **Nový člen:** založím osobu (s e-mailem), zaškrtnu *Smí se přihlásit*, pošlu **Odkaz
+  e-mailem** (jen admin; odejde z info@lkkl.cz) nebo odkaz zkopíruji a předám sám (**Odkaz pro
+  heslo**); dám oprávnění (→ B8). Odkaz platí 3 dny – nestihne-li to, pošlu nový.
 - **Letadlo dočasně nelétá:** *mimo provoz* (→ B8). Nové nebo vyřazené letadlo, cizí vlečná
   a číselníky – přímo v databázi.
 - **Zkušební lety:** Správa → *Smazat lety dne…* (→ B8).
@@ -131,7 +132,9 @@ neaktivní osoba nebo vyřazené letadlo se nenabízí. Hláška vždy řekne, c
 ## B8. Správa (podle práv)
 - **Osoby** (na telefonu, záložka Osoby): údaje, člen klubu, **aktivní** (neaktivní se
   nenabízí a nepřihlásí), oprávnění pro kategorie letadel; účet: *Smí se přihlásit*, práva,
-  odblokování, **Odkaz pro heslo** (zkopírovat a předat).
+  odblokování; **Odkaz e-mailem** (jen admin, s potvrzením adresy; téže osobě nejvýš jednou
+  za 5 minut) a **Odkaz pro heslo** (zkopírovat a předat). V bloku je vidět, kdy byl odkaz
+  vydán a poslán.
 - **Letadla** (na telefonu): přepínač **mimo provoz** (dočasně – vidět šedě, nejde vybrat).
 - **Správa** v nabídce (admin): **Smazat lety dne…** – kalendář, dny s lety tučně, potvrzení
   (nevratné, v historii zůstane záznam); **Nastavení** – testovací provoz (žlutý pruh).

@@ -29,6 +29,14 @@ class Nastaveni:
     verze: str
     frontend: Path
     """Složka se sestaveným frontendem; když neexistuje, server vrací jen rozhraní /api."""
+    smtp_server: str | None
+    """Odesílání e-mailů (docs/modul-email.md); prázdné = e-mail se jen vypíše do logu."""
+    smtp_port: int
+    smtp_uzivatel: str
+    smtp_heslo: str
+    email_od: str
+    email_odpoved: str | None
+    """Adresa pro dotazy a odpovědi (Reply-To a text e-mailu)."""
 
     @property
     def vyvoj(self) -> bool:
@@ -80,6 +88,12 @@ def nacist() -> Nastaveni:
         povolene_adresy=frozenset(a.strip().rstrip("/") for a in povolene.split(",") if a.strip()),
         verze=verze,
         frontend=Path(os.environ.get("LKKL_FRONTEND", _FRONTEND)),
+        smtp_server=os.environ.get("LKKL_SMTP_SERVER") or None,
+        smtp_port=int(os.environ.get("LKKL_SMTP_PORT", "587")),
+        smtp_uzivatel=os.environ.get("LKKL_SMTP_UZIVATEL", ""),
+        smtp_heslo=os.environ.get("LKKL_SMTP_HESLO", ""),
+        email_od=os.environ.get("LKKL_EMAIL_OD", "AK Kladno Log <info@lkkl.cz>"),
+        email_odpoved=os.environ.get("LKKL_EMAIL_ODPOVED") or None,
     )
 
 

@@ -29,7 +29,7 @@ Stejný princip jako u první verze (osvědčil se). Značky `v2.*` se nepletou 
 | Aplikace | stávající Docker aplikace `lkkllog` na `lety.lkkl.cz` (proxy a HTTPS už nastavené) |
 | Repozitář | stávající `…/lkkllog-lkkl.cz.git`, klíč `VPSC_SSH_KEY` v GitHubu už je |
 | Databáze | stávající **`lkkllog`**, schéma **`lkkl`**; připojení unixovým socketem a `DB_*` jako dosud |
-| Proměnné | uživatel ve VPS Centru: smazat `DJANGO_*` a další proměnné první verze, přidat `LKKL_PROSTREDI=produkce`, `LKKL_TAJNY_KLIC` (nový), `LKKL_ADRESA=https://lety.lkkl.cz` |
+| Proměnné | uživatel ve VPS Centru: smazat `DJANGO_*` a další proměnné první verze, přidat `LKKL_PROSTREDI=produkce`, `LKKL_TAJNY_KLIC` (nový), `LKKL_ADRESA=https://lety.lkkl.cz`; e-mail (docs/modul-email.md): `LKKL_SMTP_SERVER`, `LKKL_SMTP_PORT` (587), `LKKL_SMTP_UZIVATEL=info@lkkl.cz`, `LKKL_SMTP_HESLO`, `LKKL_EMAIL_ODPOVED` (adresa pro dotazy) |
 
 Server čte `DB_*` (socket) i `LKKL_DATABAZE` (lokální vývoj) – úprava `app/nastaveni.py`.
 

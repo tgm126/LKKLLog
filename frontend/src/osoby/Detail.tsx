@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router";
 
 import { poslat, type Ja } from "../api";
 import { datumCas } from "../cas";
+import { Dialog } from "../komponenty/Dialog";
 import { Hlaska } from "../komponenty/Hlaska";
 import { Blok, BlokTelo, Obrazovka } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
@@ -249,6 +250,17 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
     },
     onError: (e) => oznamit({ text: e.message, chyba: true }),
   });
+  // Odkaz e-mailem z info@lkkl.cz – jen admin, s potvrzením adresy (docs/modul-email.md)
+  const [potvrditEmail, setPotvrditEmail] = useState(false);
+  const email = useMutation({
+    mutationFn: () => poslat<{ adresa: string }>(`/ucty/${o.id}/pozvanka-emailem`),
+    onSuccess: (r) => oznamit({ text: `Odkaz odeslán na ${r.adresa}` }),
+    onError: (e) => oznamit({ text: e.message, chyba: true }),
+    onSettled: () => {
+      setPotvrditEmail(false);
+      qc.invalidateQueries({ queryKey: ["osoba", o.id] });
+    },
+  });
   const jako = useMutation({
     mutationFn: () => poslat<Ja>(`/prihlasit-jako/${o.id}`),
     onSuccess: (novy) => {
@@ -261,6 +273,10 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
   const info = [
     u && (u.ma_heslo ? `heslo nastaveno${o.heslo_zmeneno ? ` ${datumCas(o.heslo_zmeneno)}` : ""}` : "heslo nenastaveno"),
     o.pozvanka_odeslana && `odkaz ${datumCas(o.pozvanka_odeslana)}`,
+    o.posledni_email &&
+      (o.posledni_email.chyba
+        ? `e-mail se nepodařilo odeslat ${datumCas(o.posledni_email.kdy)}`
+        : `odkaz e-mailem ${datumCas(o.posledni_email.kdy)}`),
   ].filter(Boolean);
 
   return (
@@ -292,6 +308,15 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
       {u && (
         <BlokTelo>
           <div className="akce-vedle">
+            {ja.prava.admin && (
+              <Tlacitko
+                varianta="obrys"
+                disabled={!u.smi_se_prihlasit || email.isPending}
+                onClick={() => setPotvrditEmail(true)}
+              >
+                Odkaz e-mailem
+              </Tlacitko>
+            )}
             <Tlacitko
               varianta="obrys"
               disabled={!u.smi_se_prihlasit || pozvanka.isPending}
@@ -299,7 +324,9 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
             >
               Odkaz pro heslo
             </Tlacitko>
-            {ja.prava.admin && (
+          </div>
+          {ja.prava.admin && (
+            <div className="akce-vedle">
               <Tlacitko
                 varianta="obrys"
                 disabled={!u.smi_se_prihlasit || u.admin || o.id === ja.osoba_id || jako.isPending}
@@ -307,16 +334,30 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
               >
                 Přihlásit se jako
               </Tlacitko>
-            )}
-          </div>
+            </div>
+          )}
           {odkaz && <OdkazProHeslo odkaz={odkaz} />}
+          {potvrditEmail && (
+            <Dialog nadpis="Poslat odkaz e-mailem?" zavrit={() => setPotvrditEmail(false)}>
+              <p>
+                Odkaz pro nastavení hesla odejde z info@lkkl.cz na <b>{o.email}</b>. Platí 3 dny, po
+                nastavení hesla už ne.
+              </p>
+              <Tlacitko varianta="modre" hlavni disabled={email.isPending} onClick={() => email.mutate()}>
+                Poslat
+              </Tlacitko>
+              <Tlacitko varianta="obrys" onClick={() => setPotvrditEmail(false)}>
+                Zpět
+              </Tlacitko>
+            </Dialog>
+          )}
         </BlokTelo>
       )}
     </Blok>
   );
 }
 
-/** Odkaz pro nastavení hesla – správce ho zkopíruje a předá osobě (e-maily se neposílají). */
+/** Odkaz pro nastavení hesla – správce ho zkopíruje a předá osobě sám (záloha k e-mailu). */
 function OdkazProHeslo({ odkaz }: { odkaz: string }) {
   const [zkopirovano, setZkopirovano] = useState(false);
   return (

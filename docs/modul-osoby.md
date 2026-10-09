@@ -73,10 +73,6 @@ Server: práva (bez práva 403, správce smí osoby, ne práva; admin vše; sám
 osoba, úpravy a chyby z databáze, převod telefonu, oprávnění, historie. Klikací: záložka
 jen pro správce, hledání, úprava telefonu, oprávnění, nová osoba, neaktivní.
 
-## 7. Později (zapsáno 8. 10. 2026)
-- **Odeslat odkaz pro heslo e-mailem.** Dnes „Smí se přihlásit“ jen založí nebo zapne účet
-  (bez e-mailu) a „Odkaz pro heslo“ ukáže odkaz, který správce zkopíruje a předá osobě sám
-  – aplikace e-maily neposílá. Uživatel chce volbu odeslat odkaz e-mailem: ruční akce
-  správce u osoby (nic automaticky při založení); hromadné pozvánky až po představení
-  aplikace klubu. Potřeba: odesílání pošty ze serveru (SMTP ve VPS Centru), text e-mailu,
-  záznam „odkaz odeslán“ (už je `ucet.pozvanka_odeslana`), zkoušet jen na adresách uživatele.
+## 7. Odkaz pro heslo e-mailem (hotovo 9. 10. 2026)
+Tlačítko **Odkaz e-mailem** v bloku Účet a přihlášení – jen admin, ručně, s potvrzením adresy;
+návrh a pravidla v `modul-email.md`. „Odkaz pro heslo“ (zkopírovat a předat) zůstává.

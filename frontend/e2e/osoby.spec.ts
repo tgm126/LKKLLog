@@ -77,3 +77,24 @@ test("osoby: admin má všechna práva zaškrtnutá a zašedlá", async ({ page 
     await expect(z).toBeDisabled();
   }
 });
+
+test("osoby: admin pošle odkaz pro heslo e-mailem (s potvrzením)", async ({ page }) => {
+  // e2e server nemá SMTP – e-mail se jen vypíše do logu, odeslání projde (docs/modul-email.md)
+  await page.getByRole("link", { name: "Osoby" }).click();
+  await page.locator(".radek-osoby", { hasText: "Nová Nela" }).click();
+  const poslat = page.getByRole("button", { name: "Odkaz e-mailem" });
+  await poslat.click();
+  const potvrzeni = page.getByRole("dialog", { name: "Poslat odkaz e-mailem?" });
+  await expect(potvrzeni).toContainText("info@lkkl.cz");
+  await potvrzeni.getByRole("button", { name: "Zpět" }).click();
+  await expect(potvrzeni).toHaveCount(0);
+
+  await poslat.click();
+  await potvrzeni.getByRole("button", { name: "Poslat" }).click();
+  await expect(page.getByRole("status")).toContainText("Odkaz odeslán na");
+  await expect(page.locator(".info-uctu")).toContainText("odkaz e-mailem");
+  // znovu hned nejde (nejvýš 1 za 5 minut)
+  await poslat.click();
+  await potvrzeni.getByRole("button", { name: "Poslat" }).click();
+  await expect(page.getByRole("status")).toContainText("za 5 minut");
+});

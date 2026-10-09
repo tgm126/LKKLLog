@@ -45,6 +45,8 @@ export type DetailOsoby = Osoba & {
   heslo_zmeneno: string | null;
   pozvanka_odeslana: string | null;
   posledni_prihlaseni: string | null;
+  /** Poslední e-mail osobě (db/038); chyba prázdná = odesláno. */
+  posledni_email: { kdy: string; adresa: string; chyba: string | null } | null;
   historie: { kdy: string; kdo: string; akce: string; popis: string | null }[];
 };
 

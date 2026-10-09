@@ -79,10 +79,19 @@ class Zmena(BaseModel):
     popis: str | None
 
 
+class PosledniEmail(BaseModel):
+    """Poslední e-mail osobě (lkkl.email, db/038); chyba prázdná = odesláno."""
+
+    kdy: datetime
+    adresa: str
+    chyba: str | None
+
+
 class DetailOsoby(Osoba):
     heslo_zmeneno: datetime | None
     pozvanka_odeslana: datetime | None
     posledni_prihlaseni: datetime | None
+    posledni_email: PosledniEmail | None
     historie: list[Zmena]
 
 
@@ -195,7 +204,12 @@ def _detail(conn: Connection, osoba_id: int) -> DetailOsoby:
            LIMIT 50""",
         {"id": str(osoba_id)},
     ).fetchall()
-    return DetailOsoby(**o, historie=historie)
+    email = conn.execute(
+        """SELECT kdy, adresa, chyba FROM lkkl.email WHERE osoba_id = %s
+           ORDER BY kdy DESC, id DESC LIMIT 1""",
+        (osoba_id,),
+    ).fetchone()
+    return DetailOsoby(**o, historie=historie, posledni_email=email)
 
 
 # --- rozhraní ---------------------------------------------------------------------------------

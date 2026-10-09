@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from psycopg import Connection, errors
 from pydantic import BaseModel
 
-from . import bezpecnost
+from . import bezpecnost, posta
 from .db import nastavit_kontext, spojeni
 from .nastaveni import nastaveni
 
@@ -112,6 +112,11 @@ class Zablokovany(OsobaKratce):
 
 class Odkaz(BaseModel):
     odkaz: str
+
+
+class OdeslanyEmail(BaseModel):
+    adresa: str
+    kdy: datetime
 
 
 # --- relace a oprávnění ---------------------------------------------------------------------
@@ -582,6 +587,66 @@ def ucet_pozvanka(
         raise HTTPException(400, "Účet nebo osoba je zablokovaná.")
     conn.execute("UPDATE lkkl.ucet SET pozvanka_odeslana = now() WHERE osoba_id = %s", (osoba_id,))
     return Odkaz(odkaz=odkaz_pro_heslo(osoba_id, u["heslo_zmeneno"]))
+
+
+PREDMET_ODKAZU = "AK Kladno Log – nastavení hesla"
+TEXT_ODKAZU = """Dobrý den, {jmeno},
+
+v aplikaci AK Kladno Log (evidence letů aeroklubu Kladno) máte připravený přístup.
+Heslo si nastavíte tímto odkazem – platí 3 dny, po nastavení hesla už ne:
+{odkaz}
+
+Přihlašovací jméno je tato e-mailová adresa. Pokud jste o přístup nežádali, e-mail
+ignorujte.{dotazy}
+
+AK Kladno
+"""
+
+
+@router.post("/ucty/{osoba_id}/pozvanka-emailem", response_model=OdeslanyEmail)
+def ucet_pozvanka_emailem(
+    osoba_id: int, p: Prihlaseny = Depends(admin), conn: Connection = Depends(spojeni)
+):
+    """Odkaz pro nastavení hesla e-mailem z info@lkkl.cz – jen admin, ručně u jedné osoby
+    (docs/modul-email.md); záznam v lkkl.email bez obsahu."""
+    u = conn.execute(
+        """SELECT u.heslo_zmeneno, v.smi_se_prihlasit, v.jmeno, v.email
+           FROM lkkl.ucet u JOIN lkkl.v_ucet v ON v.osoba_id = u.osoba_id
+           WHERE u.osoba_id = %s""",
+        (osoba_id,),
+    ).fetchone()
+    if u is None:
+        raise HTTPException(404, "Účet neexistuje.")
+    if not u["smi_se_prihlasit"]:
+        raise HTTPException(400, "Účet nebo osoba je zablokovaná.")
+    if conn.execute(
+        """SELECT 1 FROM lkkl.email WHERE osoba_id = %s AND chyba IS NULL
+           AND kdy > now() - interval '5 minutes'""",
+        (osoba_id,),
+    ).fetchone():
+        raise HTTPException(429, "Odkaz byl odeslán před chvílí – další jde poslat za 5 minut.")
+    dotazy = (
+        f" S dotazy se obraťte na {nastaveni.email_odpoved} (stačí odpovědět na tento e-mail)."
+        if nastaveni.email_odpoved
+        else ""
+    )
+    text = TEXT_ODKAZU.format(
+        jmeno=u["jmeno"], odkaz=odkaz_pro_heslo(osoba_id, u["heslo_zmeneno"]), dotazy=dotazy
+    )
+    try:
+        posta.odeslat(u["email"], PREDMET_ODKAZU, text)
+        chyba = None
+    except posta.ChybaPosty as e:
+        chyba = str(e)
+    zaznam = conn.execute(
+        """INSERT INTO lkkl.email (druh, osoba_id, adresa, odeslal_id, chyba)
+           VALUES ('ODKAZ_HESLO', %s, %s, %s, %s) RETURNING adresa, kdy""",
+        (osoba_id, u["email"], p.osoba_id, chyba),
+    ).fetchone()
+    if chyba:
+        raise HTTPException(502, f"E-mail se nepodařilo odeslat: {chyba}")
+    conn.execute("UPDATE lkkl.ucet SET pozvanka_odeslana = now() WHERE osoba_id = %s", (osoba_id,))
+    return zaznam
 
 
 def odkaz_pro_heslo(osoba_id: int, heslo_zmeneno: datetime | None) -> str:
