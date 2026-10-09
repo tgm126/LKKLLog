@@ -89,7 +89,15 @@ function Prihlaseny() {
   const { data: ja, error, refetch, isFetching } = useJa();
   const poloha = useLocation();
   if (ja === undefined) {
-    if (!error) return null;
+    if (!error) {
+      return (
+        <Vstupni nadpis="AK Kladno Log">
+          <p className="seda" role="status">
+            Načítám…
+          </p>
+        </Vstupni>
+      );
+    }
     return (
       <Vstupni nadpis="AK Kladno Log">
         <Hlaska>{error.message}</Hlaska>

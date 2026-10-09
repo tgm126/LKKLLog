@@ -54,7 +54,13 @@ export function PrehledLetu({
       <>
         <main className="obsah">
           {nahore}
-          {error && <Hlaska>{error.message}</Hlaska>}
+          {error ? (
+            <Hlaska>{error.message}</Hlaska>
+          ) : (
+            <p className="seda" role="status">
+              Načítám…
+            </p>
+          )}
         </main>
         {dole}
       </>

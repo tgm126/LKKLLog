@@ -84,6 +84,9 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 - **Čas je UTC.** Nahoře sluneční časy letiště: TB / TE začátek a konec občanského soumraku,
   SR / SS východ a západ Slunce.
 - **Žlutý pruh TESTOVACÍ PROVOZ** – zkušební provoz, lety se mohou smazat.
+- **Načítám… / bez spojení:** při načítání je to vidět; když server do 15 s neodpoví nebo
+  vypadne signál, aplikace to řekne (přehled ukáže poslední známé údaje s časem) a akci
+  stačí zopakovat – nic se nestalo dvakrát.
 
 ## B2. Přehled letů (telefon) a provozní deska (počítač)
 - **Telefon:** *Ve vzduchu*, *Naplánované* (pásky) a deník ukončených a zrušených letů; dole

@@ -99,8 +99,15 @@ export function Deska() {
       <div className="deska-spodek">
         {letyDne.error && (
           <Hlaska>
-            Bez spojení se serverem – údaje z {hodinyMinutySekundy(new Date(letyDne.dataUpdatedAt))} UTC.
+            {letyDne.data
+              ? `Bez spojení se serverem – údaje z ${hodinyMinutySekundy(new Date(letyDne.dataUpdatedAt))} UTC.`
+              : letyDne.error.message}
           </Hlaska>
+        )}
+        {letyDne.isPending && (
+          <p className="seda" role="status">
+            Načítám…
+          </p>
         )}
         <div className={["deska-sloupce", siroka && "siroka", jinyDen && "jiny-den"].filter(Boolean).join(" ")}>
           {!jinyDen && (
