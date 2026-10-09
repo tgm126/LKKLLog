@@ -8,9 +8,9 @@
 /* =============================================================================================
    NÁVRH (9. 10. 2026) – desktop: editace osnov a úloh (docs/modul-osnovy.md). Panel přes celou
    desku z nabídky uživatele (Správa → Osnovy a úlohy), jen s právem „spravuje osnovy“.
-   Data = skutečné osnovy a úlohy ze serveru 9. 10. 2026 (počty letů také). Osnova patří
-   k jedné kategorii (zamčené zaškrtnutí); úloha se dá povolit „také na“ jinou kategorii –
-   v maketě II/10–12 také na TMG. Zaškrtávátka i náhled vpravo fungují.
+   Data = skutečné osnovy a úlohy ze serveru 9. 10. 2026 (počty letů také). Kategorie je jen
+   u osnovy (v jejím řádku); úloha zůstává ve své osnově a dá se jen označit „lze letět i na“
+   jinou kategorii – v maketě II/10–12 i na TMG. Zaškrtávátka i náhled vpravo fungují.
    ============================================================================================= */
 :root {
   color-scheme: light dark;
@@ -126,7 +126,7 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
       <div class="radek zahlavi nadpisek">
         <span></span><span>Osnova / úloha</span>
         <span class="skupina">Nabízí se u účelu</span><span></span>
-        <span class="skupina">letí se na (osnova + také)</span><span></span>
+        <span class="skupina">lze letět i na</span><span></span>
         <span class="sloupec">Lety</span><span class="sloupec">Platná</span>
       </div>
       <div class="radek zahlavi male seda" style="padding-top:0">
@@ -161,9 +161,10 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
           <div id="n-nabidka"></div>
         </div>
       </div>
-      <p class="poznamka">Náhled se mění hned se zaškrtávátky vlevo. Kategorie osnovy platí pro všechny
-        její úlohy (zamčené zaškrtnutí); další kategorie se zapíná u úlohy („také na TMG“). Úloha bez účelu
-        se nenabízí nikde (oranžový štítek). Neplatná úloha i osnova se nenabízí; ve starých letech zůstává.</p>
+      <p class="poznamka">Náhled se mění hned se zaškrtávátky vlevo. Kategorie je u osnovy; úloha zůstává
+        ve své osnově a „lze letět i na“ ji jen nabídne i u letu jiné kategorie – pod svou osnovou (zkuste
+        Výcvik + TMG). Úloha bez účelu se nenabízí nikde (oranžový štítek). Neplatná úloha i osnova se
+        nenabízí; ve starých letech zůstává.</p>
     </div>
   </div>
 
@@ -224,7 +225,8 @@ const zaskrt = (ano, zmenit, neurcite = false) => {
 };
 const nabizi = (x, o) => x.platna && o.platna && x.ucely.size > 0;
 const naKategorii = (x, o, k) => k === o.kat || x.kat.has(k);
-const zamceno = (titulek) => { const c = el("input", { type: "checkbox", checked: true, disabled: true, title: titulek }); return c; };
+// buňka pod kategorií vlastní osnovy: nic k zaškrtnutí (kategorie je u osnovy)
+const vlastni = () => el("span", { class: "stred male seda", textContent: "·", title: "kategorie osnovy" });
 
 function vykreslit() {
   const m = document.getElementById("matice");
@@ -238,10 +240,11 @@ function vykreslit() {
     };
     m.append(el("div", { class: "radek osnova" + (o.platna ? "" : " neplatna") },
       el("button", { class: "sbalit", type: "button", textContent: o.otevrena ? "▾" : "▸", onclick: () => { o.otevrena = !o.otevrena; vykreslit(); } }),
-      el("span", { class: "nazev" }, o.nazev, el("span", { class: "male seda", textContent: `${KATEGORIE.find(([k]) => k === o.kat)[1]} · ${o.ulohy.length} úloh` }),
+      el("span", { class: "nazev" }, o.nazev, el("span", { class: "male", textContent: `kategorie ${KATEGORIE.find(([k]) => k === o.kat)[1]}` }),
+        el("span", { class: "male seda", textContent: `${o.ulohy.length} úloh` }),
         el("button", { class: "tl maly bez-ramu", type: "button", textContent: "+ úloha" })),
       ...UCELY.map(([k]) => souhrnne("ucely", k)), el("span"),
-      ...KATEGORIE.map(([k]) => k === o.kat ? el("span", { class: "stred" }, zamceno("kategorie osnovy")) : souhrnne("kat", k)), el("span"),
+      ...KATEGORIE.map(([k]) => k === o.kat ? vlastni() : souhrnne("kat", k)), el("span"),
       el("span", { class: "vpravo male", textContent: o.ulohy.reduce((s, x) => s + x.lety, 0) || "" }),
       el("span", { class: "stred" }, zaskrt(o.platna, (ano) => (o.platna = ano))),
     ));
@@ -254,7 +257,7 @@ function vykreslit() {
           el("button", { type: "button", title: "níž", textContent: "▼", onclick: () => { if (i < o.ulohy.length - 1) { [o.ulohy[i + 1], o.ulohy[i]] = [o.ulohy[i], o.ulohy[i + 1]]; vykreslit(); } } })),
         el("span", { class: "nazev" }, x.nazev, mimo ? el("span", { class: "mimo-nabidku", textContent: "nenabízí se" }) : ""),
         ...UCELY.map(([k]) => el("span", { class: "stred" }, zaskrt(x.ucely.has(k), (ano) => ano ? x.ucely.add(k) : x.ucely.delete(k)))), el("span"),
-        ...KATEGORIE.map(([k]) => el("span", { class: "stred" }, k === o.kat ? zamceno("kategorie osnovy – platí pro všechny její úlohy") : zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
+        ...KATEGORIE.map(([k]) => k === o.kat ? vlastni() : el("span", { class: "stred" }, zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
         el("span", { class: "vpravo male" + (x.lety ? "" : " seda"), textContent: x.lety || "–" }),
         el("span", { class: "stred" }, zaskrt(x.platna, (ano) => (x.platna = ano))),
       ));

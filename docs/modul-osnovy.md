@@ -1,4 +1,4 @@
-# Modul: osnovy a úlohy (NÁVRH k odsouhlasení)
+# Modul: osnovy a úlohy (NÁVRH – rozpracováno, čeká na upřesnění uživatele)
 
 Zadání 9. 10. 2026: editace osnov výcviku a jejich úloh v aplikaci – **jen desktop**, se
 **zvláštním právem**. Důležité jsou vazby úlohy na **kategorii letadla** a **účel letu**,
@@ -44,9 +44,10 @@ Nabídka uživatele → Správa → **Osnovy a úlohy** (admin, nebo právo *spr
   - řádek **osnovy** (sbalitelný): název, počet úloh, „+ úloha“; souhrnná zaškrtávátka
     (plné / prázdné / částečně) – klik nastaví všem úlohám osnovy; platná;
   - řádky **úloh**: pořadí ▲▼, název (např. „IU/4 Navijákové vzlety…“), zaškrtávátka
-    **účel** (Normální · Výcvik · Sólo · Přezkoušení; u povinných „povinná“) a **letí se na**
-    (Kluzák · Letoun · TMG · UL – kategorie osnovy je zaškrtnutá a zamčená, ostatní = „také
-    na“), počet letů s úlohou, platná;
+    **účel** (Normální · Výcvik · Sólo · Přezkoušení; u povinných „povinná“) a **lze letět
+    i na** (jen jiné kategorie, než je kategorie osnovy – u kluzákové Letoun · TMG · UL), počet
+    letů s úlohou, platná. Kategorie je **jen u osnovy** (v jejím řádku); úloha zůstává ve své
+    osnově a u letu jiné kategorie se nabídne pod ní („II – Sportovní výcvik → II/10…“);
   - úloha bez účelu: oranžově „nenabízí se“.
   - Nová osnova se zakládá s kategorií (povinná).
 - Vpravo **vybraná úloha** (název, přesun do jiné osnovy, smazat) a **náhled nového letu**:
