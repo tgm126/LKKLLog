@@ -347,7 +347,8 @@ def test_osoba_jen_v_jednom_letu(conn, pilot, osoba, flotila):
         zpusob="VLASTNI", akce="vzlet",
     )  # fmt: skip
     conn.execute(
-        """INSERT INTO lkkl.lov_osnova (kod, nazev, poradi) VALUES ('O', 'Osnova', 1);
+        """INSERT INTO lkkl.lov_osnova (kod, nazev, poradi, kategorie_id)
+           SELECT 'O', 'Osnova', 1, id FROM lkkl.lov_kategorie WHERE kod = 'LETOUN';
            INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, osnova_id)
            SELECT 'U', 'Úloha', 1, id FROM lkkl.lov_osnova WHERE kod = 'O';
            INSERT INTO lkkl.lov_uloha_ucel (uloha_id, ucel_id)

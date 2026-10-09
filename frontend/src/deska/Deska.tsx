@@ -38,7 +38,8 @@ export function Deska() {
   const navigate = useNavigate();
   const detail = useMatch("/let/:id");
   const novy = useMatch("/novy-let");
-  const panel = !!detail || !!novy;
+  const vycvik = useMatch("/vycvik");
+  const panel = !!detail || !!novy || !!vycvik;
   const vybranyId = detail ? Number(detail.params.id) : null;
   const akce = useAkceLetu();
   const { zprava, oznamit } = useZprava();

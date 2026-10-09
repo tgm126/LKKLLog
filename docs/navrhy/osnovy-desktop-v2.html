@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Výcvik – osnovy a typy přezkoušení (desktop)</title>
+<style>
+/* =============================================================================================
+   NÁVRH v2 (9. 10. 2026) – desktop: Správa → Výcvik (docs/modul-osnovy.md, revize po db/041).
+   Jedno právo „spravuje výcvik“, jeden panel s přepínačem Osnovy a úlohy | Typy přezkoušení.
+   Osnovy a úlohy: jako v1, ale úlohy se u přezkoušení nenabízejí (sloupec Přezk. zmizel,
+   II/9P je typ PC-CLOUD). „Lze letět i na“ (II/10–12 i na TMG) je stále otevřené.
+   Typy přezkoušení: skutečná data ze serveru po 041 (16 typů, PC-CLOUD 1 let); kdo smí
+   provést = oprávnění vydávaná pro kategorii typu (zaškrtávátka vpravo). Osoby v náhledu
+   examinátora jsou VYMYŠLENÉ (stav jako na serveru: FE(S) jen na kluzácích).
+   Zaškrtávátka, přepínač, úprava i náhledy fungují.
+   ============================================================================================= */
+:root {
+  color-scheme: light dark;
+  --pismo: system-ui, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+  --pismo-s: 12px; --pismo-m: 15px; --pismo-l: 20px;
+  --tloustka-tucna: 700; --radkovani: 1.35; --proklad-verzalky: .04em;
+  --mezera-1: 4px; --mezera-2: 8px; --mezera-3: 12px; --mezera-4: 16px;
+  --zaobleni: 12px; --zaobleni-ovladace: 8px; --zaobleni-pilulka: 999px; --ramecek-sirka: 1px;
+  --klik: 32px; --klik-hlavni: 40px; --policko: 18px;
+  --sirka-nahledu: 360px;
+  --sloupce-uloh: 28px minmax(0, 1fr) repeat(3, 64px) 12px repeat(4, 52px) 12px 56px 64px;
+  --sloupce-typu: 28px minmax(0, 1fr) minmax(0, 260px) 56px 64px;
+
+  --barva-text:           light-dark(#1a1d21, #e8eaed);
+  --barva-seda:           light-dark(#5b6570, #9aa4af);
+  --barva-cara:           light-dark(#d9dde2, #2c333c);
+  --barva-pozadi:         light-dark(#eef0f3, #0d1015);
+  --barva-karta:          light-dark(#fff, #171b21);
+  --barva-neutralni:      light-dark(#dce1e7, #1f252c);
+  --barva-najeti:         light-dark(#f5f8fc, #1b222b);
+  --barva-modra:          light-dark(#0a5fd0, #6aa8ff);
+  --barva-modra-vypln:    light-dark(#e3edfc, #122440);
+  --barva-oranzova:       light-dark(#a35400, #f0a64a);
+  --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
+  --barva-akce-modra: #0a5fd0;
+  --stin-panelu: 0 0 0 1px light-dark(#0000000f, #ffffff14), -8px 0 24px light-dark(#0000001f, #00000080);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--barva-pozadi); color: var(--barva-text); font: var(--pismo-m) / var(--radkovani) var(--pismo); }
+button { font: inherit; color: inherit; }
+.male { font-size: var(--pismo-s); }
+.seda { color: var(--barva-seda); }
+.tucne { font-weight: var(--tloustka-tucna); }
+.nadpisek { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: var(--proklad-verzalky); text-transform: uppercase; color: var(--barva-seda); }
+[hidden] { display: none !important; }
+
+/* lišta desky (jen naznačená) */
+.lista { display: flex; align-items: baseline; gap: var(--mezera-4); padding: var(--mezera-2) var(--mezera-4); background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); }
+.lista .velke { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); }
+.lista .vpravo { margin-left: auto; }
+
+/* panel přes celou desku */
+.panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: calc(100vh - 49px); margin-left: var(--mezera-4); background: var(--barva-pozadi); box-shadow: var(--stin-panelu); }
+.hlava { display: flex; align-items: center; gap: var(--mezera-3); padding: var(--mezera-3) var(--mezera-4); background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); }
+.hlava h2 { margin: 0; font-size: var(--pismo-l); }
+.hlava .prepinac { width: 340px; }
+.telo { display: grid; grid-template-columns: minmax(0, 1fr) var(--sirka-nahledu); gap: var(--mezera-4); padding: var(--mezera-3) var(--mezera-4); overflow: hidden; }
+.pata { display: flex; align-items: center; gap: var(--mezera-2); padding: var(--mezera-3) var(--mezera-4); background: var(--barva-karta); border-top: 1px solid var(--barva-cara); }
+.pata .vpravo { margin-left: auto; }
+
+.tl { display: inline-flex; align-items: center; justify-content: center; min-height: var(--klik); padding: 0 var(--mezera-3); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-weight: var(--tloustka-tucna); cursor: pointer; }
+.tl.maly { min-height: 24px; padding: 0 var(--mezera-2); font-size: var(--pismo-s); }
+.tl.bez-ramu { border-color: transparent; background: none; }
+
+/* karta s maticí */
+.karta { background: var(--barva-karta); border-radius: var(--zaobleni); overflow: hidden; }
+.matice { display: flex; flex-direction: column; min-height: 0; }
+.matice .posuv { overflow-y: auto; }
+.radek { display: grid; grid-template-columns: var(--sloupce-uloh); align-items: center; gap: 0 var(--mezera-2); padding: var(--mezera-1) var(--mezera-3); border-top: 1px solid var(--barva-cara); }
+.typy .radek { grid-template-columns: var(--sloupce-typu); }
+.radek > .stred { justify-self: center; }
+.radek > .vpravo { justify-self: end; }
+.zahlavi { position: sticky; top: 0; z-index: 1; background: var(--barva-neutralni); border-top: 0; align-items: end; }
+.zahlavi .skupina-3 { grid-column: span 3; text-align: center; border-bottom: 1px solid var(--barva-seda); padding-bottom: 2px; }
+.zahlavi .skupina-4 { grid-column: span 4; text-align: center; border-bottom: 1px solid var(--barva-seda); padding-bottom: 2px; }
+.zahlavi .sloupec { justify-self: center; text-align: center; line-height: 1.15; }
+.skupina-radek { background: var(--barva-najeti); font-weight: var(--tloustka-tucna); }
+.skupina-radek .nazev { display: flex; align-items: baseline; gap: var(--mezera-2); min-width: 0; white-space: nowrap; overflow: hidden; }
+.polozka .nazev { padding-left: var(--mezera-4); }
+.polozka:hover { background: var(--barva-najeti); }
+.polozka.vybrana { background: var(--barva-modra-vypln); }
+.neplatna .nazev, .neplatna .nazev * { color: var(--barva-seda); text-decoration: line-through; }
+.stitek-oranzovy { display: inline-block; margin-left: var(--mezera-2); padding: 0 var(--mezera-2); border-radius: var(--zaobleni-pilulka); background: var(--barva-oranzova-vypln); color: var(--barva-oranzova); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); text-decoration: none; }
+.provadi { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--mezera-2); min-width: 0; }
+.provadi .stitek-oranzovy { margin-left: 0; }
+.sbalit { width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--barva-seda); }
+.poradi { display: inline-flex; flex-direction: column; line-height: .9; }
+.poradi button { padding: 0 4px; border: 0; background: none; color: var(--barva-seda); cursor: pointer; font-size: 11px; }
+
+input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0; accent-color: var(--barva-akce-modra); cursor: pointer; }
+
+/* vpravo: úprava a náhled */
+.nahled { display: flex; flex-direction: column; gap: var(--mezera-3); min-height: 0; overflow-y: auto; }
+.blok { background: var(--barva-karta); border-radius: var(--zaobleni); overflow: hidden; }
+.blok-nadpis { display: flex; justify-content: space-between; padding: var(--mezera-1) var(--mezera-3); background: var(--barva-neutralni); }
+.blok-telo { display: grid; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); }
+.segmenty { display: flex; border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); overflow: hidden; }
+.segmenty button { flex: 1; min-height: var(--klik); border: 0; border-left: 1px solid var(--barva-cara); background: var(--barva-karta); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); cursor: pointer; }
+.segmenty button:first-child { border-left: 0; }
+.segmenty button[aria-pressed=true] { background: var(--barva-akce-modra); color: #fff; }
+.cipy { display: flex; flex-wrap: wrap; gap: var(--mezera-2); }
+.cip { padding: var(--mezera-1) var(--mezera-3); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-pilulka); background: var(--barva-karta); font-size: var(--pismo-s); }
+.prazdne { margin: 0; color: var(--barva-oranzova); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+.pole { display: grid; gap: 2px; }
+.pole label { font-size: var(--pismo-s); color: var(--barva-seda); }
+.pole input, .pole select { min-height: var(--klik); padding: 0 var(--mezera-2); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); color: var(--barva-text); font: inherit; }
+.poznamka { margin: 0; color: var(--barva-seda); font-size: var(--pismo-s); }
+.dvojice-poli { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--mezera-2); }
+.s-predponou { display: flex; align-items: center; gap: 2px; min-height: var(--klik); }
+.s-predponou input { width: 100%; min-height: var(--klik); padding: 0 var(--mezera-2); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); color: var(--barva-text); font: inherit; }
+.zaskrtnuti { display: grid; gap: var(--mezera-1); }
+.zaskrtnuti label { display: flex; align-items: center; gap: var(--mezera-2); font-size: var(--pismo-m); color: var(--barva-text); cursor: pointer; }
+.seznam { display: grid; gap: var(--mezera-1); }
+.seznam .radek-volby { padding: var(--mezera-1) var(--mezera-2); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); font-size: var(--pismo-s); }
+</style>
+</head>
+<body>
+<div class="lista">
+  <span class="velke">AK Kladno Log</span>
+  <span class="vpravo seda">‹ Pátek 9. 10. 2026 › · 09:12:40 UTC · <b>TM</b></span>
+</div>
+
+<section class="panel" aria-label="Výcvik">
+  <div class="hlava">
+    <h2>Výcvik</h2>
+    <div class="segmenty prepinac" id="prepinac"></div>
+    <span class="seda" id="souhrn"></span>
+    <span class="seda male" style="margin-left:auto">Správa → Výcvik · právo „spravuje výcvik“</span>
+  </div>
+
+  <!-- ===================== OSNOVY A ÚLOHY ===================== -->
+  <div class="telo" id="v-osnovy">
+    <div class="karta matice">
+      <div class="radek zahlavi nadpisek">
+        <span></span><span>Osnova / úloha</span>
+        <span class="skupina-3">Nabízí se u účelu</span><span></span>
+        <span class="skupina-4">lze letět i na <i>(otevřené)</i></span><span></span>
+        <span class="sloupec">Lety</span><span class="sloupec">Platná</span>
+      </div>
+      <div class="radek zahlavi male seda" style="padding-top:0">
+        <span></span><span></span>
+        <span class="sloupec">Normální</span><span class="sloupec">Výcvik<br><i>povinná</i></span><span class="sloupec">Sólo<br><i>povinná</i></span><span></span>
+        <span class="sloupec">Kluzák</span><span class="sloupec">Letoun</span><span class="sloupec">TMG</span><span class="sloupec">UL</span><span></span>
+        <span></span><span></span>
+      </div>
+      <div class="posuv" id="matice"></div>
+    </div>
+
+    <div class="nahled">
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Vybraná úloha</span><span class="male seda" id="vybrana-osnova"></span></div>
+        <div class="blok-telo">
+          <div class="dvojice-poli">
+            <div class="pole"><label>Označení</label><span class="s-predponou"><b id="predpona"></b><input id="kod" size="4"></span></div>
+            <div class="pole"><label>Název (bez označení)</label><input id="nazev"></div>
+          </div>
+          <p class="poznamka" id="nahled-popisu"></p>
+          <div class="pole"><label>Osnova</label><select id="osnova"></select></div>
+          <p class="poznamka" id="pouziti"></p>
+          <div style="display:flex;gap:8px">
+            <button class="tl maly" type="button">Smazat</button>
+            <span class="poznamka" style="align-self:center">jen nepoužitá; použitou jen zneplatnit</span>
+          </div>
+        </div>
+      </div>
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Náhled: nový let</span><span class="male seda">co uvidí pilot</span></div>
+        <div class="blok-telo">
+          <div class="segmenty" id="n-ucel"></div>
+          <div class="segmenty" id="n-kat"></div>
+          <div id="n-nabidka"></div>
+        </div>
+      </div>
+      <p class="poznamka">U přezkoušení se úlohy nezadávají – v novém letu je místo nich blok
+        Přezkoušení s typy kategorie letadla (zkuste účel Přezk.). „Přezkoušení“ před sólem
+        (IU/8P, IA/8P) zůstává úlohou výcviku – dělá ho instruktor.</p>
+    </div>
+  </div>
+
+  <!-- ===================== TYPY PŘEZKOUŠENÍ ===================== -->
+  <div class="telo" id="v-typy" hidden>
+    <div class="karta matice typy">
+      <div class="radek zahlavi nadpisek">
+        <span></span><span>Kategorie / typ přezkoušení</span><span>Kdo smí provést (PIC)</span>
+        <span class="sloupec">Lety</span><span class="sloupec">Platný</span>
+      </div>
+      <div class="posuv" id="matice-typu"></div>
+    </div>
+
+    <div class="nahled">
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Vybraný typ</span><span class="male seda" id="typ-kategorie"></span></div>
+        <div class="blok-telo">
+          <div class="dvojice-poli">
+            <div class="pole"><label>Kód (označení)</label><input id="t-kod"></div>
+            <div class="pole"><label>Název (bez kódu)</label><input id="t-nazev"></div>
+          </div>
+          <p class="poznamka" id="t-popis"></p>
+          <div class="pole"><label>Kategorie letadla</label><select id="t-kat"></select></div>
+          <p class="poznamka" id="t-pouziti"></p>
+          <span class="nadpisek">Kdo smí provést</span>
+          <div class="zaskrtnuti" id="t-opravneni"></div>
+          <p class="poznamka">Nabízí se jen oprávnění, která se pro kategorii typu vydávají.</p>
+          <div style="display:flex;gap:8px">
+            <button class="tl maly" type="button">Smazat</button>
+            <span class="poznamka" style="align-self:center">jen nepoužitý; použitý jen zneplatnit</span>
+          </div>
+        </div>
+      </div>
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Náhled: examinátor</span><span class="male seda">rychlá volba v novém letu</span></div>
+        <div class="blok-telo" id="t-examinatori"></div>
+      </div>
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Náhled: nový let</span><span class="male seda">blok Přezkoušení</span></div>
+        <div class="blok-telo" id="t-blok"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pata">
+    <span id="pata-osnovy"><button class="tl" type="button">Nová osnova</button> <button class="tl" type="button">Nová úloha</button></span>
+    <span id="pata-typy" hidden><button class="tl" type="button">Nový typ přezkoušení</button></span>
+    <span class="male seda">Každá změna se uloží hned a zapíše se do historie.</span>
+    <button class="tl vpravo" type="button">Zavřít</button>
+  </div>
+</section>
+
+<script>
+// --- společné -----------------------------------------------------------------------------------
+const UCELY = [["NORMALNI", "Normální"], ["VYCVIK", "Výcvik"], ["VYCVIK_SOLO", "Sólo"]];
+const UCELY_NAHLEDU = [...UCELY, ["PREZKOUSENI", "Přezk."]];
+const KATEGORIE = [["KLUZAK", "Kluzák"], ["LETOUN", "Letoun"], ["TMG", "TMG"], ["UL", "UL"]];
+const nazevKat = (k) => KATEGORIE.find(([x]) => x === k)[1];
+let pohled = "osnovy";
+
+const el = (tag, attrs = {}, ...deti) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k.startsWith("on") ? e.addEventListener(k.slice(2), v) : k === "class" ? (e.className = v) : (e[k] = v);
+  for (const d of deti) e.append(d);
+  return e;
+};
+const zaskrt = (ano, zmenit, neurcite = false) => {
+  const c = el("input", { type: "checkbox", checked: ano, onchange: () => { zmenit(c.checked); vykreslit(); } });
+  c.indeterminate = neurcite;
+  return c;
+};
+const seg = (cil, volby, hodnota, nastavit) => cil.replaceChildren(
+  ...volby.map(([k, n]) => el("button", { type: "button", textContent: n, ariaPressed: String(k === hodnota), onclick: () => { nastavit(k); vykreslit(); } })));
+const poradi = (pole, i) => el("span", { class: "poradi" },
+  el("button", { type: "button", title: "výš", textContent: "▲", onclick: () => { if (i) { [pole[i - 1], pole[i]] = [pole[i], pole[i - 1]]; vykreslit(); } } }),
+  el("button", { type: "button", title: "níž", textContent: "▼", onclick: () => { if (i < pole.length - 1) { [pole[i + 1], pole[i]] = [pole[i], pole[i + 1]]; vykreslit(); } } }));
+
+// --- osnovy a úlohy (server 9. 10. 2026 po 041; II/9P už je typ PC-CLOUD) -----------------------
+const u = (oznaceni, nazev, ucely, kat = "", lety = 0) => ({ kod: oznaceni, nazev, ucely: new Set(ucely.split(",")), kat: new Set(kat.split(",").filter(Boolean)), lety, platna: true });
+const V = "VYCVIK", VS = "VYCVIK,VYCVIK_SOLO", NV = "NORMALNI,VYCVIK";
+const OSNOVY = [
+  { kod: "IU", nazev: "Výcvik SPL (naviják a aerovlek)", kat: "KLUZAK", platna: true, otevrena: true, ulohy: [
+    u("1", "Seznamovací let", V, "", 2), u("2", "Účinky kormidel, přímý let a zatáčky", V),
+    u("3", "Pády, skluzy, spirály, mezní rychlosti", V), u("4", "Navijákové vzlety, okruh a přistání", V, "", 2),
+    u("5", "Opravy vadných přistání", V, "", 3), u("6", "Mimořádné případy při navijáku, omezený prostor", V),
+    u("7", "Aerovlek, vývrtky, pády, spirály", V), u("8P", "Přezkoušení před samostatnými lety", V),
+    u("9", "První samostatný let", "VYCVIK_SOLO"), u("10", "Lety po okruhu a do prostoru", VS),
+    u("11", "Přistání do omezeného prostoru", VS, "", 2), u("12", "Využití stoupavých proudů", VS),
+    u("13", "Traťový navigační let", VS)] },
+  { kod: "IA", nazev: "Výcvik SPL (aerovlek, samostart)", kat: "KLUZAK", platna: true, otevrena: false, ulohy: [
+    u("1", "Seznamovací let", V), u("2", "Účinky kormidel, přímý let a zatáčky", V), u("3", "Pády, skluzy, spirály, mezní rychlosti", V),
+    u("4", "Vzlety aerovlekem / samostartem, okruh a přistání", V), u("5", "Opravy vadných přistání", V),
+    u("6", "Mimořádné případy, omezený prostor", V), u("7", "Aerovlek, vývrtky, pády, spirály", V),
+    u("8P", "Přezkoušení před samostatnými lety", V), u("9", "První samostatný let", "VYCVIK_SOLO"),
+    u("10", "Lety po okruhu a do prostoru", VS), u("11", "Přistání do omezeného prostoru", VS),
+    u("12", "Využití stoupavých proudů", VS), u("13", "Traťový navigační let", VS)] },
+  { kod: "II", nazev: "Sportovní výcvik", kat: "KLUZAK", platna: true, otevrena: true, ulohy: [
+    u("1", "Termika, svah a lety do prostoru", NV), u("2", "Let po okruhu", NV, "", 2),
+    u("3", "Přistání do omezeného prostoru", NV), u("4", "Mimořádné případy", NV), u("5", "Navigační let ve dvojím", V),
+    u("6", "Samostatný přelet", "NORMALNI"), u("7", "Lety v dlouhé vlně", NV), u("8", "Lety v oblačnosti", NV),
+    u("10", "TMG – vzlet, okruh, přistání", NV, "TMG"), u("11", "TMG – zvláštní případy za letu", V, "TMG"),
+    u("12", "TMG – navigační lety a lety do prostoru", NV, "TMG")] },
+  { kod: "S", nazev: "Školka", kat: "KLUZAK", platna: true, otevrena: false, ulohy: [
+    u("4", "Okruh a přistání", V, "", 1), u("6", "Mimořádné případy", V), u("11", "Přistání do omezeného prostoru", V, "", 2)] },
+];
+const popisOsnovy = (o) => `${o.kod} – ${o.nazev}`;
+const popisUlohy = (x, o) => `${o.kod}/${x.kod} ${x.nazev}`;
+let vybrana = OSNOVY[2].ulohy[8];
+let nahledUcel = "VYCVIK", nahledKat = "TMG";
+const nabizi = (x, o) => x.platna && o.platna && x.ucely.size > 0;
+const naKategorii = (x, o, k) => k === o.kat || x.kat.has(k);
+const vlastni = () => el("span", { class: "stred male seda", textContent: "·", title: "kategorie osnovy" });
+
+// --- typy přezkoušení (server po 041) a oprávnění vydávaná pro kategorie (021, 041) ------------
+const OPRAVNENI = {
+  FI_S: "FI(S)", FE_S: "FE(S)", FE_S_FI: "FE(S) – ověření FI(S)", FI_A: "FI(A)", CRI_A: "CRI(A)",
+  FE_A: "FE(A)", CRE_A: "CRE(A)", FIE_A: "FIE(A)", INSTRUKTOR_ULL: "Instruktor ULL",
+  INSPEKTOR_ULL: "Inspektor ULL", VLEKAR: "Vlekař",
+};
+const PRO_KATEGORII = {
+  KLUZAK: ["FI_S", "FE_S", "FE_S_FI"],
+  TMG: ["FI_S", "FE_S", "FE_S_FI", "FI_A", "CRI_A", "FE_A", "CRE_A", "FIE_A"],
+  LETOUN: ["FI_A", "CRI_A", "FE_A", "CRE_A", "FIE_A", "VLEKAR"],
+  UL: ["INSTRUKTOR_ULL", "INSPEKTOR_ULL", "VLEKAR"],
+};
+const t = (kod, nazev, kat, opr, lety = 0) => ({ kod, nazev, kat, opr: new Set(opr.split(",")), lety, platny: true });
+const TYPY = [
+  t("ST-SPL", "Zkouška dovednosti SPL", "KLUZAK", "FE_S"),
+  t("PC-SPL", "Přezkoušení odborné způsobilosti SPL", "KLUZAK", "FE_S"),
+  t("PC-CLOUD", "Přezkoušení pro lety v oblacích", "KLUZAK", "FE_S", 1),
+  t("AOC-FI-S", "Ověření způsobilosti instruktora FI(S)", "KLUZAK", "FE_S_FI"),
+  t("ST-TMG", "Zkouška dovednosti TMG", "TMG", "FE_S,FE_A"),
+  t("PC-TMG", "Přezkoušení odborné způsobilosti TMG", "TMG", "FE_S,FE_A,CRE_A"),
+  t("ST-LAPL-A", "Zkouška dovednosti LAPL(A)", "LETOUN", "FE_A"),
+  t("ST-PPL-A", "Zkouška dovednosti PPL(A)", "LETOUN", "FE_A"),
+  t("PC-LAPL-A", "Přezkoušení odborné způsobilosti LAPL(A)", "LETOUN", "FE_A"),
+  t("PC-SEP", "Přezkoušení odborné způsobilosti SEP (prodloužení, obnova)", "LETOUN", "FE_A,CRE_A"),
+  t("AOC-FI-A", "Ověření způsobilosti instruktora FI(A), CRI(A)", "LETOUN", "FIE_A"),
+  t("ST-ULL", "Závěrečná zkouška pilota ULL", "UL", "INSPEKTOR_ULL"),
+  t("PC-ULL", "Ověření praktických dovedností pilota ULL", "UL", "INSPEKTOR_ULL"),
+  t("ST-ULL-CTR", "Zkouška pro řízené lety VFR", "UL", "INSPEKTOR_ULL"),
+  t("ST-ULL-VLEK", "Zkouška kvalifikace vlekař ULL", "UL", "INSPEKTOR_ULL"),
+  t("AOC-ULLI", "Přezkoušení instruktora ULL", "UL", "INSPEKTOR_ULL"),
+];
+// vymyšlené osoby: oprávnění → kategorie, pro které ho mají (stav jako na serveru: FE(S) jen kluzák)
+const OSOBY = [
+  { jmeno: "Karel Vítek", opr: { FE_S: ["KLUZAK"], FI_S: ["KLUZAK", "TMG"] } },
+  { jmeno: "Eva Malá", opr: { FI_S: ["KLUZAK"] } },
+  { jmeno: "Jiří Dvořák", opr: { FI_A: ["LETOUN", "TMG"] } },
+];
+const otevreneKat = new Set(KATEGORIE.map(([k]) => k));
+let vybranyTyp = TYPY[9];
+const smi = (osoba, typ) => [...typ.opr].some((o) => (osoba.opr[o] ?? []).includes(typ.kat));
+
+// --- vykreslení ---------------------------------------------------------------------------------
+function vykreslit() {
+  seg(document.getElementById("prepinac"), [["osnovy", "Osnovy a úlohy"], ["typy", "Typy přezkoušení"]], pohled, (p) => (pohled = p));
+  for (const [id, p] of [["v-osnovy", "osnovy"], ["pata-osnovy", "osnovy"], ["v-typy", "typy"], ["pata-typy", "typy"]])
+    document.getElementById(id).hidden = pohled !== p;
+  if (pohled === "osnovy") vykreslitOsnovy(); else vykreslitTypy();
+}
+
+function vykreslitOsnovy() {
+  const m = document.getElementById("matice");
+  m.replaceChildren();
+  OSNOVY.forEach((o) => {
+    const souhrnne = (mnozina, kod) => {
+      const n = o.ulohy.filter((x) => x[mnozina].has(kod)).length;
+      return el("span", { class: "stred" }, zaskrt(n === o.ulohy.length, (ano) => o.ulohy.forEach((x) => ano ? x[mnozina].add(kod) : x[mnozina].delete(kod)), n > 0 && n < o.ulohy.length));
+    };
+    m.append(el("div", { class: "radek skupina-radek" + (o.platna ? "" : " neplatna") },
+      el("button", { class: "sbalit", type: "button", textContent: o.otevrena ? "▾" : "▸", onclick: () => { o.otevrena = !o.otevrena; vykreslit(); } }),
+      el("span", { class: "nazev" }, popisOsnovy(o), el("span", { class: "male", textContent: `kategorie ${nazevKat(o.kat)}` }),
+        el("span", { class: "male seda", textContent: `${o.ulohy.length} úloh` }),
+        el("button", { class: "tl maly bez-ramu", type: "button", textContent: "+ úloha" })),
+      ...UCELY.map(([k]) => souhrnne("ucely", k)), el("span"),
+      ...KATEGORIE.map(([k]) => k === o.kat ? vlastni() : souhrnne("kat", k)), el("span"),
+      el("span", { class: "vpravo male", textContent: o.ulohy.reduce((s, x) => s + x.lety, 0) || "" }),
+      el("span", { class: "stred" }, zaskrt(o.platna, (ano) => (o.platna = ano))),
+    ));
+    if (!o.otevrena) return;
+    o.ulohy.forEach((x, i) => {
+      const mimo = !nabizi(x, o) && x.platna && o.platna;
+      m.append(el("div", { class: "radek polozka" + (x === vybrana ? " vybrana" : "") + (x.platna ? "" : " neplatna"), onclick: (e) => { if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") { vybrana = x; vykreslit(); } } },
+        poradi(o.ulohy, i),
+        el("span", { class: "nazev" }, popisUlohy(x, o), mimo ? el("span", { class: "stitek-oranzovy", textContent: "nenabízí se" }) : ""),
+        ...UCELY.map(([k]) => el("span", { class: "stred" }, zaskrt(x.ucely.has(k), (ano) => ano ? x.ucely.add(k) : x.ucely.delete(k)))), el("span"),
+        ...KATEGORIE.map(([k]) => k === o.kat ? vlastni() : el("span", { class: "stred" }, zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
+        el("span", { class: "vpravo male" + (x.lety ? "" : " seda"), textContent: x.lety || "–" }),
+        el("span", { class: "stred" }, zaskrt(x.platna, (ano) => (x.platna = ano))),
+      ));
+    });
+  });
+  const uloh = OSNOVY.reduce((s, o) => s + o.ulohy.length, 0);
+  const mimo = OSNOVY.reduce((s, o) => s + o.ulohy.filter((x) => !nabizi(x, o)).length, 0);
+  document.getElementById("souhrn").textContent = `${OSNOVY.length} osnovy · ${uloh} úloh` + (mimo ? ` · ${mimo} se nenabízí` : "");
+
+  const vo = OSNOVY.find((o) => o.ulohy.includes(vybrana));
+  const kod = document.getElementById("kod"), nazev = document.getElementById("nazev");
+  kod.value = vybrana.kod; nazev.value = vybrana.nazev;
+  kod.onchange = () => { vybrana.kod = kod.value.toUpperCase(); vykreslit(); };
+  nazev.onchange = () => { vybrana.nazev = nazev.value; vykreslit(); };
+  document.getElementById("predpona").textContent = `${vo.kod}/`;
+  document.getElementById("nahled-popisu").textContent = `V aplikaci: ${popisUlohy(vybrana, vo)} · štítek na pásku „${vo.kod}/${vybrana.kod}“`;
+  document.getElementById("vybrana-osnova").textContent = vo.kod;
+  document.getElementById("osnova").replaceChildren(...OSNOVY.map((o) => el("option", { textContent: popisOsnovy(o), selected: o === vo })));
+  document.getElementById("pouziti").textContent = vybrana.lety
+    ? `Použita v ${vybrana.lety} letech – smazat nejde, jen zneplatnit (ve starých letech zůstane).`
+    : "Zatím v žádném letu – jde smazat.";
+
+  seg(document.getElementById("n-ucel"), UCELY_NAHLEDU, nahledUcel, (k) => (nahledUcel = k));
+  seg(document.getElementById("n-kat"), KATEGORIE, nahledKat, (k) => (nahledKat = k));
+  const cil = document.getElementById("n-nabidka");
+  if (nahledUcel === "PREZKOUSENI") { cil.replaceChildren(...blokPrezkouseni(nahledKat)); return; }
+  cil.replaceChildren();
+  const osnovy = OSNOVY.map((o) => [o, o.ulohy.filter((x) => nabizi(x, o) && x.ucely.has(nahledUcel) && naKategorii(x, o, nahledKat))]).filter(([, xs]) => xs.length);
+  const ucel = UCELY.find(([k]) => k === nahledUcel)[1];
+  const povinna = nahledUcel !== "NORMALNI";
+  if (!osnovy.length) {
+    cil.append(el("p", { class: "prazdne", textContent: `Pro ${ucel.toLowerCase()} na ${nazevKat(nahledKat)} žádná úloha – blok Úloha se v novém letu neukáže${povinna ? " (a není povinná)" : ""}.` }));
+    return;
+  }
+  cil.append(el("span", { class: "nadpisek", textContent: `Úloha${povinna ? " · povinná" : " · nepovinná"}` }));
+  osnovy.forEach(([o, xs]) => cil.append(
+    el("p", { class: "male tucne", style: "margin:8px 0 4px", textContent: popisOsnovy(o) }),
+    el("div", { class: "cipy" }, ...xs.map((x) => el("span", { class: "cip", textContent: popisUlohy(x, o) })))));
+}
+
+// blok Přezkoušení v novém letu: platné typy kategorie letadla
+function blokPrezkouseni(kat) {
+  const typy = TYPY.filter((x) => x.platny && x.kat === kat);
+  if (!typy.length) return [el("p", { class: "prazdne", textContent: `Pro ${nazevKat(kat)} žádný typ přezkoušení – blok se neukáže (a typ není povinný).` })];
+  return [el("span", { class: "nadpisek", textContent: "Přezkoušení · povinné (místo úlohy)" }),
+    el("div", { class: "seznam" }, ...typy.map((x) => el("span", { class: "radek-volby" }, el("b", { textContent: x.kod }), ` ${x.nazev}`)))];
+}
+
+function vykreslitTypy() {
+  const m = document.getElementById("matice-typu");
+  m.replaceChildren();
+  KATEGORIE.forEach(([k, n]) => {
+    const typy = TYPY.filter((x) => x.kat === k);
+    m.append(el("div", { class: "radek skupina-radek" },
+      el("button", { class: "sbalit", type: "button", textContent: otevreneKat.has(k) ? "▾" : "▸", onclick: () => { otevreneKat.has(k) ? otevreneKat.delete(k) : otevreneKat.add(k); vykreslit(); } }),
+      el("span", { class: "nazev" }, n, el("span", { class: "male seda", textContent: `${typy.length} typů` }),
+        el("button", { class: "tl maly bez-ramu", type: "button", textContent: "+ typ" })),
+      el("span"), el("span", { class: "vpravo male", textContent: typy.reduce((s, x) => s + x.lety, 0) || "" }), el("span")));
+    if (!otevreneKat.has(k)) return;
+    typy.forEach((x) => {
+      const i = TYPY.indexOf(x);
+      const nikdo = x.opr.size === 0;
+      const bezOsob = !nikdo && !OSOBY.some((o) => smi(o, x));
+      m.append(el("div", { class: "radek polozka" + (x === vybranyTyp ? " vybrana" : "") + (x.platny ? "" : " neplatna"), onclick: (e) => { if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") { vybranyTyp = x; vykreslit(); } } },
+        poradi(TYPY, i),
+        el("span", { class: "nazev" }, el("b", { textContent: x.kod }), ` ${x.nazev}`),
+        el("span", { class: "provadi male" },
+          nikdo ? el("span", { class: "stitek-oranzovy", textContent: "nikdo ho nesmí provést" })
+            : [...x.opr].map((o) => OPRAVNENI[o]).join(", "),
+          bezOsob ? el("span", { class: "stitek-oranzovy", textContent: "bez examinátora", title: "oprávnění nemá žádná osoba" }) : ""),
+        el("span", { class: "vpravo male" + (x.lety ? "" : " seda"), textContent: x.lety || "–" }),
+        el("span", { class: "stred" }, zaskrt(x.platny, (ano) => (x.platny = ano)))));
+    });
+  });
+  const nikdo = TYPY.filter((x) => x.platny && !OSOBY.some((o) => smi(o, x))).length;
+  document.getElementById("souhrn").textContent = `${TYPY.length} typů` + (nikdo ? ` · ${nikdo} bez examinátora` : "");
+
+  // vybraný typ
+  const x = vybranyTyp;
+  const kod = document.getElementById("t-kod"), nazev = document.getElementById("t-nazev"), kat = document.getElementById("t-kat");
+  kod.value = x.kod; nazev.value = x.nazev;
+  kod.onchange = () => { x.kod = kod.value.toUpperCase(); vykreslit(); };
+  nazev.onchange = () => { x.nazev = nazev.value; vykreslit(); };
+  kat.replaceChildren(...KATEGORIE.map(([k, n]) => el("option", { value: k, textContent: n, selected: k === x.kat })));
+  kat.disabled = x.lety > 0;
+  kat.onchange = () => { x.kat = kat.value; x.opr = new Set([...x.opr].filter((o) => PRO_KATEGORII[x.kat].includes(o))); vykreslit(); };
+  document.getElementById("typ-kategorie").textContent = nazevKat(x.kat);
+  document.getElementById("t-popis").textContent = `V aplikaci: ${x.kod} ${x.nazev} · štítek na pásku „${x.kod}“`;
+  document.getElementById("t-pouziti").textContent = x.lety
+    ? `Použit v ${x.lety} letu – kategorii ani smazání nejde (jen zneplatnit).`
+    : "Zatím v žádném letu – jde smazat i změnit kategorii.";
+  document.getElementById("t-opravneni").replaceChildren(...PRO_KATEGORII[x.kat].map((o) =>
+    el("label", {}, zaskrt(x.opr.has(o), (ano) => ano ? x.opr.add(o) : x.opr.delete(o)), OPRAVNENI[o])));
+
+  // náhled: kdo se nabídne jako examinátor
+  const ex = document.getElementById("t-examinatori");
+  const osoby = OSOBY.filter((o) => smi(o, x));
+  ex.replaceChildren(osoby.length
+    ? el("div", { class: "cipy" }, ...osoby.map((o) => el("span", { class: "cip", textContent: o.jmeno })))
+    : el("p", { class: "prazdne", textContent: x.opr.size
+      ? `Nikdo nemá ${[...x.opr].map((o) => OPRAVNENI[o]).join(" ani ")} pro ${nazevKat(x.kat)} – examinátora najde pilot jen přes Hledat…; doplňte oprávnění v detailu osoby.`
+      : "Typ nemá žádné oprávnění – examinátor se nenabídne nikdo." }));
+  document.getElementById("t-blok").replaceChildren(...blokPrezkouseni(x.kat));
+}
+vykreslit();
+</script>
+</body>
+</html>

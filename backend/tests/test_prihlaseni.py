@@ -18,6 +18,7 @@ def test_prihlaseni_a_ja(klient, osoba, conn):
         "smi_odblokovat": True,
         "spravuje_osoby": True,
         "spravuje_letadla": True,
+        "spravuje_vycvik": True,
     }
     assert ja["puvodni"] is None
     radek = conn.execute(

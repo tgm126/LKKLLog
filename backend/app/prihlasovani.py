@@ -33,6 +33,7 @@ class Prava(BaseModel):
     smi_odblokovat: bool
     spravuje_osoby: bool
     spravuje_letadla: bool
+    spravuje_vycvik: bool
 
 
 class OsobaKratce(BaseModel):
@@ -83,6 +84,7 @@ class UcetIn(BaseModel):
     smi_odblokovat: bool = False
     spravuje_osoby: bool = False
     spravuje_letadla: bool = False
+    spravuje_vycvik: bool = False
 
 
 class UcetZmenaIn(BaseModel):
@@ -91,6 +93,7 @@ class UcetZmenaIn(BaseModel):
     smi_odblokovat: bool | None = None
     spravuje_osoby: bool | None = None
     spravuje_letadla: bool | None = None
+    spravuje_vycvik: bool | None = None
 
 
 class Ucet(OsobaSEmailem):
@@ -100,6 +103,7 @@ class Ucet(OsobaSEmailem):
     smi_odblokovat: bool
     spravuje_osoby: bool
     spravuje_letadla: bool
+    spravuje_vycvik: bool
     zalozen: datetime
     pozvanka_odeslana: datetime | None
     posledni_prihlaseni: datetime | None
@@ -131,6 +135,7 @@ class Prihlaseny:
     smi_odblokovat: bool
     spravuje_osoby: bool
     spravuje_letadla: bool
+    spravuje_vycvik: bool
     jen_cteni: bool
 
 
@@ -192,7 +197,7 @@ def prihlaseny(
     otisk = bezpecnost.otisk_klice(klic)
     r = conn.execute(
         """SELECT r.osoba_id, r.puvodni_osoba_id, r.jen_cteni, u.admin, u.smi_odblokovat,
-                  u.spravuje_osoby, u.spravuje_letadla,
+                  u.spravuje_osoby, u.spravuje_letadla, u.spravuje_vycvik,
                   r.posledni_aktivita < now() - %s AS prodlouzit
            FROM lkkl.relace r
            JOIN lkkl.v_ucet u ON u.osoba_id = r.osoba_id
@@ -229,6 +234,7 @@ def prihlaseny(
         smi_odblokovat=r["smi_odblokovat"] and not jen_cteni,
         spravuje_osoby=r["spravuje_osoby"] and not jen_cteni,
         spravuje_letadla=r["spravuje_letadla"] and not jen_cteni,
+        spravuje_vycvik=r["spravuje_vycvik"] and not jen_cteni,
         jen_cteni=jen_cteni,
     )
 
@@ -257,12 +263,18 @@ def spravuje_letadla(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
     return p
 
 
+def spravuje_vycvik(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
+    if not (p.admin or p.spravuje_vycvik):
+        raise HTTPException(403, "Na tuto akci nemáte právo.")
+    return p
+
+
 def _ja(
     conn: Connection, osoba_id: int, puvodni_osoba_id: int | None, jen_cteni: bool = False
 ) -> Ja:
     u = conn.execute(
         """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat, spravuje_osoby,
-                  spravuje_letadla
+                  spravuje_letadla, spravuje_vycvik
            FROM lkkl.v_ucet WHERE osoba_id = %s""",
         (osoba_id,),
     ).fetchone()
@@ -283,6 +295,7 @@ def _ja(
             smi_odblokovat=(u["admin"] or u["smi_odblokovat"]) and not jen_cteni,
             spravuje_osoby=(u["admin"] or u["spravuje_osoby"]) and not jen_cteni,
             spravuje_letadla=(u["admin"] or u["spravuje_letadla"]) and not jen_cteni,
+            spravuje_vycvik=(u["admin"] or u["spravuje_vycvik"]) and not jen_cteni,
         ),
         puvodni=OsobaKratce(**puvodni) if puvodni else None,
         jen_cteni=jen_cteni,
@@ -492,7 +505,8 @@ def heslo_zmenit(
 # --- účty (admin) ---------------------------------------------------------------------------
 
 _UCET_SQL = """SELECT osoba_id, jmeno, prijmeni, email, ma_heslo, smi_se_prihlasit, admin,
-                      smi_odblokovat, spravuje_osoby, spravuje_letadla, zalozen,
+                      smi_odblokovat, spravuje_osoby, spravuje_letadla, spravuje_vycvik,
+                      zalozen,
                       pozvanka_odeslana,
                       posledni_prihlaseni,
                       coalesce(zablokovano_do > now(), false) AS zablokovano
@@ -500,7 +514,7 @@ _UCET_SQL = """SELECT osoba_id, jmeno, prijmeni, email, ma_heslo, smi_se_prihlas
 
 
 def _jen_admin_prava(p: Prihlaseny, *prava: bool | None) -> None:
-    """Práva (admin, smí odblokovat, spravuje osoby a letadla) přiděluje jen admin."""
+    """Práva (admin, smí odblokovat, spravuje osoby, letadla a výcvik) přiděluje jen admin."""
     if not p.admin and any(prava):
         raise HTTPException(403, "Práva přiděluje jen admin.")
 
@@ -514,19 +528,28 @@ def ucty(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spo
 def ucet_zalozit(
     data: UcetIn, p: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
 ):
-    _jen_admin_prava(p, data.admin, data.smi_odblokovat, data.spravuje_osoby, data.spravuje_letadla)
+    _jen_admin_prava(
+        p,
+        data.admin,
+        data.smi_odblokovat,
+        data.spravuje_osoby,
+        data.spravuje_letadla,
+        data.spravuje_vycvik,
+    )
     try:
         with conn.transaction():
             conn.execute(
                 """INSERT INTO lkkl.ucet
-                       (osoba_id, admin, smi_odblokovat, spravuje_osoby, spravuje_letadla)
-                   VALUES (%s, %s, %s, %s, %s)""",
+                       (osoba_id, admin, smi_odblokovat, spravuje_osoby, spravuje_letadla,
+                        spravuje_vycvik)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
                 (
                     data.osoba_id,
                     data.admin,
                     data.smi_odblokovat,
                     data.spravuje_osoby,
                     data.spravuje_letadla,
+                    data.spravuje_vycvik,
                 ),
             )
     except errors.ForeignKeyViolation as e:
@@ -546,7 +569,13 @@ def ucet_zmenit(
     conn: Connection = Depends(spojeni),
 ):
     # odebrat právo je také přidělování práv – jen admin
-    prava = (data.admin, data.smi_odblokovat, data.spravuje_osoby, data.spravuje_letadla)
+    prava = (
+        data.admin,
+        data.smi_odblokovat,
+        data.spravuje_osoby,
+        data.spravuje_letadla,
+        data.spravuje_vycvik,
+    )
     _jen_admin_prava(p, *(v is not None for v in prava))
     if osoba_id == p.osoba_id and (data.prihlaseni_povoleno is False or data.admin is False):
         raise HTTPException(400, "Sám sobě nemůžete zablokovat účet ani odebrat admina.")
@@ -560,7 +589,8 @@ def ucet_zmenit(
                    admin = coalesce(%s, admin),
                    smi_odblokovat = coalesce(%s, smi_odblokovat),
                    spravuje_osoby = coalesce(%s, spravuje_osoby),
-                   spravuje_letadla = coalesce(%s, spravuje_letadla)
+                   spravuje_letadla = coalesce(%s, spravuje_letadla),
+                   spravuje_vycvik = coalesce(%s, spravuje_vycvik)
                WHERE osoba_id = %s RETURNING osoba_id""",
             (data.prihlaseni_povoleno, *prava, osoba_id),
         ).fetchone()

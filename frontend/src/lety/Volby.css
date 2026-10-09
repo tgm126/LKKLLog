@@ -9,9 +9,12 @@
   --tl-okraj: var(--barva-akce-modra);
 }
 
-/* Seznam voleb (úlohy osnovy): řádky „kód · název“ přes celou šířku bloku, přepážky =
-   mezera 1 px nad barvou čáry */
+/* Seznam voleb (úlohy osnovy, typy přezkoušení): řádky „kód · název“ přes celou šířku
+   bloku, přepážky = mezera 1 px nad barvou čáry. Šířka kódu podle nejdelšího (IU/10,
+   u typů přezkoušení ST-ULL-VLEK). */
 .seznam-voleb {
+  --sirka-kodu: 6ch;
+
   display: grid;
   gap: var(--ramecek-sirka);
   margin: 0 calc(-1 * var(--mezera-3));
@@ -25,10 +28,14 @@
   --tl-tloustka: var(--tloustka);
 
   display: grid;
-  grid-template-columns: 6ch minmax(0, 1fr);
+  grid-template-columns: var(--sirka-kodu) minmax(0, 1fr);
   gap: var(--mezera-2);
   align-items: center;
   text-align: left;
+}
+
+.seznam-voleb.dlouhe-kody {
+  --sirka-kodu: 12ch;
 }
 
 .seznam-voleb .tl b {

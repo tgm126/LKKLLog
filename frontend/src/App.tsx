@@ -19,6 +19,7 @@ import { SeznamLetadel } from "./letadla/Seznam";
 import { SeznamOsob } from "./osoby/Seznam";
 import { LetisteProDnesek, OsobyVProvozu } from "./provoz/Provoz";
 import { NastaveniSystemu, SmazatLetyDne } from "./sprava/Sprava";
+import { EditorVycviku } from "./vycvik/Editor";
 import { Lety } from "./stranky/Lety";
 import { NastaveniHesla } from "./stranky/NastaveniHesla";
 import { Prihlaseni } from "./stranky/Prihlaseni";
@@ -42,6 +43,9 @@ export function App() {
             <Route path="let/:id" element={<PanelDetailu />} />
             <Route element={<SeZapisem />}>
               <Route path="novy-let" element={<PanelNovehoLetu />} />
+              <Route element={<SpravujeVycvik />}>
+                <Route path="vycvik" element={<EditorVycviku />} />
+              </Route>
             </Route>
           </Route>
         ) : (
@@ -116,6 +120,11 @@ function SeZapisem() {
 /** Správa systému jen pro admina (server ji hlídá také). */
 function JenAdmin() {
   return useJa().data?.prava.admin ? <Outlet /> : <Navigate to="/" replace />;
+}
+
+/** Editor výcviku jen se správou výcviku (admin ji má vždy; server ji hlídá také). */
+function SpravujeVycvik() {
+  return useJa().data?.prava.spravuje_vycvik ? <Outlet /> : <Navigate to="/" replace />;
 }
 
 /** Obrazovky s hlavičkou a menu (průvodce a detail mají vlastní horní lištu). */

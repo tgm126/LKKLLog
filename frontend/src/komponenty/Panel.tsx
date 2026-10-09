@@ -18,6 +18,7 @@ export function Panel({
   nadpis,
   hlava,
   siroky = false,
+  cely = false,
   zavrit,
   pata,
   children,
@@ -27,12 +28,14 @@ export function Panel({
   hlava: ReactNode;
   /** Širší panel (formulář nového letu ve dvou sloupcích). */
   siroky?: boolean;
+  /** Panel přes celou desku (editor výcviku). */
+  cely?: boolean;
   zavrit: () => void;
   pata?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <aside className={siroky ? "panel siroky" : "panel"} aria-label={nadpis}>
+    <aside className={["panel", siroky && "siroky", cely && "cely"].filter(Boolean).join(" ")} aria-label={nadpis}>
       <div className="panel-hlava">{hlava}</div>
       <div className="panel-telo" onClick={ukazatBlok}>
         {children}

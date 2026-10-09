@@ -35,7 +35,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK (název „Pilot ve výcviku“), PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008, 041 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
-| `lov_osnova` | číselník (evidenční) | osnova (skupina úloh) → kategorie letadla (prázdná = všechny); **`kod` = oficiální označení** (IU, IA, II), `nazev` bez něj („Výcvik SPL…“); `v_lov_osnova.popis` = „IU – Výcvik SPL…“; kluzáky podle Programu výcviku AeČR v.6 (úprava AK Kladno) | 016, 019, 040 |
+| `lov_osnova` | číselník (evidenční) | osnova (skupina úloh) → kategorie letadla (povinná od 042); **`kod` = oficiální označení** (IU, IA, II), `nazev` bez něj („Výcvik SPL…“); `v_lov_osnova.popis` = „IU – Výcvik SPL…“; kluzáky podle Programu výcviku AeČR v.6 (úprava AK Kladno); spravuje se v editoru výcviku (desktop) | 016, 019, 040, 042 |
 | `lov_uloha` | číselník (evidenční) | úloha (letové cvičení) → osnova; **`kod` = označení v osnově** (4, 8P – jedinečný v osnově), `nazev` bez označení; `v_lov_uloha.oznaceni` „IU/4“, `popis` „IU/4 Navijákové vzlety…“; pozemní přípravy se nezadávají | 016, 019, 040 |
 | `lov_uloha_ucel` | vazba | u kterých účelů se úloha nabízí (výcvik = dvojí, sólo, normální; přezkoušení od 041 ne) | 019, 041 |
 | `lov_prezkouseni` | číselník (evidenční) | typ přezkoušení → kategorie letadla (povinná); **`kod` = označení** (ST-SPL, PC-SEP, AOC-FI-A… – zobrazuje se, štítek pásku), `nazev` bez něj; `v_lov_prezkouseni.popis` = „PC-SEP Přezkoušení…“; docs/modul-prezkouseni.md | 041 |
@@ -65,7 +65,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_osoba_opravneni_kategorie` | vazba | pro které kategorie osoba oprávnění má; složené FK na oprávnění osoby a na povolené kategorie (`kategorie_povolena`); audit | 024 |
 | `v_osoba_smi` | pohled | role, které osoba smí zastat (role, účel, funkce, kategorie letadla; jen platné položky) – nabídky osob v průvodci a detailu | 024, 031 |
 | `v_osoba_opravneni` | pohled | přehled oprávnění osob s kategoriemi a omezením v jednom řádku (kontrola zadání; i neplatné osoby) | 024, 031 |
-| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, `prihlaseni_povoleno` (smí se přihlásit; do 039 `aktivni`), práva `admin`, `smi_odblokovat`, `spravuje_osoby` a `spravuje_letadla` (admin má všechna automaticky), pozvánka, ochrana proti hádání hesla | 005, 006, 023, 029, 039 |
+| `ucet` | tabulka | přihlašovací účet osoby (1:0..1, existence = aktivace v aplikaci): otisk hesla, `prihlaseni_povoleno` (smí se přihlásit; do 039 `aktivni`), práva `admin`, `smi_odblokovat`, `spravuje_osoby`, `spravuje_letadla` a `spravuje_vycvik` (osnovy, úlohy, typy přezkoušení; admin má všechna automaticky), pozvánka, ochrana proti hádání hesla | 005, 006, 023, 029, 039, 042 |
 | `relace_provoz` | tabulka | můj provoz: nastavení relace na jeden den (UTC) – letiště (prázdné = domovské); jiný den se nebere v úvahu | 026 |
 | `relace_provoz_osoba` | tabulka | osoby v provozu relace (filtr nabídky osob v posádce); žádný řádek = bez filtru | 026 |
 | `v_relace_letiste`, `v_relace_osoba` | pohled | dnešní letiště relace (zvolené, jinak domovské) a dnešní osoby v provozu | 026 |
@@ -77,7 +77,8 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `kontrola_platnosti()` + `platnost_<sloupec>` | trigger | nová nebo změněná vazba nesmí vést na neplatný záznam `lov_` (let, posádka, můj provoz i vazby mezi číselníky) | 031 |
 | `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); zakládá ji spouštěč `app/migrace.py` | – |
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
-| `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, lov_osoba_opravneni_kategorie, ucet, lov_letadlo) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy` | 012 |
+| `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, lov_osoba_opravneni_kategorie, ucet, lov_letadlo, lov_osnova, lov_uloha, lov_uloha_ucel, lov_prezkouseni, lov_prezkouseni_opravneni) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy`, `poradi` u osnov, úloh a typů přezkoušení | 012, 042 |
+| `vycvik_kontrola` | trigger | editor výcviku nesmí rozbít staré lety: kategorii osnovy ani typu přezkoušení s lety nejde změnit, úlohu s lety nejde přesunout do osnovy jiné kategorie, účel úlohy použitý v letech nejde odebrat; typ přezkoušení jen s oprávněním vydávaným pro jeho kategorii | 042 |
 | `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit; `TRUNCATE` letů ani auditu nejde nikdy (obešel by audit – lety se mažou jen procedurou `smazat_lety_dne`) | 012, 017, 034 |
 | `lov_audit_popisek` | číselník | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje | 012, 017 |
 | `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |

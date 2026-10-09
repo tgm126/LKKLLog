@@ -14,6 +14,7 @@ def test_prava_k_osobam(osoba, prihlasit):
         "smi_odblokovat": False,
         "spravuje_osoby": True,
         "spravuje_letadla": False,
+        "spravuje_vycvik": False,
     }
     assert spravce.get("/api/osoby").status_code == 200
     # Správce smí zablokovat účet, ale ne přidělit (ani odebrat) právo.

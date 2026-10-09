@@ -53,6 +53,7 @@ export type Ja = OsobaKratce & {
     smi_odblokovat: boolean;
     spravuje_osoby: boolean;
     spravuje_letadla: boolean;
+    spravuje_vycvik: boolean;
   };
   /** Skutečný admin, pokud je přihlášen jako jiná osoba. */
   puvodni: OsobaKratce | null;

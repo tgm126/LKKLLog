@@ -19,6 +19,10 @@
   width: var(--sirka-noveho);
 }
 
+.panel.cely {
+  width: 100%;
+}
+
 /* Hlava: pásek letu přes celou šířku, nebo nadpis s popisem */
 .panel-hlava {
   display: flex;

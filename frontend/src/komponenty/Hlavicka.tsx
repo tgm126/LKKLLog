@@ -8,6 +8,7 @@ import { useDen } from "../lety/api";
 import { useMujProvoz } from "../provoz/api";
 import { useTik } from "../tik";
 import { nacistRezim, nastavitRezim, REZIMY, type Rezim } from "../rezim";
+import { useDeska } from "../rozvrzeni";
 import { inicialy, zmenitUzivatele } from "../uzivatel";
 import { Stitek } from "./Stitek";
 import { Tlacitko } from "./Tlacitko";
@@ -116,6 +117,7 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
   const provoz = useMujProvoz().data;
   const letiste = provoz?.letiste;
   const [rezim, setRezim] = useState<Rezim>(nacistRezim);
+  const deska = useDeska();
   const qc = useQueryClient();
   const odhlasit = useMutation({
     mutationFn: () => poslat("/odhlaseni"),
@@ -178,23 +180,41 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
               </Tlacitko>
             </div>
           )}
-          {ja.prava.admin && !ja.jen_cteni && (
+          {(ja.prava.admin || (deska && ja.prava.spravuje_vycvik)) && !ja.jen_cteni && (
             <div className="nabidka-oddil">
               <span className="nadpisek">Správa</span>
-              <Tlacitko
-                varianta="bez-ramu"
-                className="nabidka-polozka"
-                onClick={() => navigate("/sprava/smazat-lety")}
-              >
-                Smazat lety dne…
-              </Tlacitko>
-              <Tlacitko
-                varianta="bez-ramu"
-                className="nabidka-polozka"
-                onClick={() => navigate("/sprava/nastaveni")}
-              >
-                Nastavení
-              </Tlacitko>
+              {/* editor výcviku jen na počítači (docs/modul-osnovy.md) */}
+              {deska && ja.prava.spravuje_vycvik && (
+                <Tlacitko
+                  varianta="bez-ramu"
+                  className="nabidka-polozka"
+                  onClick={() => {
+                    setOtevrena(false);
+                    navigate("/vycvik");
+                  }}
+                >
+                  Výcvik
+                  <span>osnovy, přezkoušení</span>
+                </Tlacitko>
+              )}
+              {ja.prava.admin && (
+                <>
+                  <Tlacitko
+                    varianta="bez-ramu"
+                    className="nabidka-polozka"
+                    onClick={() => navigate("/sprava/smazat-lety")}
+                  >
+                    Smazat lety dne…
+                  </Tlacitko>
+                  <Tlacitko
+                    varianta="bez-ramu"
+                    className="nabidka-polozka"
+                    onClick={() => navigate("/sprava/nastaveni")}
+                  >
+                    Nastavení
+                  </Tlacitko>
+                </>
+              )}
             </div>
           )}
           <div className="nabidka-oddil">

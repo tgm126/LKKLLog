@@ -12,6 +12,7 @@ export type UcetOsoby = {
   smi_odblokovat: boolean;
   spravuje_osoby: boolean;
   spravuje_letadla: boolean;
+  spravuje_vycvik: boolean;
   zablokovano: boolean;
   ma_heslo: boolean;
 };

@@ -98,6 +98,13 @@
   --prstenec: 3px;           /* vybraný pásek (otevřený detail) v barvě textu */
   --prstenec-mezera: 2px;    /* mezera mezi páskem a prstencem vybraného */
 
+  /* Editor výcviku (docs/modul-osnovy.md, maketa osnovy-desktop-v2.html): tabulka
+     pořadí · název · zaškrtávátka (účely) · lety · platná, vpravo úprava a náhled */
+  --sloupce-vycviku: 28px minmax(0, 1fr) auto 56px 64px;
+  --sloupce-typu: 28px minmax(0, 1fr) minmax(0, 300px) 56px 64px;
+  --sirka-bunky-vycviku: 72px; /* jedno zaškrtávátko účelu („Normální“ v záhlaví) */
+  --sirka-boku-vycviku: 380px; /* úprava vybrané položky a náhled nového letu */
+
   /* Barvy – každá jednou, se světlou a tmavou hodnotou. Barva jen pro význam. Kontrast textu
      na kartě i na barevných plochách ≥ 4,3 : 1 (výpočet v návrhu lety-mobil-v4.html). */
   --barva-text:           light-dark(#1a1d21, #e8eaed);

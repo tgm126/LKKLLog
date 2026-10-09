@@ -84,8 +84,8 @@ def osoba(conn):
             conn.execute(
                 """INSERT INTO lkkl.ucet
                        (osoba_id, heslo_hash, admin, smi_odblokovat, spravuje_osoby,
-                        spravuje_letadla)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                        spravuje_letadla, spravuje_vycvik)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                 (
                     osoba_id,
                     bezpecnost.otisk_hesla(heslo) if heslo else None,
@@ -93,6 +93,7 @@ def osoba(conn):
                     prava.get("smi_odblokovat", False),
                     prava.get("spravuje_osoby", False),
                     prava.get("spravuje_letadla", False),
+                    prava.get("spravuje_vycvik", False),
                 ),
             )
         return osoba_id

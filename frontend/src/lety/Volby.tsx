@@ -255,7 +255,7 @@ export function VolbaPrezkouseni({
     </Tlacitko>
   );
   return (
-    <div className="seznam-voleb">
+    <div className="seznam-voleb dlouhe-kody">
       {otevrena || !vybrany
         ? typy.map((t) =>
             radek(t, () => {

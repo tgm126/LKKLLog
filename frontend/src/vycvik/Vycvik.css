@@ -1,0 +1,171 @@
+/* Editor výcviku (desktop, panel přes celou desku): vlevo tabulka osnov a úloh nebo typů
+   přezkoušení, vpravo úprava vybrané položky a náhled nového letu (maketa osnovy-desktop-v2). */
+.vycvik-telo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sirka-boku-vycviku);
+  gap: var(--mezera-4);
+  height: 100%;
+  min-height: 0;
+}
+
+.vycvik-matice {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.vycvik-radek {
+  display: grid;
+  grid-template-columns: var(--sloupce-vycviku);
+  gap: 0 var(--mezera-2);
+  align-items: center;
+  padding: var(--mezera-1) var(--mezera-3);
+  border-top: var(--ramecek);
+}
+
+.vycvik-matice.typy .vycvik-radek {
+  grid-template-columns: var(--sloupce-typu);
+}
+
+.vycvik-zahlavi {
+  position: sticky;
+  top: 0;
+  z-index: var(--vrstva-panelu);
+  align-items: end;
+  border-top: 0;
+  background: var(--barva-neutralni);
+}
+
+.vycvik-skupina {
+  background: var(--barva-najeti);
+  font-weight: var(--tloustka-tucna);
+}
+
+.vycvik-nazev {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--mezera-2);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.vycvik-polozka {
+  cursor: pointer;
+}
+
+.vycvik-polozka .vycvik-nazev {
+  padding-left: var(--mezera-4);
+}
+
+.vycvik-polozka:hover {
+  background: var(--barva-najeti);
+}
+
+.vycvik-polozka.vybrana {
+  background: var(--barva-modra-vypln);
+}
+
+.vycvik-neplatna .vycvik-nazev {
+  color: var(--barva-seda);
+  text-decoration: line-through;
+}
+
+.vycvik-bunky {
+  display: flex;
+}
+
+.vycvik-bunka {
+  display: flex;
+  justify-content: center;
+  width: var(--sirka-bunky-vycviku);
+  text-align: center;
+}
+
+.vycvik-stred {
+  justify-self: center;
+}
+
+.vycvik-vpravo {
+  justify-self: end;
+}
+
+.vycvik-matice input[type="checkbox"] {
+  width: var(--velikost-policka);
+  height: var(--velikost-policka);
+  margin: 0;
+  accent-color: var(--barva-akce-modra);
+  cursor: pointer;
+}
+
+.vycvik-posun {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.vycvik-posun button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--barva-seda);
+  font-size: var(--pismo-s);
+  line-height: var(--radkovani);
+  cursor: pointer;
+}
+
+.vycvik-sbalit {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--barva-seda);
+  cursor: pointer;
+}
+
+.vycvik-bok {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mezera-3);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* bloky se nesmršťují – posouvá se celý sloupec */
+.vycvik-bok > * {
+  flex-shrink: 0;
+}
+
+/* náhled: účely a kategorie se do úzkého sloupce vejdou na dva řádky */
+.vycvik-bok .segmenty .tl {
+  white-space: normal;
+}
+
+.vycvik-dvojice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--mezera-2);
+}
+
+.vycvik-vyber {
+  display: grid;
+  gap: var(--mezera-1);
+}
+
+.vycvik-vyber select {
+  min-height: var(--klik);
+  padding: 0 var(--mezera-2);
+  border: var(--ramecek);
+  border-radius: var(--zaobleni-ovladace);
+  background: var(--barva-karta);
+  color: var(--barva-text);
+  font: inherit;
+}
+
+.vycvik-akce {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mezera-2);
+  align-items: center;
+}
+
+.vycvik-nahled {
+  display: grid;
+  gap: var(--mezera-1);
+}

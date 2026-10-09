@@ -68,6 +68,9 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 - **Letadlo dočasně nelétá:** *mimo provoz* (→ B8). Nové nebo vyřazené letadlo, cizí vlečná
   a číselníky – přímo v databázi.
 - **Zkušební lety:** Správa → *Smazat lety dne…* (→ B8).
+- **Osnovy, úlohy a typy přezkoušení** (vedoucí výcviku, na počítači): Správa → *Výcvik*
+  (→ B8). Úloha bez zaškrtnutého účelu se pilotům nenabízí; typ přezkoušení bez examinátora
+  je oranžově – doplňte oprávnění osobám.
 
 ---
 
@@ -127,7 +130,7 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 ## B6. Nabídka uživatele (kolečko s iniciálami)
 - **Můj provoz · dnes** (jen pro mě, na tomto zařízení, jen dnes): **Letiště** pro dnešek,
   **Osoby v provozu**.
-- **Správa** (jen admin, B8). **Režim zobrazení** (podle zařízení / světlý / tmavý).
+- **Správa** (admin; Výcvik i se správou výcviku, B8). **Režim zobrazení** (podle zařízení / světlý / tmavý).
   **Odhlásit.**
 
 ## B7. Co aplikace hlídá (a proč se něco nedá uložit)
@@ -147,5 +150,15 @@ neaktivní osoba nebo vyřazené letadlo se nenabízí. Hláška vždy řekne, c
 - **Letadla** (na telefonu): přepínač **mimo provoz** (dočasně – vidět šedě, nejde vybrat).
 - **Správa** v nabídce (admin): **Smazat lety dne…** – kalendář, dny s lety tučně, potvrzení
   (nevratné, v historii zůstane záznam); **Nastavení** – testovací provoz (žlutý pruh).
-- Přímo v databázi: nová a vyřazená letadla, číselníky (nepoužívaná položka se nemaže, ale
-  zneplatní).
+- **Výcvik** (na počítači; admin nebo právo *Spravuje výcvik*): panel přes celou desku,
+  přepínač **Osnovy a úlohy | Typy přezkoušení**. Každá změna se uloží hned.
+  - *Osnovy a úlohy:* zaškrtávátka, u kterého účelu (normální, výcvik, sólo) se úloha
+    nabízí – v řádku osnovy pro všechny její úlohy; pořadí ▲▼; vpravo označení a název,
+    přesun do jiné osnovy, nová osnova (s kategorií) a úloha; náhled, co uvidí pilot
+    v novém letu.
+  - *Typy přezkoušení:* kód a název, kategorie, **kdo smí provést** (oprávnění pro tu
+    kategorii) – podle toho se v novém letu nabízí examinátor; náhled examinátorů.
+  - Použité v letech nejde smazat, jen zneplatnit (odškrtnout *Platná*); u použité úlohy
+    nejde odebrat účel, se kterým se letěla, a nejde změnit kategorie použité osnovy či typu.
+- Přímo v databázi: nová a vyřazená letadla, ostatní číselníky (nepoužívaná položka se
+  nemaže, ale zneplatní).
