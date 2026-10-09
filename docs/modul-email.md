@@ -8,7 +8,8 @@ před spuštěním; pozvánky jen ruční akcí správce“.
 - **Jediný e-mail: odkaz pro nastavení hesla** (první přihlášení i zapomenuté heslo).
   Pošle ho **správce osob ručně u jedné osoby** – nic se neposílá automaticky (založení osoby,
   zapnutí účtu ani nic jiného e-mail nespustí).
-- Dnešní **Odkaz pro heslo** (zkopírovat a předat) zůstává jako záloha.
+- Dosavadní tlačítko **Odkaz pro heslo** (správa osob na telefonu → detail osoby → blok Účet
+  a přihlášení; odkaz se zkopíruje a předá) zůstává jako záloha.
 - Později (každé samostatně, až po odsouhlasení): samoobslužné „zapomněl jsem heslo“ na
   přihlášení, hromadné pozvánky po představení aplikace klubu, upozornění.
 
@@ -59,6 +60,8 @@ CREATE TABLE lkkl.email (
 - **Omezení:** nejvýš 1 e-mail téže osobě za 5 minut (dvojklik, opakované mačkání).
 
 ## 5. Obrazovka (detail osoby, blok Účet a přihlášení)
+Správa osob zůstává **jen na telefonu** (a v úzkém okně) – rozhodnuto 9. 10. 2026; desktop je
+jedna stránka (provozní deska).
 - Vedle **Odkaz pro heslo** tlačítko **Poslat odkaz e-mailem**. Klik → potvrzení „Poslat
   odkaz pro nastavení hesla na jan.novak@…?“ → odeslat → oznámení „Odkaz odeslán“ nebo chyba.
 - Nedostupné (zašedlé s vysvětlením): osoba bez e-mailu, účet vypnutý, režim *vypnuto*,
