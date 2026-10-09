@@ -20,7 +20,9 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
 1. **Nejdřív návrh, pak kód.** Každý modul začne krátkým dokumentem v `docs/` (data,
    obrazovky, pravidla); kód až po schválení.
 2. **Malé moduly dotažené do konce** (testy, dokumentace, vyzkoušeno na mobilu i desktopu),
-   než se začne další. Nic se nestaví „do zásoby“.
+   než se začne další. Nic se nestaví „do zásoby“. K dokumentaci patří **příručka pro
+   uživatele** `docs/prirucka.md` (krátká, podle situací, ne podle tlačítek): každou změnu
+   chování, kterou uživatel aplikace pozná, do ní promítnout ve stejném commitu.
 3. **Žádné záplaty.** Při změně požadavku se nejdřív upraví návrh, pak se kód přepíše, jako by
    to tak bylo od začátku; starý kód se úplně smaže (žádné vrstvy kompatibility ani dočasné
    obezličky).
