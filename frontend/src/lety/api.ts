@@ -43,7 +43,9 @@ export type Pasek = {
   pocet_pristani: number | null;
   /** Na palubě (u výcviku spočítaný z posádky). */
   pob: number;
+  /** Popis úlohy „IU/8P Přezkoušení…“; označení „IU/8P“ zvlášť (štítek). */
   uloha: string | null;
+  uloha_oznaceni: string | null;
   pocet_tg: number;
   posadka: Clen[];
   duvod_zruseni: string | null;
@@ -139,9 +141,13 @@ export type Ucel = { id: number; kod: string; nazev: string; uloha_povinna: bool
  *  kategorie letadla. */
 export type Role = { ucel: string | null; funkce: string; kategorie: string };
 export type Osoba = { id: number; jmeno: string; prijmeni: string; role: Role[] };
+/** Úloha v nabídce (v_uloha_nabidka, db/040): označení „IU/8P“, název bez označení, popis
+ *  „IU/8P Přezkoušení…“, osnova = popis osnovy „IU – Výcvik SPL…“. */
 export type Uloha = {
   id: number;
+  oznaceni: string;
   nazev: string;
+  popis: string;
   osnova_id: number;
   osnova: string;
   ucel_id: number;
@@ -196,6 +202,7 @@ export type DetailLetu = {
   ucel_kod: string | null;
   uloha_id: number | null;
   uloha: string | null;
+  uloha_oznaceni: string | null;
   zpusob_vzletu: string;
   zpusob_vzletu_kod: string;
   je_vlecny: boolean;

@@ -1,6 +1,6 @@
 -- 019 data: osnovy výcviku na kluzácích podle dokumentu „Program výcviku na kluzácích“
 -- (AeČR, v.6 z 1. 8. 2021, úprava AK Kladno). Jen letová cvičení (pozemní přípravy se
--- k letu nenabízejí); označení „IU/4“ je součástí názvu úlohy. Cvičení II/10–12 (na TMG; poslední
+-- k letu nenabízejí); označení je v kódu (osnova IU, úloha 4 → „IU/4“ skládá pohled – 040). Cvičení II/10–12 (na TMG; poslední
 -- řádek osnovy II v dokumentu nemá číslo – je to 12). Nahrazuje testovací osnovy ze 016.
 --
 -- Vazba úloha ↔ účel podle sloupců „dvojí“ a „samostatně“ v osnovách:
@@ -22,9 +22,9 @@ WHERE kod IN ('OBECNE', 'KL_ZAKLADNI', 'KL_POKRACOVACI', 'KL_SPORTOVNI', 'LET_PP
 INSERT INTO lkkl.lov_osnova (kod, nazev, poradi, platny, kategorie_id)
 SELECT v.kod, v.nazev, v.poradi, true, k.id
 FROM (VALUES
-    ('IU', 'IU – Výcvik SPL (naviják a aerovlek)', 10),
-    ('IA', 'IA – Výcvik SPL (aerovlek, samostart)', 20),
-    ('II', 'II – Sportovní výcvik', 30)
+    ('IU', 'Výcvik SPL (naviják a aerovlek)', 10),
+    ('IA', 'Výcvik SPL (aerovlek, samostart)', 20),
+    ('II', 'Sportovní výcvik', 30)
 ) AS v(kod, nazev, poradi)
 CROSS JOIN lkkl.lov_kategorie k
 WHERE k.kod = 'KLUZAK';
@@ -75,13 +75,14 @@ INSERT INTO nove_ulohy VALUES
     ('II', '12', 'TMG – navigační lety a lety do prostoru', 120, 'VN');
 
 INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, platny, osnova_id)
-SELECT n.osnova || '_' || n.cv, n.osnova || '/' || n.cv || ' ' || n.nazev, n.poradi, true, o.id
+SELECT n.cv, n.nazev, n.poradi, true, o.id
 FROM nove_ulohy n JOIN lkkl.lov_osnova o ON o.kod = n.osnova;
 
 INSERT INTO lkkl.lov_uloha_ucel (uloha_id, ucel_id)
 SELECT u.id, uc.id
 FROM nove_ulohy n
-JOIN lkkl.lov_uloha u ON u.kod = n.osnova || '_' || n.cv
+JOIN lkkl.lov_osnova o ON o.kod = n.osnova
+JOIN lkkl.lov_uloha u ON u.osnova_id = o.id AND u.kod = n.cv
 CROSS JOIN LATERAL regexp_split_to_table(n.ucely, '') AS z(pismeno)
 JOIN lkkl.lov_ucel uc ON uc.kod = CASE z.pismeno
     WHEN 'V' THEN 'VYCVIK' WHEN 'S' THEN 'VYCVIK_SOLO'

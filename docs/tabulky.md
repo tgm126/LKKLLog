@@ -33,10 +33,10 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK, PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
-| `lov_osnova` | číselník | osnova (skupina úloh) → kategorie letadla (prázdná = všechny); kluzáky: IU, IA, II podle Programu výcviku AeČR v.6 (úprava AK Kladno) | 016, 019 |
-| `lov_uloha` | číselník | úloha (letové cvičení) → osnova; označení je součástí názvu („IU/4 Navijákové vzlety…“), pozemní přípravy se nezadávají | 016, 019 |
+| `lov_osnova` | číselník (evidenční) | osnova (skupina úloh) → kategorie letadla (prázdná = všechny); **`kod` = oficiální označení** (IU, IA, II), `nazev` bez něj („Výcvik SPL…“); `v_lov_osnova.popis` = „IU – Výcvik SPL…“; kluzáky podle Programu výcviku AeČR v.6 (úprava AK Kladno) | 016, 019, 040 |
+| `lov_uloha` | číselník (evidenční) | úloha (letové cvičení) → osnova; **`kod` = označení v osnově** (4, 8P – jedinečný v osnově), `nazev` bez označení; `v_lov_uloha.oznaceni` „IU/4“, `popis` „IU/4 Navijákové vzlety…“; pozemní přípravy se nezadávají | 016, 019, 040 |
 | `lov_uloha_ucel` | vazba | u kterých účelů se úloha nabízí (výcvik = dvojí, sólo, normální, přezkoušení) | 019 |
-| `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie; úloha je povinná (výcvik, sólo, přezkoušení), jen když pro účel a kategorii nějaká existuje | 016, 019 |
+| `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie (s `oznaceni`, `popis`, `osnova_popis`); úloha je povinná (výcvik, sólo, přezkoušení), jen když pro účel a kategorii nějaká existuje; `v_let.uloha` = popis a `v_let.uloha_oznaceni` = štítek pásku | 016, 019, 040 |
 | `lov_ucel_funkce` | vazba | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009, 017 |
 | `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místo vzletu i přistání vždy (letiště nebo popis; místo přistání do přistání = plán), časy UTC, doba (počítá DB, nejméně 1 minuta), počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |

@@ -29,6 +29,14 @@ CREATE TABLE lkkl.lov_uloha_kategorie (
 ALTER TABLE lkkl.ucet ADD COLUMN spravuje_osnovy boolean NOT NULL DEFAULT false;
 ```
 Úloha se tedy letí na kategorii **své osnovy a na kategorie z `lov_uloha_kategorie`**.
+
+**Kód a název bez opakování** (rozhodnuto 9. 10. 2026, migrace 040 – hotovo): `kod` osnovy
+i úlohy je oficiální označení a zobrazuje se (CLAUDE.md bod 10 – evidenční číselník):
+
+| | `kod` | `nazev` | text v aplikaci (pohled) |
+|---|---|---|---|
+| osnova | `IU` | Výcvik SPL (naviják a aerovlek) | `popis` = „IU – Výcvik SPL (naviják a aerovlek)“ |
+| úloha | `8P` (jedinečný v osnově) | Přezkoušení před samostatnými lety | `oznaceni` = „IU/8P“, `popis` = „IU/8P Přezkoušení…“ |
 - **Nabídka** `v_uloha_nabidka`: úloha × účel × kategorie (osnovy + „také na“), jen platná
   úloha i osnova (jako dnes); z ní průvodce i kontrola letu (`let_zkontrolovat`: úloha musí patřit k účelu
   a kategorii letadla; povinnost úlohy jen tam, kde nějaká existuje – beze změny pravidla).

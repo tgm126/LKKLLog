@@ -93,6 +93,9 @@ class Pasek(BaseModel):
     pob: int
     """Počet osob na palubě (u výcviku, sóla a přezkoušení spočítaný z posádky)."""
     uloha: str | None
+    """Popis úlohy „IU/8P Přezkoušení…“ (v_let, db/040)."""
+    uloha_oznaceni: str | None
+    """Označení úlohy „IU/8P“ – štítek na pásku."""
     pocet_tg: int
     posadka: list[Clen]
     duvod_zruseni: str | None
@@ -219,7 +222,8 @@ def lety(
                   nullif(v.misto_vzletu, %(moje)s) AS misto_vzletu,
                   nullif(v.misto_pristani, %(moje)s) AS misto_pristani,
                   v.cas_vzletu, v.cas_pristani, v.doba_uctovana_min, v.pocet_pristani,
-                  v.pob, v.uloha, a.max_doba_min, v.prekrocena_doba, v.duvod_zruseni,
+                  v.pob, v.uloha, v.uloha_oznaceni, a.max_doba_min, v.prekrocena_doba,
+                  v.duvod_zruseni,
                   v.zruseno, v.dodatecne,
                   v.zalozeno,
                   (SELECT count(*) FROM lkkl.let_tg t WHERE t.let_id = v.id) AS pocet_tg,
@@ -488,7 +492,8 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
                ORDER BY o.prijmeni, o.jmeno"""
         ).fetchall(),
         "ulohy": conn.execute(
-            """SELECT u.id, u.nazev, u.osnova_id, u.osnova, u.ucel_id, k.kod AS kategorie_kod
+            """SELECT u.id, u.oznaceni, u.nazev, u.popis, u.osnova_id, u.osnova_popis AS osnova,
+                      u.ucel_id, k.kod AS kategorie_kod
                FROM lkkl.v_uloha_nabidka u
                LEFT JOIN lkkl.lov_kategorie k ON k.id = u.kategorie_id
                -- pořadí osnov a úloh podle číselníku (spojení pořadí z pohledu nezaručí)
@@ -670,7 +675,7 @@ def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = 
     let = conn.execute(
         """SELECT v.id, v.verze, v.stav, v.letadlo_id, v.rejstrik, v.typ, v.kategorie,
                   v.kategorie_kod, t.pocet_mist, a.max_doba_min, v.prekrocena_doba,
-                  v.ucel_id, v.ucel, v.ucel_kod, v.uloha_id, v.uloha,
+                  v.ucel_id, v.ucel, v.ucel_kod, v.uloha_id, v.uloha, v.uloha_oznaceni,
                   v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
                   l.misto_vzletu_id, l.misto_vzletu_popis, v.misto_vzletu,
                   l.misto_pristani_id, l.misto_pristani_popis, v.misto_pristani,

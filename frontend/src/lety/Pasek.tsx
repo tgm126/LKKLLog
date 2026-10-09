@@ -42,6 +42,7 @@ export type LetPasku = Pick<
   | "doba_uctovana_min"
   | "pocet_pristani"
   | "uloha"
+  | "uloha_oznaceni"
   | "varovani"
 > & {
   stav: Stav | "ROZPRACOVANY";
@@ -84,9 +85,6 @@ export function ucelKratce(l: LetPasku) {
 export const zpusobKratce = (l: LetPasku) =>
   l.zpusob_vzletu_kod && l.zpusob_vzletu_kod !== "VLASTNI" ? kratce(l.zpusob_vzletu) : null;
 
-/** Označení úlohy (IU/4) z názvu „IU/4 Navijákové vzlety…“. */
-export const ulohaKratce = (uloha: string | null) => uloha?.split(" ")[0] ?? null;
-
 /** Posádka: každá osoba na vlastním řádku, funkce malým šedým písmem. */
 export function Posadka({ clenove }: { clenove: LetPasku["posadka"] }) {
   return clenove.map((c) => (
@@ -110,7 +108,7 @@ export function StitkyPasku({ let: l, trasa, children }: { let: LetPasku; trasa?
       {pozice(ucelKratce(l))}
       {pozice(zpusobKratce(l))}
       {pozice(l.pob !== null && `POB ${l.pob}`)}
-      {pozice(ulohaKratce(l.uloha), l.uloha)}
+      {pozice(l.uloha_oznaceni, l.uloha)}
       {trasa && (
         <span className="trasa-pasku">
           <Stitek barva="pasek" zkratit>
@@ -296,7 +294,7 @@ function podrobnosti(l: PasekLetu) {
     `POB ${l.pob}`,
     ucelKratce(l),
     zpusobKratce(l),
-    ulohaKratce(l.uloha),
+    l.uloha_oznaceni,
     l.dodatecne && "dodatečně",
   ].filter(Boolean);
 }

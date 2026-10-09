@@ -99,6 +99,7 @@ function Formular({
           doba_uctovana_min: null,
           pocet_pristani: null,
           uloha: null,
+          uloha_oznaceni: null,
           varovani: null,
           pob: 1,
           posadka: vlekar

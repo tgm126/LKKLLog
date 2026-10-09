@@ -149,7 +149,7 @@ def test_novy_let_vycvik(conn, pilot, osoba, flotila):
     ).fetchone()["id"]
     uloha = conn.execute(
         """INSERT INTO lkkl.lov_uloha (kod, nazev, poradi, osnova_id)
-           VALUES ('B3', 'B3 – Okruhy', 10, %s) RETURNING id""",
+           VALUES ('B3', 'Okruhy', 10, %s) RETURNING id""",
         (osnova,),
     ).fetchone()["id"]
     conn.execute(
@@ -176,6 +176,17 @@ def test_novy_let_vycvik(conn, pilot, osoba, flotila):
 
     odpoved = k.post("/api/lety", json={**data, "uloha_id": uloha})
     assert odpoved.status_code == 200, odpoved.text
+    # texty úlohy skládá pohled z označení osnovy a úlohy (db/040)
+    [nabidka] = [u for u in k.get("/api/lety/nabidky").json()["ulohy"] if u["id"] == uloha]
+    assert (nabidka["oznaceni"], nabidka["popis"], nabidka["osnova"]) == (
+        "ZAKLAD/B3",
+        "ZAKLAD/B3 Okruhy",
+        "ZAKLAD – Základní",
+    )
+    pasek = next(
+        p for p in k.get("/api/lety").json()["lety"] if p["id"] == odpoved.json()["let_id"]
+    )
+    assert (pasek["uloha_oznaceni"], pasek["uloha"]) == ("ZAKLAD/B3", "ZAKLAD/B3 Okruhy")
     stav = _stav(conn, odpoved.json()["let_id"])
     assert stav["stav"] == "NAPLANOVAN" and stav["platce_id"] == zak  # u výcviku platí žák
     assert stav["pob"] == 2  # z posádky

@@ -152,7 +152,8 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
         cas_pristani: null,
         doba_uctovana_min: null,
         pocet_pristani: null,
-        uloha: nabidky.ulohy.find((u) => u.id === novy.uloha)?.nazev ?? null,
+        uloha: nabidky.ulohy.find((u) => u.id === novy.uloha)?.popis ?? null,
+        uloha_oznaceni: nabidky.ulohy.find((u) => u.id === novy.uloha)?.oznaceni ?? null,
         varovani: null,
         pob:
           ucel.funkce.length === 0

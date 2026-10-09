@@ -177,14 +177,11 @@ export function VolbaUlohy({
     vybrat(id);
     setOtevreno(null);
   };
-  const radek = (u: Uloha, onClick: () => void) => {
-    const [kod, ...nazev] = u.nazev.split(" ");
-    return (
-      <Tlacitko key={u.id} aria-pressed={u.id === vybrana?.id} onClick={onClick}>
-        <b>{kod}</b> <span>{nazev.join(" ")}</span>
-      </Tlacitko>
-    );
-  };
+  const radek = (u: Uloha, onClick: () => void) => (
+    <Tlacitko key={u.id} aria-pressed={u.id === vybrana?.id} onClick={onClick}>
+      <b>{u.oznaceni}</b> <span>{u.nazev}</span>
+    </Tlacitko>
+  );
   const vOsnove = otevreno === "uloha" || !vybrana || vybrana.osnova_id !== osnovaId;
   return (
     <>
