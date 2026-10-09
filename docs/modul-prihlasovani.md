@@ -63,7 +63,10 @@ Vše pod `/api`, data JSON. Chyby: 400 neplatná data, 401 nepřihlášen, 403 c
    odblokovat admin nebo osoba s právem `smi_odblokovat`. Zablokování brání jen novému
    přihlášení – už přihlášená zařízení fungují dál (útočník tak nemůže vlastníka „vyhodit“).
    Odpověď 429 prozradí, že účet existuje; je to vědomý kompromis (jinak by člověk nevěděl,
-   že má požádat o odblokování).
+   že má požádat o odblokování). Kdo zná e-mail, může tak zvenčí na 15 minut zablokovat
+   nové přihlášení pilota – přijato (code review 9. 10. 2026, S2): přihlášená zařízení
+   fungují dál, odblokuje správce; počítadlo podle IP adresy za proxy VPS Centra za tu
+   složitost nestojí.
 5. Úspěch: nová relace (`plati_do` = teď + 30 dní), `posledni_prihlaseni`, cookie. *audit*
 
 ### 4.2 Relace a cookie
