@@ -32,7 +32,10 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    databází ve VPS Centru). Lokální databáze je jen pro testy a vývoj změn datového modelu.
    Nikdy schéma nezakládat znovu ani data nepřepisovat. Změny struktury jen novým skriptem
    (`ALTER`…), který data zachová; na server je doveze spouštěč migrací při nasazení.
-   Skripty `_data.sql` jsou jen počáteční naplnění. Žádné importy z Excelu.
+   Skripty `_data.sql` (019, 021, 041) jsou počáteční naplnění číselníků; nová lokální
+   databáze vzniká obnovou zálohy serveru, ne z nich. Každý `_data` skript musí používat
+   příprava klikacích testů (`backend/tests/e2e_priprava.py`) – jinak zastará bez povšimnutí
+   (letadla a letiště 001/003 tak dopadly a 9. 10. 2026 byly smazány). Žádné importy z Excelu.
    Před každou změnou struktury udělat zálohu: `bash db/zaloha.sh` (do
    `C:\GIT\LKKLLog-zalohy`, mimo git – budou tam i osobní údaje).
 6. Skripty v `db/` se před první migrací na server mohou sloučit do čistého celku (data
@@ -72,7 +75,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     **Tabulky ve schématu databáze `lkkl`**; tabulky první verze byly 6. 10. 2026 smazány
     (ve `public` zůstává jen rozšíření `btree_gist`).
 12. **Zdrojem pravdy o schématu jsou SQL skripty** v `db/`, číslované `NNN_nazev.sql` (DDL)
-    a `NNN_nazev_data.sql` (data zadaná uživatelem). Vznikají a zkouší se v lokální databázi
+    a `NNN_nazev_data.sql` (data zadaná uživatelem; tabulku `lkkl.migrace` zakládá spouštěč
+    sám – musí existovat dřív než první skript). Vznikají a zkouší se v lokální databázi
     (Docker, `127.0.0.1:5432`, databáze `lkkllog`), na server se zmigrují později.
     Předpony: `lov_` číselníky, `v_` pohledy. Seznam objektů v `docs/tabulky.md`.
 

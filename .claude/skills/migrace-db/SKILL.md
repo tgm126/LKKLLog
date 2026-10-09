@@ -41,7 +41,8 @@ Pravidla datového modelu jsou v CLAUDE.md (body 5, 8–12) – tady je postup a
   skriptu struktury; ostatní data zadává uživatel (u nových příznaků je migrace smí
   jednorázově nastavit podle zadání uživatele – uvést v komentáři).
 - `_data.sql` skripty se při migraci nespouštějí; po změně struktury je přepiš do nového
-  tvaru (slouží pro novou databázi a pro e2e přípravu).
+  tvaru. Každý musí načítat `backend/tests/e2e_priprava.py` (CI je tím ověří); skript,
+  který e2e nepoužívá, zastará – smaž ho (data jsou na serveru).
 
 ## 3. Obnova lokální DB ze zálohy (lokální DB je jen pro vývoj)
 ```bash
