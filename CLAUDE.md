@@ -78,7 +78,9 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     a `NNN_nazev_data.sql` (data zadaná uživatelem; tabulku `lkkl.migrace` zakládá spouštěč
     sám – musí existovat dřív než první skript). Vznikají a zkouší se v lokální databázi
     (Docker, `127.0.0.1:5432`, databáze `lkkllog`), na server se zmigrují později.
-    Předpony: `lov_` číselníky, `v_` pohledy. Seznam objektů v `docs/tabulky.md`.
+    Předpony: `lov_` číselníky, `v_` pohledy. Seznam objektů v `docs/tabulky.md`; **aktuální
+    schéma v jednom souboru** `docs/schema.sql` (generuje `bash db/schema.sh` ze skriptů,
+    po každém novém skriptu přegenerovat – CI hlídá shodu; neupravovat ručně).
 
 ## Technologie
 - **Databáze:** PostgreSQL, schéma `lkkl` (viz výše).

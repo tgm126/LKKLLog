@@ -18,7 +18,8 @@ Pravidla datového modelu jsou v CLAUDE.md (body 5, 8–12) – tady je postup a
    ze skriptů bez `_data`).
 5. **Zkouška na kopii serveru** (kap. 4) – povinně před každým nasazením.
 6. **Dokumentace:** řádek v `docs/tabulky.md` (objekt, druh, účel, čísla skriptů), případně
-   návrh modulu v `docs/`.
+   návrh modulu v `docs/`; **`bash db/schema.sh`** přegeneruje `docs/schema.sql` (aktuální
+   schéma v jednom souboru – CI hlídá, že odpovídá skriptům).
 
 ## 2. Pasti (na všechny už jsme narazili)
 - **Převod dat vs. omezení:** když převod porušuje staré omezení, nejdřív

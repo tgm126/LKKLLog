@@ -36,6 +36,16 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+      # Aktuální schéma v jednom souboru (docs/schema.sql) se generuje ze skriptů db/ – po
+      # novém skriptu ho vývojář přegeneruje (bash db/schema.sh); tady se hlídá, že nezastaralo.
+      - name: docs/schema.sql odpovídá skriptům db/
+        working-directory: .
+        env:
+          LKKL_DB_KONTEJNER: ${{ job.services.postgres.id }}
+        run: |
+          bash db/schema.sh
+          git diff --exit-code docs/schema.sql \
+            || { echo "::error::docs/schema.sql neodpovídá skriptům db/ – spusťte bash db/schema.sh a přidejte do commitu."; exit 1; }
 
   frontend:
     # Kontroly (typy, eslint, stylelint), sestavení a klikací testy v rozměru mobilu proti
