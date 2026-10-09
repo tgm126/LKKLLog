@@ -9,7 +9,12 @@ CIL="${LKKL_ZALOHY:-/c/GIT/LKKLLog-zalohy}"
 mkdir -p "$CIL"
 soubor="$CIL/lkkl-$(date +%Y-%m-%d-%H%M%S).sql"
 
-docker exec lkkllog-dev-db-1 pg_dump -U lkkllog -d lkkllog \
-    --schema=lkkl --no-owner --no-privileges > "$soubor"
+# Rozšíření btree_gist je ve schématu public (výpis schématu lkkl ho nezahrne); obnova do
+# prázdné databáze by bez něj spadla na EXCLUDE omezeních.
+{
+    echo "CREATE EXTENSION IF NOT EXISTS btree_gist;"
+    docker exec lkkllog-dev-db-1 pg_dump -U lkkllog -d lkkllog \
+        --schema=lkkl --no-owner --no-privileges
+} > "$soubor"
 
 echo "Záloha: $soubor ($(wc -c < "$soubor") B)"
