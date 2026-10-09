@@ -8,7 +8,7 @@ právu. Model oprávnění: `docs/navrh-opravneni.md`.
 - Záložka **OSOBY** v menu – jen pro osoby s právem **spravuje osoby** (a admina).
 - **Seznam osob:** hledání (jméno, e-mail, telefon, číslo člena), filtr Aktivní / S účtem /
   Neaktivní / Vše; u osoby telefon a značky (admin, správce, oprávnění, bez účtu, zablokován,
-  externí). Dole „+ Nová osoba“.
+  externí). Dole „Nová osoba“.
 - **Detail osoby:** údaje (ťuknutím upravit), člen klubu, aktivní; účet a přihlášení
   (smí se přihlásit, práva, odkaz pro nastavení hesla, přihlásit se jako); oprávnění po
   kategoriích letadel; historie změn z auditu.

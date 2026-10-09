@@ -40,7 +40,7 @@ test("osoby: hledání, úprava telefonu, oprávnění", async ({ page }) => {
 
 test("osoby: nová osoba a vypnutí", async ({ page }) => {
   await page.getByRole("link", { name: "Osoby" }).click();
-  await page.getByRole("button", { name: "+ Nová osoba" }).click();
+  await page.getByRole("button", { name: "Nová osoba" }).click();
   await expect(page.getByRole("heading", { name: "Nová osoba" })).toBeVisible();
   await page.getByLabel("Jméno", { exact: true }).fill("Karel");
   await page.getByLabel("Příjmení", { exact: true }).fill("Test");

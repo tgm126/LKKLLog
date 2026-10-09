@@ -30,7 +30,7 @@ export function SeznamOsob() {
   const dole = (
     <div className="dole">
       <Tlacitko varianta="modre" hlavni onClick={() => navigate("/osoba/nova")}>
-        + Nová osoba
+        Nová osoba
       </Tlacitko>
     </div>
   );
