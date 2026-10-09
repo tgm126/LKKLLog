@@ -58,7 +58,10 @@ Nabídka uživatele → Správa → **Osnovy a úlohy** (admin, nebo právo *spr
     osnově a u letu jiné kategorie se nabídne pod ní („II – Sportovní výcvik → II/10…“);
   - úloha bez účelu: oranžově „nenabízí se“.
   - Nová osnova se zakládá s kategorií (povinná).
-- Vpravo **vybraná úloha** (název, přesun do jiné osnovy, smazat) a **náhled nového letu**:
+- Vpravo **vybraná úloha**: **označení** (pevná předpona osnovy „II/“ + kód „10“) a **název**
+  zvlášť (db/040), pod nimi výsledný text „II/10 TMG – vzlet…“ a štítek pásku „II/10“; přesun
+  do jiné osnovy, smazat. Klik na řádek osnovy otevře stejně její označení, název a kategorii.
+  Dále **náhled nového letu**:
   volba účelu a kategorie → osnovy a úlohy přesně jak je uvidí pilot v bloku Úloha
   (povinná / nepovinná, nebo že se blok neukáže).
 - Každá změna se uloží hned a zapíše do historie; dole Nová osnova · Nová úloha · Zavřít.

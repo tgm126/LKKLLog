@@ -10,7 +10,9 @@
    desku z nabídky uživatele (Správa → Osnovy a úlohy), jen s právem „spravuje osnovy“.
    Data = skutečné osnovy a úlohy ze serveru 9. 10. 2026 (počty letů také). Kategorie je jen
    u osnovy (v jejím řádku); úloha zůstává ve své osnově a dá se jen označit „lze letět i na“
-   jinou kategorii – v maketě II/10–12 i na TMG. Zaškrtávátka i náhled vpravo fungují.
+   jinou kategorii – v maketě II/10–12 i na TMG. Osnova i úloha mají zvlášť označení (kod: IU,
+   8P) a název bez něj; text „IU/8P Přezkoušení…“ skládá aplikace (db/040). Zaškrtávátka,
+   úprava i náhled vpravo fungují.
    ============================================================================================= */
 :root {
   color-scheme: light dark;
@@ -105,6 +107,9 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
 .pole label { font-size: var(--pismo-s); color: var(--barva-seda); }
 .pole input, .pole select { min-height: var(--klik); padding: 0 var(--mezera-2); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); color: var(--barva-text); font: inherit; }
 .poznamka { margin: 0; color: var(--barva-seda); font-size: var(--pismo-s); }
+.dvojice-poli { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--mezera-2); }
+.s-predponou { display: flex; align-items: center; gap: 2px; min-height: var(--klik); }
+.s-predponou input { width: 100%; min-height: var(--klik); padding: 0 var(--mezera-2); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); color: var(--barva-text); font: inherit; }
 </style>
 </head>
 <body>
@@ -143,7 +148,11 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
       <div class="blok">
         <div class="blok-nadpis"><span class="nadpisek">Vybraná úloha</span><span class="male seda" id="vybrana-osnova"></span></div>
         <div class="blok-telo">
-          <div class="pole"><label>Název (s označením, např. „IU/4 …“)</label><input id="nazev"></div>
+          <div class="dvojice-poli">
+            <div class="pole"><label>Označení</label><span class="s-predponou"><b id="predpona"></b><input id="kod" size="4"></span></div>
+            <div class="pole"><label>Název (bez označení)</label><input id="nazev"></div>
+          </div>
+          <p class="poznamka" id="nahled-popisu"></p>
           <div class="pole"><label>Osnova</label><select id="osnova"></select></div>
           <p class="poznamka" id="pouziti"></p>
           <div style="display:flex;gap:8px">
@@ -207,8 +216,19 @@ const OSNOVY = [
     u("II/10 TMG – vzlet, okruh, přistání", NV, "TMG"), u("II/11 TMG – zvláštní případy za letu", V, "TMG"),
     u("II/12 TMG – navigační lety a lety do prostoru", NV, "TMG")] },
   { nazev: "S – Školka", kat: "KLUZAK", platna: true, otevrena: false, ulohy: [
-    u("I/4 Okruh a přistání", V, "", 1), u("I/6 Mimořádné případy", V), u("I/11 Přistání do omezeného prostoru", V, "", 2)] },
+    u("S/4 Okruh a přistání", V, "", 1), u("S/6 Mimořádné případy", V), u("S/11 Přistání do omezeného prostoru", V, "", 2)] },
 ];
+// osnova „IU – Výcvik…“ → kod IU + název; úloha „IU/8P Přezkoušení…“ → kod 8P + název (db/040)
+for (const o of OSNOVY) {
+  const [kod, ...nazev] = o.nazev.split(" – ");
+  Object.assign(o, { kod, nazev: nazev.join(" – ") });
+  for (const x of o.ulohy) {
+    const [oznaceni, ...nazevUlohy] = x.nazev.split(" ");
+    Object.assign(x, { kod: oznaceni.split("/")[1], nazev: nazevUlohy.join(" ") });
+  }
+}
+const popisOsnovy = (o) => `${o.kod} – ${o.nazev}`;
+const popisUlohy = (x, o) => `${o.kod}/${x.kod} ${x.nazev}`;
 let vybrana = OSNOVY[2].ulohy[9];
 let nahledUcel = "VYCVIK", nahledKat = "TMG";
 
@@ -240,7 +260,7 @@ function vykreslit() {
     };
     m.append(el("div", { class: "radek osnova" + (o.platna ? "" : " neplatna") },
       el("button", { class: "sbalit", type: "button", textContent: o.otevrena ? "▾" : "▸", onclick: () => { o.otevrena = !o.otevrena; vykreslit(); } }),
-      el("span", { class: "nazev" }, o.nazev, el("span", { class: "male", textContent: `kategorie ${KATEGORIE.find(([k]) => k === o.kat)[1]}` }),
+      el("span", { class: "nazev" }, popisOsnovy(o), el("span", { class: "male", textContent: `kategorie ${KATEGORIE.find(([k]) => k === o.kat)[1]}` }),
         el("span", { class: "male seda", textContent: `${o.ulohy.length} úloh` }),
         el("button", { class: "tl maly bez-ramu", type: "button", textContent: "+ úloha" })),
       ...UCELY.map(([k]) => souhrnne("ucely", k)), el("span"),
@@ -255,7 +275,7 @@ function vykreslit() {
         el("span", { class: "poradi" },
           el("button", { type: "button", title: "výš", textContent: "▲", onclick: () => { if (i) { [o.ulohy[i - 1], o.ulohy[i]] = [o.ulohy[i], o.ulohy[i - 1]]; vykreslit(); } } }),
           el("button", { type: "button", title: "níž", textContent: "▼", onclick: () => { if (i < o.ulohy.length - 1) { [o.ulohy[i + 1], o.ulohy[i]] = [o.ulohy[i], o.ulohy[i + 1]]; vykreslit(); } } })),
-        el("span", { class: "nazev" }, x.nazev, mimo ? el("span", { class: "mimo-nabidku", textContent: "nenabízí se" }) : ""),
+        el("span", { class: "nazev" }, popisUlohy(x, o), mimo ? el("span", { class: "mimo-nabidku", textContent: "nenabízí se" }) : ""),
         ...UCELY.map(([k]) => el("span", { class: "stred" }, zaskrt(x.ucely.has(k), (ano) => ano ? x.ucely.add(k) : x.ucely.delete(k)))), el("span"),
         ...KATEGORIE.map(([k]) => k === o.kat ? vlastni() : el("span", { class: "stred" }, zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
         el("span", { class: "vpravo male" + (x.lety ? "" : " seda"), textContent: x.lety || "–" }),
@@ -271,10 +291,16 @@ function vykreslit() {
 
   // vybraná úloha
   const vo = OSNOVY.find((o) => o.ulohy.includes(vybrana));
-  document.getElementById("nazev").value = vybrana.nazev;
-  document.getElementById("vybrana-osnova").textContent = vo.nazev.split(" – ")[0];
+  const kod = document.getElementById("kod"), nazev = document.getElementById("nazev");
+  kod.value = vybrana.kod;
+  nazev.value = vybrana.nazev;
+  kod.onchange = () => { vybrana.kod = kod.value.toUpperCase(); vykreslit(); };
+  nazev.onchange = () => { vybrana.nazev = nazev.value; vykreslit(); };
+  document.getElementById("predpona").textContent = `${vo.kod}/`;
+  document.getElementById("nahled-popisu").textContent = `V aplikaci: ${popisUlohy(vybrana, vo)} · štítek na pásku „${vo.kod}/${vybrana.kod}“`;
+  document.getElementById("vybrana-osnova").textContent = vo.kod;
   const sel = document.getElementById("osnova");
-  sel.replaceChildren(...OSNOVY.map((o) => el("option", { textContent: o.nazev, selected: o === vo })));
+  sel.replaceChildren(...OSNOVY.map((o) => el("option", { textContent: popisOsnovy(o), selected: o === vo })));
   document.getElementById("pouziti").textContent = vybrana.lety
     ? `Použita v ${vybrana.lety} letech – smazat nejde, jen zneplatnit (ve starých letech zůstane).`
     : "Zatím v žádném letu – jde smazat.";
@@ -295,8 +321,8 @@ function vykreslit() {
   }
   cil.append(el("span", { class: "nadpisek", textContent: `Úloha${povinna ? " · povinná" : " · nepovinná"}` }));
   osnovy.forEach(([o, xs]) => {
-    cil.append(el("p", { class: "male tucne", style: "margin:8px 0 4px", textContent: o.nazev }),
-      el("div", { class: "cipy" }, ...xs.map((x) => el("span", { class: "cip", textContent: x.nazev }))));
+    cil.append(el("p", { class: "male tucne", style: "margin:8px 0 4px", textContent: popisOsnovy(o) }),
+      el("div", { class: "cipy" }, ...xs.map((x) => el("span", { class: "cip", textContent: popisUlohy(x, o) }))));
   });
 }
 vykreslit();
