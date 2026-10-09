@@ -8,8 +8,9 @@
 /* =============================================================================================
    NÁVRH (9. 10. 2026) – desktop: editace osnov a úloh (docs/modul-osnovy.md). Panel přes celou
    desku z nabídky uživatele (Správa → Osnovy a úlohy), jen s právem „spravuje osnovy“.
-   Data = skutečné osnovy a úlohy ze serveru 9. 10. 2026 (počty letů také); kategorie úloh
-   v maketě už podle návrhu (II/10–12 TMG). Zaškrtávátka i náhled vpravo fungují.
+   Data = skutečné osnovy a úlohy ze serveru 9. 10. 2026 (počty letů také). Osnova patří
+   k jedné kategorii (zamčené zaškrtnutí); úloha se dá povolit „také na“ jinou kategorii –
+   v maketě II/10–12 také na TMG. Zaškrtávátka i náhled vpravo fungují.
    ============================================================================================= */
 :root {
   color-scheme: light dark;
@@ -74,7 +75,7 @@ button { font: inherit; color: inherit; }
 .zahlavi .skupina { grid-column: span 4; text-align: center; border-bottom: 1px solid var(--barva-seda); padding-bottom: 2px; }
 .zahlavi .sloupec { justify-self: center; text-align: center; line-height: 1.15; }
 .osnova { background: var(--barva-najeti); font-weight: var(--tloustka-tucna); }
-.osnova .nazev { display: flex; align-items: baseline; gap: var(--mezera-2); }
+.osnova .nazev { display: flex; align-items: baseline; gap: var(--mezera-2); min-width: 0; white-space: nowrap; overflow: hidden; }
 .uloha .nazev { padding-left: var(--mezera-4); }
 .uloha:hover { background: var(--barva-najeti); }
 .uloha.vybrana { background: var(--barva-modra-vypln); }
@@ -125,7 +126,7 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
       <div class="radek zahlavi nadpisek">
         <span></span><span>Osnova / úloha</span>
         <span class="skupina">Nabízí se u účelu</span><span></span>
-        <span class="skupina">pro kategorii letadla</span><span></span>
+        <span class="skupina">letí se na (osnova + také)</span><span></span>
         <span class="sloupec">Lety</span><span class="sloupec">Platná</span>
       </div>
       <div class="radek zahlavi male seda" style="padding-top:0">
@@ -160,7 +161,8 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
           <div id="n-nabidka"></div>
         </div>
       </div>
-      <p class="poznamka">Náhled se mění hned se zaškrtávátky vlevo. Úloha bez účelu nebo bez kategorie
+      <p class="poznamka">Náhled se mění hned se zaškrtávátky vlevo. Kategorie osnovy platí pro všechny
+        její úlohy (zamčené zaškrtnutí); další kategorie se zapíná u úlohy („také na TMG“). Úloha bez účelu
         se nenabízí nikde (oranžový štítek). Neplatná úloha i osnova se nenabízí; ve starých letech zůstává.</p>
     </div>
   </div>
@@ -174,36 +176,37 @@ input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0;
 </section>
 
 <script>
-// Skutečné osnovy a úlohy (server 9. 10. 2026); kategorie úloh podle návrhu (II/10–12 TMG).
+// Skutečné osnovy a úlohy (server 9. 10. 2026); „také na“ podle návrhu (II/10–12 také TMG).
 const UCELY = [["NORMALNI", "Normální"], ["VYCVIK", "Výcvik"], ["VYCVIK_SOLO", "Sólo"], ["PREZKOUSENI", "Přezk."]];
 const KATEGORIE = [["KLUZAK", "Kluzák"], ["LETOUN", "Letoun"], ["TMG", "TMG"], ["UL", "UL"]];
-const u = (nazev, ucely, kat = "KLUZAK", lety = 0) => ({ nazev, ucely: new Set(ucely.split(",")), kat: new Set(kat.split(",").filter(Boolean)), lety, platna: true });
+// kat = kategorie „také“ navíc ke kategorii osnovy (osnova je striktně jedné kategorie)
+const u = (nazev, ucely, kat = "", lety = 0) => ({ nazev, ucely: new Set(ucely.split(",")), kat: new Set(kat.split(",").filter(Boolean)), lety, platna: true });
 const V = "VYCVIK", VS = "VYCVIK,VYCVIK_SOLO", NV = "NORMALNI,VYCVIK";
 const OSNOVY = [
-  { nazev: "IU – Výcvik SPL (naviják a aerovlek)", platna: true, otevrena: true, ulohy: [
-    u("IU/1 Seznamovací let", V, "KLUZAK", 2), u("IU/2 Účinky kormidel, přímý let a zatáčky", V),
-    u("IU/3 Pády, skluzy, spirály, mezní rychlosti", V), u("IU/4 Navijákové vzlety, okruh a přistání", V, "KLUZAK", 2),
-    u("IU/5 Opravy vadných přistání", V, "KLUZAK", 3), u("IU/6 Mimořádné případy při navijáku, omezený prostor", V),
+  { nazev: "IU – Výcvik SPL (naviják a aerovlek)", kat: "KLUZAK", platna: true, otevrena: true, ulohy: [
+    u("IU/1 Seznamovací let", V, "", 2), u("IU/2 Účinky kormidel, přímý let a zatáčky", V),
+    u("IU/3 Pády, skluzy, spirály, mezní rychlosti", V), u("IU/4 Navijákové vzlety, okruh a přistání", V, "", 2),
+    u("IU/5 Opravy vadných přistání", V, "", 3), u("IU/6 Mimořádné případy při navijáku, omezený prostor", V),
     u("IU/7 Aerovlek, vývrtky, pády, spirály", V), u("IU/8P Přezkoušení před samostatnými lety", V),
     u("IU/9 První samostatný let", "VYCVIK_SOLO"), u("IU/10 Lety po okruhu a do prostoru", VS),
-    u("IU/11 Přistání do omezeného prostoru", VS, "KLUZAK", 2), u("IU/12 Využití stoupavých proudů", VS),
+    u("IU/11 Přistání do omezeného prostoru", VS, "", 2), u("IU/12 Využití stoupavých proudů", VS),
     u("IU/13 Traťový navigační let", VS)] },
-  { nazev: "IA – Výcvik SPL (aerovlek, samostart)", platna: true, otevrena: false, ulohy: [
+  { nazev: "IA – Výcvik SPL (aerovlek, samostart)", kat: "KLUZAK", platna: true, otevrena: false, ulohy: [
     u("IA/1 Seznamovací let", V), u("IA/2 Účinky kormidel, přímý let a zatáčky", V), u("IA/3 Pády, skluzy, spirály, mezní rychlosti", V),
     u("IA/4 Vzlety aerovlekem / samostartem, okruh a přistání", V), u("IA/5 Opravy vadných přistání", V),
     u("IA/6 Mimořádné případy, omezený prostor", V), u("IA/7 Aerovlek, vývrtky, pády, spirály", V),
     u("IA/8P Přezkoušení před samostatnými lety", V), u("IA/9 První samostatný let", "VYCVIK_SOLO"),
     u("IA/10 Lety po okruhu a do prostoru", VS), u("IA/11 Přistání do omezeného prostoru", VS),
     u("IA/12 Využití stoupavých proudů", VS), u("IA/13 Traťový navigační let", VS)] },
-  { nazev: "II – Sportovní výcvik", platna: true, otevrena: true, ulohy: [
-    u("II/1 Termika, svah a lety do prostoru", NV), u("II/2 Let po okruhu", NV, "KLUZAK", 2),
+  { nazev: "II – Sportovní výcvik", kat: "KLUZAK", platna: true, otevrena: true, ulohy: [
+    u("II/1 Termika, svah a lety do prostoru", NV), u("II/2 Let po okruhu", NV, "", 2),
     u("II/3 Přistání do omezeného prostoru", NV), u("II/4 Mimořádné případy", NV), u("II/5 Navigační let ve dvojím", V),
     u("II/6 Samostatný přelet", "NORMALNI"), u("II/7 Lety v dlouhé vlně", NV), u("II/8 Lety v oblačnosti", NV),
-    u("II/9P Přezkoušení CLOUD", "PREZKOUSENI", "KLUZAK", 1),
+    u("II/9P Přezkoušení CLOUD", "PREZKOUSENI", "", 1),
     u("II/10 TMG – vzlet, okruh, přistání", NV, "TMG"), u("II/11 TMG – zvláštní případy za letu", V, "TMG"),
     u("II/12 TMG – navigační lety a lety do prostoru", NV, "TMG")] },
-  { nazev: "S – Školka", platna: true, otevrena: false, ulohy: [
-    u("I/4 Okruh a přistání", V, "KLUZAK", 1), u("I/6 Mimořádné případy", V), u("I/11 Přistání do omezeného prostoru", V, "KLUZAK", 2)] },
+  { nazev: "S – Školka", kat: "KLUZAK", platna: true, otevrena: false, ulohy: [
+    u("I/4 Okruh a přistání", V, "", 1), u("I/6 Mimořádné případy", V), u("I/11 Přistání do omezeného prostoru", V, "", 2)] },
 ];
 let vybrana = OSNOVY[2].ulohy[9];
 let nahledUcel = "VYCVIK", nahledKat = "TMG";
@@ -219,7 +222,9 @@ const zaskrt = (ano, zmenit, neurcite = false) => {
   c.indeterminate = neurcite;
   return c;
 };
-const nabizi = (x, o) => x.platna && o.platna && x.ucely.size > 0 && x.kat.size > 0;
+const nabizi = (x, o) => x.platna && o.platna && x.ucely.size > 0;
+const naKategorii = (x, o, k) => k === o.kat || x.kat.has(k);
+const zamceno = (titulek) => { const c = el("input", { type: "checkbox", checked: true, disabled: true, title: titulek }); return c; };
 
 function vykreslit() {
   const m = document.getElementById("matice");
@@ -233,10 +238,10 @@ function vykreslit() {
     };
     m.append(el("div", { class: "radek osnova" + (o.platna ? "" : " neplatna") },
       el("button", { class: "sbalit", type: "button", textContent: o.otevrena ? "▾" : "▸", onclick: () => { o.otevrena = !o.otevrena; vykreslit(); } }),
-      el("span", { class: "nazev" }, o.nazev, el("span", { class: "male seda", textContent: `${o.ulohy.length} úloh` }),
+      el("span", { class: "nazev" }, o.nazev, el("span", { class: "male seda", textContent: `${KATEGORIE.find(([k]) => k === o.kat)[1]} · ${o.ulohy.length} úloh` }),
         el("button", { class: "tl maly bez-ramu", type: "button", textContent: "+ úloha" })),
       ...UCELY.map(([k]) => souhrnne("ucely", k)), el("span"),
-      ...KATEGORIE.map(([k]) => souhrnne("kat", k)), el("span"),
+      ...KATEGORIE.map(([k]) => k === o.kat ? el("span", { class: "stred" }, zamceno("kategorie osnovy")) : souhrnne("kat", k)), el("span"),
       el("span", { class: "vpravo male", textContent: o.ulohy.reduce((s, x) => s + x.lety, 0) || "" }),
       el("span", { class: "stred" }, zaskrt(o.platna, (ano) => (o.platna = ano))),
     ));
@@ -249,7 +254,7 @@ function vykreslit() {
           el("button", { type: "button", title: "níž", textContent: "▼", onclick: () => { if (i < o.ulohy.length - 1) { [o.ulohy[i + 1], o.ulohy[i]] = [o.ulohy[i], o.ulohy[i + 1]]; vykreslit(); } } })),
         el("span", { class: "nazev" }, x.nazev, mimo ? el("span", { class: "mimo-nabidku", textContent: "nenabízí se" }) : ""),
         ...UCELY.map(([k]) => el("span", { class: "stred" }, zaskrt(x.ucely.has(k), (ano) => ano ? x.ucely.add(k) : x.ucely.delete(k)))), el("span"),
-        ...KATEGORIE.map(([k]) => el("span", { class: "stred" }, zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
+        ...KATEGORIE.map(([k]) => el("span", { class: "stred" }, k === o.kat ? zamceno("kategorie osnovy – platí pro všechny její úlohy") : zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
         el("span", { class: "vpravo male" + (x.lety ? "" : " seda"), textContent: x.lety || "–" }),
         el("span", { class: "stred" }, zaskrt(x.platna, (ano) => (x.platna = ano))),
       ));
@@ -278,7 +283,7 @@ function vykreslit() {
   seg("n-kat", KATEGORIE, nahledKat, (k) => (nahledKat = k));
   const cil = document.getElementById("n-nabidka");
   cil.replaceChildren();
-  const osnovy = OSNOVY.map((o) => [o, o.ulohy.filter((x) => nabizi(x, o) && x.ucely.has(nahledUcel) && x.kat.has(nahledKat))]).filter(([, xs]) => xs.length);
+  const osnovy = OSNOVY.map((o) => [o, o.ulohy.filter((x) => nabizi(x, o) && x.ucely.has(nahledUcel) && naKategorii(x, o, nahledKat))]).filter(([, xs]) => xs.length);
   const ucel = UCELY.find(([k]) => k === nahledUcel)[1];
   const povinna = nahledUcel !== "NORMALNI";
   if (!osnovy.length) {

@@ -8,30 +8,34 @@ Maketa: `docs/navrhy/osnovy-desktop.html` (skutečná data ze serveru 9. 10. 202
 ## 1. Dnešní stav a problém
 - `lov_osnova (kod, nazev, poradi, platny, kategorie_id)` → `lov_uloha (…, osnova_id)` →
   vazba `lov_uloha_ucel (uloha_id, ucel_id)`; nabídka pohledem `v_uloha_nabidka`.
-- **Kategorie je u osnovy, ne u úlohy.** Všechny 4 osnovy jsou „Kluzák“, ale osnova II má
-  úlohy pro TMG (II/10–12) – dnes se nabízejí jen u letu kluzáku, u TMG ne.
+- **Osnova patří striktně k jedné kategorii** (upřesněno 9. 10. 2026) – všechny 4 osnovy
+  jsou „Kluzák“. Některé úlohy kluzákové osnovy se ale létají i na **TMG** (II/10–12 a podle
+  uvážení další) – dnes se nabízejí jen u letu kluzáku, u TMG ne. Kategorie osnovy dnes jde
+  i prázdná („pro všechny“) – to už nebude.
+- **Účely se zapínají u každé úlohy zvlášť** (výcvik, sólo, přezkoušení, normální) – beze změny.
 - Úpravy jen přímo v databázi.
 
 ## 2. Datový model (změny)
 ```sql
--- kategorie u úlohy (M:N), místo jedné kategorie osnovy
+-- osnova vždy právě jedné kategorie
+ALTER TABLE lkkl.lov_osnova ALTER COLUMN kategorie_id SET NOT NULL;
+-- úloha se dá letět „také na“ další kategorii (navíc ke kategorii své osnovy)
 CREATE TABLE lkkl.lov_uloha_kategorie (
     uloha_id     bigint NOT NULL REFERENCES lkkl.lov_uloha,
     kategorie_id bigint NOT NULL REFERENCES lkkl.lov_kategorie,
     PRIMARY KEY (uloha_id, kategorie_id)
-);
--- převod: každá úloha dostane kategorii své osnovy (osnova bez kategorie = všechny platné)
-ALTER TABLE lkkl.lov_osnova DROP COLUMN kategorie_id;
+);  -- trigger: kategorie_id ≠ kategorie osnovy úlohy (ta platí vždy, neukládá se podruhé)
 -- zvláštní právo na účtu
 ALTER TABLE lkkl.ucet ADD COLUMN spravuje_osnovy boolean NOT NULL DEFAULT false;
 ```
-- **Nabídka** `v_uloha_nabidka`: úloha × účel × kategorie, jen platná úloha i osnova (jako
-  dnes); z ní průvodce i kontrola letu (`let_zkontrolovat`: úloha musí patřit k účelu
+Úloha se tedy letí na kategorii **své osnovy a na kategorie z `lov_uloha_kategorie`**.
+- **Nabídka** `v_uloha_nabidka`: úloha × účel × kategorie (osnovy + „také na“), jen platná
+  úloha i osnova (jako dnes); z ní průvodce i kontrola letu (`let_zkontrolovat`: úloha musí patřit k účelu
   a kategorii letadla; povinnost úlohy jen tam, kde nějaká existuje – beze změny pravidla).
 - Vazba `lov_uloha_kategorie` hlídaná platností (`kontrola_platnosti`, db/031).
 - **Audit** na `lov_osnova`, `lov_uloha`, `lov_uloha_ucel`, `lov_uloha_kategorie` (úpravy
   z aplikace i z databáze) s čitelnými popisky.
-- Po převodu opravit II/10–12 na TMG – v editoru (nebo rovnou v migraci, rozhodnete).
+- II/10–12 „také na TMG“ – v editoru, nebo rovnou v migraci (rozhodnete).
 
 ## 3. Obrazovka (desktop)
 Nabídka uživatele → Správa → **Osnovy a úlohy** (admin, nebo právo *spravuje osnovy*) →
@@ -40,9 +44,11 @@ Nabídka uživatele → Správa → **Osnovy a úlohy** (admin, nebo právo *spr
   - řádek **osnovy** (sbalitelný): název, počet úloh, „+ úloha“; souhrnná zaškrtávátka
     (plné / prázdné / částečně) – klik nastaví všem úlohám osnovy; platná;
   - řádky **úloh**: pořadí ▲▼, název (např. „IU/4 Navijákové vzlety…“), zaškrtávátka
-    **účel** (Normální · Výcvik · Sólo · Přezkoušení; u povinných „povinná“) a **kategorie**
-    (Kluzák · Letoun · TMG · UL), počet letů s úlohou, platná;
-  - úloha bez účelu nebo bez kategorie: oranžově „nenabízí se“.
+    **účel** (Normální · Výcvik · Sólo · Přezkoušení; u povinných „povinná“) a **letí se na**
+    (Kluzák · Letoun · TMG · UL – kategorie osnovy je zaškrtnutá a zamčená, ostatní = „také
+    na“), počet letů s úlohou, platná;
+  - úloha bez účelu: oranžově „nenabízí se“.
+  - Nová osnova se zakládá s kategorií (povinná).
 - Vpravo **vybraná úloha** (název, přesun do jiné osnovy, smazat) a **náhled nového letu**:
   volba účelu a kategorie → osnovy a úlohy přesně jak je uvidí pilot v bloku Úloha
   (povinná / nepovinná, nebo že se blok neukáže).
@@ -62,8 +68,8 @@ letu s novou vazbou, smazání jen nepoužitého, audit. Klikací (desktop): mat
 zaškrtnutí osnovy, náhled, pořadí, nová úloha, zneplatnění.
 
 ## 6. K rozhodnutí
-1. **Kategorie u úlohy** (vazba M:N) místo u osnovy – souhlas? (doporučuji; jinak TMG úlohy
-   v osnově II nejdou.)
+1. **Kategorie osnovy + „také na“ u úlohy** (`lov_uloha_kategorie` jen s dalšími kategoriemi)
+   – souhlas?
 2. **Právo *spravuje osnovy*** – samostatné (doporučuji, např. vedoucí výcviku), nebo jen admin?
 3. **Povinnost úlohy u účelu** (`lov_ucel.uloha_povinna` – dnes výcvik, sólo, přezkoušení):
    v editoru jen zobrazit (doporučuji), nebo i měnit?
