@@ -1,141 +1,139 @@
 # LKKL Log – příručka pro uživatele
 
-Elektronický sešit letů aeroklubu Kladno. Zapisuje se **kdo, na čem, kdy a odkud kam letěl**;
-doby, počty a souhrny dne aplikace spočítá sama. Data dál přebírá účetní.
+Elektronický sešit letů aeroklubu Kladno: zapisuje se **kdo, na čem, kdy a odkud kam letěl**;
+doby, počty přistání a souhrny dne aplikace spočítá sama. Data dál přebírá účetní.
 
-Příručka je podle situací, ne podle tlačítek – aplikace vede sama a chybějící údaj ukáže
-(„vyberte“, „Chybí: …“).
-
----
-
-## Pro všechny
-
-**Přihlášení.** E-mail a heslo. Účet a odkaz pro nastavení hesla dává správce osob (aplikace
-e-maily neposílá – odkaz vám předá). Přihlášení platí 30 dní od posledního použití.
-
-**Telefon, nebo počítač.** Na telefonu (a v úzkém okně) je přehled letů pod sebou a nový let
-jako průvodce po krocích. Na počítači (okno od 1200 px) je **provozní deska** – vše na jedné
-obrazovce, ovládání myší. Data jsou stejná, přepínat nic netřeba.
-
-**Čas je vždy UTC** (jako v letectví). Nahoře je čas UTC a sluneční časy letiště:
-TB / TE = začátek a konec občanského soumraku, SR / SS = východ a západ Slunce.
-
-**Pás letu = strip.** Zelený letí, modrý je naplánovaný, červený má problém (varování:
-po konci soumraku, přes maximální dobu letu). Štítky říkají jen odchylky od běžného letu
-(výcvik, naviják / aerovlek, POB, úloha); trasa odkud → kam.
-
-**Každá akce jde vrátit.** Po VZLET, PŘISTÁL a T&G se na 6 s ukáže ZPĚT (na počítači i
-Ctrl+Z). Omyl zjištěný později opravíte v detailu letu (ťuknutí na pásek).
-
-**Let se nemaže, ruší se s důvodem** (technická závada, počasí, založeno omylem, přerušený
-vzlet, jiné). Zrušený let jde obnovit. Každá změna je v historii letu (kdo a kdy).
-
-**Nabídka uživatele** (kolečko s iniciálami vpravo nahoře):
-- **Můj provoz · dnes** – jen pro vás, na tomto zařízení a jen na dnešek:
-  - **Letiště** – kde dnes létáte (jinak domovské Kladno). Podle něj sluneční časy
-    a výchozí místo přistání.
-  - **Osoby v provozu** – kdo je dnes na letišti; rychlá volba posádky pak nabízí jen je
-    (ostatní najde Hledat…).
-- **Režim zobrazení** – podle zařízení / světlý / tmavý.
-- **Odhlásit.**
-
-**Žlutý pruh TESTOVACÍ PROVOZ** = zkušební provoz; zapsané lety se mohou smazat.
+Příručka má dvě části: **A. Situace** – co kdy udělat; **B. Ovládání** – kde to v aplikaci je
+(odkazy „→ B3“ apod.).
 
 ---
 
-## Přišel jsem si zalítat a jsem sám
-1. **Nový let** → letadlo → v posádce **Já** (PIC). Účel normální, POB 1 a místa jsou
-   předvyplněné. Místo vzletu je tam, kde letadlo **naposledy přistálo**.
-2. **VZLET TEĎ** – čas vzletu se zapíše v okamžiku stisku.
-3. Po přistání **PŘISTÁL** na pásku. Okruhy s dotykem (motorová letadla, TMG, UL) –
-   **T&G** při každém dotyku; přistání celkem se spočítá samo.
-4. Letíte jinam? Před vzletem nastavte **místo přistání** (v Dalších údajích); trasa
-   je pak vidět na pásku.
+# A. Situace
 
-**Zapomněl jsem zapsat.** Nový let → **Proběhlý let** → vyberte čas vzletu a přistání
-(nesmí být v budoucnosti). Let se označí „dodatečně“.
+## A1. Jsem na letišti sám (motorové letadlo, TMG, UL)
+1. **Připravím si let** – doma nebo před vzletem: nový let s letadlem a sebou jako PIC,
+   **Naplánovat** (→ B4). Letím-li jinam, rovnou zadám místo přistání. Místo vzletu se
+   předvyplní tam, kde letadlo naposledy přistálo.
+2. **Při letu mačkám jen VZLET a PŘISTÁL** na pásku (→ B3), u okruhů s dotykem **T&G** při
+   každém dotyku. Omyl vrátím tlačítkem ZPĚT hned po stisku.
+3. **Po přistání let upravím**, je-li co (→ B5): POB, plátce, poznámka, místo přistání,
+   opravený čas.
 
-**Let kratší než minuta** (přerušený vzlet): aplikace se při PŘISTÁL zeptá – počítat jako let
-(1 minuta), nebo zrušit jako přerušený vzlet.
+Nepřipravil jsem si nic? Nový let a rovnou **VZLET TEĎ**.
+Zapomněl jsem zapsat? Večer doma nový let → **Proběhlý let** s časy (→ B4).
 
----
+## A2. Plachtařský provoz (jsem na startu, případně u stolu)
+1. **Ráno:** v Můj provoz vyberu **osoby v provozu** (→ B6) – nabídky posádky pak ukazují
+   jen je.
+2. **Startovní pořadí:** lety předem **naplánuji** (kluzák, posádka, naviják / aerovlek;
+   u aerovleku vlečná a vlekař) (→ B4). V přehledu čekají modře v pořadí založení.
+3. **Při provozu:** **VZLET** u naplánovaného letu – u aerovleku jedním stiskem kluzák
+   i vlečná; **PŘISTÁL** u každého zvlášť (vlečná obvykle dřív).
+4. **Přetržené lano / přerušený vzlet:** let kluzáku zruším s důvodem *Přerušený vzlet*;
+   vlečná letí dál. Let kratší než minuta: aplikace se při PŘISTÁL sama zeptá.
+5. **Konec dne:** projdu deník dne (ukončené a zrušené) a souhrn plachtařského provozu,
+   chyby opravím v detailu (→ B5).
 
-## Létáme, je nás víc
-- **Naplánujte si pořadí:** Nový let → … → **Naplánovat**. Naplánované lety čekají v přehledu
-  (modře) a VZLET stiskne kdokoli, kdo je u toho – jednou; druhý stisk už nic nezapíše
-  a ukáže, kdo a kdy to udělal.
-- **Posádka podle účelu:**
-  - normální let – PIC (POB zadáte, kolik je na palubě);
-  - **výcvik** – instruktor (PIC) a žák; **sólo** – žák a dozor na zemi;
-    **přezkoušení** – examinátor (PIC) a přezkoušený. U výcviku vyberte **úlohu** z osnovy.
-  - Rychlá volba nabízí jen ty, kdo roli smí podle oprávnění (a jsou v provozu, máte-li je
-    vybrané); kohokoli jiného najde **Hledat…**.
-- **Kdo platí:** předvyplní se podle účelu (normální → PIC, výcvik a sólo → žák,
-  přezkoušení → přezkoušený), nebo **aeroklub**. Jde změnit u letu.
-- Jeden člověk ani letadlo nemohou být ve vzduchu ve dvou letech zároveň – aplikace to
-  nedovolí.
+Vleče nás **cizí vlečná**? Musí být založená mezi letadly a její pilot mezi osobami (správce,
+→ A7); pilota poprvé najdu přes Hledat…, příště se nabídne sám.
 
----
+## A3. Výcvik (jsem instruktor)
+Let naplánuji s účelem **Výcvik** (instruktor PIC + žák) nebo **Sólo** (žák + dozor na zemi)
+a vyberu **úlohu** z osnovy (u výcviku povinná). Platí žák, není-li zadáno jinak. Dál jako A1
+nebo A2.
 
-## Jsem na věži / u stolu s počítačem (provozní deska)
-- **Nahoře řada letadel**: kdo letí (běžící čas), co je naplánované, dnešní nálet; oranžový
-  kód letiště = letadlo naposledy přistálo jinde než na vašem letišti. Klik na letadlo na zemi
-  = nový let s ním; na letící nebo naplánované = jeho detail.
-- **Pásky** (ve vzduchu, naplánované): PŘISTÁL, T&G, VZLET přímo na pásku; klik na pásek
-  otevře **detail v panelu** – deska zůstává ovladatelná.
-- **Klávesy:** **N** = nový let, **Esc** = zavřít panel, **Ctrl+Z** = Zpět poslední akce.
-- **Deník dne** – ukončené lety (řádek na let), pod nimi zrušené; patička: lety, přistání,
-  doba.
-- **Souhrny** – plachtařský provoz (kluzáky a vleky) a motorový provoz (i TMG) po letadlech;
-  na notebooku za tlačítkem Souhrny.
-- **Časová osa dne** – úsečka za každý let, pásma soumraku a noci; klik = detail.
-- **Jiný den** – šipky u data (‹ ›): deník, souhrny a osa toho dne.
-- Červený pásek = hlídejte: let **po konci občanského soumraku** nebo **přes maximální dobu**
-  letadla.
+## A4. Létáme dnes jinde (přelet, soustředění)
+V Můj provoz nastavím **letiště pro dnešek** (→ B6) – platí jen pro mě a jen dnes: sluneční
+časy a výchozí místo přistání nových letů. Letadla, která naposledy přistála jinde než na
+„mém“ letišti, jsou v řadě letadel na desce oranžově. Zítra je zase Kladno.
 
----
+## A5. Jsem na věži / časoměřič s počítačem
+Provozní deska (→ B2) ukazuje vše najednou. Lety zakládám za piloty (klávesa **N**), mačkám
+VZLET / PŘISTÁL / T&G na páscích a hlídám **červené pásky** (let po konci občanského soumraku,
+přes maximální dobu letadla). Opravy v detailu (panel zprava) – deska zůstává ovladatelná.
 
-## Jsem v plachtařském provozu
-- **Naviják:** kluzák → posádka → způsob vzletu **Naviják** → VZLET TEĎ (nebo Naplánovat).
-  Aplikace si pamatuje, jak se dnes naposledy startovalo.
-- **Aerovlek:** kluzák → posádka → **Aerovlek** → vyberte **vlečnou a vlekaře** (předvyplní se
-  poslední vlekař té vlečné). Vznikne **dvojitý pásek** – kluzák a vlečná:
-  - **vzlétají společně** (jeden VZLET pro oba), **přistávají zvlášť** – PŘISTÁL u každé
-    poloviny;
-  - naplánovaný vlek se ruší celý; po vzletu je každý let samostatný (přetržené lano: kluzák
-    zrušte jako přerušený vzlet, vlečná letí dál);
-  - vlekař nemůže být v posádce kluzáku.
-- **Cizí vlečná** (nás vleče jiný klub): musí být založená mezi letadly (soukromá, vlečná)
-  a její pilot mezi osobami – požádejte správce; poprvé pilota najdete přes Hledat…, příště
-  se nabídne sám.
-- **Výcvik:** instruktor a žák, úloha z osnovy (u výcviku povinná); sólo s dozorem na zemi.
-- T&G kluzák ani vlečná nemají.
+## A6. Jsem v klubovně na sdíleném počítači
+Přihlásím se se zaškrtnutým **Jen ke čtení** (→ B1): vidím desku, deník i souhrny, ale nic
+nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
+
+## A7. Jsem správce
+- **Nový člen:** založím osobu, zaškrtnu *Smí se přihlásit*, vytvořím **Odkaz pro heslo**
+  a předám mu ho (aplikace e-maily neposílá); dám oprávnění (→ B8).
+- **Letadlo dočasně nelétá:** *mimo provoz* (→ B8). Nové nebo vyřazené letadlo, cizí vlečná
+  a číselníky – přímo v databázi.
+- **Zkušební lety:** Správa → *Smazat lety dne…* (→ B8).
 
 ---
 
-## Jsem v klubovně na sdíleném počítači
-Přihlaste se se zaškrtnutým **Jen ke čtení**: vidíte vše (deska, deník, souhrny), ale nic
-nejde změnit – ani omylem cizí rukou. Pro zápis se odhlaste a přihlaste znovu normálně.
+# B. Ovládání aplikace
 
----
+## B1. Přihlášení a obecně
+- E-mail a heslo; přihlášení platí 30 dní od posledního použití. **Jen ke čtení** = sdílený
+  počítač, nic nejde změnit.
+- **Telefon** (a úzké okno): přehled letů pod sebou, nový let jako průvodce po krocích.
+  **Počítač** (okno od 1200 px): provozní deska. Data jsou stejná.
+- **Čas je UTC.** Nahoře sluneční časy letiště: TB / TE začátek a konec občanského soumraku,
+  SR / SS východ a západ Slunce.
+- **Žlutý pruh TESTOVACÍ PROVOZ** – zkušební provoz, lety se mohou smazat.
 
-## Opravuji let
-Ťuknutí na pásek nebo řádek deníku → **detail**. Údaje se opravují na místě (ťuknutí na
-pole): posádka, POB, úloha, časy, místa, počet přistání, plátce, poznámka. U vleku se čas
-vzletu opraví kluzáku i vlečné najednou. Změnil-li let mezitím někdo jiný, aplikace ukáže
-aktuální stav a opravu zopakujete. Dole **Zrušit let** (s důvodem) / **Obnovit let**;
-**Historie** ukáže všechny změny.
+## B2. Přehled letů (telefon) a provozní deska (počítač)
+- **Telefon:** *Ve vzduchu*, *Naplánované* (pásky) a deník ukončených a zrušených letů; dole
+  **Nový let**.
+- **Deska:** nahoře datum se šipkami (‹ › jiný den), sluneční časy, „do TE“ (zbývá do konce
+  soumraku), hodiny UTC.
+  - **Řada letadel:** stav letadla (letí s časem, naplánován, dnešní nálet); oranžový kód =
+    poslední přistání jinde než na mém letišti. Klik na letadlo na zemi = nový let s ním.
+  - **Pásky** ve vzduchu a naplánované; **Deník dne** (řádek na let, patička: lety,
+    přistání, doba); **Souhrny** plachtařského a motorového provozu (na notebooku za
+    tlačítkem); **Časová osa** dne s pásmy soumraku.
+  - Klávesy: **N** nový let, **Esc** zavřít panel, **Ctrl+Z** zpět poslední akce.
 
----
+## B3. Pásek letu
+- Barva: **zelená** letí, **modrá** naplánovaný, **červená** varování (text v pásku).
+- Údaje: rejstřík a typ, posádka, čas (stopky od vzletu / plán), štítky jen odchylek
+  (výcvik, naviják / aerovlek, POB, úloha), trasa odkud → kam.
+- Tlačítka: **VZLET**, **PŘISTÁL**, **T&G** (jen motorová letadla, TMG, UL – ne kluzák ani
+  vlečná). Vlek je **dvojitý pásek**: VZLET u kluzáku pro oba, PŘISTÁL u každého zvlášť.
+- Po akci se na 6 s ukáže **ZPĚT**. Stisk platí jednou – druhý ukáže, kdo a kdy už stiskl.
+- Klik na pásek (mimo tlačítka) = **detail** (B5).
 
-## Jsem správce
-- **Osoby** (na telefonu, záložka Osoby – jen s právem): údaje, člen klubu, **aktivní**
-  (neaktivní se nenabízí a nepřihlásí), oprávnění pro kategorie letadel; účet: **Smí se
-  přihlásit**, práva, odblokování, **Odkaz pro heslo** (zkopírujte a předejte osobě).
+## B4. Nový let
+- Telefon: kroky **letadlo → posádka → let**; počítač: jeden formulář v panelu.
+- Předvyplněno: místo vzletu = kde letadlo naposledy přistálo, místo přistání = moje
+  letiště, POB, způsob vzletu kluzáku podle posledního dnešního, plátce podle účelu
+  (normální → PIC, výcvik a sólo → žák, přezkoušení → přezkoušený), nebo aeroklub.
+- **Posádka:** rychlá volba (kdo smí podle oprávnění, jen osoby v provozu, je-li výběr)
+  a **Hledat…** pro kohokoli. Funkce podle účelu: výcvik instruktor + žák, sólo žák + dozor,
+  přezkoušení examinátor + přezkoušený.
+- Chybějící údaj ukáže „vyberte“ / „Chybí: …“.
+- Zakončení: **VZLET TEĎ** · **Naplánovat** · **Proběhlý let** (výběr času vzletu
+  a přistání; nesmí být v budoucnosti; let se označí „dodatečně“).
+
+## B5. Detail letu
+- Údaje se opravují **na místě** (klik na pole): posádka, POB, úloha, časy, místa, počet
+  přistání, plátce, poznámka. U vleku se čas vzletu opraví kluzáku i vlečné.
+- Změnil-li let mezitím někdo jiný, aplikace ukáže aktuální stav – opravu zopakujte.
+- **Zrušit let** s důvodem (technická závada, počasí, založeno omylem, přerušený vzlet,
+  jiné) – let se nemaže; **Obnovit let**; **Historie** = všechny změny (kdo, kdy).
+
+## B6. Nabídka uživatele (kolečko s iniciálami)
+- **Můj provoz · dnes** (jen pro mě, na tomto zařízení, jen dnes): **Letiště** pro dnešek,
+  **Osoby v provozu**.
+- **Správa** (jen admin, B8). **Režim zobrazení** (podle zařízení / světlý / tmavý).
+  **Odhlásit.**
+
+## B7. Co aplikace hlídá (a proč se něco nedá uložit)
+Jeden PIC; posádka a úloha podle účelu; POB nejvýš počet míst; letadlo ani osoba nejsou
+ve vzduchu dvakrát zároveň; aerovlek vždy s vlečnou, vzlétají společně, vlekař není
+v posádce kluzáku; kluzák jen naviják nebo aerovlek; T&G jen motorová; čas ne v budoucnosti;
+neaktivní osoba nebo vyřazené letadlo se nenabízí. Hláška vždy řekne, co je špatně.
+
+## B8. Správa (podle práv)
+- **Osoby** (na telefonu, záložka Osoby): údaje, člen klubu, **aktivní** (neaktivní se
+  nenabízí a nepřihlásí), oprávnění pro kategorie letadel; účet: *Smí se přihlásit*, práva,
+  odblokování, **Odkaz pro heslo** (zkopírovat a předat).
 - **Letadla** (na telefonu): přepínač **mimo provoz** (dočasně – vidět šedě, nejde vybrat).
-  Vyřazené letadlo (prodané) a nová letadla zatím jen přímo v databázi.
-- **Správa** v nabídce uživatele (jen admin): **Smazat lety dne…** – kalendář, dny s lety
-  tučně, potvrzení (nevratné, v historii zůstane záznam) – a **Nastavení** (testovací provoz =
-  žlutý pruh).
-- Číselníky (účely, způsoby vzletu, letiště, osnovy…) se upravují přímo v databázi;
-  nepoužívaná položka se nemaže, ale zneplatní (`platny = false`) – pak se nikde nenabízí.
+- **Správa** v nabídce (admin): **Smazat lety dne…** – kalendář, dny s lety tučně, potvrzení
+  (nevratné, v historii zůstane záznam); **Nastavení** – testovací provoz (žlutý pruh).
+- Přímo v databázi: nová a vyřazená letadla, číselníky (nepoužívaná položka se nemaže, ale
+  zneplatní).
