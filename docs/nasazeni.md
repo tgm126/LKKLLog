@@ -56,6 +56,17 @@ Kroky 1–3 na serveru proběhnou v jedné SSH relaci, až je uživatel výslovn
 - **Lokálně** se `lkkl.migrace` jednou naplní skripty 001–016 (už provedené ručně); dál se
   i lokálně migruje spouštěčem: `uv run python -m app.migrace`.
 
+### Role databáze (rozhodnutí 9. 10. 2026, code review D1)
+Aplikace běží v databázi jako **vlastník schématu** `lkkl` – tentýž uživatel provádí migrace
+i obsluhuje požadavky. Ochrany v databázi (audit, `let_nemazat`, `nevyprazdnovat`) jsou tak
+jen dohodou: vlastník může trigger vypnout. Oddělená role `lkkllog_app` jen s DML se
+**nezavádí**: VPS Centrum dává aplikaci jednoho uživatele ověřeného unixovým socketem
+(bez hesla), druhý přihlašovací účet by znamenal ruční správu `pg_hba` mimo naše nástroje,
+a varianta „připojit se jako vlastník a `SET ROLE`“ chrání jen před chybou v kódu aplikace,
+ne před útočníkem (`RESET ROLE`). Chybě v kódu brání parametrizované dotazy, testy pravidel
+a to, že aplikace žádné DDL neposílá. Zůstává: ruční zásahy ve VPS Centru dělá jen správce
+a před nimi je záloha.
+
 ## 5. Data
 
 Při **prvním** nasazení se data schématu `lkkl` z lokální databáze (letadla, letiště, osoby,

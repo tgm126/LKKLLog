@@ -140,6 +140,12 @@ přetrženém laně – vlečná letí dál).
   nasazení ukáže pruh „Je k dispozici nová verze aplikace · Načíst“.
 - **Přehled se obnovuje sám** (dotaz každých 10 s a hned po návratu do aplikace nebo
   odemčení telefonu), aby pilot i časoměřič viděli totéž.
+- **Pravidla přes více řádků** (osoba jen v jednom letu, vlek jako dvojice, právě jeden PIC)
+  hlídají odložené triggery v izolaci READ COMMITTED: dvě transakce, které začnou ve stejnou
+  vteřinu, mohou projít obě (code review 9. 10. 2026, D3). **Vědomě přijato:** v klubu
+  zakládá let jeden až dva lidé, kolize vyžaduje stejnou osobu nebo letadlo ve dvou letech
+  ve stejném okamžiku a výsledek je vidět na pásku i v auditu a jde opravit. Zámky
+  (`pg_advisory_xact_lock` na osobu a letadlo) přidáme, až se to jednou stane.
 
 ### 3.3 Varování na páscích
 - **Po konci občanského soumraku** (TE) a stále ve vzduchu → červený pásek s důvodem.
