@@ -81,3 +81,20 @@ def test_vazby_ciselniku(conn, flotila):
             """INSERT INTO lkkl.lov_letadlo (rejstrik, typ_id)
                SELECT 'OK-0001', id FROM lkkl.lov_typ WHERE kod = 'L13'"""
         )
+
+
+def test_email_jen_platne_osobe(conn, osoba):
+    """Záznam e-mailu neplatné osobě (ani od neplatného odesílatele) neprojde (db/045)."""
+    novak, admin = osoba("Novak"), osoba("Admin", admin=True)
+    conn.execute("UPDATE lkkl.lov_osoba SET platny = false WHERE id = %s", (novak,))
+    with pytest.raises(psycopg.errors.RaiseException, match="Osoba „Jan Novak“ už neplatí"):
+        conn.execute(
+            """INSERT INTO lkkl.email (druh, osoba_id, adresa, odeslal_id)
+               VALUES ('ODKAZ_HESLO', %s, 'novak@example.cz', %s)""",
+            (novak, admin),
+        )
+
+
+def test_nastaveni_nejde_smazat(conn):
+    with pytest.raises(psycopg.errors.RaiseException, match="nevyprazdňuje"):
+        conn.execute("DELETE FROM lkkl.nastaveni")

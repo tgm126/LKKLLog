@@ -54,3 +54,29 @@ def test_kontext_po_pozadavku_zmizi(osoba, prihlasit, conn):
     prihlasit("novak@example.cz").get("/api/ja")
     conn.execute("UPDATE lkkl.ucet SET admin = true WHERE osoba_id = %s", (novak,))
     assert _audit(conn)[-1]["kdo"] == "přímo v databázi"
+
+
+def test_druh_opravneni_ma_audit(conn, flotila):
+    """Druhy oprávnění a jejich vazby rozhodují, kdo se nabídne jako instruktor – mění se jen
+    přímo v databázi, audit je tím důležitější (db/045)."""
+    opravneni = conn.execute(
+        """INSERT INTO lkkl.lov_opravneni (kod, nazev, poradi) VALUES ('FI_TEST', 'FI test', 99)
+           RETURNING id"""
+    ).fetchone()["id"]
+    conn.execute(
+        """INSERT INTO lkkl.lov_opravneni_kategorie (opravneni_id, kategorie_id)
+           SELECT %s, id FROM lkkl.lov_kategorie WHERE kod = 'KLUZAK'""",
+        (opravneni,),
+    )
+    assert [a["akce"] for a in _audit(conn, "lov_opravneni")] == ["Založení druhu oprávnění"]
+    [kategorie] = _audit(conn, "lov_opravneni_kategorie")
+    assert kategorie["akce"] == "Druh oprávnění: přidání kategorie"
+    assert kategorie["popis"] == "oprávnění FI test, kategorie Kluzák"
+
+
+def test_hodnota_v_auditu_prezije_smazani_cile(conn):
+    """Popis změny neztratí hodnotu, když cíl vazby zmizel (db/045): aspoň „#id“."""
+    popis = conn.execute(
+        "SELECT lkkl.audit_hodnota('vlecny_let_id', '999999'::jsonb) AS h"
+    ).fetchone()["h"]
+    assert popis == "#999999"

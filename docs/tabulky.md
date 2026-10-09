@@ -58,9 +58,9 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `smazat_lety_dne(den)` | procedura | admin přímo v databázi: `CALL lkkl.smazat_lety_dne('RRRR-MM-DD');` smaže všechny lety dne (datum vzletu, u nevzlétnutého založení; UTC) ve všech stavech s posádkou a T&G, u vleku celou dvojici; vrátí počet (`smazano`). Audit zůstává („Smazání letu“ se starými hodnotami) | 033 |
 | `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, platná (v aplikaci „aktivní“, do 031 sloupec `aktivni`; příznak vlekař převeden do oprávnění) | 004, 015, 017, 021, 031 |
 | `lov_role` | číselník | role v letu, do které se nabízejí osoby podle oprávnění: INSTRUKTOR (výcvik · PIC), DOZOR (sólo · dozor), VLEKAR (vlečný let · PIC); kódy používá program. EXAMINATOR zrušen – examinátor se nabízí podle typu přezkoušení | 024, 041 |
-| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FE(S) – ověření FI(S), FI(A), CRI(A), FE(A), FIE(A), CRE(A), instruktor a inspektor ULL, vlekař) | 021, 024, 041 |
-| `lov_opravneni_role` | vazba | k jakým rolím oprávnění opravňuje (instruktoři: instruktor, dozor; vlekař: vlekař); examinátoři přes typy přezkoušení (`lov_prezkouseni_opravneni`) | 022, 024, 041 |
-| `lov_opravneni_kategorie` | vazba | pro které kategorie letadel se oprávnění smí vydat (bez řádku = žádná) | 021, 024 |
+| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FE(S) – ověření FI(S), FI(A), CRI(A), FE(A), FIE(A), CRE(A), instruktor a inspektor ULL, vlekař); od 045 s auditem (mění se jen v databázi) | 021, 024, 041, 045 |
+| `lov_opravneni_role` | vazba | k jakým rolím oprávnění opravňuje (instruktoři: instruktor, dozor; vlekař: vlekař); examinátoři přes typy přezkoušení (`lov_prezkouseni_opravneni`); audit od 045 | 022, 024, 041, 045 |
+| `lov_opravneni_kategorie` | vazba | pro které kategorie letadel se oprávnění smí vydat (bez řádku = žádná); audit od 045 | 021, 024, 045 |
 | `lov_osoba_opravneni` | vazba | kdo má jaké oprávnění; `omezene` = instruktor pod dohledem (jen evidence); audit | 021, 024 |
 | `lov_osoba_opravneni_kategorie` | vazba | pro které kategorie osoba oprávnění má; složené FK na oprávnění osoby a na povolené kategorie (`kategorie_povolena`); audit | 024 |
 | `v_osoba_smi` | pohled | role, které osoba smí zastat (role, účel, funkce, kategorie letadla; jen platné položky) – nabídky osob v průvodci a detailu | 024, 031 |
@@ -69,7 +69,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `relace_provoz` | tabulka | můj provoz: nastavení relace na jeden den (UTC) – letiště (prázdné = domovské); jiný den se nebere v úvahu | 026 |
 | `relace_provoz_osoba` | tabulka | osoby v provozu relace (filtr nabídky osob v posádce); žádný řádek = bez filtru | 026 |
 | `v_relace_letiste`, `v_relace_osoba` | pohled | dnešní letiště relace (zvolené, jinak domovské) a dnešní osoby v provozu | 026 |
-| `email` | tabulka | odeslané e-maily bez obsahu (odkaz je tajný): druh (`ODKAZ_HESLO`), komu (osoba a adresa v tu chvíli), kdo poslal, kdy, chyba (prázdná = odesláno) – docs/modul-email.md | 038 |
+| `email` | tabulka | odeslané e-maily bez obsahu (odkaz je tajný): druh (`ODKAZ_HESLO`), komu (osoba a adresa v tu chvíli), kdo poslal, kdy, chyba (prázdná = odesláno) – docs/modul-email.md; osoba i odesílatel musí být platní (`kontrola_platnosti`, 045) | 038, 045 |
 | `relace` | tabulka | přihlášená zařízení: otisk klíče z cookie, platnost 30 dní od poslední aktivity, „přihlásit se jako“ (`puvodni_osoba_id`), jen ke čtení (`jen_cteni` – sdílený počítač, server odmítne zápisy) | 005, 030 |
 | `v_ucet` | pohled | účty s údaji osoby a příznakem `smi_se_prihlasit` (přihlášení povoleno a osoba platná; bez otisku hesla) | 005, 006, 031, 039 |
 | `ucet_osoba_ma_email` | trigger | účet jen pro osobu s e-mailem (neexistující osobu odmítne cizí klíč) | 005, 007 |
@@ -77,13 +77,13 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `kontrola_platnosti()` + `platnost_<sloupec>` | trigger | nová nebo změněná vazba nesmí vést na neplatný záznam `lov_` (let, posádka, můj provoz i vazby mezi číselníky) | 031 |
 | `migrace` | tabulka | evidence provedených skriptů `db/` (skript, kdy, otisk); jediný objekt, který zakládá spouštěč `app/migrace.py` (musí existovat před prvním skriptem); spouštěč hlídá změnu i zmizení provedeného skriptu, dva spouštěče najednou (zámek) a verzi PostgreSQL ≥ 17 | – |
 | `audit` | tabulka | auditní log: kdy, transakce, tabulka, klíč řádku, operace, změny (JSON „z → na“), zdroj (aplikace / databáze), kdo, skutečný admin, `let_id` (generovaný) | 012 |
-| `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, lov_osoba_opravneni_kategorie, ucet, lov_letadlo, lov_osnova, lov_uloha, lov_uloha_ucel, lov_prezkouseni, lov_prezkouseni_opravneni) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy`, `poradi` u osnov, úloh a typů přezkoušení | 012, 042 |
+| `audit` (na let, posadka, let_tg, lov_osoba, lov_osoba_opravneni, lov_osoba_opravneni_kategorie, ucet, lov_letadlo, lov_osnova, lov_uloha, lov_uloha_ucel, lov_prezkouseni, lov_prezkouseni_opravneni, lov_opravneni, lov_opravneni_kategorie, lov_opravneni_role) | trigger | zápis do auditu jednou obecnou funkcí; vynechané sloupce: `let.verze`, `ucet.heslo_hash`, `posledni_prihlaseni`, `neuspesne_pokusy`, `poradi` u osnov, úloh, typů přezkoušení a druhů oprávnění; hodnota vazby, jejíž cíl už neexistuje, se vypíše jako `#id` (045) | 012, 042, 045 |
 | `vycvik_kontrola` | trigger | editor výcviku nesmí rozbít staré lety: kategorii osnovy ani typu přezkoušení s lety nejde změnit, úlohu s lety nejde přesunout do osnovy jiné kategorie, účel úlohy použitý v letech nejde odebrat; typ přezkoušení jen s oprávněním vydávaným pro jeho kategorii | 042 |
 | `audit_jen_doplnovat`, `audit_nevyprazdnovat` | trigger | audit nejde upravit, smazat ani vyprázdnit; `TRUNCATE` letů ani auditu nejde nikdy (obešel by audit – lety se mažou jen procedurou `smazat_lety_dne`) | 012, 017, 034 |
 | `lov_audit_popisek` | číselník | popisky sloupců pro čitelnou historii; sloupec bez popisku se neukazuje (plátce letu jako „hradí“, 043) | 012, 017, 043 |
 | `v_audit` | pohled | audit čitelně: kdo (i „jako“, „přímo v databázi“), akce odvozená ze změny, popis | 012 |
 | `v_historie_letu` | pohled | historie letu: jedna akce (let + posádka + T&G v jedné transakci) = jeden řádek | 012 |
-| `nastaveni` | technická | nastavení systému – jediný řádek, sloupec = jedno nastavení (nové přidá migrace): `testovaci_provoz` (žlutý pruh TESTOVACÍ PROVOZ, nic jiného neřídí; přepíná se v databázi). Nahradila tabulku `provoz` s fázemi, `v_provozni_tabulky` a `zahajit_ostry_provoz()` (017) | 034 |
+| `nastaveni` | technická | nastavení systému – jediný řádek, sloupec = jedno nastavení (nové přidá migrace): `testovaci_provoz` (žlutý pruh TESTOVACÍ PROVOZ, nic jiného neřídí; přepíná se v databázi). Nahradila tabulku `provoz` s fázemi, `v_provozni_tabulky` a `zahajit_ostry_provoz()` (017); řádek nejde smazat (trigger `nastaveni_nemazat`, 045) | 034, 045 |
 
 ## Rozhodnutí pro další tabulky
 
