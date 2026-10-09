@@ -34,17 +34,15 @@ JOIN lkkl.lov_opravneni o ON o.kod = v.opravneni
 JOIN lkkl.lov_kategorie k ON k.kod = v.kategorie
 ON CONFLICT DO NOTHING;
 
--- Role: instruktoři vedou výcvik a dozorují sóla, examinátoři přezkušují
--- (docs/podklady/prezkouseni.md).
+-- Role: instruktoři vedou výcvik a dozorují sóla (docs/podklady/prezkouseni.md). Kdo smí
+-- přezkoušet, určuje typ přezkoušení (041_prezkouseni_data.sql), ne role.
 INSERT INTO lkkl.lov_opravneni_role (opravneni_id, role_id)
 SELECT o.id, r.id
 FROM (VALUES
     ('FI_S', 'INSTRUKTOR'), ('FI_S', 'DOZOR'),
     ('FI_A', 'INSTRUKTOR'), ('FI_A', 'DOZOR'),
     ('CRI_A', 'INSTRUKTOR'), ('CRI_A', 'DOZOR'),
-    ('INSTRUKTOR_ULL', 'INSTRUKTOR'), ('INSTRUKTOR_ULL', 'DOZOR'),
-    ('FE_S', 'EXAMINATOR'), ('FE_A', 'EXAMINATOR'), ('CRE_A', 'EXAMINATOR'),
-    ('INSPEKTOR_ULL', 'EXAMINATOR')
+    ('INSTRUKTOR_ULL', 'INSTRUKTOR'), ('INSTRUKTOR_ULL', 'DOZOR')
 ) AS v(opravneni, role)
 JOIN lkkl.lov_opravneni o ON o.kod = v.opravneni
 JOIN lkkl.lov_role r      ON r.kod = v.role;

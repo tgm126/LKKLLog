@@ -13,7 +13,15 @@ import { useJa } from "../uzivatel";
 import { oznamitAkci, type Provedeno } from "./akce";
 import type { LetadloNabidka, Nabidky, Ucel } from "./api";
 import type { LetPasku } from "./Pasek";
-import { jmeno, PIC_NAZEV, rychlaVolba, VolbaOsoby, VolbaPoctu, VolbaUlohy } from "./Volby";
+import {
+  jmeno,
+  PIC_NAZEV,
+  rychlaVolba,
+  VolbaOsoby,
+  VolbaPoctu,
+  VolbaPrezkouseni,
+  VolbaUlohy,
+} from "./Volby";
 import { denUtc, hhmm, minutyUtc, VolbaCasu } from "./VyberCasu";
 import { nazevMista, VyberMista, type Misto } from "./VyberMista";
 import "./PanelLetu.css";
@@ -36,6 +44,8 @@ export type Novy = {
   vlecna?: LetadloNabidka;
   vlekar?: number;
   uloha?: number;
+  /** Typ přezkoušení (jen u účelu Přezkoušení, db/041). */
+  prezkouseni?: number;
   platce?: number | "aeroklub";
   /** Výchozí = poslední evidované přistání letadla; prázdné = moje letiště. */
   mistoVzletu?: Misto;
@@ -103,6 +113,14 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
   // Úloha je povinná podle účelu, ale jen když pro účel a kategorii letadla nějaká existuje
   // (stejné pravidlo hlídá databáze).
   const ulohaPovinna = ucel.uloha_povinna && ulohy.length > 0;
+  // Typ přezkoušení: u účelu Přezkoušení místo úlohy, typy kategorie letadla; povinný, když
+  // nějaký je (stejné pravidlo hlídá databáze).
+  const typyPrezkouseni =
+    letadlo && ucel.kod === "PREZKOUSENI"
+      ? nabidky.prezkouseni.filter((t) => t.kategorie_kod === letadlo.kategorie_kod)
+      : [];
+  const prezkouseni = typyPrezkouseni.find((t) => t.id === novy.prezkouseni);
+  const chybiPrezkouseni = typyPrezkouseni.length > 0 && !prezkouseni;
 
   /** Vybrat letadlo; účel, který se do něj nevejde, se vrátí na normální (zůstane PIC). */
   const vybratLetadlo = (a: LetadloNabidka) => {
@@ -121,6 +139,7 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
       pob: Math.min(novy.pob, a.pocet_mist),
       zpusob: novy.zpusob ?? vychoziZpusob(nabidky),
       uloha: undefined,
+      prezkouseni: undefined,
       mistoVzletu: vychoziMistoVzletu(a),
     });
   };
@@ -133,6 +152,7 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
         Object.entries(novy.osoby).filter(([f]) => Number(f) === nabidky.pic_id),
       ),
       uloha: undefined,
+      prezkouseni: undefined,
       platce: undefined,
     });
 
@@ -154,6 +174,8 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
         pocet_pristani: null,
         uloha: nabidky.ulohy.find((u) => u.id === novy.uloha)?.popis ?? null,
         uloha_oznaceni: nabidky.ulohy.find((u) => u.id === novy.uloha)?.oznaceni ?? null,
+        prezkouseni: prezkouseni?.popis ?? null,
+        prezkouseni_kod: prezkouseni?.kod ?? null,
         varovani: null,
         pob:
           ucel.funkce.length === 0
@@ -178,6 +200,7 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
     !!letadlo &&
     posadkaHotova &&
     (!ulohaPovinna || novy.uloha !== undefined) &&
+    !chybiPrezkouseni &&
     (!aerovlek || (novy.vlecna !== undefined && novy.vlekar !== undefined));
   /** VZLET TEĎ nejde, když letí letadlo nebo vybraná vlečná. */
   const muzeVzlet = !letadlo?.leti_od && !(aerovlek && novy.vlecna?.leti_od);
@@ -209,6 +232,9 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
     platceNazev,
     ulohy,
     ulohaPovinna,
+    typyPrezkouseni,
+    prezkouseni,
+    chybiPrezkouseni,
     vybratLetadlo,
     vybratUcel,
     rozpracovany,
@@ -315,9 +341,15 @@ export function BlokUcelu({ n }: { n: NovyLet }) {
   );
 }
 
-/** Pole posádky podle účelu (PIC, žák, dozor, přezkoušený) – každé ve svém bloku. */
+/** Pole posádky podle účelu (PIC, pilot ve výcviku, dozor, přezkoušený) – každé ve svém bloku.
+ *  Examinátora (PIC u přezkoušení) nabízí podle typu přezkoušení – před jeho volbou ty, kdo
+ *  smí některý typ na kategorii letadla. */
 export function BlokyPosadky({ n }: { n: NovyLet }) {
   const letadlo = n.letadlo!;
+  const examinator = (kod: string) =>
+    kod === "PIC" && n.ucel.kod === "PREZKOUSENI"
+      ? { prezkouseni: n.prezkouseni ? [n.prezkouseni.id] : n.typyPrezkouseni.map((t) => t.id) }
+      : {};
   return n.pole.map((p) => (
     <Blok key={p.funkceId} nadpis={p.nazev} vpravo={chybi(!n.novy.osoby[p.funkceId])}>
       <BlokTelo>
@@ -326,7 +358,7 @@ export function BlokyPosadky({ n }: { n: NovyLet }) {
           jaId={n.ja.osoba_id}
           rychle={rychlaVolba(
             n.nabidky.osoby,
-            { ucel: n.ucel.kod, funkce: p.kod, kategorie: letadlo.kategorie_kod },
+            { ucel: n.ucel.kod, funkce: p.kod, kategorie: letadlo.kategorie_kod, ...examinator(p.kod) },
             [n.ja.osoba_id, ...letadlo.nedavni],
             n.vProvozu,
           )}
@@ -442,6 +474,23 @@ export function BlokUlohy({ n }: { n: NovyLet }) {
   );
 }
 
+/** Typ přezkoušení (u účelu Přezkoušení místo úlohy), jen když pro kategorii nějaký je. */
+export function BlokPrezkouseni({ n }: { n: NovyLet }) {
+  if (n.typyPrezkouseni.length === 0) return null;
+  return (
+    <Blok nadpis="Přezkoušení" vpravo={chybi(n.chybiPrezkouseni)}>
+      <BlokTelo>
+        <VolbaPrezkouseni
+          key={n.letadlo?.kategorie_kod}
+          typy={n.typyPrezkouseni}
+          vybrany={n.prezkouseni}
+          vybrat={(id) => n.zmenit({ prezkouseni: id })}
+        />
+      </BlokTelo>
+    </Blok>
+  );
+}
+
 /** Místo vzletu, místo přistání a plátce (předvyplněné, ťuknutím se změní). */
 export function BlokDalsichUdaju({ n }: { n: NovyLet }) {
   const { nabidky, novy, mojeId, platce } = n;
@@ -495,7 +544,7 @@ type Casy = {
   cas_pristani_vlecne?: string;
 };
 
-function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: NovyLet) {
+function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, prezkouseni, zavrit }: NovyLet) {
   const qc = useQueryClient();
   const oznamit = useOznamit();
   return useMutation({
@@ -513,6 +562,7 @@ function useUlozit({ nabidky, novy, ucel, letadlo, aerovlek, platce, zavrit }: N
         vlecna_id: aerovlek ? novy.vlecna?.id : null,
         vlekar_id: aerovlek ? novy.vlekar : null,
         uloha_id: novy.uloha ?? null,
+        prezkouseni_id: prezkouseni?.id ?? null,
         platce_id: typeof platce === "number" ? platce : null,
         plati_aeroklub: platce === "aeroklub",
         akce: a.akce,

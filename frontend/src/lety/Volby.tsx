@@ -3,17 +3,17 @@ import { useState, type ReactNode } from "react";
 import { Pole } from "../komponenty/Pole";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { proHledani } from "../text";
-import type { Osoba, Uloha } from "./api";
+import type { Osoba, Prezkouseni, Uloha } from "./api";
 import "../komponenty/Volby.css";
 import "./Volby.css";
 
 // Volby sdílené průvodcem a detailem letu (maketa docs/navrhy/pruvodce-mobil-v4.html):
-// osoba (čipy + Hledat…), úloha (osnova, pak seznam úloh), počet.
+// osoba (čipy + Hledat…), úloha (osnova, pak seznam úloh), typ přezkoušení, počet.
 
 /** Popisek PIC podle účelu (kdo je velitel letadla). */
 export const PIC_NAZEV: Record<string, string> = {
   VYCVIK: "Instruktor (PIC)",
-  VYCVIK_SOLO: "Žák (PIC)",
+  VYCVIK_SOLO: "Pilot (PIC)",
   PREZKOUSENI: "Examinátor (PIC)",
 };
 
@@ -21,17 +21,25 @@ export const jmeno = (o: Osoba) => `${o.jmeno} ${o.prijmeni}`;
 
 // --- kdo se nabízí: podle oprávnění osob a jejich kategorií (db/024) ------------------------
 
-/** Role v letu: účel (null = vlečný let) a funkce osoby na letadle dané kategorie. */
-type Hledana = { ucel: string | null; funkce: string; kategorie: string | undefined };
+/** Role v letu: účel (null = vlečný let) a funkce osoby na letadle dané kategorie; u examinátora
+ *  místo role typy přezkoušení, z nichž osoba smí provést aspoň jeden (db/041). */
+type Hledana = {
+  ucel: string | null;
+  funkce: string;
+  kategorie: string | undefined;
+  prezkouseni?: number[];
+};
 
 /** Smí osoba zastat roli (letadlo ještě nevybrané = na čemkoli)? */
 const smi = (o: Osoba, h: Hledana) =>
-  o.role.some(
-    (r) =>
-      r.ucel === h.ucel &&
-      r.funkce === h.funkce &&
-      (h.kategorie === undefined || r.kategorie === h.kategorie),
-  );
+  h.prezkouseni
+    ? o.prezkouseni.some((id) => h.prezkouseni!.includes(id))
+    : o.role.some(
+        (r) =>
+          r.ucel === h.ucel &&
+          r.funkce === h.funkce &&
+          (h.kategorie === undefined || r.kategorie === h.kategorie),
+      );
 
 /** Rychlá volba osoby: kdo smí roli zastat podle oprávnění; když nikdo, záloha (Já,
  *  naposledy létající). Jsou-li vybrané osoby v provozu (můj provoz), jen z nich – kdo smí,
@@ -223,6 +231,40 @@ export function VolbaUlohy({
         </div>
       )}
     </>
+  );
+}
+
+/** Typ přezkoušení: seznam „kód · název“; vybraný zůstane sám, ťuknutím se nabídka znovu
+ *  otevře (jako úloha v osnově). */
+export function VolbaPrezkouseni({
+  typy,
+  vybrany,
+  vybrat,
+  menit = false,
+}: {
+  typy: Prezkouseni[];
+  vybrany: Prezkouseni | undefined;
+  vybrat: (id: number) => void;
+  /** Rovnou celá nabídka (úprava v detailu letu). */
+  menit?: boolean;
+}) {
+  const [otevrena, setOtevrena] = useState(menit || !vybrany);
+  const radek = (t: Prezkouseni, onClick: () => void) => (
+    <Tlacitko key={t.id} aria-pressed={t.id === vybrany?.id} onClick={onClick}>
+      <b>{t.kod}</b> <span>{t.nazev}</span>
+    </Tlacitko>
+  );
+  return (
+    <div className="seznam-voleb">
+      {otevrena || !vybrany
+        ? typy.map((t) =>
+            radek(t, () => {
+              vybrat(t.id);
+              setOtevrena(false);
+            }),
+          )
+        : radek(vybrany, () => setOtevrena(true))}
+    </div>
   );
 }
 

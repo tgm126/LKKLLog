@@ -58,7 +58,7 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
     uplatňuje pravidla, patří do skriptu struktury (ne do `_data.sql`).
     **Dva druhy `kod`** (rozhodnuto 9. 10. 2026): **řídicí číselníky** (účel, funkce, způsob
     vzletu, kategorie…) – `kod` je jen pro program a nezobrazuje se; **evidenční číselníky
-    s oficiálním označením** (osnova `IU`, úloha `8P` v rámci osnovy) – `kod` je to označení
+    s oficiálním označením** (osnova `IU`, úloha `8P` v rámci osnovy, typ přezkoušení `PC-SEP`) – `kod` je to označení
     a zobrazuje se. Označení se v názvu neopakuje (osnova `IU` / „Výcvik SPL…“); složený text
     pro aplikaci („IU – Výcvik SPL…“, „IU/8P Přezkoušení…“) skládá pohled.
     **Platnost záznamu** (od 8. 10. 2026, skript 031): **každá tabulka `lov_` s vlastním `id`**

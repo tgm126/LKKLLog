@@ -96,6 +96,10 @@ class Pasek(BaseModel):
     """Popis úlohy „IU/8P Přezkoušení…“ (v_let, db/040)."""
     uloha_oznaceni: str | None
     """Označení úlohy „IU/8P“ – štítek na pásku."""
+    prezkouseni: str | None
+    """Typ přezkoušení „PC-SEP Přezkoušení…“ (u přezkoušení místo úlohy, db/041)."""
+    prezkouseni_kod: str | None
+    """Označení typu přezkoušení „PC-SEP“ – štítek na pásku."""
     pocet_tg: int
     posadka: list[Clen]
     duvod_zruseni: str | None
@@ -222,7 +226,8 @@ def lety(
                   nullif(v.misto_vzletu, %(moje)s) AS misto_vzletu,
                   nullif(v.misto_pristani, %(moje)s) AS misto_pristani,
                   v.cas_vzletu, v.cas_pristani, v.doba_uctovana_min, v.pocet_pristani,
-                  v.pob, v.uloha, v.uloha_oznaceni, a.max_doba_min, v.prekrocena_doba,
+                  v.pob, v.uloha, v.uloha_oznaceni, v.prezkouseni, v.prezkouseni_kod,
+                  a.max_doba_min, v.prekrocena_doba,
                   v.duvod_zruseni,
                   v.zruseno, v.dodatecne,
                   v.zalozeno,
@@ -478,18 +483,26 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
             "SELECT id, kod, nazev, domovske, rychla_volba FROM lkkl.v_lov_letiste"
         ).fetchall(),
         # u osoby role, které smí zastat podle oprávnění (účel – prázdný = vlečný let, funkce,
-        # kategorie letadla); průvodce podle nich nabízí osoby do posádky
+        # kategorie letadla), a typy přezkoušení, které smí provést (examinátor, db/041);
+        # průvodce podle nich nabízí osoby do posádky
         "osoby": conn.execute(
             """SELECT o.id, o.jmeno, o.prijmeni,
-                      coalesce(json_agg(json_build_object('ucel', s.ucel_kod,
-                                                          'funkce', s.funkce_kod,
-                                                          'kategorie', s.kategorie_kod))
-                               FILTER (WHERE s.osoba_id IS NOT NULL), '[]') AS role
+                      coalesce((SELECT json_agg(json_build_object('ucel', s.ucel_kod,
+                                                                  'funkce', s.funkce_kod,
+                                                                  'kategorie', s.kategorie_kod))
+                                FROM lkkl.v_osoba_smi s WHERE s.osoba_id = o.id), '[]') AS role,
+                      coalesce((SELECT array_agg(s.prezkouseni_id)
+                                FROM lkkl.v_osoba_prezkouseni s WHERE s.osoba_id = o.id),
+                               '{}'::bigint[]) AS prezkouseni
                FROM lkkl.lov_osoba o
-               LEFT JOIN lkkl.v_osoba_smi s ON s.osoba_id = o.id
                WHERE o.platny
-               GROUP BY o.id
                ORDER BY o.prijmeni, o.jmeno"""
+        ).fetchall(),
+        "prezkouseni": conn.execute(
+            """SELECT p.id, p.kod, p.nazev, p.popis, k.kod AS kategorie_kod
+               FROM lkkl.v_lov_prezkouseni p
+               JOIN lkkl.lov_kategorie k ON k.id = p.kategorie_id
+               ORDER BY p.poradi, p.nazev"""
         ).fetchall(),
         "ulohy": conn.execute(
             """SELECT u.id, u.oznaceni, u.nazev, u.popis, u.osnova_id, u.osnova_popis AS osnova,
@@ -527,6 +540,8 @@ class NovyLet(BaseModel):
     """Aerovlek: letadlo vlečné (vlečný let se založí spolu s letem kluzáku)."""
     vlekar_id: int | None = None
     uloha_id: int | None = None
+    prezkouseni_id: int | None = None
+    """Typ přezkoušení (jen u účelu Přezkoušení)."""
     platce_id: int | None = None
     """Prázdné a ne aeroklub = podle posádky (žák / přezkoušený, jinak PIC)."""
     plati_aeroklub: bool = False
@@ -549,13 +564,14 @@ def _zalozit(conn: Connection, udaje: dict, posadka: list[ClenIn]) -> int:
     let_id = conn.execute(
         """INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
                cas_vzletu, cas_pristani, pocet_pristani, pob, platce_id, plati_aeroklub,
-               uloha_id, zalozil_id, misto_vzletu_id, misto_vzletu_popis,
+               uloha_id, prezkouseni_id, zalozil_id, misto_vzletu_id, misto_vzletu_popis,
                misto_pristani_id, misto_pristani_popis)
            VALUES (%(letadlo_id)s, %(ucel_id)s, %(zpusob_vzletu_id)s, %(vlecny_let_id)s,
                    CASE WHEN %(ted)s THEN now() ELSE %(cas_vzletu)s END, %(cas_pristani)s,
                    CASE WHEN %(cas_pristani)s::timestamptz IS NOT NULL
                         THEN %(pocet_pristani)s END,
-                   %(pob)s, %(platce_id)s, %(plati_aeroklub)s, %(uloha_id)s, %(zalozil_id)s,
+                   %(pob)s, %(platce_id)s, %(plati_aeroklub)s, %(uloha_id)s,
+                   %(prezkouseni_id)s, %(zalozil_id)s,
                    %(misto_vzletu_id)s::bigint, %(misto_vzletu_popis)s::text,
                    %(misto_pristani_id)s::bigint, %(misto_pristani_popis)s::text)
            RETURNING id""",
@@ -637,6 +653,7 @@ def novy_let(
                     "pocet_pristani": 1,
                     "pob": 1,
                     "uloha_id": None,
+                    "prezkouseni_id": None,
                     **pristani,
                 },
                 [ClenIn(osoba_id=data.vlekar_id, funkce_id=pic_id)],
@@ -653,6 +670,7 @@ def novy_let(
                 "pocet_pristani": data.pocet_pristani,
                 "pob": data.pob,
                 "uloha_id": data.uloha_id,
+                "prezkouseni_id": data.prezkouseni_id,
                 **pristani,
             },
             data.posadka,
@@ -676,6 +694,7 @@ def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = 
         """SELECT v.id, v.verze, v.stav, v.letadlo_id, v.rejstrik, v.typ, v.kategorie,
                   v.kategorie_kod, t.pocet_mist, a.max_doba_min, v.prekrocena_doba,
                   v.ucel_id, v.ucel, v.ucel_kod, v.uloha_id, v.uloha, v.uloha_oznaceni,
+                  v.prezkouseni_id, v.prezkouseni, v.prezkouseni_kod,
                   v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
                   l.misto_vzletu_id, l.misto_vzletu_popis, v.misto_vzletu,
                   l.misto_pristani_id, l.misto_pristani_popis, v.misto_pristani,
@@ -779,6 +798,7 @@ class Uprava(BaseModel):
     letadlo_id: int | None = None
     pob: int | None = None
     uloha_id: int | None = None
+    prezkouseni_id: int | None = None
     platce_id: int | None = None
     plati_aeroklub: bool | None = None
     poznamka: str | None = None

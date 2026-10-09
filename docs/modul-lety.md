@@ -34,7 +34,7 @@ Vše pod `/api`, přihlášený uživatel, data JSON. Čas „teď“ vždy ze s
 |---|---|
 | `GET /api/den?den=RRRR-MM-DD` | den do hlavičky: datum, čas serveru, domovské letiště, sluneční časy (TB, SR, SS, TE) |
 | `GET /api/lety?den=RRRR-MM-DD` | lety dne pro pásky (z `v_let` + posádka, počet T&G, varování) a čas serveru; dnes i vše, co je ve vzduchu |
-| `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_lov_letadlo` + stav letí / naplánován), účely, způsoby vzletu, osoby s rolemi, které smí zastat (`v_osoba_smi`), obecné úlohy |
+| `GET /api/lety/nabidky` | vše pro průvodce: letadla (`v_lov_letadlo` + stav letí / naplánován), účely, způsoby vzletu, osoby s rolemi, které smí zastat (`v_osoba_smi`), a typy přezkoušení, které smí provést (`v_osoba_prezkouseni`), úlohy, typy přezkoušení (`v_lov_prezkouseni`) |
 | `GET /api/lety/nabidka-osob?letadlo_id=` | naposledy létající na letadle (rychlá volba) a poslední vlekař vlečné |
 | `POST /api/lety` | nový let z průvodce: letadlo, účel, posádka, POB, způsob vzletu, vlek (vlečná + vlekař), plátce, úloha, akce `vzlet` / `naplanovat` / `probehly` (s časy a počtem přistání) |
 | `GET /api/lety/{id}` | detail letu včetně historie (`v_historie_letu`) |
@@ -106,7 +106,9 @@ neuvádí, soukromé letadlo má bílou dlaždici a **světle šedý** rejstří
 s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
 („Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
 a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má
-v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. **Místo vzletu**,
+v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. U přezkoušení je
+místo úlohy blok **Přezkoušení** hned pod účelem (typy kategorie letadla „kód · název“; desktop
+pod účelem). **Místo vzletu**,
 **místo přistání** a **plátce** jsou předvyplněné řádky v bloku Další údaje – **místo vzletu
 = poslední evidované přistání letadla** (`v_lov_letadlo.poloha`, db/037; bez přistání moje
 letiště), místo přistání = moje letiště (rozhodnuto 8. 10. 2026) – ťuknutím se změní (místo: hledání letiště nebo popis místa); u aerovleku platí
@@ -115,8 +117,10 @@ přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ní
 −1 / +1 a doba letu.
 **Nabídka osob podle oprávnění** (db/021, 022, 024; model `docs/navrh-opravneni.md`):
 oprávnění osoby (FI(S), FE(S), vlekař…) opravňuje k **rolím v letu** (`lov_role`: instruktor =
-výcvik · PIC, dozor = sólo · dozor, examinátor = přezkoušení · PIC, vlekař = vlečný let · PIC)
-na kategoriích letadel, pro které ho osoba má. Přezkoušení jen examinátoři, výcvik a dozor
+výcvik · PIC, dozor = sólo · dozor, vlekař = vlečný let · PIC)
+na kategoriích letadel, pro které ho osoba má. **Examinátor** (PIC u přezkoušení) se nabízí
+podle **typu přezkoušení** (`lov_prezkouseni_opravneni`, db/041; před volbou typu kdo smí
+některý typ na kategorii) – docs/modul-prezkouseni.md. Výcvik a dozor
 instruktoři (i omezení). V rychlé volbě každého
 pole posádky (i vlekaře) se nabídnou osoby, které danou roli smí zastat na kategorii
 vybraného letadla; nesmí-li nikdo, nabídne se Já a naposledy létající. „Hledat…“ vždy hledá
@@ -208,7 +212,8 @@ frontend/
 4. **Obnovování přehledu** každých 10 s.
 5. **Fáze testování 1** na serveru – nejdřív se rozchodí standardní nasazení (samostatný
    návrh `docs/nasazeni.md`).
-6. **Osnovy a úlohy** založené (`db/016`); úloha je u výcviku, sóla a přezkoušení povinná,
+6. **Osnovy a úlohy** založené (`db/016`); úloha je u výcviku a sóla povinná (u přezkoušení
+   místo ní **typ přezkoušení**, db/041),
    jen když pro účel a kategorii letadla nějaká existuje (`db/019`). Kluzáky: osnovy IU, IA
    a II z Programu výcviku AeČR v.6 (úprava AK Kladno), nabídka úlohy podle účelu (vazba
    úloha ↔ účel); TMG zatím ne. Obecné úlohy u kluzáků nahradil sportovní výcvik (II).

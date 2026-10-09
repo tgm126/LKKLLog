@@ -73,9 +73,9 @@ neobsahuje navíc výcvikové „kontrolní lety“]**
 ## 5. Klubové pravidlo LKKL – „školka“ (podle správce, 7. 10. 2026)
 
 Na **začátku sezóny**, **pro každý létaný typ**:
-- **1 let s instruktorem** – úlohy **4 a 6** základní osnovy;
-- **1 sólo let** – většinou **přistání do omezeného prostoru**;
-- u **jednomístného typu** jen sólo let **s dozorem FI na zemi**.
+- **1 let s instruktorem** – úlohy **4 a 6 a 11** základní osnovy;
+- **1 sólo let** – většinou 11 - **přistání do omezeného prostoru**;
+- u **jednomístného typu** jen sólo let **s dozorem FI na zemi** počet dle zvážení instruktora.
 
 Není to přezkoušení podle předpisů, ale výcvik s instruktorem a sólo pod dohledem
 (v aplikaci účel Výcvik s úlohou osnovy a Výcvik sólo s dozorem).
@@ -118,7 +118,26 @@ CRE je tedy příklad examinátora, který dělá POZ, ale ne zkoušku k vydán�
 4. **Střet zájmů:** examinátor nesmí zkoušet uchazeče, kterému sám dal víc než **25 %**
    požadovaného výcviku (FCL.1005) – v aplikaci nanejvýš upozornění, let nikdy neblokovat.
 
+## 7. Zápis do zápisníku letů (AMC1 FCL.050, AMC1 SFCL.050; ověřeno 9. 10. 2026)
+
+- **Examinátor** smí zapsat jako PIC celý čas, kdy sedí na místě pilota a působí jako
+  examinátor (AMC1 FCL.050 (b)(1)(iv); u kluzáků FE(S) obdobně).
+- **Přezkoušený** (žadatel nebo držitel průkazu) smí zapsat jako PIC čas **úspěšně** složené
+  zkoušky dovednosti, přezkoušení odborné způsobilosti a ověření způsobilosti, pokud je
+  examinátor potvrdí podpisem (Part-FCL od Amendment 13, ED Decision 2025/002/R; u kluzáků SPL
+  zkoušky a přezkoušení obdobně). Stejně se jako PIC zapisuje sólo a let pod dohledem
+  (potvrzuje instruktor).
+- Funkce v zápisníku: PIC (vč. sóla), dvojí (dual), FI, FE – u kluzáků PIC, dual, FI(S), FE(S).
+- U letu pro prodloužení SEP / TMG a u letu pro rozlétanost LAPL se do poznámky zapisuje jméno
+  a podpis instruktora.
+
+**Pro aplikaci:** zápisník neurčuje, kdo je v letu velitelem – PIC si zapíší oba. Model
+„examinátor = PIC, přezkoušený = funkce“ tedy zápisu neodporuje; pro hodiny PIC přezkoušeného
+je ale rozhodující **výsledek** (neúspěšné přezkoušení se jako PIC nepočítá).
+
 ## Zdroje
+- EASA: [ED Decision 2025/002/R, Annex II – AMC/GM k Part-FCL, Amendment 13](https://www.easa.europa.eu/en/downloads/141594/en) (AMC1 FCL.050),
+  [AMC1 SFCL.050 (UK CAA Regulatory Library)](https://regulatorylibrary.caa.co.uk/2018-1976/Content/AMC%20GM/AMC1%20SFCL%20050%20Recording%20of%20flight.htm)
 - Part-SFCL (převzaté znění v UK CAA Regulatory Library): [SFCL.160 rozlétanost](https://regulatorylibrary.caa.co.uk/2018-1976/Content/Regs/00950_SFCL.160.htm),
   [SFCL.150 TMG](https://regulatorylibrary.caa.co.uk/2018-1976/Content/Regs/00930_SFCL.150.htm),
   [SFCL.205 vlekání](https://regulatorylibrary.caa.co.uk/2018-1976/Content/Regs/00980_SFCL.205.htm)

@@ -16,6 +16,8 @@ from app import bezpecnost, migrace
 OSNOVY = (migrace.ADRESAR / "019_uloha_podle_ucelu_data.sql").read_text(encoding="utf-8")
 # Druhy oprávnění (FI(S), FE(S)…) jako na serveru.
 OPRAVNENI = (migrace.ADRESAR / "021_opravneni_data.sql").read_text(encoding="utf-8")
+# Typy přezkoušení a kdo je smí provést jako na serveru.
+PREZKOUSENI = (migrace.ADRESAR / "041_prezkouseni_data.sql").read_text(encoding="utf-8")
 
 ZAKLAD = os.environ.get("LKKL_E2E_ZAKLAD", "postgresql://lkkllog:lkkllog@127.0.0.1:5432")
 DATABAZE = "lkkllog_e2e"
@@ -145,12 +147,14 @@ def pripravit() -> None:
             c.execute(FLOTILA)
             c.execute(OSNOVY)
             c.execute(OPRAVNENI)
-            # Admin je instruktor kluzáků, Nela vlekař (nabídky v průvodci).
+            c.execute(PREZKOUSENI)
+            # Admin je instruktor i examinátor kluzáků, Nela vlekař (nabídky v průvodci).
             c.execute(
                 """INSERT INTO lkkl.lov_osoba_opravneni (osoba_id, opravneni_id)
-                   SELECT v.osoba, o.id FROM (VALUES (%s, 'FI_S'), (%s, 'VLEKAR')) AS v(osoba, kod)
+                   SELECT v.osoba, o.id
+                   FROM (VALUES (%s, 'FI_S'), (%s, 'FE_S'), (%s, 'VLEKAR')) AS v(osoba, kod)
                    JOIN lkkl.lov_opravneni o ON o.kod = v.kod""",
-                (admin, nova),
+                (admin, admin, nova),
             )
             c.execute(  # pro všechny kategorie, pro které se oprávnění vydává
                 """INSERT INTO lkkl.lov_osoba_opravneni_kategorie

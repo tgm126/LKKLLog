@@ -11,6 +11,7 @@ import {
   BlokDalsichUdaju,
   BlokPob,
   BlokUcelu,
+  BlokPrezkouseni,
   BlokUlohy,
   BlokVleku,
   BlokyPosadky,
@@ -56,6 +57,7 @@ function coChybi(n: NovyLet): string[] {
   return [
     ...n.pole.filter((p) => !n.novy.osoby[p.funkceId]).map((p) => (p.kod === "PIC" ? "pilot" : p.nazev)),
     n.ulohaPovinna && n.novy.uloha === undefined ? "úloha" : "",
+    n.chybiPrezkouseni ? "přezkoušení" : "",
     n.aerovlek && (!n.novy.vlecna || !n.novy.vlekar) ? "vlečná a vlekař" : "",
   ].filter(Boolean);
 }
@@ -100,6 +102,8 @@ function Formular({
           pocet_pristani: null,
           uloha: null,
           uloha_oznaceni: null,
+          prezkouseni: null,
+          prezkouseni_kod: null,
           varovani: null,
           pob: 1,
           posadka: vlekar
@@ -184,6 +188,7 @@ function Formular({
           {n.letadlo && (
             <>
               <BlokUcelu n={n} />
+              <BlokPrezkouseni n={n} />
               <BlokZpusobu n={n} />
               <BlokVleku n={n} />
             </>

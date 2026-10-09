@@ -8,6 +8,7 @@ import { useNabidky, type Nabidky } from "./api";
 import {
   BlokDalsichUdaju,
   BlokPob,
+  BlokPrezkouseni,
   BlokUcelu,
   BlokUlohy,
   BlokVleku,
@@ -23,7 +24,7 @@ import "../komponenty/Volby.css";
 import "./Pruvodce.css";
 
 // Průvodce novým letem (mobil) podle makety docs/navrhy/pruvodce-mobil-v4.html:
-// 1 letadlo → 2 posádka → 3 let (u kluzáku vzlet a vlek, úloha, další údaje) → VZLET TEĎ /
+// 1 letadlo → 2 posádka (u přezkoušení i jeho typ) → 3 let (u kluzáku vzlet a vlek, úloha, další údaje) → VZLET TEĎ /
 // Naplánovat / Proběhlý let (výběr časů prstem). Od kroku 2 je nahoře rozpracovaný pásek
 // letu, který se plní s každou volbou. Stav a bloky sdílí desktop (novyLet.tsx).
 
@@ -117,7 +118,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
           <Tlacitko
             varianta="modre"
             hlavni
-            disabled={!n.posadkaHotova}
+            disabled={!n.posadkaHotova || n.chybiPrezkouseni}
             onClick={() => {
               n.setUpravuji(null);
               setKrok(3);
@@ -129,6 +130,7 @@ function PruvodceKroky({ nabidky, zavrit }: { nabidky: Nabidky; zavrit: () => vo
       >
         {pasek()}
         <BlokUcelu n={n} />
+        <BlokPrezkouseni n={n} />
         <BlokyPosadky n={n} />
         <BlokPob n={n} />
       </Obrazovka>

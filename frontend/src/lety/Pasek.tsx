@@ -43,6 +43,8 @@ export type LetPasku = Pick<
   | "pocet_pristani"
   | "uloha"
   | "uloha_oznaceni"
+  | "prezkouseni"
+  | "prezkouseni_kod"
   | "varovani"
 > & {
   stav: Stav | "ROZPRACOVANY";
@@ -100,15 +102,15 @@ const pozice = (text: ReactNode, popis?: string | null) => (
   <span title={popis ?? undefined}>{text && <Stitek barva="pasek">{text}</Stitek>}</span>
 );
 
-/** Řádek štítků pásku (mobil i desktop): účel · způsob vzletu · POB · úloha v pevných
- *  pozicích, vpravo trasa a případně výsledek letu. */
+/** Řádek štítků pásku (mobil i desktop): účel · způsob vzletu · POB · úloha (u přezkoušení
+ *  jeho typ) v pevných pozicích, vpravo trasa a případně výsledek letu. */
 export function StitkyPasku({ let: l, trasa, children }: { let: LetPasku; trasa?: ReactNode; children?: ReactNode }) {
   return (
     <div className="stitky-pasku">
       {pozice(ucelKratce(l))}
       {pozice(zpusobKratce(l))}
       {pozice(l.pob !== null && `POB ${l.pob}`)}
-      {pozice(l.uloha_oznaceni, l.uloha)}
+      {pozice(l.uloha_oznaceni ?? l.prezkouseni_kod, l.uloha ?? l.prezkouseni)}
       {trasa && (
         <span className="trasa-pasku">
           <Stitek barva="pasek" zkratit>
@@ -288,13 +290,13 @@ export function PasekNaplanovany({ lety, provest, zaneprazdnen }: { lety: PasekL
 // --- deník: ukončené a zrušené lety --------------------------------------------------------
 
 /** Podrobnosti do třetího řádku: vždy POB, pak odchylky od běžného letu (účel, způsob
- *  vzletu, úloha, dodatečně). */
+ *  vzletu, úloha nebo typ přezkoušení, dodatečně). */
 function podrobnosti(l: PasekLetu) {
   return [
     `POB ${l.pob}`,
     ucelKratce(l),
     zpusobKratce(l),
-    l.uloha_oznaceni,
+    l.uloha_oznaceni ?? l.prezkouseni_kod,
     l.dodatecne && "dodatečně",
   ].filter(Boolean);
 }

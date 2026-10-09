@@ -19,6 +19,7 @@ import {
   rychlaVolba,
   VolbaOsoby,
   VolbaPoctu,
+  VolbaPrezkouseni,
   VolbaUlohy,
 } from "./Volby";
 import { denUtc, minutyUtc, VolbaCasu } from "./VyberCasu";
@@ -132,6 +133,16 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
   const u = (klic: string, povoleno = true) =>
     lzeUpravit && povoleno ? { upravit: prepnout(klic), otevreno: upravuji === klic } : {};
   const posadkaIds = l.posadka.map((c) => c.osoba_id);
+  // Typ přezkoušení (u přezkoušení místo úlohy, db/041): typy kategorie letadla; examinátor
+  // (PIC) se nabízí podle zvoleného typu.
+  const typyPrezkouseni =
+    l.ucel_kod === "PREZKOUSENI"
+      ? nabidky.prezkouseni.filter((t) => t.kategorie_kod === l.kategorie_kod)
+      : [];
+  const examinator = (funkceKod: string) =>
+    funkceKod === "PIC" && l.ucel_kod === "PREZKOUSENI"
+      ? { prezkouseni: l.prezkouseni_id ? [l.prezkouseni_id] : typyPrezkouseni.map((t) => t.id) }
+      : {};
   const volbaOsoby = (
     funkceKod: string,
     vybrana: number | undefined,
@@ -142,7 +153,12 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
       jaId={ja.osoba_id}
       rychle={rychlaVolba(
         nabidky.osoby,
-        { ucel: l.je_vlecny ? null : l.ucel_kod, funkce: funkceKod, kategorie: l.kategorie_kod },
+        {
+          ucel: l.je_vlecny ? null : l.ucel_kod,
+          funkce: funkceKod,
+          kategorie: l.kategorie_kod,
+          ...examinator(funkceKod),
+        },
         [ja.osoba_id],
         vProvozu,
       )}
@@ -212,6 +228,16 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
                 povinna={!!ucel?.uloha_povinna}
                 vybrana={ulohy.find((x) => x.id === l.uloha_id)}
                 vybrat={(id) => ulozit({ uloha_id: id ?? null })}
+                menit
+              />
+            </Udaj>
+          )}
+          {typyPrezkouseni.length > 0 && (
+            <Udaj popisek="Přezkoušení" hodnota={l.prezkouseni} cely {...u("prezkouseni")}>
+              <VolbaPrezkouseni
+                typy={typyPrezkouseni}
+                vybrany={typyPrezkouseni.find((t) => t.id === l.prezkouseni_id)}
+                vybrat={(id) => ulozit({ prezkouseni_id: id })}
                 menit
               />
             </Udaj>

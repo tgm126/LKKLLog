@@ -5,7 +5,9 @@ mezi nimi). Ostatní jsou **provozní data** (lety, audit, relace) a technické 
 `migrace`, `nastaveni`. Podle fáze provozu se nic automaticky nemaže (skript 034; dřív
 jednorázové vyprázdnění při zahájení ostrého provozu, zrušeno 8. 10. 2026).
 
-**Jednoduché číselníky** mají jednotný standard: `id`, `kod` (jedinečný, jen pro program),
+**Jednoduché číselníky** mají jednotný standard: `id`, `kod` (jedinečný, jen pro program; u
+evidenčních číselníků oficiální označení, které se zobrazuje – osnova, úloha, typ přezkoušení;
+velká písmena, číslice, `_` a od 041 i `-`),
 `nazev` (text pro zobrazení, nemusí být jedinečný), `poradi`, `platny`. Pravidla sloupců jsou
 v doménách `lkkl.kod`, `lkkl.nazev`, `lkkl.poradi`, `lkkl.platny` (skript 008). Osoby, letadla
 a vazby mají vlastní sloupce. **Pohled pro nabídky** `v_lov_<název>`: jen platné položky,
@@ -29,21 +31,24 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `lov_letadlo` | trvalá data | letadla: rejstříková značka, typ, soukromé, max. doba letu, vlečné, mimo provoz (dočasně), platné (ne = vyřazené) | 001, 002, 013, 017, 031 |
 | `v_lov_letadlo` | pohled | platná letadla s typem, kategorií, počtem míst a **polohou** (poslední evidované přistání – `poloha` kód letiště nebo popis, zvlášť `poloha_letiste_id` / `poloha_popis`: výchozí místo vzletu nového letu); pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017, 031, 035, 037 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft], rychlá volba (nabízí se hned, ostatní přes Hledat…) | 003, 008, 028 |
-| `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO, PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` | 008, 016 |
+| `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO (název „Sólo pod dozorem“), PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` (u přezkoušení ne – místo úlohy typ přezkoušení) | 008, 016, 041 |
 | `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
-| `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK, PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008 |
+| `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK (název „Pilot ve výcviku“), PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008, 041 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
 | `lov_osnova` | číselník (evidenční) | osnova (skupina úloh) → kategorie letadla (prázdná = všechny); **`kod` = oficiální označení** (IU, IA, II), `nazev` bez něj („Výcvik SPL…“); `v_lov_osnova.popis` = „IU – Výcvik SPL…“; kluzáky podle Programu výcviku AeČR v.6 (úprava AK Kladno) | 016, 019, 040 |
 | `lov_uloha` | číselník (evidenční) | úloha (letové cvičení) → osnova; **`kod` = označení v osnově** (4, 8P – jedinečný v osnově), `nazev` bez označení; `v_lov_uloha.oznaceni` „IU/4“, `popis` „IU/4 Navijákové vzlety…“; pozemní přípravy se nezadávají | 016, 019, 040 |
-| `lov_uloha_ucel` | vazba | u kterých účelů se úloha nabízí (výcvik = dvojí, sólo, normální, přezkoušení) | 019 |
+| `lov_uloha_ucel` | vazba | u kterých účelů se úloha nabízí (výcvik = dvojí, sólo, normální; přezkoušení od 041 ne) | 019, 041 |
+| `lov_prezkouseni` | číselník (evidenční) | typ přezkoušení → kategorie letadla (povinná); **`kod` = označení** (ST-SPL, PC-SEP, AOC-FI-A… – zobrazuje se, štítek pásku), `nazev` bez něj; `v_lov_prezkouseni.popis` = „PC-SEP Přezkoušení…“; docs/modul-prezkouseni.md | 041 |
+| `lov_prezkouseni_opravneni` | vazba | kdo smí přezkoušení provést (examinátor = PIC): oprávnění (FE(S), FE(A), CRE(A), FIE(A), inspektor ULL…) | 041 |
+| `v_osoba_prezkouseni` | pohled | která přezkoušení osoba smí provést (oprávnění pro kategorii typu; jen platné položky) – nabídka examinátora v průvodci a detailu | 041 |
 | `v_uloha_nabidka` | pohled | úlohy pro průvodce podle účelu a kategorie (s `oznaceni`, `popis`, `osnova_popis`); úloha je povinná (výcvik, sólo, přezkoušení), jen když pro účel a kategorii nějaká existuje; `v_let.uloha` = popis a `v_let.uloha_oznaceni` = štítek pásku | 016, 019, 040 |
 | `lov_ucel_funkce` | vazba | povinné funkce účelu kromě PIC (výcvik → žák, sólo → dozor, přezkoušení → přezkoušený) | 009, 017 |
-| `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místo vzletu i přistání vždy (letiště nebo popis; místo přistání do přistání = plán), časy UTC, doba (počítá DB, nejméně 1 minuta), počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze | 009 |
+| `let` | tabulka | let: letadlo, účel (prázdný = vlečný let), způsob vzletu, vazba na vlečný let, místo vzletu i přistání vždy (letiště nebo popis; místo přistání do přistání = plán), časy UTC, doba (počítá DB, nejméně 1 minuta), počet přistání, POB, plátce nebo aeroklub, poznámka, zrušení, založení, verze, úloha, typ přezkoušení (`prezkouseni_id`, jen u přezkoušení) | 009, 016, 041 |
 | `posadka` | tabulka | jmenovitě uvedené osoby letu s funkcí; osoba i funkce nejvýš jednou na letu | 009 |
 | `let_tg` | tabulka | časy jednotlivých T&G (nepovinné) | 009 |
-| `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem, příznakem „dodatečně“ **druhem provozu** (`PLACHTARSKY` = kluzák a vlečný let, `MOTOROVY` = ostatní, i TMG) a příznakem **`prekrocena_doba`** (ve vzduchu déle než maximální doba letadla, podle `now()`) | 009, 011, 014, 035, 036 |
+| `v_let` | pohled | lety s odvozeným stavem (NAPLANOVAN, VE_VZDUCHU, UKONCEN, ZRUSEN), dnem, vlekem, účtovanou dobou, POB (u účelů s funkcemi z posádky), PIC, plátcem, příznakem „dodatečně“ **druhem provozu** (`PLACHTARSKY` = kluzák a vlečný let, `MOTOROVY` = ostatní, i TMG) a příznakem **`prekrocena_doba`** (ve vzduchu déle než maximální doba letadla, podle `now()`); typ přezkoušení `prezkouseni` (popis) a `prezkouseni_kod` (štítek) | 009, 011, 014, 035, 036, 041 |
 | `v_souhrn_dne` | pohled | souhrn dne: ukončené lety po druhu provozu a letadle (vlečná ve vleku zvlášť, `je_vlecny`) – počet letů, přistání a účtovaných minut; souhrny desky, později uzávěrka a účetnictví | 036 |
-| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek (vlečný let jen u aerovleku a jen vlečné letadlo; **aerovlek vždy s letem vlečné** – i cizí vlečná je v `lov_letadlo` jako soukromá a vlečná; dvojice `vlek_zkontrolovat()`: stejný čas vzletu, naplánovaný vlek se ruší i obnovuje celý, vlekař není v posádce kluzáku), způsob vzletu podle kategorie (kluzák naviják / aerovlek, ostatní vlastní), T&G jen u motorového letadla (ne kluzák, ne vlečná) a v době letu, úloha (povinnost, účel, kategorie) | 009, 011, 016, 019, 032, 035 |
+| `let_kontrola` (+ `posadka_kontrola`, `let_tg_kontrola`) | trigger na konci transakce | jeden PIC, funkce podle účelu, POB, vlek (vlečný let jen u aerovleku a jen vlečné letadlo; **aerovlek vždy s letem vlečné** – i cizí vlečná je v `lov_letadlo` jako soukromá a vlečná; dvojice `vlek_zkontrolovat()`: stejný čas vzletu, naplánovaný vlek se ruší i obnovuje celý, vlekař není v posádce kluzáku), způsob vzletu podle kategorie (kluzák naviják / aerovlek, ostatní vlastní), T&G jen u motorového letadla (ne kluzák, ne vlečná) a v době letu, úloha (povinnost, účel, kategorie), typ přezkoušení (právě u přezkoušení, kategorie letadla, povinný, když pro kategorii nějaký je) | 009, 011, 016, 019, 032, 035, 041 |
 | `let_cas_ne_v_budoucnosti`, `let_tg_cas_ne_v_budoucnosti` | trigger | čas vzletu, přistání ani T&G nesmí být v budoucnosti | 035 |
 | `let_osoby_bez_prekryvu()` | funkce (v `let_kontrola`) | osoba na palubě nemůže být ve vzduchu ve dvou letech zároveň (plánování volné, dozor na zemi se nepočítá); hláška s rejstříkem a časem druhého letu | 018, 025 |
 | `let_letadlo_volne` | trigger (před zápisem letu) | letadlo nemůže mít dva překrývající se lety – hláška „OK-… už letí (vzlet 10:42 UTC, PIC …)“; omezení `letadlo_bez_prekryvu` zůstává jako pojistka pro souběh | 025 |
@@ -52,9 +57,9 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `let_verze`, `let_nemazat`, `let_nevyprazdnovat` | trigger | verze záznamu se zvyšuje; let nejde smazat (jen procedurou `smazat_lety_dne`) ani vyprázdnit | 009, 017, 033 |
 | `smazat_lety_dne(den)` | procedura | admin přímo v databázi: `CALL lkkl.smazat_lety_dne('RRRR-MM-DD');` smaže všechny lety dne (datum vzletu, u nevzlétnutého založení; UTC) ve všech stavech s posádkou a T&G, u vleku celou dvojici; vrátí počet (`smazano`). Audit zůstává („Smazání letu“ se starými hodnotami) | 033 |
 | `lov_osoba` | trvalá data | osoby: jméno, příjmení, e-mail (jedinečný bez ohledu na velikost písmen), telefon (+420…), číslo člena (text, jen u členů), člen / externí, platná (v aplikaci „aktivní“, do 031 sloupec `aktivni`; příznak vlekař převeden do oprávnění) | 004, 015, 017, 021, 031 |
-| `lov_role` | číselník | role v letu, do které se nabízejí osoby podle oprávnění: INSTRUKTOR (výcvik · PIC), DOZOR (sólo · dozor), EXAMINATOR (přezkoušení · PIC), VLEKAR (vlečný let · PIC); kódy používá program | 024 |
-| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FI(A), CRI(A), FE(A), CRE(A), instruktor a inspektor ULL, vlekař) | 021, 024 |
-| `lov_opravneni_role` | vazba | k jakým rolím oprávnění opravňuje (instruktoři: instruktor, dozor; examinátoři: examinátor; vlekař: vlekař) | 022, 024 |
+| `lov_role` | číselník | role v letu, do které se nabízejí osoby podle oprávnění: INSTRUKTOR (výcvik · PIC), DOZOR (sólo · dozor), VLEKAR (vlečný let · PIC); kódy používá program. EXAMINATOR zrušen – examinátor se nabízí podle typu přezkoušení | 024, 041 |
+| `lov_opravneni` | číselník | druh oprávnění osoby (FI(S), FE(S), FE(S) – ověření FI(S), FI(A), CRI(A), FE(A), FIE(A), CRE(A), instruktor a inspektor ULL, vlekař) | 021, 024, 041 |
+| `lov_opravneni_role` | vazba | k jakým rolím oprávnění opravňuje (instruktoři: instruktor, dozor; vlekař: vlekař); examinátoři přes typy přezkoušení (`lov_prezkouseni_opravneni`) | 022, 024, 041 |
 | `lov_opravneni_kategorie` | vazba | pro které kategorie letadel se oprávnění smí vydat (bez řádku = žádná) | 021, 024 |
 | `lov_osoba_opravneni` | vazba | kdo má jaké oprávnění; `omezene` = instruktor pod dohledem (jen evidence); audit | 021, 024 |
 | `lov_osoba_opravneni_kategorie` | vazba | pro které kategorie osoba oprávnění má; složené FK na oprávnění osoby a na povolené kategorie (`kategorie_povolena`); audit | 024 |
@@ -97,7 +102,8 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
   každý přihlášený, příznak nemá. Novou potřebu řeší nový příznak (stejně vyžaduje nový kód).
   Změny práv zachytí auditní log. Seznam práv až s tabulkou `ucet` a přihlašováním.
 - Datum narození se neeviduje (sloupec jde kdykoli přidat).
-- **Úlohy:** u výcviku a sóla z osnovy pro kategorii letadla, u přezkoušení typ přezkoušení,
+- **Úlohy:** u výcviku a sóla z osnovy pro kategorii letadla, u přezkoušení typ přezkoušení
+  (samostatný číselník `lov_prezkouseni`, db/041),
   u normálního letu úlohy z osnov i obecné (let do prostoru, okruhy, navigační let…).
   **Úlohy jsou členěné do osnov** (hierarchie): např. u kluzáků základní výcvik, pokračovací
   výcvik a sportovní výcvik. Návrh: číselník osnov (→ kategorie letadla) a číselník úloh

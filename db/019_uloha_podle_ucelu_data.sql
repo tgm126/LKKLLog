@@ -4,8 +4,8 @@
 -- řádek osnovy II v dokumentu nemá číslo – je to 12). Nahrazuje testovací osnovy ze 016.
 --
 -- Vazba úloha ↔ účel podle sloupců „dvojí“ a „samostatně“ v osnovách:
---   výcvik = dvojí řízení s FI(S), sólo = samostatně pod dozorem (žák), normální = držitel SPL,
---   přezkoušení = II/9P (obnova CLOUD s FE).
+--   výcvik = dvojí řízení s FI(S), sólo = samostatně pod dozorem (žák), normální = držitel SPL.
+--   Přezkoušení CLOUD (v programu II/9P) je typ přezkoušení PC-CLOUD (db/041), ne úloha.
 
 -- Testovací osnovy a úlohy (žádný let je nepoužívá; jinak skript skončí chybou a nic nezmění).
 DELETE FROM lkkl.lov_uloha_ucel
@@ -29,7 +29,7 @@ FROM (VALUES
 CROSS JOIN lkkl.lov_kategorie k
 WHERE k.kod = 'KLUZAK';
 
--- Úlohy: osnova, cvičení, krátký název, účely (V = výcvik, S = sólo, N = normální, P = přezkoušení).
+-- Úlohy: osnova, cvičení, krátký název, účely (V = výcvik, S = sólo, N = normální).
 CREATE TEMPORARY TABLE nove_ulohy (osnova text, cv text, nazev text, poradi int, ucely text)
 ON COMMIT DROP;
 INSERT INTO nove_ulohy VALUES
@@ -69,7 +69,6 @@ INSERT INTO nove_ulohy VALUES
     ('II', '6',  'Samostatný přelet', 60, 'N'),
     ('II', '7',  'Lety v dlouhé vlně', 70, 'VN'),
     ('II', '8',  'Lety v oblačnosti', 80, 'VN'),
-    ('II', '9P', 'Přezkoušení CLOUD', 90, 'P'),
     ('II', '10', 'TMG – vzlet, okruh, přistání', 100, 'VN'),
     ('II', '11', 'TMG – zvláštní případy za letu', 110, 'V'),
     ('II', '12', 'TMG – navigační lety a lety do prostoru', 120, 'VN');
@@ -86,4 +85,4 @@ JOIN lkkl.lov_uloha u ON u.osnova_id = o.id AND u.kod = n.cv
 CROSS JOIN LATERAL regexp_split_to_table(n.ucely, '') AS z(pismeno)
 JOIN lkkl.lov_ucel uc ON uc.kod = CASE z.pismeno
     WHEN 'V' THEN 'VYCVIK' WHEN 'S' THEN 'VYCVIK_SOLO'
-    WHEN 'N' THEN 'NORMALNI' WHEN 'P' THEN 'PREZKOUSENI' END;
+    WHEN 'N' THEN 'NORMALNI' END;

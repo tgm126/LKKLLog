@@ -46,6 +46,10 @@ export type Pasek = {
   /** Popis úlohy „IU/8P Přezkoušení…“; označení „IU/8P“ zvlášť (štítek). */
   uloha: string | null;
   uloha_oznaceni: string | null;
+  /** Typ přezkoušení „PC-SEP Přezkoušení…“ (u přezkoušení místo úlohy, db/041); kód „PC-SEP“
+   *  zvlášť (štítek). */
+  prezkouseni: string | null;
+  prezkouseni_kod: string | null;
   pocet_tg: number;
   posadka: Clen[];
   duvod_zruseni: string | null;
@@ -140,7 +144,23 @@ export type Ucel = { id: number; kod: string; nazev: string; uloha_povinna: bool
 /** Role, kterou osoba smí zastat podle oprávnění (db/024): účel (null = vlečný let), funkce,
  *  kategorie letadla. */
 export type Role = { ucel: string | null; funkce: string; kategorie: string };
-export type Osoba = { id: number; jmeno: string; prijmeni: string; role: Role[] };
+/** Osoba v nabídce: role podle oprávnění a typy přezkoušení, které smí provést (db/041). */
+export type Osoba = {
+  id: number;
+  jmeno: string;
+  prijmeni: string;
+  role: Role[];
+  prezkouseni: number[];
+};
+/** Typ přezkoušení (v_lov_prezkouseni, db/041): kód „PC-SEP“ se zobrazuje, popis
+ *  „PC-SEP Přezkoušení…“. */
+export type Prezkouseni = {
+  id: number;
+  kod: string;
+  nazev: string;
+  popis: string;
+  kategorie_kod: string;
+};
 /** Úloha v nabídce (v_uloha_nabidka, db/040): označení „IU/8P“, název bez označení, popis
  *  „IU/8P Přezkoušení…“, osnova = popis osnovy „IU – Výcvik SPL…“. */
 export type Uloha = {
@@ -165,6 +185,7 @@ export type Nabidky = {
   letiste: { id: number; kod: string; nazev: string; domovske: boolean; rychla_volba: boolean }[];
   osoby: Osoba[];
   ulohy: Uloha[];
+  prezkouseni: Prezkouseni[];
   zpusob_kluzaku: string | null;
 };
 
@@ -203,6 +224,9 @@ export type DetailLetu = {
   uloha_id: number | null;
   uloha: string | null;
   uloha_oznaceni: string | null;
+  prezkouseni_id: number | null;
+  prezkouseni: string | null;
+  prezkouseni_kod: string | null;
   zpusob_vzletu: string;
   zpusob_vzletu_kod: string;
   je_vlecny: boolean;

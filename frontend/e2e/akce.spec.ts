@@ -154,7 +154,7 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
   const instruktor = page.locator(".blok", { hasText: "Instruktor (PIC)" });
   await expect(instruktor.getByRole("button")).toHaveText(["Já (Adam Admin)", "Hledat…"]);
   await instruktor.getByRole("button", { name: "Já (Adam Admin)" }).click();
-  const zak = page.locator(".blok", { hasText: "Žák" });
+  const zak = page.locator(".blok", { hasText: "Pilot ve výcviku" });
   await zak.getByRole("button", { name: "Hledat…" }).click();
   await zak.getByRole("button", { name: "Nela Nová" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
@@ -176,6 +176,35 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
     /^IU –/,
     "IU/4 Navijákové vzlety, okruh a přistání",
   ]);
+  await page.getByRole("button", { name: "Naplánovat" }).click();
+  await expect(page.getByRole("status")).toHaveText(/OK-3819 naplánován/);
+});
+
+test("průvodce: přezkoušení s typem a examinátorem podle typu", async ({ page }) => {
+  await page.getByRole("button", { name: "Nový let", exact: true }).click();
+  await page.getByRole("button", { name: /^OK-3819/ }).click();
+  await page.getByRole("button", { name: "Přezk.", exact: true }).click();
+  // Typy přezkoušení kluzáků místo úlohy; bez typu dál nejde.
+  const typ = page.locator(".blok", { hasText: "Přezkoušení" }).first();
+  await expect(typ.getByRole("button")).toHaveText([
+    "ST-SPL Zkouška dovednosti SPL",
+    "PC-SPL Přezkoušení odborné způsobilosti SPL",
+    "PC-CLOUD Přezkoušení pro lety v oblacích",
+    "AOC-FI-S Ověření způsobilosti instruktora FI(S)",
+  ]);
+  await typ.getByRole("button", { name: /^PC-CLOUD/ }).click();
+  await expect(typ.getByRole("button")).toHaveText(["PC-CLOUD Přezkoušení pro lety v oblacích"]);
+  // Examinátor: kdo smí PC-CLOUD (FE(S)) – admin.
+  const examinator = page.locator(".blok", { hasText: "Examinátor (PIC)" });
+  await expect(examinator.getByRole("button")).toHaveText(["Já (Adam Admin)", "Hledat…"]);
+  await examinator.getByRole("button", { name: "Já (Adam Admin)" }).click();
+  const zkouseny = page.locator(".blok", { hasText: "Přezkoušený" });
+  await zkouseny.getByRole("button", { name: "Hledat…" }).click();
+  await zkouseny.getByRole("button", { name: "Nela Nová" }).click();
+  await page.getByRole("button", { name: "Dál" }).click();
+
+  await expect(page.locator(".blok", { hasText: "Úloha" })).toHaveCount(0);
+  await expect(page.locator(".stitky-pasku").first()).toContainText("PC-CLOUD"); // štítek pásku
   await page.getByRole("button", { name: "Naplánovat" }).click();
   await expect(page.getByRole("status")).toHaveText(/OK-3819 naplánován/);
 });

@@ -37,10 +37,15 @@ Zapomněl jsem zapsat? Večer doma nový let → **Proběhlý let** s časy (→
 Vleče nás **cizí vlečná**? Musí být založená mezi letadly a její pilot mezi osobami (správce,
 → A7); pilota poprvé najdu přes Hledat…, příště se nabídne sám.
 
-## A3. Výcvik (jsem instruktor)
-Let naplánuji s účelem **Výcvik** (instruktor PIC + žák) nebo **Sólo** (žák + dozor na zemi)
-a vyberu **úlohu** z osnovy (u výcviku povinná). Platí žák, není-li zadáno jinak. Dál jako A1
-nebo A2.
+## A3. Výcvik a přezkoušení (jsem instruktor / examinátor)
+Let naplánuji s účelem **Výcvik** (instruktor PIC + pilot ve výcviku) nebo **Sólo** (pilot
+PIC + dozor na zemi; sólo pod dozorem i u licencovaného pilota) a vyberu **úlohu** z osnovy
+(u výcviku povinná). Platí pilot ve výcviku, není-li zadáno jinak. Dál jako A1 nebo A2.
+
+U účelu **Přezkoušení** vyberu místo úlohy **typ přezkoušení** (např. PC-SPL přezkoušení
+odborné způsobilosti SPL, PC-SEP prodloužení SEP) – nabídnou se typy pro kategorii letadla.
+Jako examinátor (PIC) se nabídne, kdo daný typ smí provést (FE(S), FE(A), CRE…). Platí
+přezkoušený. Kód typu je pak na pásku.
 
 ## A4. Létáme dnes jinde (přelet, soustředění)
 V Můj provoz nastavím **letiště pro dnešek** (→ B6) – platí jen pro mě a jen dnes: sluneční
@@ -102,16 +107,18 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 - Telefon: kroky **letadlo → posádka → let**; počítač: jeden formulář v panelu.
 - Předvyplněno: místo vzletu = kde letadlo naposledy přistálo, místo přistání = moje
   letiště, POB, způsob vzletu kluzáku podle posledního dnešního, plátce podle účelu
-  (normální → PIC, výcvik a sólo → žák, přezkoušení → přezkoušený), nebo aeroklub.
+  (normální → PIC, výcvik a sólo → pilot ve výcviku, přezkoušení → přezkoušený), nebo
+  aeroklub.
 - **Posádka:** rychlá volba (kdo smí podle oprávnění, jen osoby v provozu, je-li výběr)
-  a **Hledat…** pro kohokoli. Funkce podle účelu: výcvik instruktor + žák, sólo žák + dozor,
-  přezkoušení examinátor + přezkoušený.
+  a **Hledat…** pro kohokoli. Funkce podle účelu: výcvik instruktor + pilot ve výcviku, sólo
+  pilot + dozor, přezkoušení examinátor + přezkoušený (a typ přezkoušení, → A3).
 - Chybějící údaj ukáže „vyberte“ / „Chybí: …“.
 - Zakončení: **VZLET TEĎ** · **Naplánovat** · **Proběhlý let** (výběr času vzletu
   a přistání; nesmí být v budoucnosti; let se označí „dodatečně“).
 
 ## B5. Detail letu
-- Údaje se opravují **na místě** (klik na pole): posádka, POB, úloha, časy, místa, počet
+- Údaje se opravují **na místě** (klik na pole): posádka, POB, úloha (u přezkoušení typ
+  přezkoušení), časy, místa, počet
   přistání, plátce, poznámka. U vleku se čas vzletu opraví kluzáku i vlečné.
 - Změnil-li let mezitím někdo jiný, aplikace ukáže aktuální stav – opravu zopakujte.
 - **Zrušit let** s důvodem (technická závada, počasí, založeno omylem, přerušený vzlet,
@@ -124,7 +131,7 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
   **Odhlásit.**
 
 ## B7. Co aplikace hlídá (a proč se něco nedá uložit)
-Jeden PIC; posádka a úloha podle účelu; POB nejvýš počet míst; letadlo ani osoba nejsou
+Jeden PIC; posádka a úloha (u přezkoušení typ přezkoušení) podle účelu; POB nejvýš počet míst; letadlo ani osoba nejsou
 ve vzduchu dvakrát zároveň; aerovlek vždy s vlečnou, vzlétají společně, vlekař není
 v posádce kluzáku; kluzák jen naviják nebo aerovlek; T&G jen motorová; čas ne v budoucnosti;
 neaktivní osoba nebo vyřazené letadlo se nenabízí. Hláška vždy řekne, co je špatně.
