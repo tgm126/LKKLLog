@@ -72,7 +72,7 @@ def test_odkaz_emailem(conn, osoba, prihlasit, klient, schranka):
     assert zprava["From"] == "AK Kladno Log <info@lkkl.cz>"
     assert zprava["Reply-To"] == "spravce@example.cz"
     assert zprava["Subject"] == "AK Kladno Log – nastavení hesla"
-    assert zprava["Date"].endswith(" GMT")
+    assert zprava["Date"].endswith("+0000")  # známé pásmo (ne „-0000“)
     text = zprava.get_content()
     assert text.startswith("Dobrý den, Jan,") and "spravce@example.cz" in text
 

@@ -23,7 +23,7 @@ def odeslat(komu: str, predmet: str, text: str) -> None:
     zprava["From"] = nastaveni.email_od
     zprava["To"] = komu
     zprava["Subject"] = predmet
-    zprava["Date"] = formatdate(usegmt=True)  # „… GMT“ (s „-0000“ = pásmo neznámé)
+    zprava["Date"] = formatdate(usegmt=True)  # UTC jako „+0000“ („-0000“ = pásmo neznámé)
     zprava["Message-ID"] = make_msgid(domain="lkkl.cz")
     if nastaveni.email_odpoved:
         zprava["Reply-To"] = nastaveni.email_odpoved
