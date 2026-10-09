@@ -519,6 +519,14 @@ def _jen_admin_prava(p: Prihlaseny, *prava: bool | None) -> None:
         raise HTTPException(403, "Práva přiděluje jen admin.")
 
 
+def jen_admin_na_admina(conn: Connection, p: Prihlaseny, osoba_id: int) -> None:
+    """Do účtu admina (vypnutí, práva, odkaz pro heslo, e-mail osoby) smí jen admin – jinak by
+    správce osob účet admina převzal (odkaz pro heslo, nebo změna e-mailu a pak odkaz)."""
+    cil = conn.execute("SELECT admin FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)).fetchone()
+    if cil is not None and cil["admin"] and not p.admin:
+        raise HTTPException(403, "Účet admina smí měnit jen admin.")
+
+
 @router.get("/ucty", response_model=list[Ucet])
 def ucty(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)):
     return conn.execute(_UCET_SQL + " ORDER BY prijmeni, jmeno").fetchall()
@@ -579,9 +587,7 @@ def ucet_zmenit(
     _jen_admin_prava(p, *(v is not None for v in prava))
     if osoba_id == p.osoba_id and (data.prihlaseni_povoleno is False or data.admin is False):
         raise HTTPException(400, "Sám sobě nemůžete zablokovat účet ani odebrat admina.")
-    cil = conn.execute("SELECT admin FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)).fetchone()
-    if cil is not None and cil["admin"] and not p.admin:
-        raise HTTPException(403, "Účet admina smí měnit jen admin.")
+    jen_admin_na_admina(conn, p, osoba_id)
     with conn.transaction():
         zmeneno = conn.execute(
             """UPDATE lkkl.ucet
@@ -603,8 +609,9 @@ def ucet_zmenit(
 
 @router.post("/ucty/{osoba_id}/pozvanka", response_model=Odkaz)
 def ucet_pozvanka(
-    osoba_id: int, _: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
+    osoba_id: int, p: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
 ):
+    jen_admin_na_admina(conn, p, osoba_id)
     u = conn.execute(
         """SELECT u.heslo_zmeneno, v.smi_se_prihlasit
            FROM lkkl.ucet u JOIN lkkl.v_ucet v ON v.osoba_id = u.osoba_id

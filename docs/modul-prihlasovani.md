@@ -104,6 +104,9 @@ aby cizí stránka poslala požadavek s cookie přihlášeného uživatele.
   relace osoby; zapnutí ho vrátí (heslo zůstává). Přihlásí se jen platná (aktivní) osoba –
   `v_ucet.smi_se_prihlasit = prihlaseni_povoleno AND lov_osoba.platny`. *audit*
 - Admin nemůže zablokovat ani odebrat `admin` sám sobě (aby nezůstal systém bez admina).
+- **Do účtu admina smí jen admin** (vypnutí, práva, odkaz pro heslo, e-mail osoby =
+  přihlašovací jméno): správce osob by si jinak odkazem pro heslo účet admina převzal
+  (code review 9. 10. 2026, K1).
 
 ### 4.7 Přihlásit se jako
 - Jen admin; za **jiného admina** se přihlásit nejde.

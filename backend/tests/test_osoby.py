@@ -37,6 +37,10 @@ def test_spravce_nesmi_na_admina_ani_sam_sebe(osoba, prihlasit):
     k = prihlasit("spravce@example.cz")
     assert k.post(f"/api/ucty/{admin}", json={"prihlaseni_povoleno": False}).status_code == 403
     assert k.post(f"/api/osoby/{admin}", json={"platny": False}).status_code == 403
+    # Odkaz pro heslo ani e-mail (přihlašovací jméno) admina – jinak by správce účet převzal.
+    assert k.post(f"/api/ucty/{admin}/pozvanka").status_code == 403
+    assert k.post(f"/api/osoby/{admin}", json={"email": "jiny@example.cz"}).status_code == 403
+    assert k.post(f"/api/osoby/{admin}", json={"telefon": "+420601234567"}).status_code == 200
     odpoved = k.post(f"/api/osoby/{spravce}", json={"platny": False})
     assert odpoved.status_code == 400 and "Sám sebe" in odpoved.json()["detail"]
 

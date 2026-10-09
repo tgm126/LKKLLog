@@ -12,7 +12,7 @@ from psycopg import Connection, errors
 from pydantic import BaseModel, field_validator
 
 from .db import spojeni
-from .prihlasovani import Prihlaseny, spravuje_osoby
+from .prihlasovani import Prihlaseny, jen_admin_na_admina, spravuje_osoby
 
 router = APIRouter(prefix="/api/osoby")
 
@@ -278,14 +278,10 @@ def osoba_zmenit(
     for k in ("email", "cislo_clena"):  # prázdný text = smazat
         if k in zmeny and not zmeny[k]:
             zmeny[k] = None
-    if zmeny.get("platny") is False:
-        if osoba_id == p.osoba_id:
-            raise HTTPException(400, "Sám sebe nemůžete vypnout.")
-        admin = conn.execute(
-            "SELECT admin FROM lkkl.ucet WHERE osoba_id = %s", (osoba_id,)
-        ).fetchone()
-        if admin and admin["admin"] and not p.admin:
-            raise HTTPException(403, "Admina smí vypnout jen admin.")
+    if zmeny.get("platny") is False and osoba_id == p.osoba_id:
+        raise HTTPException(400, "Sám sebe nemůžete vypnout.")
+    if zmeny.get("platny") is False or "email" in zmeny:  # e-mail = přihlašovací jméno
+        jen_admin_na_admina(conn, p, osoba_id)
     if zmeny:
         sloupce = ", ".join(f"{k} = %({k})s" for k in zmeny)  # jen názvy z OsobaIn
         try:
