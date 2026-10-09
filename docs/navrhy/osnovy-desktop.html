@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Osnovy a úlohy – desktop</title>
+<style>
+/* =============================================================================================
+   NÁVRH (9. 10. 2026) – desktop: editace osnov a úloh (docs/modul-osnovy.md). Panel přes celou
+   desku z nabídky uživatele (Správa → Osnovy a úlohy), jen s právem „spravuje osnovy“.
+   Data = skutečné osnovy a úlohy ze serveru 9. 10. 2026 (počty letů také); kategorie úloh
+   v maketě už podle návrhu (II/10–12 TMG). Zaškrtávátka i náhled vpravo fungují.
+   ============================================================================================= */
+:root {
+  color-scheme: light dark;
+  --pismo: system-ui, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+  --pismo-s: 12px; --pismo-m: 15px; --pismo-l: 20px;
+  --tloustka-tucna: 700; --radkovani: 1.35; --proklad-verzalky: .04em;
+  --mezera-1: 4px; --mezera-2: 8px; --mezera-3: 12px; --mezera-4: 16px;
+  --zaobleni: 12px; --zaobleni-ovladace: 8px; --zaobleni-pilulka: 999px; --ramecek-sirka: 1px;
+  --klik: 32px; --klik-hlavni: 40px; --policko: 18px;
+  --sirka-nahledu: 360px;
+  --sloupce-uloh: 28px minmax(0, 1fr) repeat(4, 64px) 12px repeat(4, 52px) 12px 56px 64px;
+
+  --barva-text:           light-dark(#1a1d21, #e8eaed);
+  --barva-seda:           light-dark(#5b6570, #9aa4af);
+  --barva-cara:           light-dark(#d9dde2, #2c333c);
+  --barva-pozadi:         light-dark(#eef0f3, #0d1015);
+  --barva-karta:          light-dark(#fff, #171b21);
+  --barva-neutralni:      light-dark(#dce1e7, #1f252c);
+  --barva-najeti:         light-dark(#f5f8fc, #1b222b);
+  --barva-modra:          light-dark(#0a5fd0, #6aa8ff);
+  --barva-modra-vypln:    light-dark(#e3edfc, #122440);
+  --barva-oranzova:       light-dark(#a35400, #f0a64a);
+  --barva-oranzova-vypln: light-dark(#fff3e0, #3a2a14);
+  --barva-akce-modra: #0a5fd0;
+  --stin-panelu: 0 0 0 1px light-dark(#0000000f, #ffffff14), -8px 0 24px light-dark(#0000001f, #00000080);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--barva-pozadi); color: var(--barva-text); font: var(--pismo-m) / var(--radkovani) var(--pismo); }
+button { font: inherit; color: inherit; }
+.male { font-size: var(--pismo-s); }
+.seda { color: var(--barva-seda); }
+.tucne { font-weight: var(--tloustka-tucna); }
+.nadpisek { font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); letter-spacing: var(--proklad-verzalky); text-transform: uppercase; color: var(--barva-seda); }
+
+/* lišta desky (jen naznačená) */
+.lista { display: flex; align-items: baseline; gap: var(--mezera-4); padding: var(--mezera-2) var(--mezera-4); background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); }
+.lista .velke { font-size: var(--pismo-l); font-weight: var(--tloustka-tucna); }
+.lista .vpravo { margin-left: auto; }
+
+/* panel přes celou desku */
+.panel { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: calc(100vh - 49px); margin-left: var(--mezera-4); background: var(--barva-pozadi); box-shadow: var(--stin-panelu); }
+.hlava { display: flex; align-items: baseline; gap: var(--mezera-3); padding: var(--mezera-3) var(--mezera-4); background: var(--barva-karta); border-bottom: 1px solid var(--barva-cara); }
+.hlava h2 { margin: 0; font-size: var(--pismo-l); }
+.telo { display: grid; grid-template-columns: minmax(0, 1fr) var(--sirka-nahledu); gap: var(--mezera-4); padding: var(--mezera-3) var(--mezera-4); overflow: hidden; }
+.pata { display: flex; align-items: center; gap: var(--mezera-2); padding: var(--mezera-3) var(--mezera-4); background: var(--barva-karta); border-top: 1px solid var(--barva-cara); }
+.pata .vpravo { margin-left: auto; }
+
+.tl { display: inline-flex; align-items: center; justify-content: center; min-height: var(--klik); padding: 0 var(--mezera-3); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); font-weight: var(--tloustka-tucna); cursor: pointer; }
+.tl.hlavni { min-height: var(--klik-hlavni); }
+.tl.modre { background: var(--barva-akce-modra); border-color: var(--barva-akce-modra); color: #fff; }
+.tl.maly { min-height: 24px; padding: 0 var(--mezera-2); font-size: var(--pismo-s); }
+.tl.bez-ramu { border-color: transparent; background: none; }
+
+/* karta s maticí úloh */
+.karta { background: var(--barva-karta); border-radius: var(--zaobleni); overflow: hidden; }
+.matice { display: flex; flex-direction: column; min-height: 0; }
+.matice .posuv { overflow-y: auto; }
+.radek { display: grid; grid-template-columns: var(--sloupce-uloh); align-items: center; gap: 0 var(--mezera-2); padding: var(--mezera-1) var(--mezera-3); border-top: 1px solid var(--barva-cara); }
+.radek > .stred { justify-self: center; }
+.radek > .vpravo { justify-self: end; }
+.zahlavi { position: sticky; top: 0; z-index: 1; background: var(--barva-neutralni); border-top: 0; align-items: end; }
+.zahlavi .skupina { grid-column: span 4; text-align: center; border-bottom: 1px solid var(--barva-seda); padding-bottom: 2px; }
+.zahlavi .sloupec { justify-self: center; text-align: center; line-height: 1.15; }
+.osnova { background: var(--barva-najeti); font-weight: var(--tloustka-tucna); }
+.osnova .nazev { display: flex; align-items: baseline; gap: var(--mezera-2); }
+.uloha .nazev { padding-left: var(--mezera-4); }
+.uloha:hover { background: var(--barva-najeti); }
+.uloha.vybrana { background: var(--barva-modra-vypln); }
+.neplatna .nazev, .neplatna .nazev * { color: var(--barva-seda); text-decoration: line-through; }
+.mimo-nabidku { display: inline-block; margin-left: var(--mezera-2); padding: 0 var(--mezera-2); border-radius: var(--zaobleni-pilulka); background: var(--barva-oranzova-vypln); color: var(--barva-oranzova); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); text-decoration: none; }
+.sbalit { width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--barva-seda); }
+.poradi { display: inline-flex; flex-direction: column; line-height: .9; }
+.poradi button { padding: 0 4px; border: 0; background: none; color: var(--barva-seda); cursor: pointer; font-size: 11px; }
+
+input[type=checkbox] { width: var(--policko); height: var(--policko); margin: 0; accent-color: var(--barva-akce-modra); cursor: pointer; }
+
+/* náhled vpravo */
+.nahled { display: flex; flex-direction: column; gap: var(--mezera-3); min-height: 0; overflow-y: auto; }
+.blok { background: var(--barva-karta); border-radius: var(--zaobleni); overflow: hidden; }
+.blok-nadpis { display: flex; justify-content: space-between; padding: var(--mezera-1) var(--mezera-3); background: var(--barva-neutralni); }
+.blok-telo { display: grid; gap: var(--mezera-2); padding: var(--mezera-2) var(--mezera-3); }
+.segmenty { display: flex; border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); overflow: hidden; }
+.segmenty button { flex: 1; min-height: var(--klik); border: 0; border-left: 1px solid var(--barva-cara); background: var(--barva-karta); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); cursor: pointer; }
+.segmenty button:first-child { border-left: 0; }
+.segmenty button[aria-pressed=true] { background: var(--barva-akce-modra); color: #fff; }
+.cipy { display: flex; flex-wrap: wrap; gap: var(--mezera-2); }
+.cip { padding: var(--mezera-1) var(--mezera-3); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-pilulka); background: var(--barva-karta); font-size: var(--pismo-s); }
+.prazdne { color: var(--barva-oranzova); font-size: var(--pismo-s); font-weight: var(--tloustka-tucna); }
+
+/* úprava vybrané úlohy */
+.pole { display: grid; gap: 2px; }
+.pole label { font-size: var(--pismo-s); color: var(--barva-seda); }
+.pole input, .pole select { min-height: var(--klik); padding: 0 var(--mezera-2); border: 1px solid var(--barva-cara); border-radius: var(--zaobleni-ovladace); background: var(--barva-karta); color: var(--barva-text); font: inherit; }
+.poznamka { margin: 0; color: var(--barva-seda); font-size: var(--pismo-s); }
+</style>
+</head>
+<body>
+<div class="lista">
+  <span class="velke">AK Kladno Log</span>
+  <span class="vpravo seda">‹ Pátek 9. 10. 2026 › · 09:12:40 UTC · <b>TM</b></span>
+</div>
+
+<section class="panel" aria-label="Osnovy a úlohy">
+  <div class="hlava">
+    <h2>Osnovy a úlohy</h2>
+    <span class="seda" id="souhrn"></span>
+    <span class="seda male" style="margin-left:auto">Správa → Osnovy a úlohy · právo „spravuje osnovy“</span>
+  </div>
+
+  <div class="telo">
+    <!-- matice: hierarchie osnova → úlohy, zaškrtávátka = kde se úloha nabízí -->
+    <div class="karta matice">
+      <div class="radek zahlavi nadpisek">
+        <span></span><span>Osnova / úloha</span>
+        <span class="skupina">Nabízí se u účelu</span><span></span>
+        <span class="skupina">pro kategorii letadla</span><span></span>
+        <span class="sloupec">Lety</span><span class="sloupec">Platná</span>
+      </div>
+      <div class="radek zahlavi male seda" style="padding-top:0">
+        <span></span><span></span>
+        <span class="sloupec">Normální</span><span class="sloupec">Výcvik<br><i>povinná</i></span><span class="sloupec">Sólo<br><i>povinná</i></span><span class="sloupec">Přezk.<br><i>povinná</i></span><span></span>
+        <span class="sloupec">Kluzák</span><span class="sloupec">Letoun</span><span class="sloupec">TMG</span><span class="sloupec">UL</span><span></span>
+        <span></span><span></span>
+      </div>
+      <div class="posuv" id="matice"></div>
+    </div>
+
+    <!-- vpravo: úprava vybrané úlohy a náhled nabídky v novém letu -->
+    <div class="nahled">
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Vybraná úloha</span><span class="male seda" id="vybrana-osnova"></span></div>
+        <div class="blok-telo">
+          <div class="pole"><label>Název (s označením, např. „IU/4 …“)</label><input id="nazev"></div>
+          <div class="pole"><label>Osnova</label><select id="osnova"></select></div>
+          <p class="poznamka" id="pouziti"></p>
+          <div style="display:flex;gap:8px">
+            <button class="tl maly" type="button">Smazat</button>
+            <span class="poznamka" style="align-self:center">jen nepoužitá; použitou jen zneplatnit</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="blok">
+        <div class="blok-nadpis"><span class="nadpisek">Náhled: nový let</span><span class="male seda">co uvidí pilot</span></div>
+        <div class="blok-telo">
+          <div class="segmenty" id="n-ucel"></div>
+          <div class="segmenty" id="n-kat"></div>
+          <div id="n-nabidka"></div>
+        </div>
+      </div>
+      <p class="poznamka">Náhled se mění hned se zaškrtávátky vlevo. Úloha bez účelu nebo bez kategorie
+        se nenabízí nikde (oranžový štítek). Neplatná úloha i osnova se nenabízí; ve starých letech zůstává.</p>
+    </div>
+  </div>
+
+  <div class="pata">
+    <button class="tl" type="button">Nová osnova</button>
+    <button class="tl" type="button">Nová úloha</button>
+    <span class="male seda">Každá změna se uloží hned (zaškrtnutí, název, pořadí) a zapíše se do historie.</span>
+    <button class="tl vpravo" type="button">Zavřít</button>
+  </div>
+</section>
+
+<script>
+// Skutečné osnovy a úlohy (server 9. 10. 2026); kategorie úloh podle návrhu (II/10–12 TMG).
+const UCELY = [["NORMALNI", "Normální"], ["VYCVIK", "Výcvik"], ["VYCVIK_SOLO", "Sólo"], ["PREZKOUSENI", "Přezk."]];
+const KATEGORIE = [["KLUZAK", "Kluzák"], ["LETOUN", "Letoun"], ["TMG", "TMG"], ["UL", "UL"]];
+const u = (nazev, ucely, kat = "KLUZAK", lety = 0) => ({ nazev, ucely: new Set(ucely.split(",")), kat: new Set(kat.split(",").filter(Boolean)), lety, platna: true });
+const V = "VYCVIK", VS = "VYCVIK,VYCVIK_SOLO", NV = "NORMALNI,VYCVIK";
+const OSNOVY = [
+  { nazev: "IU – Výcvik SPL (naviják a aerovlek)", platna: true, otevrena: true, ulohy: [
+    u("IU/1 Seznamovací let", V, "KLUZAK", 2), u("IU/2 Účinky kormidel, přímý let a zatáčky", V),
+    u("IU/3 Pády, skluzy, spirály, mezní rychlosti", V), u("IU/4 Navijákové vzlety, okruh a přistání", V, "KLUZAK", 2),
+    u("IU/5 Opravy vadných přistání", V, "KLUZAK", 3), u("IU/6 Mimořádné případy při navijáku, omezený prostor", V),
+    u("IU/7 Aerovlek, vývrtky, pády, spirály", V), u("IU/8P Přezkoušení před samostatnými lety", V),
+    u("IU/9 První samostatný let", "VYCVIK_SOLO"), u("IU/10 Lety po okruhu a do prostoru", VS),
+    u("IU/11 Přistání do omezeného prostoru", VS, "KLUZAK", 2), u("IU/12 Využití stoupavých proudů", VS),
+    u("IU/13 Traťový navigační let", VS)] },
+  { nazev: "IA – Výcvik SPL (aerovlek, samostart)", platna: true, otevrena: false, ulohy: [
+    u("IA/1 Seznamovací let", V), u("IA/2 Účinky kormidel, přímý let a zatáčky", V), u("IA/3 Pády, skluzy, spirály, mezní rychlosti", V),
+    u("IA/4 Vzlety aerovlekem / samostartem, okruh a přistání", V), u("IA/5 Opravy vadných přistání", V),
+    u("IA/6 Mimořádné případy, omezený prostor", V), u("IA/7 Aerovlek, vývrtky, pády, spirály", V),
+    u("IA/8P Přezkoušení před samostatnými lety", V), u("IA/9 První samostatný let", "VYCVIK_SOLO"),
+    u("IA/10 Lety po okruhu a do prostoru", VS), u("IA/11 Přistání do omezeného prostoru", VS),
+    u("IA/12 Využití stoupavých proudů", VS), u("IA/13 Traťový navigační let", VS)] },
+  { nazev: "II – Sportovní výcvik", platna: true, otevrena: true, ulohy: [
+    u("II/1 Termika, svah a lety do prostoru", NV), u("II/2 Let po okruhu", NV, "KLUZAK", 2),
+    u("II/3 Přistání do omezeného prostoru", NV), u("II/4 Mimořádné případy", NV), u("II/5 Navigační let ve dvojím", V),
+    u("II/6 Samostatný přelet", "NORMALNI"), u("II/7 Lety v dlouhé vlně", NV), u("II/8 Lety v oblačnosti", NV),
+    u("II/9P Přezkoušení CLOUD", "PREZKOUSENI", "KLUZAK", 1),
+    u("II/10 TMG – vzlet, okruh, přistání", NV, "TMG"), u("II/11 TMG – zvláštní případy za letu", V, "TMG"),
+    u("II/12 TMG – navigační lety a lety do prostoru", NV, "TMG")] },
+  { nazev: "S – Školka", platna: true, otevrena: false, ulohy: [
+    u("I/4 Okruh a přistání", V, "KLUZAK", 1), u("I/6 Mimořádné případy", V), u("I/11 Přistání do omezeného prostoru", V, "KLUZAK", 2)] },
+];
+let vybrana = OSNOVY[2].ulohy[9];
+let nahledUcel = "VYCVIK", nahledKat = "TMG";
+
+const el = (tag, attrs = {}, ...deti) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k.startsWith("on") ? e.addEventListener(k.slice(2), v) : k === "class" ? (e.className = v) : (e[k] = v);
+  for (const d of deti) e.append(d);
+  return e;
+};
+const zaskrt = (ano, zmenit, neurcite = false) => {
+  const c = el("input", { type: "checkbox", checked: ano, onchange: () => { zmenit(c.checked); vykreslit(); } });
+  c.indeterminate = neurcite;
+  return c;
+};
+const nabizi = (x, o) => x.platna && o.platna && x.ucely.size > 0 && x.kat.size > 0;
+
+function vykreslit() {
+  const m = document.getElementById("matice");
+  m.replaceChildren();
+  OSNOVY.forEach((o, io) => {
+    // řádek osnovy: souhrnná zaškrtávátka (klik nastaví všem úlohám osnovy)
+    const vse = (mnozina, kod) => o.ulohy.filter((x) => x[mnozina].has(kod)).length;
+    const souhrnne = (mnozina, kod) => {
+      const n = vse(mnozina, kod);
+      return el("span", { class: "stred" }, zaskrt(n === o.ulohy.length, (ano) => o.ulohy.forEach((x) => ano ? x[mnozina].add(kod) : x[mnozina].delete(kod)), n > 0 && n < o.ulohy.length));
+    };
+    m.append(el("div", { class: "radek osnova" + (o.platna ? "" : " neplatna") },
+      el("button", { class: "sbalit", type: "button", textContent: o.otevrena ? "▾" : "▸", onclick: () => { o.otevrena = !o.otevrena; vykreslit(); } }),
+      el("span", { class: "nazev" }, o.nazev, el("span", { class: "male seda", textContent: `${o.ulohy.length} úloh` }),
+        el("button", { class: "tl maly bez-ramu", type: "button", textContent: "+ úloha" })),
+      ...UCELY.map(([k]) => souhrnne("ucely", k)), el("span"),
+      ...KATEGORIE.map(([k]) => souhrnne("kat", k)), el("span"),
+      el("span", { class: "vpravo male", textContent: o.ulohy.reduce((s, x) => s + x.lety, 0) || "" }),
+      el("span", { class: "stred" }, zaskrt(o.platna, (ano) => (o.platna = ano))),
+    ));
+    if (!o.otevrena) return;
+    o.ulohy.forEach((x, i) => {
+      const mimo = !nabizi(x, o) && x.platna && o.platna;
+      m.append(el("div", { class: "radek uloha" + (x === vybrana ? " vybrana" : "") + (x.platna ? "" : " neplatna"), onclick: (e) => { if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") { vybrana = x; vykreslit(); } } },
+        el("span", { class: "poradi" },
+          el("button", { type: "button", title: "výš", textContent: "▲", onclick: () => { if (i) { [o.ulohy[i - 1], o.ulohy[i]] = [o.ulohy[i], o.ulohy[i - 1]]; vykreslit(); } } }),
+          el("button", { type: "button", title: "níž", textContent: "▼", onclick: () => { if (i < o.ulohy.length - 1) { [o.ulohy[i + 1], o.ulohy[i]] = [o.ulohy[i], o.ulohy[i + 1]]; vykreslit(); } } })),
+        el("span", { class: "nazev" }, x.nazev, mimo ? el("span", { class: "mimo-nabidku", textContent: "nenabízí se" }) : ""),
+        ...UCELY.map(([k]) => el("span", { class: "stred" }, zaskrt(x.ucely.has(k), (ano) => ano ? x.ucely.add(k) : x.ucely.delete(k)))), el("span"),
+        ...KATEGORIE.map(([k]) => el("span", { class: "stred" }, zaskrt(x.kat.has(k), (ano) => ano ? x.kat.add(k) : x.kat.delete(k)))), el("span"),
+        el("span", { class: "vpravo male" + (x.lety ? "" : " seda"), textContent: x.lety || "–" }),
+        el("span", { class: "stred" }, zaskrt(x.platna, (ano) => (x.platna = ano))),
+      ));
+    });
+  });
+
+  // souhrn v hlavě
+  const uloh = OSNOVY.reduce((s, o) => s + o.ulohy.length, 0);
+  const mimo = OSNOVY.reduce((s, o) => s + o.ulohy.filter((x) => !nabizi(x, o)).length, 0);
+  document.getElementById("souhrn").textContent = `${OSNOVY.length} osnovy · ${uloh} úloh` + (mimo ? ` · ${mimo} se nenabízí` : "");
+
+  // vybraná úloha
+  const vo = OSNOVY.find((o) => o.ulohy.includes(vybrana));
+  document.getElementById("nazev").value = vybrana.nazev;
+  document.getElementById("vybrana-osnova").textContent = vo.nazev.split(" – ")[0];
+  const sel = document.getElementById("osnova");
+  sel.replaceChildren(...OSNOVY.map((o) => el("option", { textContent: o.nazev, selected: o === vo })));
+  document.getElementById("pouziti").textContent = vybrana.lety
+    ? `Použita v ${vybrana.lety} letech – smazat nejde, jen zneplatnit (ve starých letech zůstane).`
+    : "Zatím v žádném letu – jde smazat.";
+
+  // náhled nabídky v novém letu (průvodce i panel): účel + kategorie → osnovy → úlohy
+  const seg = (id, volby, hodnota, nastavit) => document.getElementById(id).replaceChildren(
+    ...volby.map(([k, n]) => el("button", { type: "button", textContent: n, ariaPressed: String(k === hodnota), onclick: () => { nastavit(k); vykreslit(); } })));
+  seg("n-ucel", UCELY, nahledUcel, (k) => (nahledUcel = k));
+  seg("n-kat", KATEGORIE, nahledKat, (k) => (nahledKat = k));
+  const cil = document.getElementById("n-nabidka");
+  cil.replaceChildren();
+  const osnovy = OSNOVY.map((o) => [o, o.ulohy.filter((x) => nabizi(x, o) && x.ucely.has(nahledUcel) && x.kat.has(nahledKat))]).filter(([, xs]) => xs.length);
+  const ucel = UCELY.find(([k]) => k === nahledUcel)[1];
+  const povinna = nahledUcel !== "NORMALNI";
+  if (!osnovy.length) {
+    cil.append(el("p", { class: "prazdne", textContent: `Pro ${ucel.toLowerCase()} na ${KATEGORIE.find(([k]) => k === nahledKat)[1]} žádná úloha – blok Úloha se v novém letu neukáže${povinna ? " (a není povinná)" : ""}.` }));
+    return;
+  }
+  cil.append(el("span", { class: "nadpisek", textContent: `Úloha${povinna ? " · povinná" : " · nepovinná"}` }));
+  osnovy.forEach(([o, xs]) => {
+    cil.append(el("p", { class: "male tucne", style: "margin:8px 0 4px", textContent: o.nazev }),
+      el("div", { class: "cipy" }, ...xs.map((x) => el("span", { class: "cip", textContent: x.nazev }))));
+  });
+}
+vykreslit();
+</script>
+</body>
+</html>
