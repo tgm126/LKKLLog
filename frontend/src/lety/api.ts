@@ -86,6 +86,8 @@ export type RadekSouhrnu = {
   lety: number;
   pristani: number;
   minut: number;
+  /** Startů navijákem (db/044). */
+  navijaky: number;
 };
 
 type LetyDne = { ted: string; lety: Pasek[]; souhrn: RadekSouhrnu[] };

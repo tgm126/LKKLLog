@@ -140,7 +140,8 @@ má víc místa; **bez svislých přepážek**, trasa pod časem, sloupec pásk�
 Svislý sloupec **karet**; každá karta je samostatný zdroj, přidávají se postupně (zatím jen
 karty 1 a 2, počasí a další zdroje přijdou se svými moduly):
 1. **Plachtařský provoz:** tabulka kluzáků a vlečných (vleky) – Letadlo · Lety · Doba (bez
-   přistání, 8. 10. 2026); celkem dole v patičce jako u deníku, **dva řádky: kluzáky a vleky**.
+   přistání, 8. 10. 2026); celkem dole v patičce jako u deníku, **dva řádky: kluzáky a vleky**,
+   pod nimi **Navijáky** – počet startů navijákem (9. 10. 2026, `v_souhrn_dne.navijaky`).
 2. **Motorový provoz:** tabulka letadel Letadlo · Lety · P · Doba, dole řádek Celkem.
 
    Číselné sloupce (Lety, P, Doba) jsou v obou tabulkách stejně široké – podle nejdelší doby

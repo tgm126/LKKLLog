@@ -46,6 +46,8 @@ test("deska: pásky, řada letadel, deník, souhrny a časová osa", async ({ pa
   const plachtari = page.getByRole("region", { name: "Plachtařský provoz" });
   await expect(plachtari).toContainText("OK-3819");
   await expect(plachtari.locator("thead th")).toHaveText(["Letadlo", "Lety", "Doba"]);
+  // patička: kluzáky, vleky a počet navijáků (OK-3819 vzlétl navijákem)
+  await expect(plachtari.locator("tfoot tr")).toHaveText([/^Kluzáky1/, /^Vleky0/, /^Navijáky1$/]);
   const motorovy = page.getByRole("region", { name: "Motorový provoz" });
   await expect(motorovy).toContainText("OK-CRA");
   await expect(motorovy.locator("thead th")).toHaveText(["Letadlo", "Lety", "P", "Doba"]);

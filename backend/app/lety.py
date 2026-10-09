@@ -119,6 +119,8 @@ class RadekSouhrnu(BaseModel):
     lety: int
     pristani: int
     minut: int
+    navijaky: int
+    """Startů navijákem (plachtařský provoz, db/044)."""
 
 
 class LetyDne(BaseModel):
@@ -260,7 +262,7 @@ def lety(
     ).fetchall()
     te = slunce(letiste, den).te
     souhrn = conn.execute(
-        """SELECT druh_provozu, rejstrik, je_vlecny, lety, pristani, minut
+        """SELECT druh_provozu, rejstrik, je_vlecny, lety, pristani, minut, navijaky
            FROM lkkl.v_souhrn_dne WHERE den = %s ORDER BY rejstrik, je_vlecny""",
         (den,),
     ).fetchall()

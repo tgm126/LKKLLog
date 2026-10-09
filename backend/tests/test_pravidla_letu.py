@@ -176,12 +176,21 @@ def test_souhrn_dne(conn, pilot, osoba, let):
         vzlet="now() - interval '90 minutes'",
         pristani="now() - interval '60 minutes'",
     )
+    let(
+        "OK-2817",
+        {"PIC": pilot_id},
+        zpusob="NAVIJAK",
+        vzlet="now() - interval '50 minutes'",
+        pristani="now() - interval '40 minutes'",
+    )
     let("OK-2817", {"PIC": pilot_id})  # naplánovaný se nepočítá
     souhrn = k.get("/api/lety").json()["souhrn"]
     assert sorted(
-        (r["druh_provozu"], r["rejstrik"], r["je_vlecny"], r["lety"], r["minut"]) for r in souhrn
+        (r["druh_provozu"], r["rejstrik"], r["je_vlecny"], r["lety"], r["minut"], r["navijaky"])
+        for r in souhrn
     ) == [
-        ("MOTOROVY", "OK-CRA", False, 1, 30),
-        ("PLACHTARSKY", "OK-3819", False, 1, 60),
-        ("PLACHTARSKY", "OK-CRA", True, 1, 10),
+        ("MOTOROVY", "OK-CRA", False, 1, 30, 0),
+        ("PLACHTARSKY", "OK-2817", False, 1, 10, 1),
+        ("PLACHTARSKY", "OK-3819", False, 1, 60, 0),
+        ("PLACHTARSKY", "OK-CRA", True, 1, 10, 0),
     ]
