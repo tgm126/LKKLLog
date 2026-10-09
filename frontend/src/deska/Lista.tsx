@@ -10,7 +10,7 @@ import { useTik } from "../tik";
 
 // Horní lišta desky (docs/modul-desktop.md 3): název, den se šipkami, sluneční časy se
 // zbývajícím časem do konce soumraku, hodiny UTC a nabídka uživatele (jako na mobilu).
-// Desktop je jedna stránka – bez menu (osoby a letadla se spravují na mobilu).
+// Správa (osoby, letadla, výcvik…) z nabídky uživatele se otevře jako sloupec uprostřed desky.
 
 /** Den o `o` dní dál (RRRR-MM-DD). */
 export function posunDne(den: string, o: number): string {

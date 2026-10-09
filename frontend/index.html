@@ -9,8 +9,12 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
     <meta name="apple-mobile-web-app-title" content="AK Kladno Log">
-    <meta name="theme-color" content="#1c4587">
+    <!-- barva lišty prohlížeče = akční modrá z tokenů (frontend/src/styly/tokeny.css) -->
+    <meta name="theme-color" content="#0a5fd0">
     <title>AK Kladno Log</title>
+    <!-- režim zobrazení ještě před načtením aplikace, aby tmavý režim nebliknul světle;
+         samostatný soubor (ne vložený skript) kvůli CSP serveru -->
+    <script src="/rezim.js"></script>
   </head>
   <body>
     <div id="aplikace"></div>

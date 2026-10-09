@@ -8,7 +8,7 @@ export const REZIMY: { rezim: Rezim; nazev: string }[] = [
   { rezim: "tmavy", nazev: "Tmavý" },
 ];
 
-const KLIC = "lkkl-rezim";
+const KLIC = "lkkl-rezim"; // stejný klíč čte public/rezim.js před načtením aplikace
 
 export function nacistRezim(): Rezim {
   try {
