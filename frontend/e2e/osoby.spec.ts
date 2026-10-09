@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { prihlasit, pripravitData } from "./pomocne";
+import { prihlasit, pripravitData, zeSpravy } from "./pomocne";
 
 // Správa osob (docs/modul-osoby.md): admin má všechna práva, Nela žádné.
 
@@ -8,7 +8,7 @@ test.beforeAll(() => pripravitData());
 test.beforeEach(async ({ page }) => prihlasit(page));
 
 test("osoby: hledání, úprava telefonu, oprávnění", async ({ page }) => {
-  await page.getByRole("link", { name: "Osoby" }).click();
+  await zeSpravy(page, "Osoby");
   await page.getByLabel("Hledat jméno, e-mail, telefon, číslo člena").fill("nova");
   const radky = page.locator(".radek-osoby");
   await expect(radky).toHaveCount(1);
@@ -39,7 +39,7 @@ test("osoby: hledání, úprava telefonu, oprávnění", async ({ page }) => {
 });
 
 test("osoby: nová osoba a vypnutí", async ({ page }) => {
-  await page.getByRole("link", { name: "Osoby" }).click();
+  await zeSpravy(page, "Osoby");
   await page.getByRole("button", { name: "Nová osoba" }).click();
   await expect(page.getByRole("heading", { name: "Nová osoba" })).toBeVisible();
   await page.getByLabel("Jméno", { exact: true }).fill("Karel");
@@ -57,18 +57,22 @@ test("osoby: nová osoba a vypnutí", async ({ page }) => {
   await expect(page.locator(".radek-osoby", { hasText: "Test Karel" })).toHaveCount(1);
 });
 
-test("osoby: bez práva záložka chybí (přihlásit se jako)", async ({ page }) => {
-  await page.getByRole("link", { name: "Osoby" }).click();
+test("osoby: bez práva není ve Správě (přihlásit se jako); záložky jen pro všechny", async ({ page }) => {
+  await expect(page.getByRole("navigation").getByRole("link")).toHaveText(["Lety", "Moje lety"]);
+  await zeSpravy(page, "Osoby");
   await page.locator(".radek-osoby", { hasText: "Nová Nela" }).click();
   await page.getByRole("button", { name: "Přihlásit se jako" }).click();
   await expect(page.getByText("Přihlášen jako Nela Nová")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Osoby" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Nabídka uživatele" }).click();
+  await expect(page.locator(".nabidka-oddil", { hasText: "Správa" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Zpět na svůj účet" }).click();
-  await expect(page.getByRole("link", { name: "Osoby" })).toBeVisible();
+  await zeSpravy(page, "Osoby");
+  await expect(page.getByRole("heading", { name: "Osoby" })).toBeVisible();
 });
 
 test("osoby: admin má všechna práva zaškrtnutá a zašedlá", async ({ page }) => {
-  await page.getByRole("link", { name: "Osoby" }).click();
+  await zeSpravy(page, "Osoby");
   await page.getByLabel("Hledat jméno, e-mail, telefon, číslo člena").fill("admin");
   await page.locator(".radek-osoby").first().click();
   for (const pravo of [/^Spravuje osoby/, /^Spravuje letadla/, /^Smí odblokovat/]) {
@@ -80,7 +84,7 @@ test("osoby: admin má všechna práva zaškrtnutá a zašedlá", async ({ page 
 
 test("osoby: admin pošle odkaz pro heslo e-mailem (s potvrzením)", async ({ page }) => {
   // e2e server nemá SMTP – e-mail se jen vypíše do logu, odeslání projde (docs/modul-email.md)
-  await page.getByRole("link", { name: "Osoby" }).click();
+  await zeSpravy(page, "Osoby");
   await page.locator(".radek-osoby", { hasText: "Nová Nela" }).click();
   const poslat = page.getByRole("button", { name: "Odkaz e-mailem" });
   await poslat.click();

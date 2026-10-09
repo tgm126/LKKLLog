@@ -57,9 +57,10 @@ Proto: **jedna obrazovka na celý provoz dne**, ovládaná myší, nic přes cel
           detail letu / nový let = panel zprava přes deník a informace; pásky zůstanou vidět
 ```
 
-- **Desktop je jedna stránka** (rozhodnuto 8. 10. 2026): jen provozní deska, **bez menu**.
-  Správa osob a letadel je jen na mobilu (na desktopu adresa `/osoby`, `/letadla` vede na
-  desku); můj provoz zatím jako sloupec uprostřed z nabídky uživatele.
+- **Desktop je jedna stránka** (rozhodnuto 8. 10. 2026): jen provozní deska, **bez záložek**.
+  Osoby, Letadla, Smazat lety a Nastavení jsou ve Správě nabídky uživatele (stejná jako na
+  mobilu, 9. 10. 2026) a otevřou se jako sloupec uprostřed (mobilní podoba, Zpět na desku);
+  editor výcviku jako panel přes desku. Můj provoz zatím také jako sloupec uprostřed.
 - **Horní lišta:** název, datum normálním písmem 15 px, **den se
   šipkami** (3.6), všechny údaje na jednom účaří písma, sluneční časy se zbývajícím časem do konce soumraku (oranžově), hodiny UTC se
   sekundami, nabídka uživatele (Můj provoz, Režim zobrazení, Odhlásit – jako na mobilu).
@@ -198,7 +199,7 @@ současný stav. Úpravy letů jiného dne stejně jako dnes (omezí je až uzá
 ### 3.7 Přihlášení jen ke čtení (pro klubovnu)
 Viz 6.1. Na desktopu i na mobilu v relaci jen ke čtení: chybí „Nový let“ (i klávesa `N`
 a adresa `/novy-let`), akce na páscích a v detailu, pole v detailu nejdou upravit, klik na
-letadlo na zemi nic nezaloží, Můj provoz nejde měnit, záložky Osoby a Letadla nejsou.
+letadlo na zemi nic nezaloží, Můj provoz nejde měnit, Správa v nabídce není.
 Oranžový štítek „Jen ke čtení“: na desktopu v liště za názvem, na mobilu vpravo v řádku menu
 (datum v hlavičce zůstává celé). V nabídce uživatele zůstává režim zobrazení a Odhlásit.
 
@@ -260,8 +261,8 @@ Oranžový štítek „Jen ke čtení“: na desktopu v liště za názvem, na m
 ## 5. Postup (malé moduly) – odsouhlaseno 7. 10. 2026
 
 1. **Provozní deska** – vše v kap. 3 kromě 3.7 a počasí. (Tento návrh.)
-2. ~~Osoby a Letadla na desktopu~~ – zrušeno 8. 10. 2026: desktop je jedna stránka, správa
-   osob a letadel jen na mobilu.
+2. **Osoby a Letadla na desktopu** – 9. 10. 2026 ze Správy jako sloupec uprostřed (mobilní
+   podoba); vlastní desktopový návrh (tabulka) později.
 3. **Můj provoz na desktopu** – v nabídce uživatele (malá úprava; jako panel, ne stránka).
 4. **Počasí** – zdroj, stanice, mezipaměť na serveru (vlastní návrh).
 5. **Přihlášení jen ke čtení** (6.1) – rozhodnuto 8. 10. 2026, dělá se hned po desce.

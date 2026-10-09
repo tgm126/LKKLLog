@@ -54,9 +54,9 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   await page.getByLabel("Hledat letiště (kód nebo název)").fill("LKLT");
   await page.getByRole("button", { name: "LKLT Letňany" }).click();
   await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT Letňany/ })).toBeVisible();
-  await page.getByRole("button", { name: /^Platí/ }).click();
+  await page.getByRole("button", { name: /^Hradí/ }).click();
   await page.getByRole("button", { name: "Aeroklub" }).click();
-  await expect(page.getByRole("button", { name: /Platí\s*Aeroklub/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Hradí\s*Aeroklub/ })).toBeVisible();
 
   await page.getByRole("button", { name: "Proběhlý let" }).click();
   await page.getByRole("button", { name: "Včera" }).click();

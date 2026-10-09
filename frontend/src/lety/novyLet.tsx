@@ -515,7 +515,7 @@ export function BlokDalsichUdaju({ n }: { n: NovyLet }) {
             }
           />
         </Udaj>
-        <Udaj popisek="Platí" hodnota={n.platceNazev} {...n.upravit("platce")}>
+        <Udaj popisek="Hradí" hodnota={n.platceNazev} {...n.upravit("platce")}>
           <VolbaOsoby
             osoby={nabidky.osoby}
             jaId={n.ja.osoba_id}

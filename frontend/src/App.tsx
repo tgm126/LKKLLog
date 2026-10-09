@@ -30,8 +30,8 @@ import { useJa, useJenCteni, zmenitUzivatele } from "./uzivatel";
 export function App() {
   // Provoz (přehled, detail letu, nový let): na desktopu provozní deska s panelem zprava,
   // jinak mobilní obrazovky (docs/modul-desktop.md). Adresy jsou stejné – odkaz funguje
-  // na obou. Desktop je jedna stránka: správa osob a letadel je jen v mobilní podobě
-  // (na desktopu adresa vede na desku); můj provoz zatím jako sloupec uprostřed.
+  // na obou. Desktop je jedna stránka bez záložek: správa (osoby, letadla…) a můj provoz
+  // z nabídky uživatele jako sloupec uprostřed (mobilní podoba).
   const deska = useDeska();
   return (
     <Routes>
@@ -61,16 +61,15 @@ export function App() {
             <Route path="/let/:id" element={<Detail />} />
           </>
         )}
-        {!deska && (
-          <>
-            <Route element={<SHlavickou />}>
-              <Route path="/osoby" element={<SeznamOsob />} />
-              <Route path="/letadla" element={<SeznamLetadel />} />
-            </Route>
-            <Route path="/osoba/nova" element={<NovaOsoba />} />
-            <Route path="/osoba/:id" element={<DetailOsoby />} />
-          </>
-        )}
+        {/* správa podle práv z nabídky uživatele; na počítači jako sloupec uprostřed */}
+        <Route element={<SPravem pravo="spravuje_osoby" />}>
+          <Route path="/osoby" element={<SeznamOsob />} />
+          <Route path="/osoba/nova" element={<NovaOsoba />} />
+          <Route path="/osoba/:id" element={<DetailOsoby />} />
+        </Route>
+        <Route element={<SPravem pravo="spravuje_letadla" />}>
+          <Route path="/letadla" element={<SeznamLetadel />} />
+        </Route>
         <Route element={<SeZapisem />}>
           <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
           <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />
@@ -117,6 +116,11 @@ function Prihlaseny() {
 /** Obrazovky, které jen zapisují (nový let, můj provoz): v relaci jen ke čtení zpět na přehled. */
 function SeZapisem() {
   return useJenCteni() ? <Navigate to="/" replace /> : <Outlet />;
+}
+
+/** Správa podle práva (osoby, letadla); server ho hlídá také. */
+function SPravem({ pravo }: { pravo: keyof Ja["prava"] }) {
+  return useJa().data?.prava[pravo] ? <Outlet /> : <Navigate to="/" replace />;
 }
 
 /** Správa systému jen pro admina (server ji hlídá také). */

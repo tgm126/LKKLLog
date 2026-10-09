@@ -35,17 +35,7 @@ export function Hlavicka({ ja }: { ja: Ja }) {
         <NavLink className="nadpisek" to="/moje-lety">
           Moje lety
         </NavLink>
-        {/* správa osob a letadel jen pro toho, kdo má právo (server ho hlídá také) */}
-        {ja.prava.spravuje_osoby && (
-          <NavLink className="nadpisek" to="/osoby">
-            Osoby
-          </NavLink>
-        )}
-        {ja.prava.spravuje_letadla && (
-          <NavLink className="nadpisek" to="/letadla">
-            Letadla
-          </NavLink>
-        )}
+        {/* jen záložky pro všechny; co je podle práv, je v nabídce uživatele (Správa) */}
         <StitkyMenu jenCteni={ja.jen_cteni} />
       </nav>
     </>
@@ -122,6 +112,21 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
   const [rezim, setRezim] = useState<Rezim>(nacistRezim);
   const deska = useDeska();
   const qc = useQueryClient();
+  const jdi = (cesta: string) => {
+    setOtevrena(false);
+    navigate(cesta);
+  };
+  // Správa podle práv – stejná na telefonu i počítači; Výcvik jen na počítači (navržen jen
+  // pro desktop, docs/modul-osnovy.md)
+  const sprava = (
+    [
+      [ja.prava.spravuje_osoby, "Osoby", "/osoby"],
+      [ja.prava.spravuje_letadla, "Letadla", "/letadla"],
+      [deska && ja.prava.spravuje_vycvik, "Výcvik", "/vycvik"],
+      [ja.prava.admin, "Smazat lety dne…", "/sprava/smazat-lety"],
+      [ja.prava.admin, "Nastavení", "/sprava/nastaveni"],
+    ] as const
+  ).filter(([smi]) => smi && !ja.jen_cteni);
   const odhlasit = useMutation({
     mutationFn: () => poslat("/odhlaseni"),
     onSettled: () => zmenitUzivatele(qc, null),
@@ -148,10 +153,19 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
       {otevrena && <div className="zastin" onClick={() => setOtevrena(false)} />}
       {otevrena && (
         <div className="nabidka">
-          <div className="nabidka-oddil">
+          <div className="nabidka-oddil nabidka-ja">
             <span className="tucne">
               {ja.jmeno} {ja.prijmeni}
             </span>
+            {/* Odhlásit vpravo u jména – nabídka je kratší (zadání 9. 10. 2026) */}
+            <Tlacitko
+              varianta="obrys"
+              className="nabidka-odhlasit"
+              disabled={odhlasit.isPending}
+              onClick={() => odhlasit.mutate()}
+            >
+              Odhlásit
+            </Tlacitko>
             <span className="male seda">{ja.email}</span>
             {ja.jen_cteni && (
               <span className="male">
@@ -166,7 +180,7 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
               <Tlacitko
                 varianta="bez-ramu"
                 className="nabidka-polozka"
-                onClick={() => navigate("/muj-provoz/letiste")}
+                onClick={() => jdi("/muj-provoz/letiste")}
               >
                 Letiště
                 <span className={letiste && !letiste.domovske ? "jinde" : undefined}>
@@ -176,52 +190,30 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
               <Tlacitko
                 varianta="bez-ramu"
                 className="nabidka-polozka"
-                onClick={() => navigate("/muj-provoz/osoby")}
+                onClick={() => jdi("/muj-provoz/osoby")}
               >
                 Osoby v provozu
                 <span>{provoz?.osoby.length || "všechny"}</span>
               </Tlacitko>
             </div>
           )}
-          {(ja.prava.admin || (deska && ja.prava.spravuje_vycvik)) && !ja.jen_cteni && (
+          {sprava.length > 0 && (
             <div className="nabidka-oddil">
               <span className="nadpisek">Správa</span>
-              {/* editor výcviku jen na počítači (docs/modul-osnovy.md) */}
-              {deska && ja.prava.spravuje_vycvik && (
+              {sprava.map(([, nazev, cesta]) => (
                 <Tlacitko
+                  key={cesta}
                   varianta="bez-ramu"
                   className="nabidka-polozka"
-                  onClick={() => {
-                    setOtevrena(false);
-                    navigate("/vycvik");
-                  }}
+                  onClick={() => jdi(cesta)}
                 >
-                  Výcvik
-                  <span>osnovy, přezkoušení</span>
+                  {nazev}
                 </Tlacitko>
-              )}
-              {ja.prava.admin && (
-                <>
-                  <Tlacitko
-                    varianta="bez-ramu"
-                    className="nabidka-polozka"
-                    onClick={() => navigate("/sprava/smazat-lety")}
-                  >
-                    Smazat lety dne…
-                  </Tlacitko>
-                  <Tlacitko
-                    varianta="bez-ramu"
-                    className="nabidka-polozka"
-                    onClick={() => navigate("/sprava/nastaveni")}
-                  >
-                    Nastavení
-                  </Tlacitko>
-                </>
-              )}
+              ))}
             </div>
           )}
-          <div className="nabidka-oddil">
-            <span className="nadpisek">Režim zobrazení</span>
+          <div className="nabidka-oddil nabidka-rezim">
+            <span className="nadpisek">Režim</span>
             <div className="segmenty">
               {REZIMY.map((r) => (
                 <Tlacitko
@@ -237,16 +229,6 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
                 </Tlacitko>
               ))}
             </div>
-          </div>
-          <div className="nabidka-oddil">
-            <Tlacitko
-              varianta="bez-ramu"
-              className="nabidka-polozka"
-              disabled={odhlasit.isPending}
-              onClick={() => odhlasit.mutate()}
-            >
-              Odhlásit
-            </Tlacitko>
           </div>
         </div>
       )}

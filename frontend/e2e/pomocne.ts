@@ -19,6 +19,15 @@ export async function prihlasitJenCteni(page: Page) {
   await expect(page.getByText(/jen (ke )?čtení/i).first()).toBeVisible();
 }
 
+/** Správa v nabídce uživatele (kolečko s iniciálami): Osoby, Letadla, Výcvik… */
+export async function zeSpravy(page: Page, polozka: string) {
+  await page.getByRole("button", { name: "Nabídka uživatele" }).click();
+  await page
+    .locator(".nabidka-oddil", { hasText: "Správa" })
+    .getByRole("button", { name: new RegExp(`^${polozka}`) })
+    .click();
+}
+
 export async function prihlasit(page: Page) {
   await page.goto("/prihlaseni");
   await page.getByLabel("E-mail").fill("admin@example.cz");

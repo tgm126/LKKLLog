@@ -5,7 +5,8 @@ Navrženo a odsouhlaseno 7. 10. 2026. Makety `docs/navrhy/osoby-mobil.html` a pr
 právu. Model oprávnění: `docs/navrh-opravneni.md`.
 
 ## 1. Rozsah
-- Záložka **OSOBY** v menu – jen pro osoby s právem **spravuje osoby** (a admina).
+- **Osoby** ve Správě nabídky uživatele (od 9. 10. 2026, dřív záložka) – jen s právem
+  **spravuje osoby** (a admin); na počítači sloupec uprostřed.
 - **Seznam osob:** hledání (jméno, e-mail, telefon, číslo člena), filtr Aktivní / S účtem /
   Neaktivní / Vše; u osoby telefon a značky (admin, správce, oprávnění, bez účtu, zablokován,
   externí). Dole „Nová osoba“.
@@ -27,7 +28,7 @@ Práva se přidělují konkrétním osobám (sloupce v `ucet`); **admin má auto
 |---|---|
 | `spravuje_osoby` (nové, db/023) | seznam a detail osob, nová osoba, úprava údajů, člen, aktivní, oprávnění; založit účet (smí se přihlásit), zablokovat / povolit účet (ne účet admina), odkaz pro nastavení hesla |
 | `smi_odblokovat` | odblokovat účet zablokovaný po chybných heslech |
-| `spravuje_letadla` (db/029) | záložka Letadla: mimo provoz (`docs/modul-letadla.md`) |
+| `spravuje_letadla` (db/029) | Správa → Letadla: mimo provoz (`docs/modul-letadla.md`) |
 | `admin` | vše; navíc přiděluje práva (admin, smí odblokovat, spravuje osoby) a smí „přihlásit se jako“ |
 
 Pravidla (hlídá server, ne jen skrytím tlačítek): sám sobě nikdo nevypne „aktivní“ ani

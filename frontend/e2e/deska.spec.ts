@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { prihlasit, prihlasitJenCteni, pripravitData } from "./pomocne";
+import { prihlasit, prihlasitJenCteni, pripravitData, zeSpravy } from "./pomocne";
 
 // Provozní deska na desktopu (docs/modul-desktop.md) v rozměru věže 1920 × 1080 a notebooku
 // 1366 × 768, ovládání myší; lety z e2e_priprava.py.
@@ -134,10 +134,11 @@ test("deska na notebooku: souhrny za tlačítkem, jiný den bez pásků", async 
   await page.getByRole("button", { name: "Zpět na dnešek" }).click();
   await expect(page.getByRole("region", { name: "Pásky" })).toBeVisible();
 
-  // Desktop je jedna stránka: bez menu, správa osob a letadel jen na mobilu
+  // Desktop je jedna stránka bez záložek; osoby a letadla ze Správy jako sloupec, Zpět na desku
   await expect(page.getByRole("link", { name: "Osoby" })).toHaveCount(0);
-  await page.goto("/osoby");
-  await expect(page).toHaveURL("/");
+  await zeSpravy(page, "Osoby");
+  await expect(page.getByRole("heading", { name: "Osoby" })).toBeVisible();
+  await page.getByRole("button", { name: "Zpět", exact: true }).click();
   await expect(page.getByRole("region", { name: "Pásky" })).toBeVisible();
 
   // Pod 1200 px mobilní přehled (pásky pod sebou)

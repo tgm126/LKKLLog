@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { Hlaska } from "../komponenty/Hlaska";
+import { Obrazovka } from "../komponenty/Obrazovka";
 import { Pole } from "../komponenty/Pole";
 import { Stitek } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
@@ -11,7 +12,8 @@ import { rozdelitNazev, telefonCitelne, useOsoby, type Opravneni, type Osoba } f
 import "./Osoby.css";
 
 // Seznam osob pro správce osob (docs/modul-osoby.md, maketa osoby-mobil.html): hledání,
-// filtr, řádek osoby s telefonem a štítky; ťuknutí otevře detail.
+// filtr, řádek osoby s telefonem a štítky; ťuknutí otevře detail. Z nabídky uživatele
+// (Správa → Osoby), Zpět na přehled; na počítači sloupec uprostřed.
 
 type Filtr = "aktivni" | "ucet" | "neaktivni" | "vse";
 
@@ -27,21 +29,21 @@ export function SeznamOsob() {
   const navigate = useNavigate();
   const [hledat, setHledat] = useState("");
   const [filtr, setFiltr] = useState<Filtr>("aktivni");
-  const dole = (
-    <div className="dole">
-      <Tlacitko varianta="modre" hlavni onClick={() => navigate("/osoba/nova")}>
-        Nová osoba
-      </Tlacitko>
-    </div>
+  const obrazovka = (obsah: ReactNode) => (
+    <Obrazovka
+      zpet={() => navigate("/")}
+      zpetPopis="Zpět"
+      nadpis="Osoby"
+      akce={
+        <Tlacitko varianta="modre" hlavni onClick={() => navigate("/osoba/nova")}>
+          Nová osoba
+        </Tlacitko>
+      }
+    >
+      {obsah}
+    </Obrazovka>
   );
-  if (!data) {
-    return (
-      <>
-        <main className="obsah">{error && <Hlaska>{error.message}</Hlaska>}</main>
-        {dole}
-      </>
-    );
-  }
+  if (!data) return obrazovka(error && <Hlaska>{error.message}</Hlaska>);
   const h = proHledani(hledat.trim());
   // hledá v „jméno příjmení příjmení jméno e-mail telefon číslo“ (jméno v obou pořadích)
   const nalezene = data.osoby.filter(
@@ -52,38 +54,35 @@ export function SeznamOsob() {
       ).includes(h),
   );
   const podle = FILTRY.find(([f]) => f === filtr)![2];
-  return (
+  return obrazovka(
     <>
-      <main className="obsah">
-        <Pole
-          popisek="Hledat jméno, e-mail, telefon, číslo člena"
-          value={hledat}
-          onChange={(e) => setHledat(e.target.value)}
-        />
-        <div className="segmenty filtr-osob">
-          {FILTRY.map(([f, nazev, test]) => (
-            <Tlacitko
-              key={f}
-              aria-pressed={filtr === f}
-              onClick={() => setFiltr(f)}
-            >
-              {nazev} {f !== "vse" && <span className="cisla">{nalezene.filter(test).length}</span>}
-            </Tlacitko>
-          ))}
-        </div>
-        <div className="seznam-osob">
-          {nalezene.filter(podle).map((o) => (
-            <RadekOsoby
-              key={o.id}
-              osoba={o}
-              opravneni={data.opravneni}
-              otevrit={() => navigate(`/osoba/${o.id}`)}
-            />
-          ))}
-        </div>
-      </main>
-      {dole}
-    </>
+      <Pole
+        popisek="Hledat jméno, e-mail, telefon, číslo člena"
+        value={hledat}
+        onChange={(e) => setHledat(e.target.value)}
+      />
+      <div className="segmenty filtr-osob">
+        {FILTRY.map(([f, nazev, test]) => (
+          <Tlacitko
+            key={f}
+            aria-pressed={filtr === f}
+            onClick={() => setFiltr(f)}
+          >
+            {nazev} {f !== "vse" && <span className="cisla">{nalezene.filter(test).length}</span>}
+          </Tlacitko>
+        ))}
+      </div>
+      <div className="seznam-osob">
+        {nalezene.filter(podle).map((o) => (
+          <RadekOsoby
+            key={o.id}
+            osoba={o}
+            opravneni={data.opravneni}
+            otevrit={() => navigate(`/osoba/${o.id}`)}
+          />
+        ))}
+      </div>
+    </>,
   );
 }
 

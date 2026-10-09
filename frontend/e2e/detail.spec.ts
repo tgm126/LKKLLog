@@ -61,11 +61,11 @@ test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa"
   await page.getByRole("button", { name: "LKLT Letňany" }).click();
   await expect(page.getByRole("button", { name: /Místo vzletu\s*LKLT/ })).toBeVisible();
 
-  // Platí: místo aeroklubu osoba.
-  await page.getByRole("button", { name: /Platí\s*Aeroklub/ }).click();
+  // Hradí: místo aeroklubu osoba.
+  await page.getByRole("button", { name: /Hradí\s*Aeroklub/ }).click();
   await blok("Platba").getByRole("button", { name: "Hledat…" }).click();
   await blok("Platba").getByRole("button", { name: "Nela Nová" }).click();
-  await expect(page.getByRole("button", { name: /Platí\s*Nela Nová/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Hradí\s*Nela Nová/ })).toBeVisible();
 
   // VZLET z detailu, čas vzletu o dvě minuty dřív (přistání pak nepotřebuje dotaz na krátký let).
   await page.getByRole("button", { name: "Vzlet", exact: true }).click();

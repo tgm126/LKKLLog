@@ -40,11 +40,11 @@ Vleče nás **cizí vlečná**? Musí být založená mezi letadly a její pilot
 ## A3. Výcvik a přezkoušení (jsem instruktor / examinátor)
 Let naplánuji s účelem **Výcvik** (instruktor PIC + pilot ve výcviku) nebo **Sólo** (pilot
 PIC + dozor na zemi; sólo pod dozorem i u licencovaného pilota) a vyberu **úlohu** z osnovy
-(u výcviku povinná). Platí pilot ve výcviku, není-li zadáno jinak. Dál jako A1 nebo A2.
+(u výcviku povinná). Hradí pilot ve výcviku, není-li zadáno jinak. Dál jako A1 nebo A2.
 
 U účelu **Přezkoušení** vyberu místo úlohy **typ přezkoušení** (např. PC-SPL přezkoušení
 odborné způsobilosti SPL, PC-SEP prodloužení SEP) – nabídnou se typy pro kategorii letadla.
-Jako examinátor (PIC) se nabídne, kdo daný typ smí provést (FE(S), FE(A), CRE…). Platí
+Jako examinátor (PIC) se nabídne, kdo daný typ smí provést (FE(S), FE(A), CRE…). Hradí
 přezkoušený. Kód typu je pak na pásku.
 
 ## A4. Létáme dnes jinde (přelet, soustředění)
@@ -113,7 +113,7 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 ## B4. Nový let
 - Telefon: kroky **letadlo → posádka → let**; počítač: jeden formulář v panelu.
 - Předvyplněno: místo vzletu = kde letadlo naposledy přistálo, místo přistání = moje
-  letiště, POB, způsob vzletu kluzáku podle posledního dnešního, plátce podle účelu
+  letiště, POB, způsob vzletu kluzáku podle posledního dnešního, kdo **hradí** podle účelu
   (normální → PIC, výcvik a sólo → pilot ve výcviku, přezkoušení → přezkoušený), nebo
   aeroklub.
 - **Posádka:** rychlá volba (kdo smí podle oprávnění, jen osoby v provozu, je-li výběr)
@@ -126,16 +126,20 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 ## B5. Detail letu
 - Údaje se opravují **na místě** (klik na pole): posádka, POB, úloha (u přezkoušení typ
   přezkoušení), časy, místa, počet
-  přistání, plátce, poznámka. U vleku se čas vzletu opraví kluzáku i vlečné.
+  přistání, kdo hradí, poznámka. U vleku se čas vzletu opraví kluzáku i vlečné.
 - Změnil-li let mezitím někdo jiný, aplikace ukáže aktuální stav – opravu zopakujte.
 - **Zrušit let** s důvodem (technická závada, počasí, založeno omylem, přerušený vzlet,
   jiné) – let se nemaže; **Obnovit let**; **Historie** = všechny změny (kdo, kdy).
 
 ## B6. Nabídka uživatele (kolečko s iniciálami)
+Stejná na telefonu i na počítači. Záložky na telefonu jsou jen pro všechny (**Lety · Moje
+lety**); co se řídí právy, je tady.
+- Nahoře jméno a **Odhlásit**.
 - **Můj provoz · dnes** (jen pro mě, na tomto zařízení, jen dnes): **Letiště** pro dnešek,
   **Osoby v provozu**.
-- **Správa** (admin; Výcvik i se správou výcviku, B8). **Režim zobrazení** (podle zařízení / světlý / tmavý).
-  **Odhlásit.**
+- **Správa** – jen položky, na které mám právo (B8): Osoby, Letadla, Výcvik (jen na
+  počítači), Smazat lety dne…, Nastavení.
+- **Režim** zobrazení (podle zařízení / světlý / tmavý).
 
 ## B7. Co aplikace hlídá (a proč se něco nedá uložit)
 Jeden PIC; posádka a úloha (u přezkoušení typ přezkoušení) podle účelu; POB nejvýš počet míst; letadlo ani osoba nejsou
@@ -144,14 +148,14 @@ v posádce kluzáku; kluzák jen naviják nebo aerovlek; T&G jen motorová; čas
 neaktivní osoba nebo vyřazené letadlo se nenabízí. Hláška vždy řekne, co je špatně.
 
 ## B8. Správa (podle práv)
-- **Osoby** (na telefonu, záložka Osoby): údaje, **člen klubu** (jen evidence člen /
+- **Osoby** (Správa v nabídce uživatele; na počítači sloupec uprostřed): údaje, **člen klubu** (jen evidence člen /
   externí), **aktivní** (ne = už nelétá: nenabízí se v letech a nepřihlásí se), oprávnění pro
   kategorie letadel; účet: **Smí se přihlásit** (přístup do aplikace – bez něj osoba dál létá,
   jen ji zapisují ostatní), práva,
   odblokování; **Odkaz e-mailem** (jen admin, s potvrzením adresy; téže osobě nejvýš jednou
   za 5 minut) a **Odkaz pro heslo** (zkopírovat a předat). V bloku je vidět, kdy byl odkaz
   vydán a poslán.
-- **Letadla** (na telefonu): přepínač **mimo provoz** (dočasně – vidět šedě, nejde vybrat).
+- **Letadla** (Správa v nabídce uživatele): přepínač **mimo provoz** (dočasně – vidět šedě, nejde vybrat).
 - **Správa** v nabídce (admin): **Smazat lety dne…** – kalendář, dny s lety tučně, potvrzení
   (nevratné, v historii zůstane záznam); **Nastavení** – testovací provoz (žlutý pruh).
 - **Výcvik** (na počítači; admin nebo právo *Spravuje výcvik*): panel přes celou desku,

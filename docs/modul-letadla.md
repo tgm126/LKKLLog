@@ -5,7 +5,8 @@ Zatím jen **přepínač mimo provoz**; další úpravy letadel (typ, vlečné, 
 letu, termíny) přijdou s rozšířením číselníku.
 
 ## 1. Rozsah
-- Záložka **LETADLA** v menu – jen pro právo **spravuje letadla** (a admina, který má všechna
+- **Letadla** ve Správě nabídky uživatele (od 9. 10. 2026, dřív záložka) – jen pro právo
+  **spravuje letadla** (a admina, který má všechna
   práva automaticky). Server právo hlídá u každého požadavku.
 - **Seznam letadel** po kategoriích (pořadí kategorie → typ → rejstřík): rejstřík, pod ním
   typ (případně „soukromé“, „mimo provoz“), vpravo zaškrtávátko = **mimo provoz**. Zaškrtnutí se

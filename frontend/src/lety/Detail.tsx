@@ -333,7 +333,7 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
 
       <Blok nadpis="Platba a poznámka">
         <Udaje>
-          <Udaj popisek="Platí" hodnota={platce} cely {...u("platce")}>
+          <Udaj popisek="Hradí" hodnota={platce} cely {...u("platce")}>
             <VolbaOsoby
               osoby={nabidky.osoby}
               jaId={ja.osoba_id}

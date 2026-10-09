@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
 import { poslat, ziskat } from "../api";
 import { Hlaska } from "../komponenty/Hlaska";
-import { Blok } from "../komponenty/Obrazovka";
+import { Blok, Obrazovka } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
 import { Zaskrtavatka, Zaskrtavatko } from "../komponenty/Zaskrtavatko";
 import "./Letadla.css";
 
 // Letadla (docs/modul-letadla.md): seznam po kategoriích a přepínač mimo provoz (uloží se
-// hned). Záložka jen pro právo „spravuje letadla“ (a admina); server ho hlídá také.
+// hned). Z nabídky uživatele (Správa → Letadla) jen s právem „spravuje letadla“ (a admin);
+// server ho hlídá také. Na počítači sloupec uprostřed.
 
 type Letadlo = {
   id: number;
@@ -22,6 +24,7 @@ type Letadlo = {
 export function SeznamLetadel() {
   const qc = useQueryClient();
   const oznamit = useOznamit();
+  const navigate = useNavigate();
   const { data: letadla, error } = useQuery({
     queryKey: ["letadla"],
     queryFn: () => ziskat<Letadlo[]>("/letadla"),
@@ -46,7 +49,7 @@ export function SeznamLetadel() {
   for (const a of letadla ?? []) skupiny.set(a.kategorie, [...(skupiny.get(a.kategorie) ?? []), a]);
 
   return (
-    <main className="obsah">
+    <Obrazovka zpet={() => navigate("/")} zpetPopis="Zpět" nadpis="Letadla">
       {error && <Hlaska>{error.message}</Hlaska>}
       <p className="male seda letadla-napoveda">
         Zaškrtnuté = mimo provoz: nenabízí se pro nové lety, stará data zůstávají.
@@ -74,6 +77,6 @@ export function SeznamLetadel() {
       <div className="oznameni-dole">
         <Oznameni />
       </div>
-    </main>
+    </Obrazovka>
   );
 }

@@ -48,8 +48,10 @@ test("přihlášení jen ke čtení: přehled bez ovládání, odhlásit jde", a
   await expect(mfv).toBeVisible();
   await expect(page.getByRole("button", { name: /Přistál|Vzlet|T&G/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Nový let", exact: true })).toHaveCount(0);
-  // práva se neuplatní – admin nevidí správu osob ani letadel
-  await expect(page.getByRole("link", { name: "Osoby" })).toHaveCount(0);
+  // práva se neuplatní – admin nevidí Správu (osoby, letadla…)
+  await page.getByRole("button", { name: "Nabídka uživatele" }).click();
+  await expect(page.locator(".nabidka-oddil", { hasText: "Správa" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
 
   // Detail bez akcí a bez úprav na místě
   await mfv.getByText("Olga Pilotka").click();
