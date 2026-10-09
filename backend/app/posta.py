@@ -6,6 +6,7 @@ LKKL_SMTP_SERVER (vývoj, testy) se nic neodešle – e-mail se jen vypíše do 
 
 import logging
 import smtplib
+import ssl
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid
 
@@ -33,7 +34,7 @@ def odeslat(komu: str, predmet: str, text: str) -> None:
         return
     try:
         with smtplib.SMTP(nastaveni.smtp_server, nastaveni.smtp_port, timeout=10) as smtp:
-            smtp.starttls()
+            smtp.starttls(context=ssl.create_default_context())  # ověřit certifikát
             if nastaveni.smtp_uzivatel:
                 smtp.login(nastaveni.smtp_uzivatel, nastaveni.smtp_heslo)
             smtp.send_message(zprava)

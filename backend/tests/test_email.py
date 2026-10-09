@@ -17,6 +17,7 @@ class Schranka:
         self.odeslane = []
         self.prihlaseni = []
         self.chyba: Exception | None = None
+        self.tls_kontext = None
 
     def smtp(self, server, port, timeout):
         schranka = self
@@ -28,8 +29,8 @@ class Schranka:
             def __exit__(self, *_):
                 return False
 
-            def starttls(self):
-                pass
+            def starttls(self, context):
+                schranka.tls_kontext = context
 
             def login(self, uzivatel, heslo):
                 schranka.prihlaseni.append((server, port, uzivatel, heslo))
