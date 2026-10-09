@@ -1,6 +1,7 @@
-import { type MouseEvent, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 
+import type { Klik } from "../komponenty/klavesnice";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import type { useAkceLetu } from "../lety/akce";
 import type { Pasek, Stav } from "../lety/api";
@@ -30,9 +31,11 @@ export function Pasky({
   const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu)));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
   const pocet = (d: Pasek[][]) => d.reduce((s, x) => s + x.length, 0);
-  const otevrit = (id: number) => (e: MouseEvent) => {
-    if (!(e.target as HTMLElement).closest("button")) navigate(`/let/${id}`);
-  };
+  const otevrit =
+    (id: number): Klik =>
+    (e) => {
+      if (!(e.target as HTMLElement).closest("button")) navigate(`/let/${id}`);
+    };
   const zaneprazdnen = (d: Pasek[]) => d.some((l) => l.id === akce.probiha?.letId);
 
   const skupina = (d: Pasek[], obsah: (l: Pasek, i: number) => ReactNode) => {

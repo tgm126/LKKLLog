@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import { hodinyMinuty, ted } from "../cas";
+import { jakoTlacitko } from "../komponenty/klavesnice";
 import { Blok } from "../komponenty/Obrazovka";
 import type { Den, Pasek } from "../lety/api";
 import { useSirokaDeska } from "../rozvrzeni";
@@ -150,9 +151,8 @@ export function CasovaOsa({
                         y="20%"
                         height="60%"
                         rx="2"
-                        role="button"
                         aria-label={`Let ${l.rejstrik} ${hodinyMinuty(l.cas_vzletu!)}`}
-                        onClick={() => navigate(`/let/${l.id}`)}
+                        {...jakoTlacitko(() => navigate(`/let/${l.id}`), "link")}
                       >
                         <title>
                           {`${l.rejstrik} ${hodinyMinuty(l.cas_vzletu!)}–${l.cas_pristani ? hodinyMinuty(l.cas_pristani) : "letí"} · ${posadka}`}

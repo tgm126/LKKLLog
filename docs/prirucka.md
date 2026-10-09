@@ -102,7 +102,8 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
   - **Pásky** ve vzduchu a naplánované; **Deník dne** (řádek na let, patička: lety,
     přistání, doba); **Souhrny** plachtařského a motorového provozu (na notebooku za
     tlačítkem); **Časová osa** dne s pásmy soumraku.
-  - Klávesy: **N** nový let, **Esc** zavřít panel, **Ctrl+Z** zpět poslední akce.
+  - Klávesy: **N** nový let, **Esc** zavřít panel (nebo dialog), **Ctrl+Z** zpět poslední
+    akce; **Tab** prochází i pásky, řádky deníku a úsečky osy, **Enter** je otevře.
 
 ## B3. Pásek letu
 - Barva: **zelená** letí, **modrá** naplánovaný, **červená** varování (text v pásku).

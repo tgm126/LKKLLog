@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { Hlaska } from "../komponenty/Hlaska";
+import { jakoTlacitko } from "../komponenty/klavesnice";
 import { Blok, BlokTelo } from "../komponenty/Obrazovka";
 import { Panel } from "../komponenty/Panel";
 import { Pole } from "../komponenty/Pole";
@@ -359,7 +360,7 @@ function Osnovy({
               <div
                 className={["vycvik-radek vycvik-skupina vycvik-polozka", !o.platny && "vycvik-neplatna",
                   vyber?.druh === "osnova" && vyber.id === o.id && "vybrana"].filter(Boolean).join(" ")}
-                onClick={() => setVyber({ druh: "osnova", id: o.id })}
+                {...jakoTlacitko(() => setVyber({ druh: "osnova", id: o.id }))}
               >
                 <button
                   type="button"
@@ -410,7 +411,7 @@ function Osnovy({
                     key={u.id}
                     className={["vycvik-radek vycvik-polozka", !u.platny && "vycvik-neplatna",
                       vyber?.druh === "uloha" && vyber.id === u.id && "vybrana"].filter(Boolean).join(" ")}
-                    onClick={() => setVyber({ druh: "uloha", id: u.id })}
+                    {...jakoTlacitko(() => setVyber({ druh: "uloha", id: u.id }))}
                   >
                     <Posun posunout={posun("uloha", u.id)} />
                     <span className="vycvik-nazev">

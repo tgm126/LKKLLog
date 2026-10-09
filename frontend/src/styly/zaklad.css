@@ -29,6 +29,13 @@ button {
   cursor: pointer;
 }
 
+/* Fokus z klávesnice (tabulátor) viditelný u všeho klikacího – i u pásků a řádků, které nejsou
+   <button>; myš a dotyk ho neukazují. */
+:focus-visible {
+  outline: var(--obrys-sirka) solid var(--barva-modra);
+  outline-offset: var(--ramecek-sirka);
+}
+
 h1,
 h2,
 p {

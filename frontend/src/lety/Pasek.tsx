@@ -1,7 +1,8 @@
-import { type MouseEvent, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
+import { jakoTlacitko, type Klik } from "../komponenty/klavesnice";
 import { Sipka } from "../komponenty/Sipka";
 import { Stitek } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
@@ -157,14 +158,14 @@ export function PolovinaPasku({
   let: LetPasku;
   /** Obsah přihrádky času (jinak podle stavu letu). */
   cas?: ReactNode;
-  onClick?: (e: MouseEvent) => void;
+  onClick?: Klik;
   /** Akce pod páskem (PŘISTÁL, T&G). */
   children?: ReactNode;
 }) {
   const ukoncen = l.stav === "UKONCEN";
   const kam = trasa(l);
   return (
-    <div className={onClick ? "let-par otevira" : "let-par"} onClick={onClick}>
+    <div className={onClick ? "let-par otevira" : "let-par"} {...jakoTlacitko(onClick, "link")}>
       <div className="let-hlava">
         <span className="velke tucne">{l.rejstrik}</span>
         <span className="let-typ">
@@ -208,9 +209,9 @@ export const tridaPasku = (lety: LetPasku[]) =>
       } as const)[lety[0]!.stav];
 
 /** Ťuknutí na pásek otevře detail letu (tlačítka akcí ne). */
-function useOtevrit(letId: number) {
+function useOtevrit(letId: number): Klik {
   const navigate = useNavigate();
-  return (e: MouseEvent) => {
+  return (e) => {
     if (!(e.target as HTMLElement).closest("button")) navigate(`/let/${letId}`);
   };
 }
@@ -310,7 +311,7 @@ function RadekDeniku({ let: l }: { let: PasekLetu }) {
   ).map((c) => `${c.jmeno} ${c.prijmeni}`);
   const doplnek = zrusen ? [l.duvod_zruseni] : podrobnosti(l);
   return (
-    <div className={`denik-radek ${zrusen ? "zrusen" : "ukoncen"}`} onClick={otevrit}>
+    <div className={`denik-radek ${zrusen ? "zrusen" : "ukoncen"}`} {...jakoTlacitko(otevrit, "link")}>
       <span className="denik-rejstrik">{l.rejstrik}</span>
       <span className="denik-posadka">
         <span>{prvni}</span>

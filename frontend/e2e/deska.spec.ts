@@ -54,7 +54,7 @@ test("deska: pásky, řada letadel, deník, souhrny a časová osa", async ({ pa
 
   // Časová osa: úsečka za každý let, který letěl nebo letí
   const osa = page.getByRole("region", { name: "Časová osa dne" });
-  await expect(osa.getByRole("button", { name: /^Let / })).toHaveCount(4);
+  await expect(osa.getByRole("link", { name: /^Let / })).toHaveCount(4);
 });
 
 test("deska: akce z pásku, Ctrl+Z, detail v panelu a úprava", async ({ page }) => {

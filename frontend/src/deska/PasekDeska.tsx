@@ -1,6 +1,7 @@
-import { type MouseEvent, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { doba, hodinyMinuty, stopky } from "../cas";
+import { jakoTlacitko, type Klik } from "../komponenty/klavesnice";
 import { Sipka } from "../komponenty/Sipka";
 import { Posadka, StitkyPasku, tridaPasku, type LetPasku } from "../lety/Pasek";
 import { useTik } from "../tik";
@@ -69,7 +70,7 @@ export function PasekDeska({
   vPanelu?: boolean;
   /** Obsah přihrádky času (jinak podle stavu letu). */
   cas?: ReactNode;
-  onClick?: (e: MouseEvent) => void;
+  onClick?: Klik;
   /** Akce v přihrádce vpravo (T&G, PŘISTÁL, VZLET). */
   children?: ReactNode;
 }) {
@@ -84,7 +85,7 @@ export function PasekDeska({
     onClick && "otevira",
   ];
   return (
-    <div className={trida.filter(Boolean).join(" ")} onClick={onClick}>
+    <div className={trida.filter(Boolean).join(" ")} {...jakoTlacitko(onClick, "link")}>
       <div className="prihradka">
         <span className="velke tucne">{l.rejstrik}</span>
         <span className="male seda">
