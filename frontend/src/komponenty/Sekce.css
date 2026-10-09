@@ -1,18 +1,16 @@
-/* Sekce: nadpis sbalí / rozbalí následující tělo. */
+/* Sekce: nadpis sbalí / rozbalí následující tělo. Řádek nadpisu je celý dotykový cíl
+   (výška --dotyk), mezery nad a pod jsou jeho součástí – ne okraj mimo něj. */
 .sekce {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--mezera-2);
   width: 100%;
-  margin: var(--mezera-3) 0 var(--mezera-2);
+  min-height: var(--dotyk);
+  margin: 0;
   padding: 0 var(--mezera-1);
   border: 0;
   background: none;
   text-align: left;
-}
-
-.sekce:first-child {
-  margin-top: 0;
 }
 
 .sekce-sipka {

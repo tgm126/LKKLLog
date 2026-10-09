@@ -101,6 +101,8 @@
   flex-direction: column;
 }
 
+/* VÝJIMKA: editor je jen na desce (myš); šipky ▲▼ nad sebou v řádku tabulky – každá výšky
+   --dotyk by řádek zdvojnásobila. Cíl je celé tlačítko se svým řádkem textu. */
 .vycvik-posun button {
   padding: 0;
   border: 0;
@@ -111,6 +113,7 @@
   cursor: pointer;
 }
 
+/* VÝJIMKA: tamtéž – rozbalovací šipka v řádku tabulky editoru (myš), výška řádku textu. */
 .vycvik-sbalit {
   padding: 0;
   border: 0;
