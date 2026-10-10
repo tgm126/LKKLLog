@@ -6,14 +6,13 @@ server jejich chybu vrátí jako hlášku. Každá změna vrátí celý stav edi
 audit (db/042) – kromě pořadí.
 """
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection, errors
 from pydantic import BaseModel
 
+from . import db
 from .db import spojeni
 from .prihlasovani import Prihlaseny, spravuje_vycvik
 
@@ -196,23 +195,16 @@ def _stav(conn: Connection) -> dict:
     }
 
 
-@contextmanager
-def _zmena(conn: Connection) -> Iterator[None]:
-    """Změna v jedné transakci; chyby databáze jako srozumitelné hlášky."""
-    try:
-        with conn.transaction():
-            yield
-    except errors.RaiseException as e:
-        raise HTTPException(400, e.diag.message_primary) from e
-    except errors.UniqueViolation as e:
-        raise HTTPException(400, "Toto označení už existuje.") from e
-    except errors.CheckViolation as e:
-        raise HTTPException(
-            400,
-            "Označení: jen velká písmena, číslice, podtržítko a pomlčka; název nesmí být prázdný.",
-        ) from e
-    except errors.ForeignKeyViolation as e:
-        raise HTTPException(409, "Je použito – nejde smazat, jen zneplatnit.") from e
+# Hlášky k pravidlům databáze (domény lkkl.kod a lkkl.nazev, jedinečná označení, vazby).
+HLASKY = {
+    "kod_check": "Označení: jen velká písmena, číslice, podtržítko a pomlčka.",
+    "nazev_check": "Název nesmí být prázdný.",
+    errors.UniqueViolation: "Toto označení už existuje.",
+}
+
+
+def _zmena(conn: Connection):
+    return db.transakce(conn, HLASKY)
 
 
 def _upravit(conn: Connection, tabulka: str, id_: int, zmeny: dict) -> None:
@@ -221,12 +213,7 @@ def _upravit(conn: Connection, tabulka: str, id_: int, zmeny: dict) -> None:
         zmeny["kod"] = zmeny["kod"].strip().upper()
     if "nazev" in zmeny:
         zmeny["nazev"] = zmeny["nazev"].strip()
-    nastavit = ", ".join(f"{s} = %({s})s" for s in zmeny) or "id = id"
-    radek = conn.execute(
-        f"UPDATE lkkl.{tabulka} SET {nastavit} WHERE id = %(id)s RETURNING id",  # noqa: S608
-        {**zmeny, "id": id_},
-    ).fetchone()
-    if radek is None:
+    if not db.upravit(conn, tabulka, id_, zmeny):
         raise HTTPException(404, "Záznam neexistuje.")
 
 

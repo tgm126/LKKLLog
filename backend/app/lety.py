@@ -1,17 +1,15 @@
 """Lety: přehled dne a sluneční časy (návrh: docs/modul-lety.md)."""
 
-import re
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from typing import Literal
 
 from astral import Observer
 from astral.sun import dawn, dusk, sun
 from fastapi import APIRouter, Depends, HTTPException
-from psycopg import Connection, errors
+from psycopg import Connection
 from pydantic import BaseModel
 
+from . import db
 from .db import spojeni
 from .prihlasovani import Prihlaseny, prihlaseny
 
@@ -274,25 +272,13 @@ def lety(
 # --- akce letu: vzlet, přistání, T&G, zpět ---------------------------------------------------
 
 PREKRYV = "Letadlo v tu dobu už letí – překrývá se s jiným letem."
+HLASKY = {"letadlo_bez_prekryvu": PREKRYV}
 
 
-@contextmanager
-def zmena(conn: Connection) -> Iterator[None]:
-    """Změna letu v jedné transakci; pravidla databáze (kontroly letu odložené na konec
-    transakce) se vyhodnotí po všech příkazech změny a jejich chyba se vrátí jako
-    srozumitelná hláška."""
-    try:
-        with conn.transaction():
-            # Kontroly letu až po celé změně (např. výměna PIC = odebrat a přidat), i když
-            # předchozí změna ve stejné transakci (testy) přepnula kontroly na okamžité.
-            conn.execute("SET CONSTRAINTS ALL DEFERRED")
-            yield
-            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
-    except errors.RaiseException as e:
-        zprava = re.sub(r"^Let \d+: ", "", e.diag.message_primary or "")
-        raise HTTPException(400, zprava[:1].upper() + zprava[1:]) from e
-    except errors.ExclusionViolation as e:
-        raise HTTPException(409, PREKRYV) from e
+def zmena(conn: Connection):
+    """Změna letu v jedné transakci: kontroly letu až po celé změně (např. výměna PIC =
+    odebrat a přidat), hlášky databáze bez předpony „Let 12: “."""
+    return db.transakce(conn, HLASKY, odlozene=True, predpona=r"^Let \d+: ")
 
 
 class Provedeno(BaseModel):
@@ -873,12 +859,8 @@ def upravit(
             )
         if aktualni["zruseni_duvod_id"] is not None:
             raise HTTPException(409, "Zrušený let nejde upravit – nejdřív ho obnovte.")
-        # Sloupce jen z pevného seznamu modelu Uprava; i bez změny letu se zvýší verze.
-        nastavit = ", ".join(f"{s} = %({s})s" for s in zmeny) or "verze = verze"
-        conn.execute(
-            f"UPDATE lkkl.let SET {nastavit} WHERE id = %(id)s",  # noqa: S608
-            {**zmeny, "id": let_id},
-        )
+        # i bez změny údajů (jen posádka) se zvýší verze – trigger let_verze
+        db.upravit(conn, "let", let_id, zmeny, beze_zmeny="verze = verze")
         if "cas_vzletu" in zmeny:  # kluzák a vlečná vzlétají společně (db/035)
             conn.execute(
                 f"""UPDATE lkkl.let SET cas_vzletu = %(cas)s
