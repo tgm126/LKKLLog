@@ -80,3 +80,15 @@ def test_hodnota_v_auditu_prezije_smazani_cile(conn):
         "SELECT lkkl.audit_hodnota('vlecny_let_id', '999999'::jsonb) AS h"
     ).fetchone()["h"]
     assert popis == "#999999"
+
+
+def test_prihlaseny_jako_zapise_skutecneho_admina(osoba, prihlasit, let, conn):
+    """Admin přihlášený za jinou osobu: audit nese skutečného admina (puvodni_osoba_id)."""
+    osoba("Admin", admin=True)
+    novak = osoba("Novak")
+    let_id = let("OK-2817", {"PIC": novak})
+    admin = prihlasit("admin@example.cz")
+    assert admin.post(f"/api/prihlasit-jako/{novak}").status_code == 200
+    assert admin.post(f"/api/lety/{let_id}/vzlet").status_code == 200
+    posledni = _audit(conn, "let")[-1]
+    assert (posledni["kdo"], posledni["akce"]) == ("Jan Admin (jako Jan Novak)", "Vzlet")

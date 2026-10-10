@@ -1,5 +1,8 @@
 """Přihlášení, relace, odhlášení, ochrana proti hádání hesla a CSRF."""
 
+import dataclasses
+
+from app import main
 from app.prihlasovani import CHYBA_PRIHLASENI, COOKIE, smazat_prosle_relace
 
 from .conftest import HESLO
@@ -185,3 +188,30 @@ def test_zarizeni_a_odhlaseni_ostatnich(osoba, prihlasit):
     assert pocitac.post("/api/zarizeni/odhlasit-ostatni").status_code == 204
     assert telefon.get("/api/ja").status_code == 401
     assert pocitac.get("/api/ja").status_code == 200
+
+
+def test_neznamy_ucet_se_neblokuje(klient, osoba):
+    """Neznámý e-mail vrací vždy 401, i po mnoha pokusech – jinak by 429 prozradilo, že účet
+    neexistuje; existující účet má po 5 pokusech 429 (docs/modul-prihlasovani.md 4.1, S2)."""
+    osoba("Novak")
+    k = klient()
+    for _ in range(7):
+        odpoved = k.post("/api/prihlaseni", json={"email": "nikdo@example.cz", "heslo": "x" * 10})
+        assert odpoved.status_code == 401
+    for _ in range(5):
+        k.post("/api/prihlaseni", json={"email": "novak@example.cz", "heslo": "x" * 10})
+    odpoved = k.post("/api/prihlaseni", json={"email": "novak@example.cz", "heslo": HESLO})
+    assert odpoved.status_code == 429
+
+
+def test_vic_povolenych_adres_puvodu(klient, osoba, monkeypatch):
+    """Zápis smí přijít z kterékoli povolené adresy (LKKL_POVOLENE_ADRESY čárkou); lomítko na
+    konci Origin nevadí; jiná adresa 403."""
+    osoba("Novak")
+    povolene = frozenset({"https://lety.test", "https://testserver"})
+    nastaveni = dataclasses.replace(main.nastaveni, povolene_adresy=povolene)
+    monkeypatch.setattr(main, "nastaveni", nastaveni)
+    prihlaseni = {"email": "novak@example.cz", "heslo": HESLO}
+    assert klient("https://lety.test/").post("/api/prihlaseni", json=prihlaseni).status_code == 200
+    assert klient("https://testserver").post("/api/prihlaseni", json=prihlaseni).status_code == 200
+    assert klient("https://jina.test").post("/api/prihlaseni", json=prihlaseni).status_code == 403
