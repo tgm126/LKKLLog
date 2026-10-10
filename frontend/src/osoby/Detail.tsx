@@ -226,7 +226,13 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
   // Admin má automaticky všechna práva: ostatní práva zaškrtnutá a zašedlá (uložená hodnota
   // platí, až admin přestane být adminem).
   const pravo = (
-    klic: "admin" | "smi_odblokovat" | "spravuje_osoby" | "spravuje_letadla" | "spravuje_vycvik",
+    klic:
+      | "admin"
+      | "smi_odblokovat"
+      | "spravuje_osoby"
+      | "spravuje_letadla"
+      | "spravuje_vycvik"
+      | "smi_exportovat",
     popisek: string,
     pod?: string,
   ) => {
@@ -302,6 +308,7 @@ function BlokUctu({ osoba: o, ja }: { osoba: DetailOsoby; ja: Ja }) {
         {pravo("spravuje_osoby", "Spravuje osoby")}
         {pravo("spravuje_letadla", "Spravuje letadla", "mimo provoz")}
         {pravo("spravuje_vycvik", "Spravuje výcvik", "osnovy, přezkoušení – počítač")}
+        {pravo("smi_exportovat", "Exportuje lety", "PDF e-mailem adminovi")}
         {pravo("smi_odblokovat", "Smí odblokovat", "po chybných heslech")}
         <Zaskrtavatko
           popisek="Zablokován"

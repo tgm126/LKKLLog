@@ -1,62 +1,8 @@
 """Odkaz pro nastavení hesla e-mailem – jen admin, ručně u jedné osoby (docs/modul-email.md)."""
 
-import dataclasses
 import re
 import smtplib
 from urllib.parse import parse_qs, urlparse
-
-import pytest
-
-from app import posta, prihlasovani
-
-
-class Schranka:
-    """Zkušební SMTP server v paměti: co se přihlásilo a co odešlo."""
-
-    def __init__(self):
-        self.odeslane = []
-        self.prihlaseni = []
-        self.chyba: Exception | None = None
-        self.tls_kontext = None
-
-    def smtp(self, server, port, timeout):
-        schranka = self
-
-        class Spojeni:
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_):
-                return False
-
-            def starttls(self, context):
-                schranka.tls_kontext = context
-
-            def login(self, uzivatel, heslo):
-                schranka.prihlaseni.append((server, port, uzivatel, heslo))
-                if schranka.chyba:
-                    raise schranka.chyba
-
-            def send_message(self, zprava):
-                schranka.odeslane.append(zprava)
-
-        return Spojeni()
-
-
-@pytest.fixture
-def schranka(monkeypatch):
-    s = Schranka()
-    nastaveni = dataclasses.replace(
-        posta.nastaveni,
-        smtp_server="smtp.test",
-        smtp_uzivatel="info@lkkl.cz",
-        smtp_heslo="tajne",
-        email_odpoved="spravce@example.cz",
-    )
-    monkeypatch.setattr(posta, "nastaveni", nastaveni)
-    monkeypatch.setattr(prihlasovani, "nastaveni", nastaveni)
-    monkeypatch.setattr(posta.smtplib, "SMTP", s.smtp)
-    return s
 
 
 def test_odkaz_emailem(conn, osoba, prihlasit, klient, schranka):

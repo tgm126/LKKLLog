@@ -19,7 +19,8 @@ class ChybaPosty(Exception):
     """E-mail se nepodařilo odeslat (text chyby SMTP nebo spojení)."""
 
 
-def odeslat(komu: str, predmet: str, text: str) -> None:
+def odeslat(komu: str, predmet: str, text: str, priloha: tuple[str, bytes] | None = None) -> None:
+    """`priloha`: (název souboru, obsah PDF)."""
     zprava = EmailMessage()
     zprava["From"] = nastaveni.email_od
     zprava["To"] = komu
@@ -29,8 +30,20 @@ def odeslat(komu: str, predmet: str, text: str) -> None:
     if nastaveni.email_odpoved:
         zprava["Reply-To"] = nastaveni.email_odpoved
     zprava.set_content(text)
+    if priloha:
+        nazev, obsah = priloha
+        zprava.add_attachment(obsah, maintype="application", subtype="pdf", filename=nazev)
     if not nastaveni.smtp_server:
-        log.warning("E-mail se neodesílá (chybí LKKL_SMTP_SERVER):\n%s", zprava)
+        if priloha:  # obsah přílohy do logu nepatří
+            log.warning(
+                "E-mail se neodesílá (chybí LKKL_SMTP_SERVER): komu %s, %s, příloha %s (%d B)",
+                komu,
+                predmet,
+                priloha[0],
+                len(priloha[1]),
+            )
+        else:
+            log.warning("E-mail se neodesílá (chybí LKKL_SMTP_SERVER):\n%s", zprava)
         return
     try:
         with smtplib.SMTP(nastaveni.smtp_server, nastaveni.smtp_port, timeout=10) as smtp:

@@ -36,6 +36,7 @@ class Prava(Model):
     spravuje_osoby: bool = False
     spravuje_letadla: bool = False
     spravuje_vycvik: bool = False
+    smi_exportovat: bool = False
 
 
 PRAVA = tuple(Prava.model_fields)
@@ -261,6 +262,7 @@ smi_odblokovat = pravo("smi_odblokovat")
 spravuje_osoby = pravo("spravuje_osoby")
 spravuje_letadla = pravo("spravuje_letadla")
 spravuje_vycvik = pravo("spravuje_vycvik")
+smi_exportovat = pravo("smi_exportovat")
 
 
 def _ja(
@@ -612,8 +614,8 @@ def ucet_pozvanka_emailem(
     if not u["smi_se_prihlasit"]:
         raise HTTPException(400, "Účet nebo osoba je zablokovaná.")
     if conn.execute(
-        """SELECT 1 FROM lkkl.email WHERE osoba_id = %s AND chyba IS NULL
-           AND kdy > now() - interval '5 minutes'""",
+        """SELECT 1 FROM lkkl.email WHERE osoba_id = %s AND druh = 'ODKAZ_HESLO'
+           AND chyba IS NULL AND kdy > now() - interval '5 minutes'""",
         (osoba_id,),
     ).fetchone():
         raise HTTPException(429, "Odkaz byl odeslán před chvílí – další jde poslat za 5 minut.")

@@ -72,7 +72,7 @@ class Seznam(Model):
 
 
 class PosledniEmail(Model):
-    """Poslední e-mail osobě (lkkl.email, db/038); chyba prázdná = odesláno."""
+    """Poslední odkaz pro heslo e-mailem (lkkl.email, db/038); chyba prázdná = odesláno."""
 
     kdy: datetime
     adresa: str
@@ -147,6 +147,7 @@ SELECT o.id, o.jmeno, o.prijmeni, o.email, o.telefon, o.cislo_clena, o.clen, o.p
            'spravuje_osoby', u.spravuje_osoby,
            'spravuje_letadla', u.spravuje_letadla,
            'spravuje_vycvik', u.spravuje_vycvik,
+           'smi_exportovat', u.smi_exportovat,
            'zablokovano', coalesce(u.zablokovano_do > now(), false),
            'ma_heslo', u.heslo_hash IS NOT NULL) END AS ucet,
        coalesce((SELECT json_agg(json_build_object(
@@ -192,7 +193,8 @@ def _detail(conn: Connection, osoba_id: int) -> DetailOsoby:
         {"id": str(osoba_id)},
     ).fetchall()
     email = conn.execute(
-        """SELECT kdy, adresa, chyba FROM lkkl.email WHERE osoba_id = %s
+        """SELECT kdy, adresa, chyba FROM lkkl.email
+           WHERE osoba_id = %s AND druh = 'ODKAZ_HESLO'
            ORDER BY kdy DESC, id DESC LIMIT 1""",
         (osoba_id,),
     ).fetchone()

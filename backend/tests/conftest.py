@@ -2,6 +2,7 @@
 Schéma sestaví spouštěč migrací ze skriptů db/NNN_*.sql (bez _data); každý test běží
 v transakci, která se na konci vrátí."""
 
+import dataclasses
 import os
 
 ZAKLAD = "postgresql://lkkllog:lkkllog@127.0.0.1:5432"
@@ -17,7 +18,7 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from psycopg.rows import dict_row  # noqa: E402
 
-from app import bezpecnost, migrace  # noqa: E402
+from app import bezpecnost, migrace, posta, prihlasovani  # noqa: E402
 from app.db import s_kontextem, spojeni  # noqa: E402
 from app.main import app  # noqa: E402
 
@@ -84,8 +85,8 @@ def osoba(conn):
             conn.execute(
                 """INSERT INTO lkkl.ucet
                        (osoba_id, heslo_hash, admin, smi_odblokovat, spravuje_osoby,
-                        spravuje_letadla, spravuje_vycvik)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                        spravuje_letadla, spravuje_vycvik, smi_exportovat)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     osoba_id,
                     bezpecnost.otisk_hesla(heslo) if heslo else None,
@@ -94,6 +95,7 @@ def osoba(conn):
                     prava.get("spravuje_osoby", False),
                     prava.get("spravuje_letadla", False),
                     prava.get("spravuje_vycvik", False),
+                    prava.get("smi_exportovat", False),
                 ),
             )
         return osoba_id
@@ -210,3 +212,55 @@ def let(conn, osoba, flotila):
         return let_id
 
     return zalozit
+
+
+# --- e-mail -----------------------------------------------------------------------------------
+
+
+class Schranka:
+    """Zkušební SMTP server v paměti: co se přihlásilo a co odešlo."""
+
+    def __init__(self):
+        self.odeslane = []
+        self.prihlaseni = []
+        self.chyba: Exception | None = None
+        self.tls_kontext = None
+
+    def smtp(self, server, port, timeout):
+        schranka = self
+
+        class Spojeni:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return False
+
+            def starttls(self, context):
+                schranka.tls_kontext = context
+
+            def login(self, uzivatel, heslo):
+                schranka.prihlaseni.append((server, port, uzivatel, heslo))
+                if schranka.chyba:
+                    raise schranka.chyba
+
+            def send_message(self, zprava):
+                schranka.odeslane.append(zprava)
+
+        return Spojeni()
+
+
+@pytest.fixture
+def schranka(monkeypatch):
+    s = Schranka()
+    nastaveni = dataclasses.replace(
+        posta.nastaveni,
+        smtp_server="smtp.test",
+        smtp_uzivatel="info@lkkl.cz",
+        smtp_heslo="tajne",
+        email_odpoved="spravce@example.cz",
+    )
+    monkeypatch.setattr(posta, "nastaveni", nastaveni)
+    monkeypatch.setattr(prihlasovani, "nastaveni", nastaveni)
+    monkeypatch.setattr(posta.smtplib, "SMTP", s.smtp)
+    return s

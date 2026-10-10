@@ -1048,9 +1048,12 @@ CREATE TABLE lkkl.email (
     adresa text NOT NULL,
     odeslal_id bigint NOT NULL,
     chyba text,
+    obdobi daterange,
     CONSTRAINT email_adresa_check CHECK ((btrim(adresa) <> ''::text)),
     CONSTRAINT email_chyba_check CHECK ((btrim(chyba) <> ''::text)),
-    CONSTRAINT email_druh_check CHECK ((druh = 'ODKAZ_HESLO'::text))
+    CONSTRAINT email_druh_check CHECK ((druh = ANY (ARRAY['ODKAZ_HESLO'::text, 'EXPORT_LETU'::text]))),
+    CONSTRAINT email_obdobi CHECK (((druh = 'EXPORT_LETU'::text) = (obdobi IS NOT NULL))),
+    CONSTRAINT email_obdobi_neprazdne CHECK ((NOT isempty(obdobi)))
 );
 
 
@@ -1066,6 +1069,13 @@ COMMENT ON TABLE lkkl.email IS 'Odeslané e-maily (bez obsahu): druh, komu (osob
 --
 
 COMMENT ON COLUMN lkkl.email.druh IS 'ODKAZ_HESLO = odkaz pro nastavení hesla.';
+
+
+--
+-- Name: COLUMN email.obdobi; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON COLUMN lkkl.email.obdobi IS 'Exportované dny [od, do) – jen u druhu EXPORT_LETU.';
 
 
 --
@@ -2306,6 +2316,7 @@ CREATE TABLE lkkl.ucet (
     spravuje_osoby boolean DEFAULT false NOT NULL,
     spravuje_letadla boolean DEFAULT false NOT NULL,
     spravuje_vycvik boolean DEFAULT false NOT NULL,
+    smi_exportovat boolean DEFAULT false NOT NULL,
     CONSTRAINT ucet_neuspesne_pokusy_check CHECK ((neuspesne_pokusy >= 0))
 );
 
@@ -2385,6 +2396,13 @@ COMMENT ON COLUMN lkkl.ucet.spravuje_letadla IS 'Smí spravovat letadla (mimo pr
 --
 
 COMMENT ON COLUMN lkkl.ucet.spravuje_vycvik IS 'Smí spravovat osnovy, úlohy a typy přezkoušení (editor výcviku na desktopu); admin vždy.';
+
+
+--
+-- Name: COLUMN ucet.smi_exportovat; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON COLUMN lkkl.ucet.smi_exportovat IS 'Smí si nechat poslat export letů (PDF e-mailem adminům); admin smí vždy.';
 
 
 --
@@ -2977,6 +2995,34 @@ COMMENT ON VIEW lkkl.v_souhrn_dne IS 'Souhrn dne: ukončené lety po druhu provo
 
 
 --
+-- Name: v_souhrn_platce; Type: VIEW; Schema: lkkl; Owner: -
+--
+
+CREATE VIEW lkkl.v_souhrn_platce AS
+ SELECT den,
+    platce_id,
+    plati_aeroklub,
+    platce_jmeno,
+    platce_prijmeni,
+    letadlo_id,
+    rejstrik,
+    je_vlecny,
+    (count(*))::integer AS lety,
+    (sum(pocet_pristani))::integer AS pristani,
+    (sum(doba_uctovana_min))::integer AS minut
+   FROM lkkl.v_let
+  WHERE (stav = 'UKONCEN'::text)
+  GROUP BY den, platce_id, plati_aeroklub, platce_jmeno, platce_prijmeni, letadlo_id, rejstrik, je_vlecny;
+
+
+--
+-- Name: VIEW v_souhrn_platce; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON VIEW lkkl.v_souhrn_platce IS 'Souhrn podle plátce: ukončené lety po dni, plátci (osoba nebo aeroklub) a letadle (vlečná ve vleku zvlášť) – počet letů, přistání a účtovaných minut. Podklad exportu pro účetnictví (docs/modul-export.md).';
+
+
+--
 -- Name: v_ucet; Type: VIEW; Schema: lkkl; Owner: -
 --
 
@@ -2995,7 +3041,8 @@ CREATE VIEW lkkl.v_ucet AS
     u.smi_odblokovat,
     u.spravuje_osoby,
     u.spravuje_letadla,
-    u.spravuje_vycvik
+    u.spravuje_vycvik,
+    u.smi_exportovat
    FROM (lkkl.ucet u
      JOIN lkkl.lov_osoba o ON ((o.id = u.osoba_id)));
 

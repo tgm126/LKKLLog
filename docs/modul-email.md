@@ -45,6 +45,8 @@ CREATE TABLE lkkl.email (
   i odeslaného); v detailu osoby se ukáže poslední e-mail („odkaz e-mailem 9. 10. 12:30“,
   případně „e-mail se nepodařilo odeslat“).
 - **Omezení:** téže osobě nejvýš 1 odeslaný e-mail za 5 minut (dvojklik, opakované mačkání).
+- Od skriptu 047 tabulku sdílí **export letů** (druh `EXPORT_LETU`, sloupec `obdobi`,
+  docs/modul-export.md) – dotazy na odkazy filtrují `druh = 'ODKAZ_HESLO'`.
 
 ## 4. Obrazovka (detail osoby na telefonu, blok Účet a přihlášení)
 Správa osob zůstává **jen na telefonu** (a v úzkém okně) – rozhodnuto 9. 10. 2026.

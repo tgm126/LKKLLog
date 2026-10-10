@@ -123,6 +123,7 @@ export function NabidkaUzivatele({ ja }: { ja: Ja }) {
       [ja.prava.spravuje_osoby, "Osoby", "/osoby"],
       [ja.prava.spravuje_letadla, "Letadla", "/letadla"],
       [deska && ja.prava.spravuje_vycvik, "Výcvik", "/vycvik"],
+      [ja.prava.smi_exportovat, "Export letů", "/export"],
       [ja.prava.admin, "Smazat lety dne…", "/sprava/smazat-lety"],
       [ja.prava.admin, "Nastavení", "/sprava/nastaveni"],
     ] as const

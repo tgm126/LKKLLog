@@ -12,6 +12,7 @@ import { Deska } from "./deska/Deska";
 import { PanelDetailu } from "./deska/PanelDetailu";
 import { PanelNovehoLetu } from "./deska/PanelNovehoLetu";
 import { Detail } from "./lety/Detail";
+import { ExportLetu } from "./export/Export";
 import { Pruvodce } from "./lety/Pruvodce";
 import { Detail as DetailOsoby } from "./osoby/Detail";
 import { NovaOsoba } from "./osoby/Nova";
@@ -73,6 +74,9 @@ export function App() {
         <Route element={<SeZapisem />}>
           <Route path="/muj-provoz/letiste" element={<LetisteProDnesek />} />
           <Route path="/muj-provoz/osoby" element={<OsobyVProvozu />} />
+          <Route element={<SPravem pravo="smi_exportovat" />}>
+            <Route path="/export" element={<ExportLetu />} />
+          </Route>
           <Route element={<JenAdmin />}>
             <Route path="/sprava/smazat-lety" element={<SmazatLetyDne />} />
             <Route path="/sprava/nastaveni" element={<NastaveniSystemu />} />

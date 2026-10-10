@@ -72,6 +72,14 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
   (→ B8). Úloha bez zaškrtnutého účelu se pilotům nenabízí; typ přezkoušení bez examinátora
   je oranžově – doplňte oprávnění osobám.
 
+## A8. Potřebuji lety na papír / do účetnictví
+- S právem *Exportuje lety* (dá ho admin; admin ho má vždy): nabídka uživatele → **Export
+  letů** → **Den** (kalendář, dny s lety tučně) nebo **Měsíc** (posledních 12) → **Poslat**.
+- PDF přijde e-mailem adminům (adresa je vidět před odesláním) – vytisknu, zkontroluji
+  a podepíšu. Obsahuje ukončené lety (časy UTC), souhrn podle letadel a podle plátců.
+- Let ve vzduchu v PDF chybí (e-mail i PDF na něj upozorní) – po přistání pošlu znovu.
+  Opravu letu po odeslání zachytí až další export. Znovu jde poslat nejdřív za minutu.
+
 ---
 
 # B. Ovládání aplikace
@@ -145,7 +153,7 @@ lety**); co se řídí právy, je tady.
 - **Můj provoz · dnes** (jen pro mě, na tomto zařízení, jen dnes): **Letiště** pro dnešek,
   **Osoby v provozu**.
 - **Správa** – jen položky, na které mám právo (B8): Osoby, Letadla, Výcvik (jen na
-  počítači), Smazat lety dne…, Nastavení.
+  počítači), Export letů (A8), Smazat lety dne…, Nastavení.
 - **Režim** zobrazení (podle zařízení / světlý / tmavý).
 
 ## B7. Co aplikace hlídá (a proč se něco nedá uložit)

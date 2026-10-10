@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from psycopg import Connection
 
-from . import db, letadla, lety, muj_provoz, osoby, prihlasovani, sprava, vycvik
+from . import db, export, letadla, lety, muj_provoz, osoby, prihlasovani, sprava, vycvik
 from .model import Model
 from .nastaveni import nastaveni
 
@@ -80,6 +80,7 @@ app.include_router(muj_provoz.router)
 app.include_router(letadla.router)
 app.include_router(sprava.router)
 app.include_router(vycvik.router)
+app.include_router(export.router)
 
 
 class StavServeru(Model):

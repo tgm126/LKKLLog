@@ -1,5 +1,5 @@
-/* Správa: kalendář letů (docs/modul-sprava.md) – měsíc se šipkami nad mřížkou, týden od pondělí,
-   dny s lety tučně s počtem letů, ostatní šedě a nejdou vybrat; dnešek orámovaný. */
+/* Kalendář letů (správa: smazat lety dne, export) – měsíc se šipkami nad mřížkou, týden od
+   pondělí, dny s lety tučně s počtem letů, ostatní šedě a nejdou vybrat; dnešek orámovaný. */
 .kalendar-mesic {
   --tl-min-sirka: var(--dotyk);
   --tl-odsazeni: 0;

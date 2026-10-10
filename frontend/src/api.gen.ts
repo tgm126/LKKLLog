@@ -1004,6 +1004,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Nabidka
+         * @description Dny s ukončenými lety a jejich počet (kalendář exportu) a komu export přijde.
+         */
+        get: operations["nabidka_api_export_get"];
+        put?: never;
+        /**
+         * Exportovat
+         * @description Sestaví PDF a pošle ho každému adminovi, který se smí přihlásit (zatím napevno).
+         */
+        post: operations["exportovat_api_export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -1194,6 +1218,16 @@ export interface components {
             /** @description Typy přezkoušení, které smí provést (v_osoba_prezkouseni). */
             prezkouseni: number[];
         };
+        /** ExportIn */
+        ExportIn: {
+            /** @enum {string} */
+            druh: "DEN" | "MESIC";
+            /**
+             * Format: date
+             * @description Exportovaný den; u měsíce kterýkoli den měsíce.
+             */
+            den: string;
+        };
         /** Funkce */
         Funkce: {
             id: number;
@@ -1297,6 +1331,12 @@ export interface components {
             /** @description Osoby v provozu (filtr nabídky osob v posádce); prázdné = bez filtru. */
             osoby: number[];
         };
+        /** NabidkaExportu */
+        NabidkaExportu: {
+            dny: components["schemas"]["DenSLety"][];
+            /** @description Komu export přijde (admini, kteří se smějí přihlásit). */
+            adresy: string[];
+        };
         /**
          * Nabidky
          * @description Vše pro průvodce novým letem (nabídky z pohledů v_lov_*).
@@ -1376,6 +1416,13 @@ export interface components {
             kod: string;
             nazev: string;
             kategorie_id: number;
+        };
+        /** Odeslano */
+        Odeslano: {
+            /** @description „čtvrtek 9. 10. 2026“ nebo „říjen 2026“. */
+            obdobi: string;
+            lety: number;
+            adresy: string[];
         };
         /** OdeslanyEmail */
         OdeslanyEmail: {
@@ -1550,7 +1597,7 @@ export interface components {
         };
         /**
          * PosledniEmail
-         * @description Poslední e-mail osobě (lkkl.email, db/038); chyba prázdná = odesláno.
+         * @description Poslední odkaz pro heslo e-mailem (lkkl.email, db/038); chyba prázdná = odesláno.
          */
         PosledniEmail: {
             /** Format: date-time */
@@ -1582,6 +1629,8 @@ export interface components {
             spravuje_letadla: boolean;
             /** @default false */
             spravuje_vycvik: boolean;
+            /** @default false */
+            smi_exportovat: boolean;
         };
         /**
          * PrezkouseniNabidky
@@ -1720,6 +1769,8 @@ export interface components {
             spravuje_letadla: boolean;
             /** @default false */
             spravuje_vycvik: boolean;
+            /** @default false */
+            smi_exportovat: boolean;
             osoba_id: number;
             jmeno: string;
             prijmeni: string;
@@ -1744,6 +1795,8 @@ export interface components {
             spravuje_letadla: boolean;
             /** @default false */
             spravuje_vycvik: boolean;
+            /** @default false */
+            smi_exportovat: boolean;
             osoba_id: number;
         };
         /** UcetOsoby */
@@ -1758,6 +1811,8 @@ export interface components {
             spravuje_letadla: boolean;
             /** @default false */
             spravuje_vycvik: boolean;
+            /** @default false */
+            smi_exportovat: boolean;
             /** @description Přihlášení povoleno a osoba platná (v_ucet). */
             smi_se_prihlasit: boolean;
             prihlaseni_povoleno: boolean;
@@ -1772,6 +1827,7 @@ export interface components {
             spravuje_osoby?: boolean | null;
             spravuje_letadla?: boolean | null;
             spravuje_vycvik?: boolean | null;
+            smi_exportovat?: boolean | null;
         };
         /** Uloha */
         Uloha: {
@@ -3677,6 +3733,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Vycvik"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    nabidka_api_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NabidkaExportu"];
+                };
+            };
+        };
+    };
+    exportovat_api_export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Odeslano"];
                 };
             };
             /** @description Validation Error */
