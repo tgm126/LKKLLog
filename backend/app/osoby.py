@@ -11,8 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection, errors
 from pydantic import BaseModel, field_validator
 
+from . import db
 from .db import spojeni
-from .prihlasovani import Prihlaseny, jen_admin_na_admina, spravuje_osoby
+from .prihlasovani import Prava, Prihlaseny, jen_admin_na_admina, spravuje_osoby
 
 router = APIRouter(prefix="/api/osoby")
 
@@ -20,15 +21,10 @@ router = APIRouter(prefix="/api/osoby")
 # --- schémata -------------------------------------------------------------------------------
 
 
-class UcetOsoby(BaseModel):
+class UcetOsoby(Prava):
     smi_se_prihlasit: bool
     """Přihlášení povoleno a osoba platná (v_ucet)."""
     prihlaseni_povoleno: bool
-    admin: bool
-    smi_odblokovat: bool
-    spravuje_osoby: bool
-    spravuje_letadla: bool
-    spravuje_vycvik: bool
     zablokovano: bool
     ma_heslo: bool
 
@@ -176,7 +172,7 @@ LEFT JOIN lkkl.ucet u ON u.osoba_id = o.id
 """
 
 # Čitelné hlášky k omezením lov_osoba (db/004, 017).
-_CHYBY = {
+HLASKY = {
     "lov_osoba_email_check": "Neplatný e-mail.",
     "lov_osoba_telefon_check": "Telefon zadejte s předvolbou, např. +420 602 123 456.",
     "lov_osoba_cislo_clena_check": "Číslo člena smí obsahovat jen číslice.",
@@ -186,12 +182,6 @@ _CHYBY = {
     "lov_osoba_email_jedinecny": "Tento e-mail už má jiná osoba.",
     "lov_osoba_cislo_clena_key": "Toto číslo člena už má jiná osoba.",
 }
-
-
-def _chyba(e: errors.Error) -> HTTPException:
-    if isinstance(e, errors.RaiseException):
-        return HTTPException(400, e.diag.message_primary)
-    return HTTPException(400, _CHYBY.get(e.diag.constraint_name or "", "Údaje nejdou uložit."))
 
 
 def _detail(conn: Connection, osoba_id: int) -> DetailOsoby:
@@ -248,22 +238,19 @@ def osoba(
 def osoba_zalozit(
     data: OsobaIn, _: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
 ):
-    try:
-        with conn.transaction():
-            osoba_id = conn.execute(
-                """INSERT INTO lkkl.lov_osoba (jmeno, prijmeni, email, telefon, cislo_clena, clen)
-                   VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
-                (
-                    data.jmeno or "",
-                    data.prijmeni or "",
-                    data.email or None,
-                    data.telefon,
-                    data.cislo_clena or None,
-                    True if data.clen is None else data.clen,
-                ),
-            ).fetchone()["id"]
-    except (errors.CheckViolation, errors.UniqueViolation, errors.RaiseException) as e:
-        raise _chyba(e) from e
+    with db.transakce(conn, HLASKY):
+        osoba_id = conn.execute(
+            """INSERT INTO lkkl.lov_osoba (jmeno, prijmeni, email, telefon, cislo_clena, clen)
+               VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
+            (
+                data.jmeno or "",
+                data.prijmeni or "",
+                data.email or None,
+                data.telefon,
+                data.cislo_clena or None,
+                True if data.clen is None else data.clen,
+            ),
+        ).fetchone()["id"]
     return _detail(conn, osoba_id)
 
 
@@ -283,16 +270,9 @@ def osoba_zmenit(
     if zmeny.get("platny") is False or "email" in zmeny:  # e-mail = přihlašovací jméno
         jen_admin_na_admina(conn, p, osoba_id)
     if zmeny:
-        sloupce = ", ".join(f"{k} = %({k})s" for k in zmeny)  # jen názvy z OsobaIn
-        try:
-            with conn.transaction():
-                upraveno = conn.execute(
-                    f"UPDATE lkkl.lov_osoba SET {sloupce} WHERE id = %(id)s RETURNING id",  # noqa: S608
-                    {**zmeny, "id": osoba_id},
-                ).fetchone()
-        except (errors.CheckViolation, errors.UniqueViolation, errors.RaiseException) as e:
-            raise _chyba(e) from e
-        if upraveno is None:
+        with db.transakce(conn, HLASKY):
+            upraveno = db.upravit(conn, "lov_osoba", osoba_id, zmeny)  # jen názvy z OsobaIn
+        if not upraveno:
             raise HTTPException(404, "Osoba neexistuje.")
     return _detail(conn, osoba_id)
 

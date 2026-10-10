@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from psycopg import Connection, errors
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
 
-from . import bezpecnost, posta
+from . import bezpecnost, db, posta
 from .db import nastavit_kontext, spojeni
 from .nastaveni import nastaveni
 
@@ -27,13 +27,18 @@ CHYBA_ODKAZU = "Odkaz neplatí nebo vypršel. Požádejte admina o nový."
 
 
 class Prava(BaseModel):
-    """Práva přihlášeného včetně „admin smí vše“ (docs/modul-osoby.md)."""
+    """Práva účtu – jediný seznam v kódu (sloupce `lkkl.ucet`, vstupy i výstupy rozhraní;
+    docs/modul-osoby.md). Admin smí vše; `Ja.prava` to už má započtené."""
 
-    admin: bool
-    smi_odblokovat: bool
-    spravuje_osoby: bool
-    spravuje_letadla: bool
-    spravuje_vycvik: bool
+    admin: bool = False
+    smi_odblokovat: bool = False
+    spravuje_osoby: bool = False
+    spravuje_letadla: bool = False
+    spravuje_vycvik: bool = False
+
+
+PRAVA = tuple(Prava.model_fields)
+SLOUPCE_PRAV = ", ".join(PRAVA)  # do SQL jen pevné názvy z modelu (noqa S608 níže)
 
 
 class OsobaKratce(BaseModel):
@@ -78,32 +83,21 @@ class ZmenitHesloIn(BaseModel):
     nove: str
 
 
-class UcetIn(BaseModel):
+class UcetIn(Prava):
     osoba_id: int
-    admin: bool = False
-    smi_odblokovat: bool = False
-    spravuje_osoby: bool = False
-    spravuje_letadla: bool = False
-    spravuje_vycvik: bool = False
 
 
-class UcetZmenaIn(BaseModel):
-    prihlaseni_povoleno: bool | None = None
-    admin: bool | None = None
-    smi_odblokovat: bool | None = None
-    spravuje_osoby: bool | None = None
-    spravuje_letadla: bool | None = None
-    spravuje_vycvik: bool | None = None
+# Změna účtu: přihlášení a každé právo zvlášť, jen poslané (None = beze změny).
+UcetZmenaIn = create_model(
+    "UcetZmenaIn",
+    prihlaseni_povoleno=(bool | None, None),
+    **{pravo: (bool | None, None) for pravo in PRAVA},
+)
 
 
-class Ucet(OsobaSEmailem):
+class Ucet(OsobaSEmailem, Prava):
     ma_heslo: bool
     smi_se_prihlasit: bool
-    admin: bool
-    smi_odblokovat: bool
-    spravuje_osoby: bool
-    spravuje_letadla: bool
-    spravuje_vycvik: bool
     zalozen: datetime
     pozvanka_odeslana: datetime | None
     posledni_prihlaseni: datetime | None
@@ -131,12 +125,17 @@ class Prihlaseny:
     relace_id: str
     osoba_id: int
     puvodni_osoba_id: int | None
-    admin: bool
-    smi_odblokovat: bool
-    spravuje_osoby: bool
-    spravuje_letadla: bool
-    spravuje_vycvik: bool
+    prava: Prava
+    """Práva z účtu (bez „admin smí vše“); v relaci jen ke čtení všechna vypnutá."""
     jen_cteni: bool
+
+    @property
+    def admin(self) -> bool:
+        return self.prava.admin
+
+    def smi(self, pravo: str) -> bool:
+        """Má právo, nebo je admin."""
+        return self.prava.admin or getattr(self.prava, pravo)
 
 
 JEN_CTENI = "Přihlášeno jen ke čtení – pro změny se odhlaste a přihlaste znovu."
@@ -204,9 +203,9 @@ def prihlaseny(
     if not klic:
         raise HTTPException(401, "Nejste přihlášen.")
     otisk = bezpecnost.otisk_klice(klic)
+    prava_uctu = ", ".join(f"u.{pravo}" for pravo in PRAVA)
     r = conn.execute(
-        """SELECT r.osoba_id, r.puvodni_osoba_id, r.jen_cteni, u.admin, u.smi_odblokovat,
-                  u.spravuje_osoby, u.spravuje_letadla, u.spravuje_vycvik,
+        f"""SELECT r.osoba_id, r.puvodni_osoba_id, r.jen_cteni, {prava_uctu},
                   r.posledni_aktivita < now() - %s AS prodlouzit
            FROM lkkl.relace r
            JOIN lkkl.v_ucet u ON u.osoba_id = r.osoba_id
@@ -214,7 +213,7 @@ def prihlaseny(
            WHERE r.id = %s
              AND r.plati_do > now()
              AND u.smi_se_prihlasit
-             AND (r.puvodni_osoba_id IS NULL OR (p.smi_se_prihlasit AND p.admin))""",
+             AND (r.puvodni_osoba_id IS NULL OR (p.smi_se_prihlasit AND p.admin))""",  # noqa: S608
         (PRODLOUZIT_PO, otisk),
     ).fetchone()
     if r is None:
@@ -239,52 +238,36 @@ def prihlaseny(
         relace_id=otisk,
         osoba_id=r["osoba_id"],
         puvodni_osoba_id=r["puvodni_osoba_id"],
-        admin=r["admin"] and not jen_cteni,
-        smi_odblokovat=r["smi_odblokovat"] and not jen_cteni,
-        spravuje_osoby=r["spravuje_osoby"] and not jen_cteni,
-        spravuje_letadla=r["spravuje_letadla"] and not jen_cteni,
-        spravuje_vycvik=r["spravuje_vycvik"] and not jen_cteni,
+        prava=Prava(**{pravo: r[pravo] and not jen_cteni for pravo in PRAVA}),
         jen_cteni=jen_cteni,
     )
 
 
-def admin(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
-    if not p.admin:
-        raise HTTPException(403, "Na tuto akci nemáte právo.")
-    return p
+def pravo(nazev: str):
+    """Závislost: přihlášený s daným právem (nebo admin), jinak 403."""
+
+    def zavislost(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
+        if not p.smi(nazev):
+            raise HTTPException(403, "Na tuto akci nemáte právo.")
+        return p
+
+    zavislost.__name__ = nazev
+    return zavislost
 
 
-def smi_odblokovat(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
-    if not (p.admin or p.smi_odblokovat):
-        raise HTTPException(403, "Na tuto akci nemáte právo.")
-    return p
-
-
-def spravuje_osoby(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
-    if not (p.admin or p.spravuje_osoby):
-        raise HTTPException(403, "Na tuto akci nemáte právo.")
-    return p
-
-
-def spravuje_letadla(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
-    if not (p.admin or p.spravuje_letadla):
-        raise HTTPException(403, "Na tuto akci nemáte právo.")
-    return p
-
-
-def spravuje_vycvik(p: Prihlaseny = Depends(prihlaseny)) -> Prihlaseny:
-    if not (p.admin or p.spravuje_vycvik):
-        raise HTTPException(403, "Na tuto akci nemáte právo.")
-    return p
+admin = pravo("admin")
+smi_odblokovat = pravo("smi_odblokovat")
+spravuje_osoby = pravo("spravuje_osoby")
+spravuje_letadla = pravo("spravuje_letadla")
+spravuje_vycvik = pravo("spravuje_vycvik")
 
 
 def _ja(
     conn: Connection, osoba_id: int, puvodni_osoba_id: int | None, jen_cteni: bool = False
 ) -> Ja:
     u = conn.execute(
-        """SELECT osoba_id, jmeno, prijmeni, email, admin, smi_odblokovat, spravuje_osoby,
-                  spravuje_letadla, spravuje_vycvik
-           FROM lkkl.v_ucet WHERE osoba_id = %s""",
+        f"""SELECT osoba_id, jmeno, prijmeni, email, {SLOUPCE_PRAV}
+            FROM lkkl.v_ucet WHERE osoba_id = %s""",  # noqa: S608 – pevné názvy sloupců
         (osoba_id,),
     ).fetchone()
     puvodni = None
@@ -299,13 +282,7 @@ def _ja(
         prijmeni=u["prijmeni"],
         email=u["email"],
         # admin má všechna práva; v relaci jen ke čtení žádná
-        prava=Prava(
-            admin=u["admin"] and not jen_cteni,
-            smi_odblokovat=(u["admin"] or u["smi_odblokovat"]) and not jen_cteni,
-            spravuje_osoby=(u["admin"] or u["spravuje_osoby"]) and not jen_cteni,
-            spravuje_letadla=(u["admin"] or u["spravuje_letadla"]) and not jen_cteni,
-            spravuje_vycvik=(u["admin"] or u["spravuje_vycvik"]) and not jen_cteni,
-        ),
+        prava=Prava(**{pravo: (u["admin"] or u[pravo]) and not jen_cteni for pravo in PRAVA}),
         puvodni=OsobaKratce(**puvodni) if puvodni else None,
         jen_cteni=jen_cteni,
     )
@@ -513,18 +490,15 @@ def heslo_zmenit(
 
 # --- účty (admin) ---------------------------------------------------------------------------
 
-_UCET_SQL = """SELECT osoba_id, jmeno, prijmeni, email, ma_heslo, smi_se_prihlasit, admin,
-                      smi_odblokovat, spravuje_osoby, spravuje_letadla, spravuje_vycvik,
-                      zalozen,
-                      pozvanka_odeslana,
-                      posledni_prihlaseni,
+_UCET_SQL = f"""SELECT osoba_id, jmeno, prijmeni, email, ma_heslo, smi_se_prihlasit, {SLOUPCE_PRAV},
+                      zalozen, pozvanka_odeslana, posledni_prihlaseni,
                       coalesce(zablokovano_do > now(), false) AS zablokovano
-               FROM lkkl.v_ucet"""
+               FROM lkkl.v_ucet"""  # noqa: S608 – pevné názvy sloupců
 
 
-def _jen_admin_prava(p: Prihlaseny, *prava: bool | None) -> None:
-    """Práva (admin, smí odblokovat, spravuje osoby, letadla a výcvik) přiděluje jen admin."""
-    if not p.admin and any(prava):
+def _jen_admin_prava(p: Prihlaseny, prava: dict) -> None:
+    """Práva přiděluje (i odebírá) jen admin: poslané právo od správce osob = 403."""
+    if not p.admin and prava:
         raise HTTPException(403, "Práva přiděluje jen admin.")
 
 
@@ -545,71 +519,42 @@ def ucty(_: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spo
 def ucet_zalozit(
     data: UcetIn, p: Prihlaseny = Depends(spravuje_osoby), conn: Connection = Depends(spojeni)
 ):
-    _jen_admin_prava(
-        p,
-        data.admin,
-        data.smi_odblokovat,
-        data.spravuje_osoby,
-        data.spravuje_letadla,
-        data.spravuje_vycvik,
-    )
-    try:
-        with conn.transaction():
-            conn.execute(
-                """INSERT INTO lkkl.ucet
-                       (osoba_id, admin, smi_odblokovat, spravuje_osoby, spravuje_letadla,
-                        spravuje_vycvik)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                (
-                    data.osoba_id,
-                    data.admin,
-                    data.smi_odblokovat,
-                    data.spravuje_osoby,
-                    data.spravuje_letadla,
-                    data.spravuje_vycvik,
-                ),
-            )
-    except errors.ForeignKeyViolation as e:
-        raise HTTPException(404, "Osoba neexistuje.") from e
-    except errors.UniqueViolation as e:
-        raise HTTPException(400, "Osoba už účet má.") from e
-    except errors.RaiseException as e:
-        raise HTTPException(400, e.diag.message_primary) from e
+    prava = data.model_dump(exclude={"osoba_id"})
+    _jen_admin_prava(p, {k: v for k, v in prava.items() if v})
+    hlasky = {
+        errors.ForeignKeyViolation: "Osoba neexistuje.",
+        errors.UniqueViolation: "Osoba už účet má.",
+    }
+    with db.transakce(conn, hlasky):
+        conn.execute(
+            f"""INSERT INTO lkkl.ucet (osoba_id, {SLOUPCE_PRAV})
+                VALUES (%(osoba_id)s, {", ".join(f"%({pravo})s" for pravo in PRAVA)})""",  # noqa: S608
+            data.model_dump(),
+        )
     return conn.execute(_UCET_SQL + " WHERE osoba_id = %s", (data.osoba_id,)).fetchone()
 
 
 @router.post("/ucty/{osoba_id}", response_model=Ucet)
 def ucet_zmenit(
     osoba_id: int,
-    data: UcetZmenaIn,
+    data: UcetZmenaIn,  # type: ignore[valid-type]
     p: Prihlaseny = Depends(spravuje_osoby),
     conn: Connection = Depends(spojeni),
 ):
-    # odebrat právo je také přidělování práv – jen admin
-    prava = (
-        data.admin,
-        data.smi_odblokovat,
-        data.spravuje_osoby,
-        data.spravuje_letadla,
-        data.spravuje_vycvik,
-    )
-    _jen_admin_prava(p, *(v is not None for v in prava))
-    if osoba_id == p.osoba_id and (data.prihlaseni_povoleno is False or data.admin is False):
+    zmeny = data.model_dump(exclude_unset=True, exclude_none=True)
+    _jen_admin_prava(p, {k: v for k, v in zmeny.items() if k in PRAVA})  # i odebrání práva
+    if osoba_id == p.osoba_id and (
+        zmeny.get("prihlaseni_povoleno") is False or zmeny.get("admin") is False
+    ):
         raise HTTPException(400, "Sám sobě nemůžete zablokovat účet ani odebrat admina.")
     jen_admin_na_admina(conn, p, osoba_id)
     with conn.transaction():
+        nastavit = ", ".join(f"{k} = %({k})s" for k in zmeny) or "osoba_id = osoba_id"
         zmeneno = conn.execute(
-            """UPDATE lkkl.ucet
-               SET prihlaseni_povoleno = coalesce(%s, prihlaseni_povoleno),
-                   admin = coalesce(%s, admin),
-                   smi_odblokovat = coalesce(%s, smi_odblokovat),
-                   spravuje_osoby = coalesce(%s, spravuje_osoby),
-                   spravuje_letadla = coalesce(%s, spravuje_letadla),
-                   spravuje_vycvik = coalesce(%s, spravuje_vycvik)
-               WHERE osoba_id = %s RETURNING osoba_id""",
-            (data.prihlaseni_povoleno, *prava, osoba_id),
+            f"UPDATE lkkl.ucet SET {nastavit} WHERE osoba_id = %(osoba_id)s RETURNING osoba_id",  # noqa: S608
+            {**zmeny, "osoba_id": osoba_id},
         ).fetchone()
-        if zmeneno and data.prihlaseni_povoleno is False:
+        if zmeneno and zmeny.get("prihlaseni_povoleno") is False:
             smazat_relace(conn, "osoba_id = %s OR puvodni_osoba_id = %s", (osoba_id, osoba_id))
     if zmeneno is None:
         raise HTTPException(404, "Účet neexistuje.")
