@@ -57,7 +57,14 @@ export function useAkceLetu() {
     onSettled: obnovit,
   });
 
-  const provest = (letId: number, a: Akce) => akce.mutate({ letId, akce: a });
+  const probiha = akce.isPending ? akce.variables : undefined;
+  /** Akce letu se neodešle znovu, dokud běží předchozí (dvojí ťuknutí, T&G a hned PŘISTÁL). */
+  const provest = (letId: number, a: Akce) => {
+    if (probiha?.letId !== letId) akce.mutate({ letId, akce: a });
+  };
+  /** Právě běží tahle akce letu – zešedne jen stisknuté tlačítko, ne všechna tlačítka letu
+   *  (blikala by naráz); ostatní hlídá `provest`. */
+  const bezi = (letId: number, a: Akce) => probiha?.letId === letId && probiha.akce === a;
 
   /** PŘISTÁL; let kratší než minuta se nejdřív zeptá, jestli ho zrušit, nebo počítat. */
   const pristat = (l: LetKPristani) => {
@@ -102,7 +109,7 @@ export function useAkceLetu() {
     provest,
     pristat,
     dialog,
-    probiha: akce.isPending ? akce.variables : undefined,
+    bezi,
     zpet: (letId: number, a: Akce) => zpet.mutate({ letId, akce: a }),
   };
 }

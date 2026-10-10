@@ -26,10 +26,7 @@ const malymi = (text: string) => text.toLocaleLowerCase("cs-CZ");
 /** „Vlastní (motorem)“ → „vlastní“ – v poli pásku jen krátce. */
 const kratce = (text: string) => malymi(text.replace(/\s*\(.*\)\s*/, ""));
 /** Krátké názvy účelů, aby se vešly do pole (jinak název z číselníku). */
-const UCEL_KRATCE: Record<string, string> = {
-  VYCVIK_SOLO: "sólo",
-  PREZKOUSENI: "přezk.",
-};
+const UCEL_KRATCE: Record<string, string> = { VYCVIK_SOLO: "sólo", PREZKOUSENI: "přezk." };
 
 /** Údaje pásku – přehled letů (Pasek), detail letu i rozpracovaný let v průvodci. */
 export type LetPasku = Pick<
@@ -53,12 +50,7 @@ export type LetPasku = Pick<
 > & {
   stav: Stav | "ROZPRACOVANY";
   pob: number | null;
-  posadka: {
-    jmeno: string;
-    prijmeni: string;
-    funkce: string;
-    funkce_kod: string;
-  }[];
+  posadka: { jmeno: string; prijmeni: string; funkce: string; funkce_kod: string }[];
   /** Místa jen tehdy, když nejsou moje letiště (server je u pásků vynechá). */
   misto_vzletu?: string | null;
   misto_pristani?: string | null;
@@ -94,40 +86,26 @@ export function ucelKratce(l: LetPasku) {
 
 /** Způsob vzletu do pole pásku; vlastní (motorem) se nevypisuje. */
 export const zpusobKratce = (l: LetPasku) =>
-  l.zpusob_vzletu_kod && l.zpusob_vzletu_kod !== "VLASTNI"
-    ? kratce(l.zpusob_vzletu)
-    : null;
+  l.zpusob_vzletu_kod && l.zpusob_vzletu_kod !== "VLASTNI" ? kratce(l.zpusob_vzletu) : null;
 
 /** Posádka: každá osoba na vlastním řádku, funkce malým šedým písmem. */
 export function Posadka({ clenove }: { clenove: LetPasku["posadka"] }) {
   return clenove.map((c) => (
     <span key={c.funkce_kod}>
       {c.jmeno} {c.prijmeni}{" "}
-      <span className="funkce">
-        {c.funkce_kod === "PIC" ? "PIC" : malymi(c.funkce)}
-      </span>
+      <span className="funkce">{c.funkce_kod === "PIC" ? "PIC" : malymi(c.funkce)}</span>
     </span>
   ));
 }
 
 /** Štítek na své pozici; bez údaje zůstane pozice prázdná (šířka i výška štítku). */
 const pozice = (text: ReactNode, popis?: string | null) => (
-  <span title={popis ?? undefined}>
-    {text && <Stitek barva="pasek">{text}</Stitek>}
-  </span>
+  <span title={popis ?? undefined}>{text && <Stitek barva="pasek">{text}</Stitek>}</span>
 );
 
 /** Řádek štítků pásku (mobil i desktop): účel · způsob vzletu · POB · úloha (u přezkoušení
  *  jeho typ) v pevných pozicích, vpravo trasa a případně výsledek letu. */
-export function StitkyPasku({
-  let: l,
-  trasa,
-  children,
-}: {
-  let: LetPasku;
-  trasa?: ReactNode;
-  children?: ReactNode;
-}) {
+export function StitkyPasku({ let: l, trasa, children }: { let: LetPasku; trasa?: ReactNode; children?: ReactNode }) {
   return (
     <div className="stitky-pasku">
       {pozice(ucelKratce(l))}
@@ -163,15 +141,11 @@ function CasLetu({ let: l }: { let: LetPasku }) {
     return (
       <>
         <b>{hodinyMinuty(l.cas_vzletu)}</b>
-        <span className="seda">
-          {l.cas_pristani ? hodinyMinuty(l.cas_pristani) : "—:—"}
-        </span>
+        <span className="seda">{l.cas_pristani ? hodinyMinuty(l.cas_pristani) : "—:—"}</span>
       </>
     );
   }
-  return (
-    <span className="male seda">{l.stav === "ZRUSEN" ? "zrušen" : "plán"}</span>
-  );
+  return <span className="male seda">{l.stav === "ZRUSEN" ? "zrušen" : "plán"}</span>;
 }
 
 /** Jedna polovina pásku (u vleku kluzák a vlečná pod sebou): přihrádky a pás údajů. Akce
@@ -191,10 +165,7 @@ export function PolovinaPasku({
   const ukoncen = l.stav === "UKONCEN";
   const kam = trasa(l);
   return (
-    <div
-      className={onClick ? "let-par otevira" : "let-par"}
-      {...jakoTlacitko(onClick, "link")}
-    >
+    <div className={onClick ? "let-par otevira" : "let-par"} {...jakoTlacitko(onClick, "link")}>
       <div className="let-hlava">
         <span className="velke tucne">{l.rejstrik}</span>
         <span className="let-typ">
@@ -228,15 +199,13 @@ export function PolovinaPasku({
 export const tridaPasku = (lety: LetPasku[]) =>
   lety.some((l) => l.varovani)
     ? "problem"
-    : (
-        {
-          VE_VZDUCHU: "vzduch",
-          NAPLANOVAN: "naplanovan",
-          UKONCEN: "ukoncen",
-          ZRUSEN: "zrusen",
-          ROZPRACOVANY: "rozpracovany",
-        } as const
-      )[lety[0]!.stav];
+    : ({
+        VE_VZDUCHU: "vzduch",
+        NAPLANOVAN: "naplanovan",
+        UKONCEN: "ukoncen",
+        ZRUSEN: "zrusen",
+        ROZPRACOVANY: "rozpracovany",
+      } as const)[lety[0]!.stav];
 
 /** Ťuknutí na pásek otevře detail letu. */
 function useOtevrit(letId: number): Klik {
@@ -250,16 +219,15 @@ function Polovina({ let: l }: { let: PasekLetu }) {
 }
 
 /** Řádek akcí pod polovinou pásku (mimo její klikací plochu). */
-const AkcePodPaskem = ({ children }: { children: ReactNode }) => (
-  <div className="let-akce">{children}</div>
-);
+const AkcePodPaskem = ({ children }: { children: ReactNode }) => <div className="let-akce">{children}</div>;
 
-/** Akce z pásku: provést (letId, akce); zaneprázdněn = akce tohoto letu právě běží. */
+/** Akce z pásku: provést (letId, akce); bezi = právě běží tahle akce letu (zešedne jen
+ *  její tlačítko). */
 type AkcePasku = {
   provest: (letId: number, akce: Akce) => void;
   /** PŘISTÁL – u letu kratšího než minuta se nejdřív zeptá. */
   pristat: (l: LetKPristani) => void;
-  zaneprazdnen: boolean;
+  bezi: (letId: number, akce: Akce) => boolean;
 };
 
 /** Let ve vzduchu; vlek jako dvojitý pásek, dokud jsou ve vzduchu kluzák i vlečná
@@ -268,7 +236,7 @@ export function PasekVeVzduchu({
   lety,
   provest,
   pristat,
-  zaneprazdnen,
+  bezi,
 }: { lety: PasekLetu[] } & AkcePasku) {
   const jenCteni = useJenCteni();
   return (
@@ -280,20 +248,11 @@ export function PasekVeVzduchu({
             <AkcePodPaskem>
               {/* T&G jen motorová letadla, TMG a UL, ne vlečná (při vleku nedělá); počet na tlačítku */}
               {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
-                <Tlacitko
-                  varianta="obrys"
-                  disabled={zaneprazdnen}
-                  onClick={() => provest(l.id, "tg")}
-                >
+                <Tlacitko varianta="obrys" disabled={bezi(l.id, "tg")} onClick={() => provest(l.id, "tg")}>
                   T&amp;G <span className="cisla">{l.pocet_tg}</span>
                 </Tlacitko>
               )}
-              <Tlacitko
-                varianta="zelene"
-                hlavni
-                disabled={zaneprazdnen}
-                onClick={() => pristat(l)}
-              >
+              <Tlacitko varianta="zelene" hlavni disabled={bezi(l.id, "pristani")} onClick={() => pristat(l)}>
                 Přistál
               </Tlacitko>
             </AkcePodPaskem>
@@ -305,11 +264,7 @@ export function PasekVeVzduchu({
 }
 
 /** Naplánovaný let; vlek jako dvojitý pásek (kluzák a vlečná startují společně). */
-export function PasekNaplanovany({
-  lety,
-  provest,
-  zaneprazdnen,
-}: { lety: PasekLetu[] } & AkcePasku) {
+export function PasekNaplanovany({ lety, provest, bezi }: { lety: PasekLetu[] } & AkcePasku) {
   const jenCteni = useJenCteni();
   return (
     <div className="let panel-letu naplanovan">
@@ -322,7 +277,7 @@ export function PasekNaplanovany({
           <Tlacitko
             varianta="modre"
             hlavni
-            disabled={zaneprazdnen}
+            disabled={bezi(lety[0]!.id, "vzlet")}
             onClick={() => provest(lety[0]!.id, "vzlet")}
           >
             Vzlet
@@ -356,10 +311,7 @@ function RadekDeniku({ let: l }: { let: PasekLetu }) {
   ).map((c) => `${c.jmeno} ${c.prijmeni}`);
   const doplnek = zrusen ? [l.duvod_zruseni] : podrobnosti(l);
   return (
-    <div
-      className={`denik-radek ${zrusen ? "zrusen" : "ukoncen"}`}
-      {...jakoTlacitko(otevrit, "link")}
-    >
+    <div className={`denik-radek ${zrusen ? "zrusen" : "ukoncen"}`} {...jakoTlacitko(otevrit, "link")}>
       <span className="denik-rejstrik">{l.rejstrik}</span>
       <span className="denik-posadka">
         <span>{prvni}</span>
@@ -367,33 +319,19 @@ function RadekDeniku({ let: l }: { let: PasekLetu }) {
       </span>
       <span className="denik-cas cisla">
         {l.cas_vzletu && <span>{hodinyMinuty(l.cas_vzletu)}</span>}
-        {l.cas_pristani && (
-          <span className="seda">{hodinyMinuty(l.cas_pristani)}</span>
-        )}
+        {l.cas_pristani && <span className="seda">{hodinyMinuty(l.cas_pristani)}</span>}
       </span>
-      <span className="denik-doba cisla">
-        {!zrusen && doba(l.doba_uctovana_min ?? 0)}
-      </span>
-      <span className="denik-pristani cisla">
-        {!zrusen && l.pocet_pristani}
-      </span>
+      <span className="denik-doba cisla">{!zrusen && doba(l.doba_uctovana_min ?? 0)}</span>
+      <span className="denik-pristani cisla">{!zrusen && l.pocet_pristani}</span>
       {doplnek.length > 0 && (
-        <span className="denik-podrobnosti male seda">
-          {doplnek.join(" · ")}
-        </span>
+        <span className="denik-podrobnosti male seda">{doplnek.join(" · ")}</span>
       )}
     </div>
   );
 }
 
 /** Ukončené (nebo zrušené – bez záhlaví) lety jako deník v jedné kartě. */
-export function Denik({
-  lety,
-  zahlavi = true,
-}: {
-  lety: PasekLetu[];
-  zahlavi?: boolean;
-}) {
+export function Denik({ lety, zahlavi = true }: { lety: PasekLetu[]; zahlavi?: boolean }) {
   return (
     <div className="denik karta">
       {zahlavi && (

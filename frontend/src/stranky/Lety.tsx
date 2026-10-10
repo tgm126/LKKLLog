@@ -36,7 +36,7 @@ export function PrehledLetu({
   prazdne: string;
   nahore?: ReactNode;
 }) {
-  const { provest, pristat, dialog, probiha } = useAkceLetu();
+  const { provest, pristat, dialog, bezi } = useAkceLetu();
   const navigate = useNavigate();
   const jenCteni = useJenCteni();
   const dole = (
@@ -66,11 +66,7 @@ export function PrehledLetu({
       </>
     );
   }
-  const akce = (lety: Pasek[]) => ({
-    provest,
-    pristat,
-    zaneprazdnen: lety.some((l) => l.id === probiha?.letId),
-  });
+  const akce = { provest, pristat, bezi };
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
   const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu)));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
@@ -91,14 +87,14 @@ export function PrehledLetu({
       {veVzduchu.length > 0 && (
         <Sekce nadpis={`Ve vzduchu ${veVzduchu.length}`}>
           {veVzduchu.map((d) => (
-            <PasekVeVzduchu key={d[0]!.id} lety={d} {...akce(d)} />
+            <PasekVeVzduchu key={d[0]!.id} lety={d} {...akce} />
           ))}
         </Sekce>
       )}
       {naplanovane.length > 0 && (
         <Sekce nadpis={`Naplánované ${naplanovane.length}`}>
           {naplanovane.map((d) => (
-            <PasekNaplanovany key={d[0]!.id} lety={d} {...akce(d)} />
+            <PasekNaplanovany key={d[0]!.id} lety={d} {...akce} />
           ))}
         </Sekce>
       )}

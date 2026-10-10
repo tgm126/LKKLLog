@@ -456,11 +456,10 @@ function UpravaPoznamky({ puvodni, ulozit }: { puvodni: string; ulozit: (p: stri
 
 /** Akce detailu podle stavu letu (PŘISTÁL, T&G, VZLET, zrušení s důvodem, obnovení). */
 export function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: Nabidky }) {
-  const { provest, pristat, dialog, probiha } = useAkceLetu();
+  const { provest, pristat, dialog, bezi } = useAkceLetu();
   const qc = useQueryClient();
   const oznamit = useOznamit();
   const [rusim, setRusim] = useState(false);
-  const zaneprazdnen = probiha?.letId === l.id;
   const jenCteni = useJenCteni();
 
   const prikaz = useMutation({
@@ -514,17 +513,17 @@ export function AkceDetailu({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
       {l.stav === "VE_VZDUCHU" && (
         <div className="akce-vedle">
           {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
-            <Tlacitko varianta="obrys" disabled={zaneprazdnen} onClick={() => provest(l.id, "tg")}>
+            <Tlacitko varianta="obrys" disabled={bezi(l.id, "tg")} onClick={() => provest(l.id, "tg")}>
               T&amp;G <span className="cisla">{l.tg.length}</span>
             </Tlacitko>
           )}
-          <Tlacitko varianta="zelene" hlavni disabled={zaneprazdnen} onClick={() => pristat(l)}>
+          <Tlacitko varianta="zelene" hlavni disabled={bezi(l.id, "pristani")} onClick={() => pristat(l)}>
             Přistál
           </Tlacitko>
         </div>
       )}
       {l.stav === "NAPLANOVAN" && (
-        <Tlacitko varianta="modre" hlavni disabled={zaneprazdnen} onClick={() => provest(l.id, "vzlet")}>
+        <Tlacitko varianta="modre" hlavni disabled={bezi(l.id, "vzlet")} onClick={() => provest(l.id, "vzlet")}>
           Vzlet
         </Tlacitko>
       )}

@@ -36,7 +36,6 @@ export function Pasky({
     (e) => {
       if (!(e.target as HTMLElement).closest("button")) navigate(`/let/${id}`);
     };
-  const zaneprazdnen = (d: Pasek[]) => d.some((l) => l.id === akce.probiha?.letId);
 
   const skupina = (d: Pasek[], obsah: (l: Pasek, i: number) => ReactNode) => {
     const pasky = d.map((l, i) => (
@@ -72,7 +71,7 @@ export function Pasky({
             {l.kategorie_kod !== "KLUZAK" && !l.je_vlecny && (
               <Tlacitko
                 varianta="obrys"
-                disabled={zaneprazdnen(d)}
+                disabled={akce.bezi(l.id, "tg")}
                 onClick={() => akce.provest(l.id, "tg")}
               >
                 T&amp;G <span className="cisla">{l.pocet_tg}</span>
@@ -81,7 +80,7 @@ export function Pasky({
             <Tlacitko
               varianta="zelene"
               hlavni
-              disabled={zaneprazdnen(d)}
+              disabled={akce.bezi(l.id, "pristani")}
               onClick={() => akce.pristat(l)}
             >
               Přistál
@@ -101,7 +100,7 @@ export function Pasky({
             <Tlacitko
               varianta="modre"
               hlavni
-              disabled={zaneprazdnen(d)}
+              disabled={akce.bezi(l.id, "vzlet")}
               onClick={() => akce.provest(l.id, "vzlet")}
             >
               Vzlet
