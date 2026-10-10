@@ -2995,34 +2995,6 @@ COMMENT ON VIEW lkkl.v_souhrn_dne IS 'Souhrn dne: ukončené lety po druhu provo
 
 
 --
--- Name: v_souhrn_platce; Type: VIEW; Schema: lkkl; Owner: -
---
-
-CREATE VIEW lkkl.v_souhrn_platce AS
- SELECT den,
-    platce_id,
-    plati_aeroklub,
-    platce_jmeno,
-    platce_prijmeni,
-    letadlo_id,
-    rejstrik,
-    je_vlecny,
-    (count(*))::integer AS lety,
-    (sum(pocet_pristani))::integer AS pristani,
-    (sum(doba_uctovana_min))::integer AS minut
-   FROM lkkl.v_let
-  WHERE (stav = 'UKONCEN'::text)
-  GROUP BY den, platce_id, plati_aeroklub, platce_jmeno, platce_prijmeni, letadlo_id, rejstrik, je_vlecny;
-
-
---
--- Name: VIEW v_souhrn_platce; Type: COMMENT; Schema: lkkl; Owner: -
---
-
-COMMENT ON VIEW lkkl.v_souhrn_platce IS 'Souhrn podle plátce: ukončené lety po dni, plátci (osoba nebo aeroklub) a letadle (vlečná ve vleku zvlášť) – počet letů, přistání a účtovaných minut. Podklad exportu pro účetnictví (docs/modul-export.md).';
-
-
---
 -- Name: v_ucet; Type: VIEW; Schema: lkkl; Owner: -
 --
 

@@ -17,7 +17,6 @@ from .export_pdf import (
     Let,
     Podklad,
     SouhrnLetadla,
-    SouhrnPlatce,
     nazev_dne,
     nazev_mesice,
     pocet_letu,
@@ -67,8 +66,9 @@ def _jmeno(prijmeni: str | None, jmeno: str | None) -> str:
 
 _LETY_SQL = """
 SELECT l.den, l.cas_vzletu, l.cas_pristani, l.rejstrik, l.typ, l.soukrome,
-       l.pic_prijmeni, l.pic_jmeno, l.ucel, l.je_vlecny, l.vlecny_let_id, l.zpusob_vzletu,
-       l.misto_vzletu, l.misto_pristani, l.doba_min, l.pocet_pristani, l.pob,
+       l.pic_prijmeni, l.pic_jmeno, l.ucel, l.ucel_kod, l.je_vlecny, l.zpusob_vzletu,
+       l.zpusob_vzletu_kod,
+       l.misto_vzletu, l.misto_pristani, l.doba_min, l.pocet_pristani,
        l.plati_aeroklub, l.platce_prijmeni, l.platce_jmeno, l.poznamka, l.dodatecne,
        l.uloha_oznaceni, l.prezkouseni_kod,
        kluzak.rejstrik AS kluzak, vlecna.rejstrik AS vlecna,
@@ -84,16 +84,24 @@ LEFT JOIN lkkl.lov_letadlo kluzak ON kluzak.id = k.letadlo_id
 LEFT JOIN lkkl.let v            ON v.id = l.vlecny_let_id
 LEFT JOIN lkkl.lov_letadlo vlecna ON vlecna.id = v.letadlo_id
 WHERE l.stav = 'UKONCEN' AND l.den >= %(od)s AND l.den < %(do)s
-ORDER BY l.cas_vzletu, l.je_vlecny, l.id
+ORDER BY l.den, l.rejstrik, l.cas_vzletu, l.id
 """
 
 
 def _let(r: dict) -> Let:
+    oznaceni = r["uloha_oznaceni"] or r["prezkouseni_kod"] or ""
     if r["je_vlecny"]:
         ucel = f"Vlek {r['kluzak']}"
+    elif r["ucel_kod"] == "NORMALNI":
+        ucel = oznaceni  # účel Normální se nevypisuje
     else:
-        oznaceni = r["uloha_oznaceni"] or r["prezkouseni_kod"]
-        ucel = f"{r['ucel']} {oznaceni}" if oznaceni else r["ucel"]
+        ucel = f"{r['ucel']} {oznaceni}".strip()
+    if r["vlecna"]:
+        zpusob = f"Aerovlek {r['vlecna']}"
+    elif r["zpusob_vzletu_kod"] == "VLASTNI":
+        zpusob = ""  # vlastní vzlet se nevypisuje
+    else:
+        zpusob = r["zpusob_vzletu"]
     return Let(
         den=r["den"],
         vzlet=r["cas_vzletu"].astimezone(UTC),
@@ -103,12 +111,11 @@ def _let(r: dict) -> Let:
         pic=_jmeno(r["pic_prijmeni"], r["pic_jmeno"]),
         posadka=r["posadka"] or "",
         ucel=ucel,
-        zpusob=f"Aerovlek {r['vlecna']}" if r["vlecna"] else r["zpusob_vzletu"],
+        zpusob=zpusob,
         odkud=r["misto_vzletu"] or "",
         kam=r["misto_pristani"] or "",
         doba_min=r["doba_min"],
         pocet_pristani=r["pocet_pristani"] or 0,
-        pob=r["pob"] or 0,
         hradi="aeroklub"
         if r["plati_aeroklub"]
         else _jmeno(r["platce_prijmeni"], r["platce_jmeno"]),
@@ -120,8 +127,8 @@ def _let(r: dict) -> Let:
 
 def podklad(
     conn: Connection, od: date, do: date
-) -> tuple[list[Let], list[SouhrnLetadla], list[SouhrnPlatce], list[str]]:
-    """Data exportu: lety, souhrn podle letadel, podle plátců a popisy letů ve vzduchu."""
+) -> tuple[list[Let], list[SouhrnLetadla], list[str]]:
+    """Data exportu: lety (po dnech a letadlech), souhrn podle letadel a lety ve vzduchu."""
     parametry = {"od": od, "do": do}
     lety = [_let(r) for r in conn.execute(_LETY_SQL, parametry).fetchall()]
     letadla = [
@@ -146,28 +153,6 @@ def podklad(
             parametry,
         ).fetchall()
     ]
-    platci = [
-        SouhrnPlatce(
-            platce="aeroklub"
-            if r["plati_aeroklub"]
-            else _jmeno(r["platce_prijmeni"], r["platce_jmeno"]),
-            letadlo=r["rejstrik"] + (" ve vleku" if r["je_vlecny"] else ""),
-            lety=r["lety"],
-            minut=r["minut"] or 0,
-            klic=r["platce_id"],
-        )
-        for r in conn.execute(
-            """SELECT plati_aeroklub, platce_id, platce_prijmeni, platce_jmeno, rejstrik,
-                      je_vlecny, sum(lety)::int AS lety, sum(minut)::int AS minut
-               FROM lkkl.v_souhrn_platce
-               WHERE den >= %(od)s AND den < %(do)s
-               GROUP BY plati_aeroklub, platce_id, platce_prijmeni, platce_jmeno, rejstrik,
-                        je_vlecny
-               ORDER BY plati_aeroklub, platce_prijmeni, platce_jmeno, platce_id,
-                        je_vlecny, rejstrik""",
-            parametry,
-        ).fetchall()
-    ]
     neukoncene = [
         f"{r['rejstrik']}, vzlet {_den_cas(r['cas_vzletu'])}"
         for r in conn.execute(
@@ -177,7 +162,7 @@ def podklad(
             parametry,
         ).fetchall()
     ]
-    return lety, letadla, platci, neukoncene
+    return lety, letadla, neukoncene
 
 
 def _den_cas(cas: datetime) -> str:
@@ -222,7 +207,7 @@ def exportovat(
         (p.osoba_id,),
     ).fetchone():
         raise HTTPException(429, "Export byl odeslán před chvílí – další jde poslat za minutu.")
-    lety, letadla, platci, neukoncene = podklad(conn, od, do)
+    lety, letadla, neukoncene = podklad(conn, od, do)
     if not lety:
         raise HTTPException(400, f"Za období {nazev} nejsou žádné ukončené lety.")
     admini = conn.execute(_ADMINI_SQL).fetchall()
@@ -238,7 +223,6 @@ def exportovat(
             mesicni=data.druh == "MESIC",
             lety=lety,
             letadla=letadla,
-            platci=platci,
             neukoncene=neukoncene,
             vytvoreno=datetime.now(UTC),
             vytvoril=kdo,

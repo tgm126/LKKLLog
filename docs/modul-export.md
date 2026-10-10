@@ -1,7 +1,7 @@
 # Modul: export záznamů o letech (PDF e-mailem)
 
 Zadání 10. 10. 2026, odsouhlaseno 10. 10. 2026 (rozhodnutí v kap. 9), realizace skriptem
-`db/047_export.sql`.
+`db/047_export.sql`; úprava podoby PDF 10. 10. 2026 (kap. 3, skript 048).
 
 Zadání: osoby, které lety archivují na papíře a přepisují do účetního programu, si nechají
 poslat **denní** nebo **měsíční** přehled letů jako **PDF v příloze e-mailu**. Adresát je
@@ -35,24 +35,27 @@ COMMENT ON COLUMN lkkl.ucet.smi_exportovat IS
 měsíc „říjen 2026“ · časy UTC · strana 1/3. **Patička:** vytvořeno 10. 10. 2026 13:20 UTC,
 kdo (jméno), verze aplikace.
 
-**Tabulka letů** (seřazeno podle vzletu; u měsíce po dnech s mezisoučtem dne):
+**Tabulka letů** (mřížka, písmo 6 pt, text v buňkách zarovnaný nahoru). Lety jsou
+**seskupené podle letadla** (řádek skupiny: letadlo, typ, počet letů, doba; soukromé
+označené), ve skupině podle vzletu; skupiny podle rejstříku. U měsíce nejdřív nadpis dne
+(počet letů, doba), v něm skupiny letadel. Pořadové číslo průběžné za celé PDF.
 
-| č. | Letadlo | Typ | PIC | Další posádka | Účel / úloha | Vzlet (způsob) | Odkud | Kam | Vzlet | Přistání | Doba | Přist. | POB | Hradí | Poznámka |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| č. | Letadlo | Typ | PIC | Další posádka | Hradí | Účel / úloha | Vzlet (způsob) | Odkud | Kam | Vzlet | Přistání | Doba | Počet | Poznámka |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
-- Další posádka s funkcí („žák: Novák J.“, „dozor: …“, „přezkoušený: …“).
-- Účel / úloha: „Výcvik IU/4“, „Přezkoušení PC-SEP“, vlečný let „Vlek → OK-1234“.
-- Vzlet (způsob): naviják / vlastní / „aerovlek OK-ABC“. Kluzák a jeho vlečná jdou
-  v tabulce **pod sebou** (stejný čas vzletu).
-- Hradí: jméno plátce, nebo „aeroklub“. Soukromé letadlo je označené štítkem „soukromé“.
-- Dodatečně zapsaný let je označený („dopsáno“).
+- Další posádka s funkcí („Pilot ve výcviku: Novák J.“, „Dozor: …“, …).
+- Účel / úloha: „Výcvik IU/4“, „Přezkoušení PC-SEP“, vlečný let „Vlek OK-1234“; účel
+  **Normální se nevypisuje** (jen případná úloha).
+- Vzlet (způsob): naviják / „Aerovlek OK-ABC“; **vlastní se nevypisuje**.
+- Počet = počet přistání. POB se nevypisuje.
+- Hradí: jméno plátce, nebo „aeroklub“.
+- Poznámka: štítky „soukromé“ (soukromé letadlo), „dopsáno“ (dodatečně zapsaný let)
+  a text poznámky.
 
-**Souhrny** (za tabulkou):
-1. **Podle letadel** – z `v_souhrn_dne`: lety, přistání, minuty (h:mm), navijáky; vlečná ve
-   vleku zvlášť; plachtařský a motorový provoz zvlášť s mezisoučty.
-2. **Podle plátců** – osoba / aeroklub: počet letů, minuty po letadlech (podklad
-   pro účetnictví). Nový pohled `v_souhrn_platce` (den, plátce, letadlo, lety, minuty,
-   přistání) – ze stejných pravidel jako `v_souhrn_dne`.
+**Souhrn podle letadel** (za tabulkou) – z `v_souhrn_dne`: lety, přistání, minuty (h:mm),
+navijáky; vlečná ve vleku zvlášť; plachtařský a motorový provoz zvlášť s mezisoučty.
+Souhrn podle plátců se nedělá (zrušen 10. 10. 2026, skript 048 smazal pohled
+`v_souhrn_platce`).
 
 Na konci řádek pro podpis „Zkontroloval: … dne …“.
 

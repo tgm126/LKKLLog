@@ -19,23 +19,24 @@ DRUH_PROVOZU = {"PLACHTARSKY": "Plachtařský provoz", "MOTOROVY": "Motorový pr
 
 # Sloupce tabulky letů: (záhlaví, poměrná šířka, zarovnání)
 SLOUPCE = (
-    ("č.", 6, "R"),
-    ("Letadlo", 16, "L"),
+    ("č.", 5, "R"),
+    ("Letadlo", 13, "L"),
     ("Typ", 15, "L"),
-    ("PIC", 25, "L"),
-    ("Další posádka", 33, "L"),
-    ("Účel / úloha", 28, "L"),
-    ("Vzlet (způsob)", 22, "L"),
-    ("Odkud", 13, "L"),
-    ("Kam", 13, "L"),
-    ("Vzlet", 10, "C"),
-    ("Přist.", 10, "C"),
-    ("Doba", 10, "R"),
-    ("Přist. č.", 9, "R"),
-    ("POB", 8, "R"),
-    ("Hradí", 26, "L"),
-    ("Poznámka", 28, "L"),
+    ("PIC", 22, "L"),
+    ("Další posádka", 32, "L"),
+    ("Hradí", 22, "L"),
+    ("Účel / úloha", 24, "L"),
+    ("Vzlet (způsob)", 18, "L"),
+    ("Odkud", 11, "L"),
+    ("Kam", 11, "L"),
+    ("Vzlet", 8, "C"),
+    ("Přistání", 11, "C"),
+    ("Doba", 8, "R"),
+    ("Počet", 8, "R"),
+    ("Poznámka", 32, "L"),
 )
+PISMO = 6
+"""Velikost písma tabulek (pt)."""
 SEDA = (225, 225, 225)
 SVETLE_SEDA = (242, 242, 242)
 
@@ -56,7 +57,6 @@ class Let:
     kam: str
     doba_min: int
     pocet_pristani: int
-    pob: int
     hradi: str
     poznamka: str
     soukrome: bool
@@ -74,23 +74,12 @@ class SouhrnLetadla:
 
 
 @dataclass
-class SouhrnPlatce:
-    platce: str
-    letadlo: str
-    lety: int
-    minut: int
-    klic: object = None
-    """Kdo platí (id osoby, None = aeroklub) – dva lidé se stejným jménem se nesloučí."""
-
-
-@dataclass
 class Podklad:
     nazev_obdobi: str
     """„čtvrtek 9. 10. 2026“ nebo „říjen 2026“."""
     mesicni: bool
     lety: list[Let]
     letadla: list[SouhrnLetadla]
-    platci: list[SouhrnPlatce]
     neukoncene: list[str] = field(default_factory=list)
     """Popisy letů ve vzduchu („OK-1234, vzlet 9. 10. 14:02“)."""
     vytvoreno: datetime = field(default_factory=datetime.now)
@@ -155,58 +144,88 @@ class _Pdf(FPDF):
 def _nadpis(pdf: _Pdf, text: str, velikost: int = 10) -> None:
     pdf.set_font("DejaVu", "B", velikost)
     pdf.cell(0, 6, text, new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("DejaVu", "", 7)
+    pdf.set_font("DejaVu", "", PISMO)
 
 
-def _tabulka(pdf: _Pdf, zahlavi, sirky, zarovnani, radky, souctove=()) -> None:
-    """Tabulka s opakovaným záhlavím; řádky s indexem v `souctove` tučně a podbarvené."""
+@dataclass
+class Skupina:
+    """Řádek skupiny přes celou šířku tabulky (letadlo)."""
+
+    text: str
+
+
+def _tabulka(pdf: _Pdf, zahlavi, sirky, zarovnani, radky, souctove=(), roztazena=False) -> None:
+    """Mřížka s opakovaným záhlavím, text v buňkách nahoře; řádky s indexem v `souctove`
+    tučně a podbarvené, `Skupina` přes celou šířku."""
+    pdf.set_font("DejaVu", "", PISMO)
+    pdf.set_draw_color(120, 120, 120)
     with pdf.table(
         col_widths=sirky,
         text_align=zarovnani,
-        line_height=3.6,
-        padding=0.8,
+        v_align="TOP",
+        line_height=2.8,
+        padding=0.7,
         headings_style=FontFace(emphasis="BOLD", fill_color=SEDA),
-        borders_layout="SINGLE_TOP_LINE",
+        borders_layout="ALL",
         repeat_headings=1,
-        width=sum(sirky) if sum(sirky) < pdf.epw else pdf.epw,
+        width=pdf.epw if roztazena else min(sum(sirky), pdf.epw),
         align="L",
     ) as t:
         t.row(zahlavi)
+        tucne = FontFace(emphasis="BOLD", fill_color=SVETLE_SEDA)
         for i, radek in enumerate(radky):
-            styl = FontFace(emphasis="BOLD", fill_color=SVETLE_SEDA) if i in souctove else None
-            t.row([str(h) for h in radek], style=styl)
+            if isinstance(radek, Skupina):
+                t.row().cell(radek.text, colspan=len(sirky), align="L", style=tucne)
+            else:
+                t.row([str(h) for h in radek], style=tucne if i in souctove else None)
     pdf.ln(3)
 
 
 def _lety(pdf: _Pdf, lety: list[Let], cislo_od: int) -> None:
-    radky = []
-    for i, let_ in enumerate(lety, start=cislo_od):
-        stitky = [s for s, ano in (("soukromé", let_.soukrome), ("dopsáno", let_.dodatecne)) if ano]
-        poznamka = " · ".join([*stitky, let_.poznamka] if let_.poznamka else stitky)
-        radky.append((
-            i,
-            let_.rejstrik,
-            let_.typ,
-            let_.pic,
-            let_.posadka,
-            let_.ucel,
-            let_.zpusob,
-            let_.odkud,
-            let_.kam,
-            f"{let_.vzlet:%H:%M}",
-            f"{let_.pristani:%H:%M}",
-            doba(let_.doba_min),
-            let_.pocet_pristani,
-            let_.pob,
-            let_.hradi,
-            poznamka,
-        ))  # fmt: skip
+    """Lety seskupené podle letadla (vstup seřazený podle letadla a vzletu)."""
+    radky: list = []
+    letadla = list(dict.fromkeys(let_.rejstrik for let_ in lety))
+    cislo = cislo_od
+    for rejstrik in letadla:
+        skupina = [let_ for let_ in lety if let_.rejstrik == rejstrik]
+        prvni = skupina[0]
+        soukrome = " (soukromé)" if prvni.soukrome else ""
+        minut = sum(let_.doba_min for let_ in skupina)
+        radky.append(
+            Skupina(
+                f"{rejstrik} · {prvni.typ}{soukrome} – {pocet_letu(len(skupina))}, {doba(minut)}"
+            )
+        )
+        for let_ in skupina:
+            stitky = [
+                s for s, ano in (("soukromé", let_.soukrome), ("dopsáno", let_.dodatecne)) if ano
+            ]
+            poznamka = " · ".join([*stitky, let_.poznamka] if let_.poznamka else stitky)
+            radky.append((
+                cislo,
+                let_.rejstrik,
+                let_.typ,
+                let_.pic,
+                let_.posadka,
+                let_.hradi,
+                let_.ucel,
+                let_.zpusob,
+                let_.odkud,
+                let_.kam,
+                f"{let_.vzlet:%H:%M}",
+                f"{let_.pristani:%H:%M}",
+                doba(let_.doba_min),
+                let_.pocet_pristani,
+                poznamka,
+            ))  # fmt: skip
+            cislo += 1
     _tabulka(
         pdf,
         [s[0] for s in SLOUPCE],
         [s[1] for s in SLOUPCE],
         [s[2] for s in SLOUPCE],
         radky,
+        roztazena=True,
     )
 
 
@@ -235,29 +254,6 @@ def _souhrn_letadel(pdf: _Pdf, souhrn: list[SouhrnLetadla]) -> None:
     )
 
 
-def _souhrn_platcu(pdf: _Pdf, souhrn: list[SouhrnPlatce]) -> None:
-    _nadpis(pdf, "Souhrn podle plátců")
-    radky, souctove = [], []
-    platci = list(dict.fromkeys((s.klic, s.platce) for s in souhrn))
-    for klic, platce in platci:
-        cast = [s for s in souhrn if (s.klic, s.platce) == (klic, platce)]
-        for s in cast:
-            radky.append((platce, s.letadlo, s.lety, doba(s.minut)))
-        if len(cast) > 1:
-            souctove.append(len(radky))
-            radky.append((
-                f"{platce} celkem", "", sum(s.lety for s in cast), doba(sum(s.minut for s in cast))
-            ))  # fmt: skip
-    _tabulka(
-        pdf,
-        ["Hradí", "Letadlo", "Lety", "Doba"],
-        (55, 45, 15, 18),
-        ("L", "L", "R", "R"),
-        radky,
-        souctove,
-    )
-
-
 def sazba(podklad: Podklad) -> bytes:
     pdf = _Pdf(podklad)
     pdf.add_page()
@@ -278,7 +274,6 @@ def sazba(podklad: Podklad) -> bytes:
         )  # fmt: skip
         pdf.set_text_color(0, 0, 0)
     pdf.ln(2)
-    pdf.set_font("DejaVu", "", 7)
 
     if podklad.mesicni:
         dny = list(dict.fromkeys(let_.den for let_ in podklad.lety))
@@ -293,7 +288,6 @@ def sazba(podklad: Podklad) -> bytes:
         _lety(pdf, podklad.lety, 1)
 
     _souhrn_letadel(pdf, podklad.letadla)
-    _souhrn_platcu(pdf, podklad.platci)
 
     if pdf.will_page_break(20):
         pdf.add_page()

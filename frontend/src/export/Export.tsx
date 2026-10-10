@@ -78,7 +78,7 @@ function Vyber({ nabidka }: { nabidka: NabidkaExportu }) {
         </Blok>
       )}
       <p className="male seda">
-        Do PDF jdou ukončené lety (časy UTC) a souhrny podle letadel a plátců; přijde e-mailem na{" "}
+        Do PDF jdou ukončené lety po letadlech (časy UTC) a souhrn podle letadel; přijde e-mailem na{" "}
         {adresy || "– (žádný admin se nesmí přihlásit)"}. Den letu je datum vzletu.
       </p>
       {vybrane && (

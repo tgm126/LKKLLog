@@ -76,7 +76,7 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 - S právem *Exportuje lety* (dá ho admin; admin ho má vždy): nabídka uživatele → **Export
   letů** → **Den** (kalendář, dny s lety tučně) nebo **Měsíc** (posledních 12) → **Poslat**.
 - PDF přijde e-mailem adminům (adresa je vidět před odesláním) – vytisknu, zkontroluji
-  a podepíšu. Obsahuje ukončené lety (časy UTC), souhrn podle letadel a podle plátců.
+  a podepíšu. Obsahuje ukončené lety po letadlech (časy UTC) a souhrn podle letadel.
 - Let ve vzduchu v PDF chybí (e-mail i PDF na něj upozorní) – po přistání pošlu znovu.
   Opravu letu po odeslání zachytí až další export. Znovu jde poslat nejdřív za minutu.
 

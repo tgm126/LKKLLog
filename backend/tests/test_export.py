@@ -79,17 +79,20 @@ def test_export_dne(conn, provoz, exportujici, schranka):
         "Aerovlek OK-CRA",  # kluzák: způsob vzletu s vlečnou
         "Vlek OK-3819",  # vlečná: koho vlekla
         "Pilot ve výcviku: Zak Jan",  # další posádka
-        "Zak Jan soukromé · dopsáno · termika",  # hradí, štítky a poznámka
+        "Zak Jan Výcvik",  # hradí, účel
+        "soukromé · dopsáno · termika",  # štítky a poznámka
         "Pozor: 1 let není ukončený",
         "Souhrn podle letadel",
         "OK-2817 (soukromé)",
         "Plachtařský provoz celkem 3 3 0:48 1",
-        "Souhrn podle plátců",
-        "aeroklub celkem 2 0:38",
         "Zkontroloval",
     ):
         assert "".join(ocekavane.split()) in text, ocekavane
-    assert text.index("AerovlekOK-CRA") < text.index("VlekOK-3819")  # dvojice pod sebou
+    # skupiny podle letadla (podle rejstříku); Normální, vlastní vzlet a POB se nevypisují
+    assert text.index("OK-2817·") < text.index("OK-3819·") < text.index("OK-CRA·")
+    assert "OK-CRA·" in text and "1let" in text
+    for chybi in ("Normální", "Vlastní", "POB", "plátců"):
+        assert chybi not in text, chybi
 
     zaznam = conn.execute(
         """SELECT adresa, druh, chyba, lower(obdobi) AS od, upper(obdobi) - lower(obdobi) AS dni
