@@ -3,7 +3,7 @@
 # Frontend se sestaví zvlášť (Node je potřeba jen pro sestavení, do výsledného image nejde).
 FROM node:24-slim AS frontend
 WORKDIR /frontend
-COPY frontend/package.json frontend/package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./
 RUN npm ci
 COPY frontend/ ./
 RUN npm run build
