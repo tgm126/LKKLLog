@@ -39,14 +39,15 @@
   white-space: nowrap;
 }
 
-.let-typ {
+/* Typ letadla (mobil i deska): malým šedým, „vlečná“ v barvě textu */
+.typ-letadla {
   overflow: hidden;
   font-size: var(--pismo-s);
   color: var(--barva-seda);
   text-overflow: ellipsis;
 }
 
-.let-typ b {
+.typ-letadla b {
   color: var(--barva-text);
 }
 
@@ -72,7 +73,8 @@
   white-space: nowrap;
 }
 
-.let-stopky {
+/* Stopky letu ve vzduchu (mobil i deska) */
+.stopky-pasku {
   font-size: var(--pismo-l);
   font-weight: var(--tloustka-tucna);
 }
@@ -118,13 +120,17 @@
   font-weight: var(--tloustka);
 }
 
-.let-varovani {
-  grid-area: varovani;
+/* Varování pod páskem (mobil i deska); kde leží v mřížce, určuje pásek */
+.varovani-pasku {
   padding: var(--mezera-1) var(--mezera-3);
   border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
   color: var(--barva-cervena);
   font-size: var(--pismo-s);
   font-weight: var(--tloustka-tucna);
+}
+
+.let-par > .varovani-pasku {
+  grid-area: varovani;
 }
 
 /* Akce pod polovinou pásku (mimo klikací plochu): T&G a PŘISTÁL v řádku (PŘISTÁL širší),

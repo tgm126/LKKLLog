@@ -124,18 +124,64 @@ export function StitkyPasku({ let: l, trasa, children }: { let: LetPasku; trasa?
   );
 }
 
-/** Přihrádka času vpravo podle stavu: stopky a vzlet / vzlet nad přistáním / plán. */
-function CasLetu({ let: l }: { let: LetPasku }) {
+// --- přihrádky společné pro mobil i desku: obsah jednou, rozložení určuje pásek -------------
+
+/** Rejstřík a „typ · vlečná“ (mobil vedle sebe, deska pod sebou). */
+export function Letadlo({ let: l }: { let: LetPasku }) {
+  return (
+    <>
+      <span className="velke tucne">{l.rejstrik}</span>
+      <span className="typ-letadla">
+        {l.typ}
+        {l.je_vlecny && (
+          <>
+            {" · "}
+            <b>vlečná</b>
+          </>
+        )}
+      </span>
+    </>
+  );
+}
+
+/** Přihrádka času podle stavu. Ve vzduchu stopky a vzlet. Jinak mobil: vzlet nad přistáním
+ *  (doba je v řádku štítků) / plán; deska: vzlet–přistání a doba / plán a kdy založen /
+ *  nový let. */
+export function CasLetu({ let: l, deska = false }: { let: LetPasku; deska?: boolean }) {
   const ted = useTik();
   if (l.stav === "VE_VZDUCHU" && l.cas_vzletu) {
     return (
       <>
-        <span className="let-stopky">{stopky(l.cas_vzletu, ted)}</span>
+        <span className="stopky-pasku">{stopky(l.cas_vzletu, ted)}</span>
         <span className="male seda">
           <Sipka smer="vzlet" /> {hodinyMinuty(l.cas_vzletu)}
         </span>
       </>
     );
+  }
+  if (deska) {
+    if (l.stav === "UKONCEN" && l.cas_vzletu && l.cas_pristani) {
+      return (
+        <>
+          <span>
+            {hodinyMinuty(l.cas_vzletu)}–{hodinyMinuty(l.cas_pristani)}
+          </span>
+          <span>
+            <b>{doba(l.doba_uctovana_min ?? 0)}</b>{" "}
+            <span className="male seda">{l.pocet_pristani}×</span>
+          </span>
+        </>
+      );
+    }
+    if (l.stav === "NAPLANOVAN") {
+      return (
+        <>
+          <span className="male seda">plán</span>
+          {l.zalozeno && <span className="male seda">zal. {hodinyMinuty(l.zalozeno)}</span>}
+        </>
+      );
+    }
+    return <span className="male seda">{l.stav === "ZRUSEN" ? "zrušen" : "nový let"}</span>;
   }
   if (l.cas_vzletu) {
     return (
@@ -147,6 +193,10 @@ function CasLetu({ let: l }: { let: LetPasku }) {
   }
   return <span className="male seda">{l.stav === "ZRUSEN" ? "zrušen" : "plán"}</span>;
 }
+
+/** Varování pod páskem (červeně přes celou šířku). */
+export const Varovani = ({ let: l }: { let: LetPasku }) =>
+  l.varovani ? <div className="varovani-pasku">{l.varovani}</div> : null;
 
 /** Jedna polovina pásku (u vleku kluzák a vlečná pod sebou): přihrádky a pás údajů. Akce
  *  (VZLET, PŘISTÁL, T&G) jsou až pod ní v `AkcePodPaskem`, ne uvnitř klikací plochy: telefon
@@ -167,16 +217,7 @@ export function PolovinaPasku({
   return (
     <div className={onClick ? "let-par otevira" : "let-par"} {...jakoTlacitko(onClick, "link")}>
       <div className="let-hlava">
-        <span className="velke tucne">{l.rejstrik}</span>
-        <span className="let-typ">
-          {l.typ}
-          {l.je_vlecny && (
-            <>
-              {" · "}
-              <b>vlečná</b>
-            </>
-          )}
-        </span>
+        <Letadlo let={l} />
       </div>
       <div className="let-posadka">
         <Posadka clenove={l.posadka} />
@@ -190,7 +231,7 @@ export function PolovinaPasku({
           </b>
         )}
       </StitkyPasku>
-      {l.varovani && <div className="let-varovani">{l.varovani}</div>}
+      <Varovani let={l} />
     </div>
   );
 }

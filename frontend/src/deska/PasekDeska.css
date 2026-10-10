@@ -41,17 +41,8 @@
   white-space: nowrap;
 }
 
-.pasek-vlecna {
-  color: var(--barva-text);
-}
-
 .pasek-cas {
   justify-items: end;
-}
-
-.pasek-stopky {
-  font-size: var(--pismo-l);
-  font-weight: var(--tloustka-tucna);
 }
 
 /* Akce: T&G bílé s černým textem, PŘISTÁL zeleně a VZLET modře plné, pevná šířka; svisle
@@ -82,13 +73,8 @@
   white-space: normal;
 }
 
-.pasek-varovani {
+.pasek-deska > .varovani-pasku {
   grid-column: 1 / -1;
-  padding: var(--mezera-1) var(--mezera-3);
-  border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
-  color: var(--barva-cervena);
-  font-size: var(--pismo-s);
-  font-weight: var(--tloustka-tucna);
 }
 
 /* Řádek štítků pod přihrádkami až po čas (trasa vpravo končí pod časem), jako na mobilu */

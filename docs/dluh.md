@@ -11,7 +11,6 @@ nasazeno v2.24.0–v2.24.2); body, které se udělaly, tu nejsou.
 |---|---|---|
 | `backend/app/prihlasovani.py` (~700 ř.) | rozdělit: `relace.py` (relace, cookie, závislosti), `ucty.py` (správa účtů, pozvánky, e-mailová šablona), „přihlásit se jako“ | jen čitelnost; bez změny chování |
 | `backend/app/lety.py` (~900 ř.) | rozdělit: `slunce.py` (sluneční výpočty), `lety_akce.py` (vzlet, přistání, T&G, zpět), přehled dne, průvodce a detail zvlášť | tamtéž |
-| `frontend/src/lety/Pasek.tsx` + `deska/PasekDeska.tsx` | dvě `CasLetu`, dvojí markup „typ · vlečná“ a CSS `.let-stopky`/`.pasek-stopky`, `.let-varovani`/`.pasek-varovani` → společné přihrádky (`Rejstrik`, `CasLetu`, `Varovani`) s jednou třídou; mobil a deska skládají jen mřížku | změna vzhledu obou podob – dělat při příští úpravě pásku se snímky (skill snimky-mobil) |
 | `frontend/src/vycvik/Editor.tsx` (~940 ř., 14 komponent) | rozdělit na `Osnovy.tsx`, `Typy.tsx`, `prvky.tsx`, `Nahled.tsx` | čitelnost |
 | `frontend/src/lety/novyLet.tsx` (~770 ř.) | `useNovyLet` rozdělit na čistou funkci `odvodit(novy, nabidky)` + tenký hook (dnes vrací ~30 položek); čistou funkci pokrýt jednotkovými testy (vitest) | větší zásah do průvodce; dnes pokryto jen klikacími testy |
 | `frontend/src/lety/Detail.tsx` (~540 ř.) | `AkceDetailu.tsx`, `Upravy.tsx` | čitelnost |

@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 
-import { doba, hodinyMinuty, stopky } from "../cas";
 import { jakoTlacitko, type Klik } from "../komponenty/klavesnice";
 import { Sipka } from "../komponenty/Sipka";
-import { Posadka, StitkyPasku, tridaPasku, type LetPasku } from "../lety/Pasek";
-import { useTik } from "../tik";
+import { CasLetu, Letadlo, Posadka, StitkyPasku, tridaPasku, Varovani, type LetPasku } from "../lety/Pasek";
 import "../lety/PanelLetu.css";
 import "./PasekDeska.css";
 
@@ -14,43 +12,6 @@ import "./PasekDeska.css";
 // letiště, šedě – na desktopu je místo; rozhodnuto 8. 10. 2026). Stav letu říká jen
 // výplň pásku; písmo v barvě textu (kromě varování a tlačítek). V panelu (detail, nový let)
 // je pásek sám – bez akcí nezabírá místo pro tlačítka.
-
-/** Přihrádka času: stopky a vzlet / plán a kdy založen / vzlet–přistání a doba. */
-function CasLetu({ let: l }: { let: LetPasku }) {
-  const ted = useTik();
-  if (l.stav === "VE_VZDUCHU" && l.cas_vzletu) {
-    return (
-      <>
-        <span className="pasek-stopky">{stopky(l.cas_vzletu, ted)}</span>
-        <span className="male seda">
-          <Sipka smer="vzlet" /> {hodinyMinuty(l.cas_vzletu)}
-        </span>
-      </>
-    );
-  }
-  if (l.stav === "UKONCEN" && l.cas_vzletu && l.cas_pristani) {
-    return (
-      <>
-        <span>
-          {hodinyMinuty(l.cas_vzletu)}–{hodinyMinuty(l.cas_pristani)}
-        </span>
-        <span>
-          <b>{doba(l.doba_uctovana_min ?? 0)}</b>{" "}
-          <span className="male seda">{l.pocet_pristani}×</span>
-        </span>
-      </>
-    );
-  }
-  if (l.stav === "NAPLANOVAN") {
-    return (
-      <>
-        <span className="male seda">plán</span>
-        {l.zalozeno && <span className="male seda">zal. {hodinyMinuty(l.zalozeno)}</span>}
-      </>
-    );
-  }
-  return <span className="male seda">{l.stav === "ZRUSEN" ? "zrušen" : "nový let"}</span>;
-}
 
 export function PasekDeska({
   let: l,
@@ -87,21 +48,12 @@ export function PasekDeska({
   return (
     <div className={trida.filter(Boolean).join(" ")} {...jakoTlacitko(onClick, "link")}>
       <div className="prihradka">
-        <span className="velke tucne">{l.rejstrik}</span>
-        <span className="male seda">
-          {l.typ}
-          {l.je_vlecny && (
-            <>
-              {" · "}
-              <b className="pasek-vlecna">vlečná</b>
-            </>
-          )}
-        </span>
+        <Letadlo let={l} />
       </div>
       <div className="prihradka pasek-posadka">
         {l.posadka.length > 0 ? <Posadka clenove={l.posadka} /> : <span className="seda">— pilot —</span>}
       </div>
-      <div className="prihradka pasek-cas cisla">{cas ?? <CasLetu let={l} />}</div>
+      <div className="prihradka pasek-cas cisla">{cas ?? <CasLetu let={l} deska />}</div>
       {(children || !vPanelu) && <div className="pasek-akce">{children}</div>}
       <StitkyPasku
         let={l}
@@ -111,7 +63,7 @@ export function PasekDeska({
           </>
         }
       />
-      {l.varovani && <div className="pasek-varovani">{l.varovani}</div>}
+      <Varovani let={l} />
     </div>
   );
 }
