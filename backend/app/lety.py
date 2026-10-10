@@ -7,10 +7,10 @@ from astral import Observer
 from astral.sun import dawn, dusk, sun
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection
-from pydantic import BaseModel
 
 from . import db
 from .db import spojeni
+from .model import DruhProvozu, Model, Polozka, Stav, Zmena
 from .prihlasovani import Prihlaseny, prihlaseny
 
 router = APIRouter(prefix="/api")
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api")
 # --- schémata -------------------------------------------------------------------------------
 
 
-class Slunce(BaseModel):
+class Slunce(Model):
     """Začátek a konec občanského soumraku a východ a západ slunce (UTC); pro časovou osu
     desktopu i začátek ráno a konec večer nautického (12°) a astronomického (18°) soumraku –
     prázdné, když Slunce tak hluboko nesestoupí (v létě astronomický, docs/modul-desktop.md)."""
@@ -34,14 +34,14 @@ class Slunce(BaseModel):
     av: datetime | None
 
 
-class Letiste(BaseModel):
+class Letiste(Model):
     id: int
     kod: str
     nazev: str
     domovske: bool
 
 
-class Den(BaseModel):
+class Den(Model):
     den: date
     ted: datetime
     """Čas serveru – obrazovka podle něj počítá stopky (hodiny telefonu se mohou lišit)."""
@@ -51,24 +51,22 @@ class Den(BaseModel):
     slunce: Slunce
 
 
-class Clen(BaseModel):
+class Clen(Model):
     jmeno: str
     prijmeni: str
     funkce: str
     funkce_kod: str
 
 
-class Pasek(BaseModel):
+class Pasek(Model):
     """Let pro pásek v přehledu dne."""
 
     id: int
-    stav: str
-    """NAPLANOVAN | VE_VZDUCHU | UKONCEN | ZRUSEN"""
+    stav: Stav
     rejstrik: str
     typ: str
     kategorie_kod: str
-    druh_provozu: str
-    """PLACHTARSKY (kluzák a vlečný let) | MOTOROVY – souhrny dne (db/035)."""
+    druh_provozu: DruhProvozu
     ucel: str | None
     ucel_kod: str | None
     zpusob_vzletu: str
@@ -108,10 +106,10 @@ class Pasek(BaseModel):
     """Proč je pásek červený (po konci soumraku, přes maximální dobu letu)."""
 
 
-class RadekSouhrnu(BaseModel):
+class RadekSouhrnu(Model):
     """Souhrn dne po druhu provozu a letadle (v_souhrn_dne, db/036) – ukončené lety."""
 
-    druh_provozu: str
+    druh_provozu: DruhProvozu
     rejstrik: str
     je_vlecny: bool
     lety: int
@@ -121,7 +119,7 @@ class RadekSouhrnu(BaseModel):
     """Startů navijákem (plachtařský provoz, db/044)."""
 
 
-class LetyDne(BaseModel):
+class LetyDne(Model):
     ted: datetime
     lety: list[Pasek]
     souhrn: list[RadekSouhrnu]
@@ -281,7 +279,7 @@ def zmena(conn: Connection):
     return db.transakce(conn, HLASKY, odlozene=True, predpona=r"^Let \d+: ")
 
 
-class Provedeno(BaseModel):
+class Provedeno(Model):
     """Výsledek akce pro oznámení se Zpět."""
 
     let_id: int
@@ -377,7 +375,7 @@ def tg(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depe
     return Provedeno(let_id=let_id, rejstrik=let["rejstrik"], akce="tg", cas=cas["cas"])
 
 
-class ZpetIn(BaseModel):
+class ZpetIn(Model):
     akce: Literal["vzlet", "pristani", "tg"]
 
 
@@ -438,7 +436,111 @@ def moje_dny(p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spo
     ]
 
 
-@router.get("/lety/nabidky")
+class LetadloNabidky(Model):
+    id: int
+    rejstrik: str
+    typ: str
+    kategorie: str
+    kategorie_kod: str
+    pocet_mist: int
+    vlecne: bool
+    soukrome: bool
+    mimo_provoz: bool
+    poloha: str | None
+    """Poslední evidované přistání – kód letiště nebo popis místa (db/035, 037)."""
+    poloha_letiste_id: int | None
+    """Letiště polohy – výchozí místo vzletu nového letu."""
+    poloha_popis: str | None
+    """Popis místa v terénu, když poloha není letiště."""
+    leti_od: datetime | None
+    """Čas vzletu, je-li letadlo právě ve vzduchu."""
+    naplanovan: bool
+    """Má dnes naplánovaný let."""
+    nedavni: list[int]
+    """Naposledy létající na letadle (id osob, od posledního) – rychlá volba osoby."""
+    posledni_vlekar: int | None
+    """Vlekař posledního vleku této vlečné."""
+
+
+class Funkce(Polozka):
+    na_palube: bool
+    """Počítá se do osob na palubě."""
+
+
+class UcelNabidky(Polozka):
+    uloha_povinna: bool
+    funkce: list[Funkce]
+    """Funkce, které se u účelu zadávají (lov_ucel_funkce)."""
+
+
+class Role(Model):
+    """Role, kterou osoba smí zastat podle oprávnění (db/024)."""
+
+    ucel: str | None
+    """Kód účelu; prázdný = vlečný let."""
+    funkce: str
+    """Kód funkce."""
+    kategorie: str
+    """Kód kategorie letadla."""
+
+
+class OsobaNabidky(Model):
+    id: int
+    jmeno: str
+    prijmeni: str
+    role: list[Role]
+    prezkouseni: list[int]
+    """Typy přezkoušení, které smí provést jako examinátor (db/041)."""
+
+
+class PrezkouseniNabidky(Polozka):
+    """Typ přezkoušení (v_lov_prezkouseni, db/041): kód „PC-SEP“ se zobrazuje."""
+
+    popis: str
+    """„PC-SEP Přezkoušení…“"""
+    kategorie_kod: str
+
+
+class UlohaNabidky(Model):
+    """Úloha v nabídce (v_uloha_nabidka, db/040)."""
+
+    id: int
+    oznaceni: str
+    """„IU/8P“"""
+    nazev: str
+    """Bez označení."""
+    popis: str
+    """„IU/8P Přezkoušení…“"""
+    osnova_id: int
+    osnova: str
+    """Popis osnovy „IU – Výcvik SPL…“."""
+    ucel_id: int
+    kategorie_kod: str | None
+    """Prázdná = obecná úloha pro všechny kategorie."""
+
+
+class LetisteNabidky(Letiste):
+    rychla_volba: bool
+    """Nabízí se hned; ostatní přes Hledat… (db/028)."""
+
+
+class Nabidky(Model):
+    """Vše pro průvodce novým letem (nabídky z pohledů v_lov_*)."""
+
+    letadla: list[LetadloNabidky]
+    ucely: list[UcelNabidky]
+    pic_id: int
+    zpusoby: list[Polozka]
+    duvody_zruseni: list[Polozka]
+    letiste: list[LetisteNabidky]
+    osoby: list[OsobaNabidky]
+    ulohy: list[UlohaNabidky]
+    prezkouseni: list[PrezkouseniNabidky]
+    zpusob_kluzaku: str | None
+    """Jak se dnes naposledy vzlétalo s kluzákem (kód) – výchozí volba naviják / aerovlek."""
+
+
+@router.get("/lety/nabidky", response_model=Nabidky)
 def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
     """Vše pro průvodce novým letem v jednom dotazu (nabídky z pohledů v_lov_*)."""
     letadla = conn.execute(
@@ -534,12 +636,12 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
     }
 
 
-class ClenIn(BaseModel):
+class ClenIn(Model):
     osoba_id: int
     funkce_id: int
 
 
-class NovyLet(BaseModel):
+class NovyLet(Model):
     letadlo_id: int
     ucel_id: int
     posadka: list[ClenIn]
@@ -696,7 +798,82 @@ def novy_let(
 # --- detail letu: údaje, historie, zrušení, obnovení, úpravy ---------------------------------
 
 
-@router.get("/lety/{let_id}")
+class ClenDetail(Model):
+    osoba_id: int
+    jmeno: str
+    prijmeni: str
+    funkce_id: int
+    funkce_kod: str
+    funkce: str
+
+
+class Vlek(Model):
+    """Druhý let vleku (u kluzáku vlečná, u vlečné kluzák)."""
+
+    let_id: int
+    rejstrik: str
+    pilot: str
+
+
+class DetailLetu(Model):
+    """Všechny údaje letu, posádka, časy T&G a historie z auditu (docs/modul-lety.md 3.5)."""
+
+    id: int
+    verze: int
+    """Verze záznamu – úprava ji posílá zpět, souběžná změna se pozná (db/009)."""
+    stav: Stav
+    letadlo_id: int
+    rejstrik: str
+    typ: str
+    kategorie: str
+    kategorie_kod: str
+    pocet_mist: int
+    ucel_id: int | None
+    ucel: str | None
+    ucel_kod: str | None
+    uloha_id: int | None
+    uloha: str | None
+    uloha_oznaceni: str | None
+    prezkouseni_id: int | None
+    prezkouseni: str | None
+    prezkouseni_kod: str | None
+    zpusob_vzletu: str
+    zpusob_vzletu_kod: str
+    je_vlecny: bool
+    misto_vzletu_id: int | None
+    misto_vzletu_popis: str | None
+    misto_vzletu: str | None
+    """Kód letiště nebo popis místa (v_let)."""
+    misto_pristani_id: int | None
+    misto_pristani_popis: str | None
+    misto_pristani: str | None
+    cas_vzletu: datetime | None
+    cas_pristani: datetime | None
+    doba_min: int | None
+    doba_uctovana_min: int | None
+    pocet_pristani: int | None
+    pob: int | None
+    pob_zadany: int | None
+    """Zadaný počet (u výcviku, sóla a přezkoušení prázdný – odvozuje se z posádky)."""
+    platce_id: int | None
+    plati_aeroklub: bool
+    platce_jmeno: str | None
+    platce_prijmeni: str | None
+    poznamka: str | None
+    duvod_zruseni: str | None
+    zruseno: datetime | None
+    zrusil: str | None
+    dodatecne: bool
+    zalozeno: datetime
+    zalozil: str
+    posadka: list[ClenDetail]
+    tg: list[datetime]
+    vlek: Vlek | None
+    historie: list[Zmena]
+    varovani: str | None
+
+
+@router.get("/lety/{let_id}", response_model=DetailLetu)
 def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
     """Všechny údaje letu, posádka, časy T&G a historie z auditu (docs/modul-lety.md 3.5)."""
     let = conn.execute(
@@ -759,7 +936,7 @@ def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = 
     return let
 
 
-class ZrusitIn(BaseModel):
+class ZrusitIn(Model):
     duvod_id: int
 
 
@@ -800,7 +977,7 @@ def obnovit(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection =
     return Provedeno(let_id=let_id, rejstrik=let["rejstrik"], akce="obnovit", cas=None)
 
 
-class Uprava(BaseModel):
+class Uprava(Model):
     """Úprava z detailu: číslo verze a jen změněné údaje (prázdná hodnota = smazat)."""
 
     verze: int

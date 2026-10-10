@@ -1,49 +1,17 @@
 // Editor výcviku – data ze serveru (backend/app/vycvik.py, docs/modul-osnovy.md).
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { poslat, ziskat } from "../api";
+import { poslat, ziskat, type Schemata } from "../api";
 import { useOznamit } from "../komponenty/Oznameni";
 
-export type Ucel = { id: number; kod: string; nazev: string; uloha_povinna: boolean };
-export type Kategorie = { id: number; kod: string; nazev: string };
-export type Uloha = {
-  id: number;
-  kod: string;
-  nazev: string;
-  platny: boolean;
-  ucely: number[];
-  lety: number;
-};
-export type Osnova = {
-  id: number;
-  kod: string;
-  nazev: string;
-  kategorie_id: number;
-  platny: boolean;
-  ulohy: Uloha[];
-};
-/** Typ přezkoušení; oprávnění = kdo ho smí provést. */
-export type Typ = {
-  id: number;
-  kod: string;
-  nazev: string;
-  kategorie_id: number;
-  platny: boolean;
-  opravneni: number[];
-  lety: number;
-};
-/** Oprávnění a kategorie, pro které se vydává. */
-export type Opravneni = { id: number; nazev: string; kategorie: number[] };
-export type Examinator = { osoba_id: number; jmeno: string; prijmeni: string; prezkouseni: number[] };
-
-export type Vycvik = {
-  ucely: Ucel[];
-  kategorie: Kategorie[];
-  osnovy: Osnova[];
-  typy: Typ[];
-  opravneni: Opravneni[];
-  examinatori: Examinator[];
-};
+export type Ucel = Schemata["Ucel"];
+export type Kategorie = Schemata["Polozka"];
+export type Uloha = Schemata["Uloha"];
+export type Osnova = Schemata["Osnova"];
+export type Typ = Schemata["Typ"];
+export type Opravneni = Schemata["DruhOpravneni"];
+export type Examinator = Schemata["Examinator"];
+export type Vycvik = Schemata["Vycvik"];
 
 export function useVycvik() {
   return useQuery({ queryKey: ["vycvik"], queryFn: () => ziskat<Vycvik>("/vycvik") });

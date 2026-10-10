@@ -10,10 +10,10 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection, errors
-from pydantic import BaseModel
 
 from . import db
 from .db import spojeni
+from .model import Model, Polozka
 from .prihlasovani import Prihlaseny, spravuje_vycvik
 
 router = APIRouter(prefix="/api/vycvik")
@@ -22,20 +22,14 @@ router = APIRouter(prefix="/api/vycvik")
 # --- schémata -------------------------------------------------------------------------------
 
 
-class Ucel(BaseModel):
+class Ucel(Model):
     id: int
     kod: str
     nazev: str
     uloha_povinna: bool
 
 
-class Kategorie(BaseModel):
-    id: int
-    kod: str
-    nazev: str
-
-
-class Uloha(BaseModel):
+class Uloha(Model):
     id: int
     kod: str
     nazev: str
@@ -44,7 +38,7 @@ class Uloha(BaseModel):
     lety: int
 
 
-class Osnova(BaseModel):
+class Osnova(Model):
     id: int
     kod: str
     nazev: str
@@ -53,7 +47,7 @@ class Osnova(BaseModel):
     ulohy: list[Uloha]
 
 
-class Typ(BaseModel):
+class Typ(Model):
     """Typ přezkoušení s oprávněními, která ho smí provést."""
 
     id: int
@@ -65,14 +59,14 @@ class Typ(BaseModel):
     lety: int
 
 
-class Opravneni(BaseModel):
+class DruhOpravneni(Model):
     id: int
     nazev: str
     kategorie: list[int]
     """Kategorie, pro které se oprávnění vydává."""
 
 
-class Examinator(BaseModel):
+class Examinator(Model):
     osoba_id: int
     jmeno: str
     prijmeni: str
@@ -80,62 +74,62 @@ class Examinator(BaseModel):
     """Typy přezkoušení, které smí provést (v_osoba_prezkouseni)."""
 
 
-class Vycvik(BaseModel):
+class Vycvik(Model):
     ucely: list[Ucel]
-    kategorie: list[Kategorie]
+    kategorie: list[Polozka]
     osnovy: list[Osnova]
     typy: list[Typ]
-    opravneni: list[Opravneni]
+    opravneni: list[DruhOpravneni]
     examinatori: list[Examinator]
 
 
-class NovaOsnova(BaseModel):
+class NovaOsnova(Model):
     kod: str
     nazev: str
     kategorie_id: int
 
 
-class ZmenaOsnovy(BaseModel):
+class ZmenaOsnovy(Model):
     kod: str | None = None
     nazev: str | None = None
     kategorie_id: int | None = None
     platny: bool | None = None
 
 
-class NovaUloha(BaseModel):
+class NovaUloha(Model):
     osnova_id: int
     kod: str
     nazev: str
 
 
-class ZmenaUlohy(BaseModel):
+class ZmenaUlohy(Model):
     kod: str | None = None
     nazev: str | None = None
     osnova_id: int | None = None
     platny: bool | None = None
 
 
-class NovyTyp(BaseModel):
+class NovyTyp(Model):
     kod: str
     nazev: str
     kategorie_id: int
 
 
-class ZmenaTypu(BaseModel):
+class ZmenaTypu(Model):
     kod: str | None = None
     nazev: str | None = None
     kategorie_id: int | None = None
     platny: bool | None = None
 
 
-class Vazba(BaseModel):
+class Vazba(Model):
     """Zaškrtnutí: účel u úlohy (osnovy) nebo oprávnění u typu přezkoušení."""
 
     id: int
     ano: bool
 
 
-class Posun(BaseModel):
+class Posun(Model):
     co: Literal["osnova", "uloha", "typ"]
     id: int
     smer: Literal[-1, 1]

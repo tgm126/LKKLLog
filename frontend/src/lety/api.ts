@@ -1,63 +1,13 @@
 // Data letů ze serveru (backend/app/lety.py).
 import { useQuery } from "@tanstack/react-query";
 
-import { ziskat } from "../api";
+import { ziskat, type Schemata } from "../api";
 import { nastavitCasServeru } from "../cas";
 
-export type Den = {
-  den: string;
-  ted: string;
-  /** Moje letiště na dnešek (můj provoz, jinak domovské); sluneční časy jsou pro ně. */
-  letiste: { id: number; kod: string; nazev: string; domovske: boolean } | null;
-  /** Občanský soumrak (TB, TE), východ a západ; pro časovou osu desktopu i začátek ráno
-   *  a konec večer nautického (nr, nv) a astronomického soumraku (ar, av) – prázdné, když
-   *  nenastane. */
-  slunce: Record<"tb" | "sr" | "ss" | "te" | "nr" | "nv" | "ar" | "av", string | null>;
-};
-
-export type Clen = { jmeno: string; prijmeni: string; funkce: string; funkce_kod: string };
-
-export type Stav = "NAPLANOVAN" | "VE_VZDUCHU" | "UKONCEN" | "ZRUSEN";
-
-export type Pasek = {
-  id: number;
-  stav: Stav;
-  rejstrik: string;
-  typ: string;
-  kategorie_kod: string;
-  /** Plachtařský (kluzák a vlečný let) nebo motorový provoz – podle databáze (db/035). */
-  druh_provozu: "PLACHTARSKY" | "MOTOROVY";
-  ucel: string | null;
-  ucel_kod: string | null;
-  zpusob_vzletu: string;
-  zpusob_vzletu_kod: string;
-  je_vlecny: boolean;
-  vlecny_let_id: number | null;
-  vleceny_let_id: number | null;
-  vlek_rejstrik: string | null;
-  misto_vzletu: string | null;
-  misto_pristani: string | null;
-  cas_vzletu: string | null;
-  cas_pristani: string | null;
-  doba_uctovana_min: number | null;
-  pocet_pristani: number | null;
-  /** Na palubě (u výcviku spočítaný z posádky). */
-  pob: number;
-  /** Popis úlohy „IU/8P Přezkoušení…“; označení „IU/8P“ zvlášť (štítek). */
-  uloha: string | null;
-  uloha_oznaceni: string | null;
-  /** Typ přezkoušení „PC-SEP Přezkoušení…“ (u přezkoušení místo úlohy, db/041); kód „PC-SEP“
-   *  zvlášť (štítek). */
-  prezkouseni: string | null;
-  prezkouseni_kod: string | null;
-  pocet_tg: number;
-  posadka: Clen[];
-  duvod_zruseni: string | null;
-  zruseno: string | null;
-  dodatecne: boolean;
-  zalozeno: string;
-  varovani: string | null;
-};
+export type Den = Schemata["Den"];
+export type Clen = Schemata["Clen"];
+export type Pasek = Schemata["Pasek"];
+export type Stav = Pasek["stav"];
 
 /** Dotaz na den: bez dne dnešek, jinak `?den=RRRR-MM-DD` (desktop – jiný den). */
 const sDnem = (cesta: string, den?: string) => (den ? `${cesta}?den=${den}` : cesta);
@@ -77,20 +27,8 @@ export function useDen(den?: string) {
 
 /** Lety dne; obnovují se samy každých 10 s a po návratu do aplikace (docs/modul-lety.md 3.2).
  *  Bez dne dnešek (i vše, co je ve vzduchu), jinak lety zvoleného dne (desktop). */
-/** Souhrn dne po druhu provozu a letadle – ukončené lety (v_souhrn_dne, db/036). */
-export type RadekSouhrnu = {
-  druh_provozu: "PLACHTARSKY" | "MOTOROVY";
-  rejstrik: string;
-  /** Vlečná ve vleku (vleky) – zvlášť od jejích vlastních letů. */
-  je_vlecny: boolean;
-  lety: number;
-  pristani: number;
-  minut: number;
-  /** Startů navijákem (db/044). */
-  navijaky: number;
-};
-
-type LetyDne = { ted: string; lety: Pasek[]; souhrn: RadekSouhrnu[] };
+export type RadekSouhrnu = Schemata["RadekSouhrnu"];
+type LetyDne = Schemata["LetyDne"];
 
 /** Lety dne a souhrn jedním dotazem (obnoví se spolu); každý háček vybere svou část.
  *  Moje = jen lety, kde jsem v posádce (docs/modul-moje-lety.md). */
@@ -129,77 +67,14 @@ export function useSouhrnDne(den?: string) {
 
 // --- průvodce novým letem --------------------------------------------------------------------
 
-export type LetadloNabidka = {
-  id: number;
-  rejstrik: string;
-  typ: string;
-  kategorie: string;
-  kategorie_kod: string;
-  pocet_mist: number;
-  vlecne: boolean;
-  soukrome: boolean;
-  mimo_provoz: boolean;
-  /** Poslední evidované přistání (kód letiště nebo popis), db/035; zvlášť id letiště, nebo
-   *  popis místa v terénu – výchozí místo vzletu nového letu (db/037). */
-  poloha: string | null;
-  poloha_letiste_id: number | null;
-  poloha_popis: string | null;
-  leti_od: string | null;
-  naplanovan: boolean;
-  /** Naposledy létající na letadle (id osob, od posledního). */
-  nedavni: number[];
-  posledni_vlekar: number | null;
-};
-
-export type Funkce = { id: number; kod: string; nazev: string; na_palube: boolean };
-export type Ucel = { id: number; kod: string; nazev: string; uloha_povinna: boolean; funkce: Funkce[] };
-/** Role, kterou osoba smí zastat podle oprávnění (db/024): účel (null = vlečný let), funkce,
- *  kategorie letadla. */
-export type Role = { ucel: string | null; funkce: string; kategorie: string };
-/** Osoba v nabídce: role podle oprávnění a typy přezkoušení, které smí provést (db/041). */
-export type Osoba = {
-  id: number;
-  jmeno: string;
-  prijmeni: string;
-  role: Role[];
-  prezkouseni: number[];
-};
-/** Typ přezkoušení (v_lov_prezkouseni, db/041): kód „PC-SEP“ se zobrazuje, popis
- *  „PC-SEP Přezkoušení…“. */
-export type Prezkouseni = {
-  id: number;
-  kod: string;
-  nazev: string;
-  popis: string;
-  kategorie_kod: string;
-};
-/** Úloha v nabídce (v_uloha_nabidka, db/040): označení „IU/8P“, název bez označení, popis
- *  „IU/8P Přezkoušení…“, osnova = popis osnovy „IU – Výcvik SPL…“. */
-export type Uloha = {
-  id: number;
-  oznaceni: string;
-  nazev: string;
-  popis: string;
-  osnova_id: number;
-  osnova: string;
-  ucel_id: number;
-  /** Prázdná = obecná úloha pro všechny kategorie. */
-  kategorie_kod: string | null;
-};
-
-export type Nabidky = {
-  letadla: LetadloNabidka[];
-  ucely: Ucel[];
-  pic_id: number;
-  zpusoby: { id: number; kod: string; nazev: string }[];
-  duvody_zruseni: { id: number; kod: string; nazev: string }[];
-  /** rychla_volba = nabízí se hned, ostatní přes Hledat… (db/028) */
-  letiste: { id: number; kod: string; nazev: string; domovske: boolean; rychla_volba: boolean }[];
-  osoby: Osoba[];
-  ulohy: Uloha[];
-  prezkouseni: Prezkouseni[];
-  zpusob_kluzaku: string | null;
-};
+export type LetadloNabidka = Schemata["LetadloNabidky"];
+export type Funkce = Schemata["Funkce"];
+export type Ucel = Schemata["UcelNabidky"];
+export type Role = Schemata["Role"];
+export type Osoba = Schemata["OsobaNabidky"];
+export type Prezkouseni = Schemata["PrezkouseniNabidky"];
+export type Uloha = Schemata["UlohaNabidky"];
+export type Nabidky = Schemata["Nabidky"];
 
 export function useNabidky() {
   return useQuery({
@@ -211,68 +86,8 @@ export function useNabidky() {
 
 // --- detail letu -----------------------------------------------------------------------------
 
-export type ClenDetail = {
-  osoba_id: number;
-  jmeno: string;
-  prijmeni: string;
-  funkce_id: number;
-  funkce_kod: string;
-  funkce: string;
-};
-
-export type DetailLetu = {
-  id: number;
-  verze: number;
-  stav: Stav;
-  letadlo_id: number;
-  rejstrik: string;
-  typ: string;
-  kategorie: string;
-  kategorie_kod: string;
-  pocet_mist: number;
-  ucel_id: number | null;
-  ucel: string | null;
-  ucel_kod: string | null;
-  uloha_id: number | null;
-  uloha: string | null;
-  uloha_oznaceni: string | null;
-  prezkouseni_id: number | null;
-  prezkouseni: string | null;
-  prezkouseni_kod: string | null;
-  zpusob_vzletu: string;
-  zpusob_vzletu_kod: string;
-  je_vlecny: boolean;
-  misto_vzletu_id: number | null;
-  misto_vzletu_popis: string | null;
-  misto_vzletu: string | null;
-  misto_pristani_id: number | null;
-  misto_pristani_popis: string | null;
-  misto_pristani: string | null;
-  cas_vzletu: string | null;
-  cas_pristani: string | null;
-  doba_min: number | null;
-  doba_uctovana_min: number | null;
-  pocet_pristani: number | null;
-  pob: number | null;
-  /** Zadaný počet (u výcviku, sóla a přezkoušení prázdný – odvozuje se z posádky). */
-  pob_zadany: number | null;
-  platce_id: number | null;
-  plati_aeroklub: boolean;
-  platce_jmeno: string | null;
-  platce_prijmeni: string | null;
-  poznamka: string | null;
-  duvod_zruseni: string | null;
-  zruseno: string | null;
-  zrusil: string | null;
-  dodatecne: boolean;
-  zalozeno: string;
-  zalozil: string;
-  posadka: ClenDetail[];
-  tg: string[];
-  vlek: { let_id: number; rejstrik: string; pilot: string } | null;
-  historie: { kdy: string; kdo: string; akce: string; popis: string | null }[];
-  varovani: string | null;
-};
+export type ClenDetail = Schemata["ClenDetail"];
+export type DetailLetu = Schemata["DetailLetu"];
 
 export function useDetail(letId: number) {
   return useQuery({

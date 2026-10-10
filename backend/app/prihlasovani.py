@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from psycopg import Connection, errors
-from pydantic import BaseModel, create_model
+from pydantic import create_model
 
 from . import bezpecnost, db, posta
 from .db import nastavit_kontext, spojeni
+from .model import Model
 from .nastaveni import nastaveni
 
 router = APIRouter(prefix="/api")
@@ -26,7 +27,7 @@ CHYBA_ODKAZU = "Odkaz neplatí nebo vypršel. Požádejte admina o nový."
 # --- schémata -------------------------------------------------------------------------------
 
 
-class Prava(BaseModel):
+class Prava(Model):
     """Práva účtu – jediný seznam v kódu (sloupce `lkkl.ucet`, vstupy i výstupy rozhraní;
     docs/modul-osoby.md). Admin smí vše; `Ja.prava` to už má započtené."""
 
@@ -41,7 +42,7 @@ PRAVA = tuple(Prava.model_fields)
 SLOUPCE_PRAV = ", ".join(PRAVA)  # do SQL jen pevné názvy z modelu (noqa S608 níže)
 
 
-class OsobaKratce(BaseModel):
+class OsobaKratce(Model):
     osoba_id: int
     jmeno: str
     prijmeni: str
@@ -59,26 +60,26 @@ class Ja(OsobaSEmailem):
     """Relace jen ke čtení (sdílený počítač): zápisy server odmítne, práva vypnutá."""
 
 
-class PrihlaseniIn(BaseModel):
+class PrihlaseniIn(Model):
     email: str
     heslo: str
     jen_cteni: bool = False
     """Sdílený počítač (klubovna): relace jen ke čtení (docs/modul-desktop.md 6.1)."""
 
 
-class Zarizeni(BaseModel):
+class Zarizeni(Model):
     zarizeni: str | None
     vytvorena: datetime
     posledni_aktivita: datetime
     aktualni: bool
 
 
-class NastavitHesloIn(BaseModel):
+class NastavitHesloIn(Model):
     klic: str
     heslo: str
 
 
-class ZmenitHesloIn(BaseModel):
+class ZmenitHesloIn(Model):
     stare: str
     nove: str
 
@@ -108,11 +109,11 @@ class Zablokovany(OsobaKratce):
     zablokovano_do: datetime
 
 
-class Odkaz(BaseModel):
+class Odkaz(Model):
     odkaz: str
 
 
-class OdeslanyEmail(BaseModel):
+class OdeslanyEmail(Model):
     adresa: str
     kdy: datetime
 

@@ -77,6 +77,8 @@ jobs:
         working-directory: backend
       - run: npm ci
       - run: npm run kontrola
+      # Typy rozhraní (src/api.gen.ts) se generují z popisu serveru – commit je musí mít aktuální.
+      - run: git diff --exit-code src/api.gen.ts || { echo "::error::src/api.gen.ts neodpovídá serveru – spusťte npm run api-typy a přidejte do commitu."; exit 1; }
       # Prohlížeč pro klikací testy: bez systémových balíčků (--with-deps) – runner je má díky
       # předinstalovanému Chromu a zrcadlo Ubuntu bývá pomalé (fonty i 6 minut); stažený
       # prohlížeč z cache podle verze Playwrightu.

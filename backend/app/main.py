@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from psycopg import Connection
 
 from . import db, letadla, lety, muj_provoz, osoby, prihlasovani, sprava, vycvik
+from .model import Model
 from .nastaveni import nastaveni
 
 BEZPECNE_METODY = {"GET", "HEAD", "OPTIONS"}
@@ -81,7 +82,12 @@ app.include_router(sprava.router)
 app.include_router(vycvik.router)
 
 
-@app.get("/api/health")
+class StavServeru(Model):
+    stav: str
+    verze: str
+
+
+@app.get("/api/health", response_model=StavServeru)
 def health(conn: Connection = Depends(db.spojeni)):
     """Kontrola stavu pro nasazení a hlídání dostupnosti: verze a spojení s databází."""
     conn.execute("SELECT 1")
@@ -93,7 +99,13 @@ PRUH_TEST = "TESTOVACÍ PROVOZ"
 PRUH_VYVOJ = "VÝVOJ – lokální databáze"
 
 
-@app.get("/api/aplikace")
+class Aplikace(Model):
+    verze: str
+    pruh: str
+    """Text žlutého pruhu (testovací provoz, vývoj); prázdný = bez pruhu."""
+
+
+@app.get("/api/aplikace", response_model=Aplikace)
 def aplikace(conn: Connection = Depends(db.spojeni)):
     """Co obrazovky ukazují i bez přihlášení: verze a text pruhu (testovací provoz)."""
     test = conn.execute("SELECT testovaci_provoz FROM lkkl.nastaveni").fetchone()[

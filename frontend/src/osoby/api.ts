@@ -1,56 +1,14 @@
 // Data správy osob ze serveru (backend/app/osoby.py, účty v prihlasovani.py).
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { poslat, ziskat } from "../api";
+import { poslat, ziskat, type Schemata } from "../api";
 import { useOznamit } from "../komponenty/Oznameni";
 
-export type UcetOsoby = {
-  smi_se_prihlasit: boolean;
-  /** Přístup do aplikace povolen (ucet.prihlaseni_povoleno); přihlásí se jen platná osoba. */
-  prihlaseni_povoleno: boolean;
-  admin: boolean;
-  smi_odblokovat: boolean;
-  spravuje_osoby: boolean;
-  spravuje_letadla: boolean;
-  spravuje_vycvik: boolean;
-  zablokovano: boolean;
-  ma_heslo: boolean;
-};
-
-export type Osoba = {
-  id: number;
-  jmeno: string;
-  prijmeni: string;
-  email: string | null;
-  telefon: string | null;
-  cislo_clena: string | null;
-  clen: boolean;
-  /** Platná osoba (v aplikaci „aktivní“): nabízí se v letech, smí se přihlásit. */
-  platny: boolean;
-  ucet: UcetOsoby | null;
-  opravneni: OpravneniOsoby[];
-};
-
-/** Oprávnění, které osoba má: pro které kategorie letadel (id) a zda omezené. */
-export type OpravneniOsoby = { id: number; omezene: boolean; kategorie: number[] };
-
-/** Oprávnění z číselníku: kategorie letadel, pro které se smí vydat; lze_omezit = dává roli
- *  instruktora (jen tam má smysl „omezený“). */
-export type Opravneni = {
-  id: number;
-  nazev: string;
-  lze_omezit: boolean;
-  kategorie: { id: number; nazev: string }[];
-};
-
-export type DetailOsoby = Osoba & {
-  heslo_zmeneno: string | null;
-  pozvanka_odeslana: string | null;
-  posledni_prihlaseni: string | null;
-  /** Poslední e-mail osobě (db/038); chyba prázdná = odesláno. */
-  posledni_email: { kdy: string; adresa: string; chyba: string | null } | null;
-  historie: { kdy: string; kdo: string; akce: string; popis: string | null }[];
-};
+export type UcetOsoby = Schemata["UcetOsoby"];
+export type Osoba = Schemata["Osoba"];
+export type OpravneniOsoby = Schemata["OpravneniOsoby"];
+export type Opravneni = Schemata["Opravneni"];
+export type DetailOsoby = Schemata["DetailOsoby"];
 
 export type UdajeOsoby = Partial<
   Pick<Osoba, "jmeno" | "prijmeni" | "email" | "telefon" | "cislo_clena" | "clen" | "platny">
@@ -59,7 +17,7 @@ export type UdajeOsoby = Partial<
 export function useOsoby() {
   return useQuery({
     queryKey: ["osoby"],
-    queryFn: () => ziskat<{ osoby: Osoba[]; opravneni: Opravneni[] }>("/osoby"),
+    queryFn: () => ziskat<Schemata["Seznam"]>("/osoby"),
   });
 }
 

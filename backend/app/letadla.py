@@ -5,15 +5,15 @@ Smí správce letadel a admin (prihlasovani.spravuje_letadla). Změnu zachytí a
 
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection
-from pydantic import BaseModel
 
 from .db import spojeni
+from .model import Model
 from .prihlasovani import Prihlaseny, spravuje_letadla
 
 router = APIRouter(prefix="/api/letadla")
 
 
-class Letadlo(BaseModel):
+class Letadlo(Model):
     id: int
     rejstrik: str
     typ: str
@@ -22,7 +22,7 @@ class Letadlo(BaseModel):
     mimo_provoz: bool
 
 
-class MimoProvozIn(BaseModel):
+class MimoProvozIn(Model):
     mimo_provoz: bool
 
 

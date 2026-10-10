@@ -2,15 +2,10 @@
 // návrh docs/modul-muj-provoz.md).
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { poslat, ziskat } from "../api";
+import { poslat, ziskat, type Schemata } from "../api";
 import { useOznamit } from "../komponenty/Oznameni";
 
-export type MujProvoz = {
-  /** Moje letiště na dnešek (zvolené, jinak domovské). */
-  letiste: { id: number; kod: string; nazev: string; domovske: boolean } | null;
-  /** Osoby v provozu (filtr nabídky osob v posádce); prázdné = bez filtru. */
-  osoby: number[];
-};
+export type MujProvoz = Schemata["MujProvoz"];
 
 export function useMujProvoz() {
   return useQuery({

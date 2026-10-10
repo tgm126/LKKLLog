@@ -6,29 +6,29 @@ a v_relace_osoba (db/026); první uložení v novém dni přepíše staré nasta
 
 from fastapi import APIRouter, Depends
 from psycopg import Connection, errors
-from pydantic import BaseModel
 
 from . import db
 from .db import spojeni
 from .lety import Letiste
+from .model import Model
 from .prihlasovani import Prihlaseny, prihlaseny
 
 router = APIRouter(prefix="/api/muj-provoz")
 
 
-class MujProvoz(BaseModel):
+class MujProvoz(Model):
     letiste: Letiste | None
     """Moje letiště na dnešek (zvolené, jinak domovské)."""
     osoby: list[int]
     """Osoby v provozu (filtr nabídky osob v posádce); prázdné = bez filtru."""
 
 
-class LetisteIn(BaseModel):
+class LetisteIn(Model):
     letiste_id: int | None
     """Prázdné = domovské."""
 
 
-class OsobaIn(BaseModel):
+class OsobaVProvozuIn(Model):
     osoba_id: int
     ma: bool
 
@@ -84,7 +84,9 @@ def letiste(
 
 
 @router.post("/osoby", response_model=MujProvoz)
-def osoby(data: OsobaIn, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)):
+def osoby(
+    data: OsobaVProvozuIn, p: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spojeni)
+):
     with db.transakce(conn, {errors.ForeignKeyViolation: "Osoba neexistuje."}):
         _dnesni(conn, p.relace_id)
         if data.ma:

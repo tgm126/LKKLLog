@@ -1,4 +1,5 @@
 // Volání rozhraní serveru (/api). Chyba serveru se převede na ChybaApi s hláškou pro člověka.
+import type { components } from "./api.gen";
 
 export class ChybaApi extends Error {
   readonly status: number;
@@ -52,24 +53,12 @@ export const ziskat = <T>(cesta: string) => zavolat<T>("GET", cesta);
 export const poslat = <T>(cesta: string, data?: unknown) => zavolat<T>("POST", cesta, data);
 
 // --- typy odpovědí ---------------------------------------------------------------------------
+// Generované z popisu rozhraní serveru (npm run api-typy → src/api.gen.ts); ručně se nepíší.
 
-export type OsobaKratce = { osoba_id: number; jmeno: string; prijmeni: string };
+export type Schemata = components["schemas"];
 
-export type Ja = OsobaKratce & {
-  email: string;
-  /** Práva včetně „admin smí vše“. */
-  prava: {
-    admin: boolean;
-    smi_odblokovat: boolean;
-    spravuje_osoby: boolean;
-    spravuje_letadla: boolean;
-    spravuje_vycvik: boolean;
-  };
-  /** Skutečný admin, pokud je přihlášen jako jiná osoba. */
-  puvodni: OsobaKratce | null;
-  /** Přihlášeno jen ke čtení (sdílený počítač): zápisy server odmítne, práva vypnutá
-   *  (docs/modul-desktop.md 6.1). */
-  jen_cteni: boolean;
-};
-
-export type Aplikace = { verze: string; pruh: string };
+export type OsobaKratce = Schemata["OsobaKratce"];
+/** Přihlášený: jméno, e-mail, práva (včetně „admin smí vše“), skutečný admin při „přihlásit
+ *  jako“, relace jen ke čtení. */
+export type Ja = Schemata["Ja"];
+export type Aplikace = Schemata["Aplikace"];

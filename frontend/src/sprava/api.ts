@@ -1,11 +1,11 @@
 // Správa systému – jen admin (backend/app/sprava.py, návrh docs/modul-sprava.md).
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { poslat, ziskat } from "../api";
+import { poslat, ziskat, type Schemata } from "../api";
 import { useOznamit } from "../komponenty/Oznameni";
 
-export type DenSLety = { den: string; lety: number };
-export type NastaveniSystemu = { testovaci_provoz: boolean };
+export type DenSLety = Schemata["DenSLety"];
+export type NastaveniSystemu = Schemata["NastaveniSystemu"];
 
 export function useDnySLety() {
   return useQuery({
@@ -19,7 +19,7 @@ export function useSmazatDen() {
   const qc = useQueryClient();
   const oznamit = useOznamit();
   return useMutation({
-    mutationFn: (den: string) => poslat<{ den: string; smazano: number }>("/sprava/smazat-den", { den }),
+    mutationFn: (den: string) => poslat<Schemata["Smazano"]>("/sprava/smazat-den", { den }),
     onSuccess: () => {
       for (const klic of ["dny-s-lety", "lety", "den", "nabidky"]) qc.invalidateQueries({ queryKey: [klic] });
     },

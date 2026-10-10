@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "kontrola": "tsc -p tsconfig.json && tsc -p tsconfig.node.json && eslint . && stylelint \"src/**/*.css\" && vitest run",
+    "api-typy": "cd ../backend && uv run python -m app.openapi ../frontend/node_modules/.cache/openapi.json && cd ../frontend && openapi-typescript node_modules/.cache/openapi.json -o src/api.gen.ts",
+    "kontrola": "npm run api-typy && tsc -p tsconfig.json && tsc -p tsconfig.node.json && eslint . && stylelint \"src/**/*.css\" && vitest run",
     "test": "vitest run",
     "e2e": "npm run build && playwright test"
   },
@@ -26,6 +27,7 @@
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
+    "openapi-typescript": "^7.13.0",
     "stylelint": "^17.16.0",
     "stylelint-config-standard": "^40.0.0",
     "typescript": "~6.0.3",

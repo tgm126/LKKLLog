@@ -92,6 +92,11 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
   zapisuje trigger v databázi, čitelně pohledy `v_audit` a `v_historie_letu`.
 - Přihlášení e-mailem a heslem, platí 30 dní od poslední aktivity; admin se smí přihlásit
   jako jiná osoba (relace si pamatuje skutečného admina). Passkey zatím ne.
+- **Rozhraní popsané jednou:** každý endpoint má `response_model` (modely dědí z `app/model.py`
+  `Model`, dokumentační řetězce položek jdou do OpenAPI). Typy pro frontend se **generují**
+  (`npm run api-typy` → `frontend/src/api.gen.ts`, součást `npm run kontrola`; CI hlídá, že
+  soubor odpovídá serveru) – v `*/api.ts` jsou jen aliasy `Schemata["…"]`, ručně se typy
+  odpovědí nepíší.
 
 ## Příkazy (ve složce `backend/`, frontend ve složce `frontend/`)
 - Server pro vývoj: `uv run uvicorn app.main:app --reload` → rozhraní na

@@ -9,10 +9,11 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg import Connection, errors
-from pydantic import BaseModel, field_validator
+from pydantic import field_validator
 
 from . import db
 from .db import spojeni
+from .model import Model, Zmena
 from .prihlasovani import Prava, Prihlaseny, jen_admin_na_admina, spravuje_osoby
 
 router = APIRouter(prefix="/api/osoby")
@@ -29,7 +30,7 @@ class UcetOsoby(Prava):
     ma_heslo: bool
 
 
-class OpravneniOsoby(BaseModel):
+class OpravneniOsoby(Model):
     """Oprávnění, které osoba má: pro které kategorie letadel a zda omezené."""
 
     id: int
@@ -37,7 +38,7 @@ class OpravneniOsoby(BaseModel):
     kategorie: list[int]
 
 
-class Osoba(BaseModel):
+class Osoba(Model):
     id: int
     jmeno: str
     prijmeni: str
@@ -50,12 +51,12 @@ class Osoba(BaseModel):
     opravneni: list[OpravneniOsoby]
 
 
-class Kategorie(BaseModel):
+class Kategorie(Model):
     id: int
     nazev: str
 
 
-class Opravneni(BaseModel):
+class Opravneni(Model):
     """Druh oprávnění z číselníku a kategorie, pro které se smí vydat."""
 
     id: int
@@ -65,19 +66,12 @@ class Opravneni(BaseModel):
     kategorie: list[Kategorie]
 
 
-class Seznam(BaseModel):
+class Seznam(Model):
     osoby: list[Osoba]
     opravneni: list[Opravneni]
 
 
-class Zmena(BaseModel):
-    kdy: datetime
-    kdo: str
-    akce: str
-    popis: str | None
-
-
-class PosledniEmail(BaseModel):
+class PosledniEmail(Model):
     """Poslední e-mail osobě (lkkl.email, db/038); chyba prázdná = odesláno."""
 
     kdy: datetime
@@ -105,7 +99,7 @@ def _telefon(hodnota: str | None) -> str | None:
     return cislo or None
 
 
-class OsobaIn(BaseModel):
+class OsobaIn(Model):
     """Údaje osoby; při úpravě se mění jen poslané (prázdný text = smazat)."""
 
     jmeno: str | None = None
@@ -127,7 +121,7 @@ class OsobaIn(BaseModel):
         return _telefon(v.strip()) if v is not None else None
 
 
-class OpravneniIn(BaseModel):
+class OpravneniIn(Model):
     """Oprávnění pro kategorii: přidat (první kategorie oprávnění přidá) nebo odebrat
     (s poslední kategorií se odebere i oprávnění)."""
 
@@ -136,7 +130,7 @@ class OpravneniIn(BaseModel):
     ma: bool
 
 
-class OmezeniIn(BaseModel):
+class OmezeniIn(Model):
     opravneni_id: int
     omezene: bool
 

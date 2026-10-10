@@ -8,29 +8,29 @@ from datetime import date
 
 from fastapi import APIRouter, Depends
 from psycopg import Connection
-from pydantic import BaseModel
 
 from .db import spojeni
+from .model import Model
 from .prihlasovani import Prihlaseny, admin
 
 router = APIRouter(prefix="/api/sprava")
 
 
-class DenSLety(BaseModel):
+class DenSLety(Model):
     den: date
     lety: int
 
 
-class SmazatDen(BaseModel):
+class SmazatDen(Model):
     den: date
 
 
-class Smazano(BaseModel):
+class Smazano(Model):
     den: date
     smazano: int
 
 
-class NastaveniSystemu(BaseModel):
+class NastaveniSystemu(Model):
     testovaci_provoz: bool
     """Žlutý pruh TESTOVACÍ PROVOZ (db/034)."""
 
