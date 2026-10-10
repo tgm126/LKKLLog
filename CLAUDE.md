@@ -27,6 +27,8 @@ stůl, nic se nepřebírá automaticky. Stará verze je ve větvi `v1` (ke čten
    to tak bylo od začátku; starý kód se úplně smaže (žádné vrstvy kompatibility ani dočasné
    obezličky).
 4. **Slepé uličky** se zkoušejí na odbočce (větvi); když se nepovedou, odbočka se zahodí.
+   **Technický dluh** (co by šlo lépe, ale odkládá se na další zásah do souboru) se vede
+   v `docs/dluh.md`; před úpravou souboru se tam podívat, vyřešené položky mazat.
 5. **Data zadává uživatel** (číselníky, osoby, letadla…) a **mění je i přímo v databázi**.
    **Pravdou o datech je serverová databáze** (od 6. 10. 2026; ruční úpravy přes správce
    databází ve VPS Centru). Lokální databáze je jen pro testy a vývoj změn datového modelu.
