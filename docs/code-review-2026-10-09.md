@@ -315,3 +315,12 @@ zrcadlo Ubuntu, viz komentář v `ci.yml`); iPhone se zkouší ručně. F12 zbyt
 chunky, service worker, dialog jako bottom sheet na 1920 px) a D7 (indexy) – při tisících
 letů ročně nepostřehnutelné. S5 – 502 nese text chyby SMTP dál (vidí ho jen admin, je i
 v `lkkl.email.chyba`). S6 – doplněn test ke K1 a k úklidu relací; ostatní navržené testy ne.
+
+**Doplněno 10. 10. 2026 (po nasazení v2.24.0):** S3 (`db.transakce` s jedním překladem chyb
+databáze – podle názvu omezení, druhu chyby nebo výchozí; `db.upravit` pro UPDATE poslaných
+sloupců), A1 (práva jen v modelu `Prava`, závislost `pravo(název)`), A2 (`response_model` všude,
+modely dědí z `app/model.py`, typy frontendu generované z OpenAPI do `src/api.gen.ts` –
+`npm run api-typy` v kontrole, CI hlídá shodu; ručně opsané typy pryč, tsc prošel beze změny
+obrazovek) a S6 (testy: neznámý účet 401 i po pokusech, víc adres původu, audit při „přihlásit
+jako“, `DB_SOCKET`). Z review tak zbývá jen bod 9 (A3, F4, F10 při dalším zásahu do souborů)
+a vědomě neprovedené A4, F6, F12 zbytek, D7.
