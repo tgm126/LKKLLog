@@ -28,7 +28,7 @@ export function Pasky({
   const navigate = useNavigate();
   const jenCteni = useJenCteni();
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
-  const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu)));
+  const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.vzlet_namereno)));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
   const pocet = (d: Pasek[][]) => d.reduce((s, x) => s + x.length, 0);
   const otevrit =

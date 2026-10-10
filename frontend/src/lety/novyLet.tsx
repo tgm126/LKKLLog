@@ -169,6 +169,7 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
         zpusob_vzletu: nabidky.zpusoby.find((z) => z.kod === zpusobKod)?.nazev ?? "",
         zpusob_vzletu_kod: zpusobKod,
         cas_vzletu: null,
+        vzlet_namereno: null,
         cas_pristani: null,
         doba_uctovana_min: null,
         pocet_pristani: null,

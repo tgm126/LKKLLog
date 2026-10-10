@@ -5,6 +5,8 @@ import re
 import psycopg
 import pytest
 
+from app.lety import na_minuty
+
 from .conftest import _id
 
 
@@ -23,6 +25,10 @@ def test_vzlet_jen_jednou_a_zpet(conn, pilot, let):
     odpoved = k.post(f"/api/lety/{let_id}/vzlet")
     assert odpoved.status_code == 200 and odpoved.json()["rejstrik"] == "OK-2817"
     assert _stav(conn, let_id)["stav"] == "VE_VZDUCHU"
+    # oznámení a pásek na minuty, stopky z naměřeného vzletu (docs/modul-lety.md 3.6)
+    assert odpoved.json()["cas"].endswith(":00Z") or odpoved.json()["cas"].endswith(":00+00:00")
+    pasek = next(p for p in k.get("/api/lety").json()["lety"] if p["id"] == let_id)
+    assert pasek["cas_vzletu"] == odpoved.json()["cas"] and pasek["vzlet_namereno"] is not None
 
     znovu = k.post(f"/api/lety/{let_id}/vzlet")
     assert znovu.status_code == 409 and znovu.json()["detail"].startswith("OK-2817: Už vzlétl v")
@@ -241,8 +247,9 @@ def test_novy_probehly_aerovlek(conn, pilot, osoba, flotila):
     kluzak = _stav(conn, odpoved.json()["let_id"])
     vlecna = _stav(conn, kluzak["vlecny_let_id"])
     assert kluzak["stav"] == vlecna["stav"] == "UKONCEN"
-    assert kluzak["cas_vzletu"] == vlecna["cas_vzletu"] == casy["vzlet"]
-    assert vlecna["cas_pristani"] == casy["vlecna"] and vlecna["pob"] == 1
+    # ručně zadané časy jsou na minuty (docs/modul-lety.md 3.6)
+    assert kluzak["cas_vzletu"] == vlecna["cas_vzletu"] == na_minuty(casy["vzlet"])
+    assert vlecna["cas_pristani"] == na_minuty(casy["vlecna"]) and vlecna["pob"] == 1
     assert kluzak["plati_aeroklub"] and vlecna["plati_aeroklub"]
     # nezadané místo přistání = moje letiště pro oba lety vleku
     assert kluzak["misto_pristani"] == vlecna["misto_pristani"] == "LKKL"

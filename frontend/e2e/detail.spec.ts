@@ -69,7 +69,7 @@ test("detail naplánovaného letu: úpravy, vzlet a přistání, časy a místa"
 
   // VZLET z detailu, čas vzletu o dvě minuty dřív (přistání pak nepotřebuje dotaz na krátký let).
   await page.getByRole("button", { name: "Vzlet", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText(/OK-3819 vzlet \d\d:\d\d:\d\d/);
+  await expect(page.getByRole("status")).toContainText(/OK-3819 vzlet \d\d:\d\dZPĚT/);
   await expect(page.getByText("Ve vzduchu", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /^Vzlet\s*\d/ }).click();
   await page.getByRole("button", { name: "o minutu dřív" }).click();

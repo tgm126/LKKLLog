@@ -55,7 +55,7 @@ def _let(c, zalozil: int, posadka: dict[str, int], **udaje) -> int:
     vzlet, pristani = udaje.get("vzlet", "NULL"), udaje.get("pristani", "NULL")
     let_id = c.execute(
         f"""INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
-                cas_vzletu, cas_pristani, misto_pristani_id, pocet_pristani, pob,
+                vzlet_namereno, pristani_namereno, misto_pristani_id, pocet_pristani, pob,
                 plati_aeroklub, zalozil_id)
             VALUES ((SELECT id FROM lkkl.lov_letadlo WHERE rejstrik = %(rejstrik)s),
                     (SELECT id FROM lkkl.lov_ucel WHERE kod = %(ucel)s),

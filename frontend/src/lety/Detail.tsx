@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import { poslat } from "../api";
-import { doba, hodinyMinuty, hodinyMinutySekundy, ted } from "../cas";
+import { doba, hodinyMinuty, ted } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
 import { Blok, Obrazovka, useZpet } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
@@ -259,7 +259,7 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
           {l.cas_vzletu && (
             <Udaj
               popisek="Vzlet"
-              hodnota={<span className="cisla">{hodinyMinutySekundy(new Date(l.cas_vzletu))}</span>}
+              hodnota={<span className="cisla">{hodinyMinuty(l.cas_vzletu)}</span>}
               zvyraznit
               {...u("cas_vzletu")}
             >
@@ -275,7 +275,7 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
           {pristal && l.cas_pristani && (
             <Udaj
               popisek="Přistání"
-              hodnota={<span className="cisla">{hodinyMinutySekundy(new Date(l.cas_pristani))}</span>}
+              hodnota={<span className="cisla">{hodinyMinuty(l.cas_pristani)}</span>}
               zvyraznit
               {...u("cas_pristani")}
             >
@@ -377,7 +377,7 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
             >
               {upravy.map((h, i) => (
                 <p key={i}>
-                  <span className="cisla">{hodinyMinutySekundy(new Date(h.kdy))}</span> · {h.akce} ·{" "}
+                  <span className="cisla">{hodinyMinuty(h.kdy)}</span> · {h.akce} ·{" "}
                   {h.kdo}
                   {h.popis && <span className="udaj-pod">{h.popis}</span>}
                 </p>

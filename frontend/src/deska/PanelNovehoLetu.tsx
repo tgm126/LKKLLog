@@ -97,6 +97,7 @@ function Formular({
           zpusob_vzletu: "",
           zpusob_vzletu_kod: "VLASTNI",
           cas_vzletu: null,
+          vzlet_namereno: null,
           cas_pristani: null,
           doba_uctovana_min: null,
           pocet_pristani: null,

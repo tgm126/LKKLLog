@@ -39,6 +39,7 @@ export type LetPasku = Pick<
   | "zpusob_vzletu"
   | "zpusob_vzletu_kod"
   | "cas_vzletu"
+  | "vzlet_namereno"
   | "cas_pristani"
   | "doba_uctovana_min"
   | "pocet_pristani"
@@ -150,9 +151,10 @@ export function Letadlo({ let: l }: { let: LetPasku }) {
 export function CasLetu({ let: l, deska = false }: { let: LetPasku; deska?: boolean }) {
   const ted = useTik();
   if (l.stav === "VE_VZDUCHU" && l.cas_vzletu) {
+    // stopky z naměřeného vzletu (sekundy), vzlet pod nimi na minuty (docs/modul-lety.md 3.6)
     return (
       <>
-        <span className="stopky-pasku">{stopky(l.cas_vzletu, ted)}</span>
+        <span className="stopky-pasku">{stopky(l.vzlet_namereno ?? l.cas_vzletu, ted)}</span>
         <span className="male seda">
           <Sipka smer="vzlet" /> {hodinyMinuty(l.cas_vzletu)}
         </span>

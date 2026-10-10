@@ -83,7 +83,10 @@ class Pasek(Model):
     misto_pristani: str | None
     """Jen když není moje letiště."""
     cas_vzletu: datetime | None
+    """Na minuty (docs/modul-lety.md 3.6); stejně tak přistání."""
     cas_pristani: datetime | None
+    vzlet_namereno: datetime | None
+    """Naměřený vzlet na sekundy – jen pro stopky letu ve vzduchu."""
     doba_uctovana_min: int | None
     pocet_pristani: int | None
     pob: int
@@ -177,6 +180,12 @@ def slunce(letiste: dict | None, den: date) -> Slunce:
     )
 
 
+def na_minuty(cas: datetime | None) -> datetime | None:
+    """Ručně zadaný čas na celé minuty (zaokrouhlení jako lkkl.na_minuty) – na sekundy se jen
+    měří tlačítkem (docs/modul-lety.md 3.6)."""
+    return cas and (cas + timedelta(seconds=30)).replace(second=0, microsecond=0)
+
+
 def doba(minut: int) -> str:
     """Doba letu zápisem 1°02" (hodiny a minuty), pod hodinu 45"."""
     return f'{minut // 60}°{minut % 60:02d}"' if minut >= 60 else f'{minut}"'
@@ -226,8 +235,9 @@ def lety(
                   v.vleceny_let_id, coalesce(av.rejstrik, ak.rejstrik) AS vlek_rejstrik,
                   nullif(v.misto_vzletu, %(moje)s) AS misto_vzletu,
                   nullif(v.misto_pristani, %(moje)s) AS misto_pristani,
-                  v.cas_vzletu, v.cas_pristani, v.doba_uctovana_min, v.pocet_pristani,
-                  v.pob, v.uloha, v.uloha_oznaceni, v.prezkouseni, v.prezkouseni_kod,
+                  v.cas_vzletu, v.cas_pristani, v.vzlet_namereno, v.doba_uctovana_min,
+                  v.pocet_pristani, v.pob, v.uloha, v.uloha_oznaceni, v.prezkouseni,
+                  v.prezkouseni_kod,
                   a.max_doba_min, v.prekrocena_doba,
                   v.duvod_zruseni,
                   v.zruseno, v.dodatecne,
@@ -307,7 +317,7 @@ def _uz_provedeno(conn: Connection, let: dict, akce: str, cas: datetime | None) 
            ORDER BY kdy DESC LIMIT 1""",
         (let["id"], akce),
     ).fetchone()
-    kdy = f" v {cas:%H:%M:%S}" if cas else ""
+    kdy = f" v {cas:%H:%M}" if cas else ""
     od = f" ({kdo['kdo']})" if kdo else ""
     sloveso = {"Vzlet": "Už vzlétl", "Přistání": "Už přistál"}[akce]
     return HTTPException(409, f"{let['rejstrik']}: {sloveso}{kdy}{od}.")
@@ -325,8 +335,8 @@ def vzlet(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = D
     let = _let(conn, let_id)
     with zmena(conn):
         cas = conn.execute(
-            f"""UPDATE lkkl.let SET cas_vzletu = now()
-                WHERE id IN ({DVOJICE}) AND cas_vzletu IS NULL AND zruseni_duvod_id IS NULL
+            f"""UPDATE lkkl.let SET vzlet_namereno = now()
+                WHERE id IN ({DVOJICE}) AND vzlet_namereno IS NULL AND zruseni_duvod_id IS NULL
                 RETURNING cas_vzletu""",  # noqa: S608 – pevný text
             {"id": let_id},
         ).fetchone()
@@ -342,9 +352,9 @@ def pristani(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection 
     with zmena(conn):
         cas = conn.execute(
             """UPDATE lkkl.let l
-               SET cas_pristani = now(),
+               SET pristani_namereno = now(),
                    pocet_pristani = (SELECT count(*) FROM lkkl.let_tg t WHERE t.let_id = l.id) + 1
-               WHERE id = %s AND cas_vzletu IS NOT NULL AND cas_pristani IS NULL
+               WHERE id = %s AND vzlet_namereno IS NOT NULL AND pristani_namereno IS NULL
                  AND zruseni_duvod_id IS NULL
                RETURNING cas_pristani""",
             (let_id,),
@@ -367,7 +377,7 @@ def tg(let_id: int, _: Prihlaseny = Depends(prihlaseny), conn: Connection = Depe
             """INSERT INTO lkkl.let_tg (let_id, cas)
                SELECT v.id, now() FROM lkkl.v_let v
                WHERE v.id = %s AND v.stav = 'VE_VZDUCHU' AND v.kategorie_kod <> 'KLUZAK'
-               RETURNING cas""",
+               RETURNING lkkl.na_minuty(cas) AS cas""",
             (let_id,),
         ).fetchone()
     if cas is None:
@@ -395,16 +405,16 @@ def zpet(
     with zmena(conn):
         if data.akce == "vzlet":
             radky = conn.execute(
-                f"""UPDATE lkkl.let SET cas_vzletu = NULL
-                    WHERE id IN ({DVOJICE}) AND cas_pristani IS NULL
-                      AND cas_vzletu > now() - %(do)s""",  # noqa: S608 – pevný text
+                f"""UPDATE lkkl.let SET vzlet_namereno = NULL
+                    WHERE id IN ({DVOJICE}) AND pristani_namereno IS NULL
+                      AND vzlet_namereno > now() - %(do)s""",  # noqa: S608 – pevný text
                 {"id": let_id, "do": ZPET_DO},
             ).rowcount
         elif data.akce == "pristani":
             radky = conn.execute(
                 """UPDATE lkkl.let
-                   SET cas_pristani = NULL, pocet_pristani = NULL
-                   WHERE id = %s AND cas_pristani > now() - %s""",
+                   SET pristani_namereno = NULL, pocet_pristani = NULL
+                   WHERE id = %s AND pristani_namereno > now() - %s""",
                 (let_id, ZPET_DO),
             ).rowcount
         else:
@@ -629,7 +639,7 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
                 """SELECT zpusob_vzletu_kod AS kod FROM lkkl.v_let
                    WHERE den = (now() AT TIME ZONE 'UTC')::date AND kategorie_kod = 'KLUZAK'
                      AND cas_vzletu IS NOT NULL
-                   ORDER BY cas_vzletu DESC LIMIT 1"""
+                   ORDER BY vzlet_namereno DESC LIMIT 1"""  # pořadí i v téže minutě
             ).fetchone()
             or {"kod": None}
         )["kod"],
@@ -674,7 +684,7 @@ class NovyLet(Model):
 def _zalozit(conn: Connection, udaje: dict, posadka: list[ClenIn]) -> int:
     let_id = conn.execute(
         """INSERT INTO lkkl.let (letadlo_id, ucel_id, zpusob_vzletu_id, vlecny_let_id,
-               cas_vzletu, cas_pristani, pocet_pristani, pob, platce_id, plati_aeroklub,
+               vzlet_namereno, pristani_namereno, pocet_pristani, pob, platce_id, plati_aeroklub,
                uloha_id, prezkouseni_id, zalozil_id, misto_vzletu_id, misto_vzletu_popis,
                misto_pristani_id, misto_pristani_popis)
            VALUES (%(letadlo_id)s, %(ucel_id)s, %(zpusob_vzletu_id)s, %(vlecny_let_id)s,
@@ -735,7 +745,7 @@ def novy_let(
     pristani_popis = (data.misto_pristani_popis or "").strip() or None
     spolecne = {
         "ted": data.akce == "vzlet",
-        "cas_vzletu": data.cas_vzletu if probehly else None,
+        "cas_vzletu": na_minuty(data.cas_vzletu) if probehly else None,
         "platce_id": platce_id,
         "plati_aeroklub": data.plati_aeroklub,
         "zalozil_id": p.osoba_id,
@@ -760,7 +770,7 @@ def novy_let(
                     "ucel_id": None,
                     "zpusob_vzletu_id": vlastni,
                     "vlecny_let_id": None,
-                    "cas_pristani": data.cas_pristani_vlecne if probehly else None,
+                    "cas_pristani": na_minuty(data.cas_pristani_vlecne) if probehly else None,
                     "pocet_pristani": 1,
                     "pob": 1,
                     "uloha_id": None,
@@ -777,7 +787,7 @@ def novy_let(
                 "ucel_id": data.ucel_id,
                 "zpusob_vzletu_id": data.zpusob_vzletu_id,
                 "vlecny_let_id": vlecny_let_id,
-                "cas_pristani": data.cas_pristani if probehly else None,
+                "cas_pristani": na_minuty(data.cas_pristani) if probehly else None,
                 "pocet_pristani": data.pocet_pristani,
                 "pob": data.pob,
                 "uloha_id": data.uloha_id,
@@ -848,7 +858,10 @@ class DetailLetu(Model):
     misto_pristani_popis: str | None
     misto_pristani: str | None
     cas_vzletu: datetime | None
+    """Na minuty (docs/modul-lety.md 3.6); stejně tak přistání a časy T&G."""
     cas_pristani: datetime | None
+    vzlet_namereno: datetime | None
+    """Naměřený vzlet na sekundy – jen pro stopky letu ve vzduchu."""
     doba_min: int | None
     doba_uctovana_min: int | None
     pocet_pristani: int | None
@@ -884,7 +897,7 @@ def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = 
                   v.zpusob_vzletu, v.zpusob_vzletu_kod, v.je_vlecny,
                   l.misto_vzletu_id, l.misto_vzletu_popis, v.misto_vzletu,
                   l.misto_pristani_id, l.misto_pristani_popis, v.misto_pristani,
-                  v.cas_vzletu, v.cas_pristani, v.doba_min, v.doba_uctovana_min,
+                  v.cas_vzletu, v.cas_pristani, v.vzlet_namereno, v.doba_min, v.doba_uctovana_min,
                   v.pocet_pristani, v.pob, l.pob AS pob_zadany,
                   v.platce_id, v.plati_aeroklub, v.platce_jmeno, v.platce_prijmeni, v.poznamka,
                   v.duvod_zruseni, v.zruseno, v.dodatecne, v.zalozeno,
@@ -914,7 +927,8 @@ def detail(let_id: int, p: Prihlaseny = Depends(prihlaseny), conn: Connection = 
     let["tg"] = [
         r["cas"]
         for r in conn.execute(
-            "SELECT cas FROM lkkl.let_tg WHERE let_id = %s ORDER BY cas", (let_id,)
+            "SELECT lkkl.na_minuty(cas) AS cas FROM lkkl.let_tg WHERE let_id = %s ORDER BY 1",
+            (let_id,),
         ).fetchall()
     ]
     let["vlek"] = (
@@ -1028,7 +1042,9 @@ def upravit(
         zmeny["platce_id"] = None
     with zmena(conn):
         aktualni = conn.execute(
-            "SELECT verze, zruseni_duvod_id FROM lkkl.let WHERE id = %s FOR UPDATE", (let_id,)
+            """SELECT verze, zruseni_duvod_id, cas_vzletu, cas_pristani
+               FROM lkkl.let WHERE id = %s FOR UPDATE""",
+            (let_id,),
         ).fetchone()
         if aktualni["verze"] != data.verze:
             raise HTTPException(
@@ -1036,13 +1052,20 @@ def upravit(
             )
         if aktualni["zruseni_duvod_id"] is not None:
             raise HTTPException(409, "Zrušený let nejde upravit – nejdřív ho obnovte.")
+        if "cas_vzletu" in zmeny or "cas_pristani" in zmeny:
+            # Ručně jen minuty; i neupravený čas se zapíše tak, jak je zobrazený (na minuty),
+            # aby doba byla přesně rozdíl časů, které obsluha vidí (docs/modul-lety.md 3.6).
+            zmeny["vzlet_namereno"] = na_minuty(zmeny.pop("cas_vzletu", aktualni["cas_vzletu"]))
+            zmeny["pristani_namereno"] = na_minuty(
+                zmeny.pop("cas_pristani", aktualni["cas_pristani"])
+            )
         # i bez změny údajů (jen posádka) se zvýší verze – trigger let_verze
         db.upravit(conn, "let", let_id, zmeny, beze_zmeny="verze = verze")
-        if "cas_vzletu" in zmeny:  # kluzák a vlečná vzlétají společně (db/035)
+        if "cas_vzletu" in data.model_fields_set:  # kluzák a vlečná vzlétají společně (db/035)
             conn.execute(
-                f"""UPDATE lkkl.let SET cas_vzletu = %(cas)s
+                f"""UPDATE lkkl.let SET vzlet_namereno = %(cas)s, pristani_namereno = cas_pristani
                     WHERE id IN ({DVOJICE}) AND id <> %(id)s""",  # noqa: S608 – pevný text
-                {"cas": zmeny["cas_vzletu"], "id": let_id},
+                {"cas": zmeny["vzlet_namereno"], "id": let_id},
             )
         if data.posadka is not None:
             nove = {(c.osoba_id, c.funkce_id) for c in data.posadka}

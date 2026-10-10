@@ -3,6 +3,8 @@
 import psycopg
 import pytest
 
+from app.lety import na_minuty
+
 from .conftest import _id
 from .test_akce import _novy
 
@@ -36,7 +38,7 @@ def test_vlek_jako_dvojice(conn, osoba, let):
     pilot = osoba("Pilot")
     kluzak, vlecna = _vlek(let, osoba, pilot)
     # vzlet jen jedné poloviny
-    vzlet = "UPDATE lkkl.let SET cas_vzletu = now() WHERE id = %s"
+    vzlet = "UPDATE lkkl.let SET vzlet_namereno = now() WHERE id = %s"
     assert "čas vzletu musí být stejný" in _chyba(conn, vzlet, (kluzak,))
     # zrušení naplánovaného vleku jen napůl
     zrusit = """UPDATE lkkl.let SET zruseni_duvod_id = (SELECT min(id) FROM lkkl.lov_duvod_zruseni),
@@ -84,7 +86,7 @@ def test_uprava_vzletu_vleku_pro_oba(conn, pilot, osoba, let):
     casy = conn.execute(
         "SELECT cas_vzletu FROM lkkl.let WHERE id IN (%s, %s)", (kluzak, vlecna)
     ).fetchall()
-    assert [r["cas_vzletu"] for r in casy] == [novy, novy]
+    assert [r["cas_vzletu"] for r in casy] == [na_minuty(novy)] * 2
 
 
 def test_zpusob_vzletu_podle_kategorie(conn, osoba, let):
@@ -103,7 +105,9 @@ def test_cas_ne_v_budoucnosti(conn, pilot, let):
     pilot_id, k = pilot
     let_id = let("OK-2817", {"PIC": pilot_id})
     assert _chyba(
-        conn, "UPDATE lkkl.let SET cas_vzletu = now() + interval '1 hour' WHERE id = %s", (let_id,)
+        conn,
+        "UPDATE lkkl.let SET vzlet_namereno = now() + interval '1 hour' WHERE id = %s",
+        (let_id,),
     ) == ("Čas nesmí být v budoucnosti.")
     data = _novy(conn, rejstrik="OK-2817", posadka={"PIC": pilot_id}, pob=1, akce="probehly")
     budoucnost = conn.execute("SELECT now() + interval '1 hour' AS t").fetchone()["t"]
@@ -194,3 +198,51 @@ def test_souhrn_dne(conn, pilot, osoba, let):
         ("PLACHTARSKY", "OK-3819", False, 1, 60, 0),
         ("PLACHTARSKY", "OK-CRA", True, 1, 10, 0),
     ]
+
+
+def _casy(conn, let_id: int) -> dict:
+    return conn.execute(
+        """SELECT to_char(cas_vzletu AT TIME ZONE 'UTC', 'HH24:MI:SS') AS vzlet,
+                  to_char(cas_pristani AT TIME ZONE 'UTC', 'HH24:MI:SS') AS pristani, doba_min
+           FROM lkkl.let WHERE id = %s""",
+        (let_id,),
+    ).fetchone()
+
+
+@pytest.mark.parametrize(
+    ("vzlet", "pristani", "ocekavane"),
+    [
+        # dřív 10:00–10:10 (useknuté), ale doba 11
+        ("10:00:20", "10:10:50", {"vzlet": "10:00:00", "pristani": "10:11:00", "doba_min": 11}),
+        # zaokrouhlení každého času zvlášť by dalo 10:00–10:11 a dobu 11, čistý čas je 10:02
+        ("10:00:29", "10:10:31", {"vzlet": "10:00:00", "pristani": "10:10:00", "doba_min": 10}),
+        ("10:00:30", "10:10:29", {"vzlet": "10:01:00", "pristani": "10:11:00", "doba_min": 10}),
+        # krátký let: nejméně 1 minuta, přistání = vzlet + 1
+        ("10:00:40", "10:00:55", {"vzlet": "10:01:00", "pristani": "10:02:00", "doba_min": 1}),
+    ],
+)
+def test_casy_na_minuty(conn, osoba, let, vzlet, pristani, ocekavane):
+    """Vzlet na nejbližší minutu, doba z naměřeného času, přistání = vzlet + doba (3.6)."""
+    let_id = let(
+        "OK-2817", {"PIC": osoba("Pilot")},
+        vzlet=f"timestamptz '2026-10-01 {vzlet}+00'",
+        pristani=f"timestamptz '2026-10-01 {pristani}+00'",
+    )  # fmt: skip
+    assert _casy(conn, let_id) == ocekavane
+
+
+def test_uprava_jednoho_casu_drzi_zobrazeny_druhy(conn, osoba, prihlasit, let):
+    """Upravené přistání: vzlet zůstane, jak byl zobrazený, doba = rozdíl zobrazených časů."""
+    let_id = let(
+        "OK-2817", {"PIC": osoba("Pilot")},
+        vzlet="timestamptz '2026-10-01 10:00:40+00'",
+        pristani="timestamptz '2026-10-01 10:10:10+00'",
+    )  # fmt: skip
+    k = prihlasit("pilot@example.cz")
+    verze = k.get(f"/api/lety/{let_id}").json()["verze"]
+    d = k.post(
+        f"/api/lety/{let_id}",
+        json={"verze": verze, "cas_pristani": "2026-10-01T10:15:00Z"},
+    )
+    assert d.status_code == 200, d.text
+    assert _casy(conn, let_id) == {"vzlet": "10:01:00", "pristani": "10:15:00", "doba_min": 14}

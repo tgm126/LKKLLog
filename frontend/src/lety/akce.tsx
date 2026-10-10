@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { poslat } from "../api";
-import { hodinyMinutySekundy, stopky, ted } from "../cas";
+import { hodinyMinuty, stopky, ted } from "../cas";
 import { Dialog } from "../komponenty/Dialog";
 import { useOznamit } from "../komponenty/Oznameni";
 import { Tlacitko } from "../komponenty/Tlacitko";
@@ -13,8 +13,8 @@ export type Akce = "vzlet" | "pristani" | "tg";
 
 export type Provedeno = { let_id: number; rejstrik: string; akce: string; cas: string | null };
 
-/** Let pro PŘISTÁL: kvůli dotazu na let kratší než minuta je potřeba čas vzletu. */
-export type LetKPristani = { id: number; rejstrik: string; cas_vzletu: string | null };
+/** Let pro PŘISTÁL: kvůli dotazu na let kratší než minuta je potřeba naměřený čas vzletu. */
+export type LetKPristani = { id: number; rejstrik: string; vzlet_namereno: string | null };
 
 const NAZEV: Record<Akce, string> = { vzlet: "vzlet", pristani: "přistání", tg: "T&G" };
 
@@ -69,7 +69,7 @@ export function useAkceLetu() {
   /** PŘISTÁL; let kratší než minuta se nejdřív zeptá, jestli ho zrušit, nebo počítat. */
   const pristat = (l: LetKPristani) => {
     const kratsi =
-      l.cas_vzletu && ted().getTime() - new Date(l.cas_vzletu).getTime() < MINUTA_MS;
+      l.vzlet_namereno && ted().getTime() - new Date(l.vzlet_namereno).getTime() < MINUTA_MS;
     if (kratsi) setKratky(l);
     else provest(l.id, "pristani");
   };
@@ -77,7 +77,7 @@ export function useAkceLetu() {
   const dialog = kratky && (
     <Dialog nadpis={`${kratky.rejstrik} – let kratší než minuta`} zavrit={() => setKratky(null)}>
       <p>
-        Letí teprve {kratky.cas_vzletu && stopky(kratky.cas_vzletu, ted())}. Počítat ho jako let
+        Letí teprve {kratky.vzlet_namereno && stopky(kratky.vzlet_namereno, ted())}. Počítat ho jako let
         (zapíše se 1 minuta), nebo zrušit jako přerušený vzlet?
       </p>
       <Tlacitko
@@ -114,13 +114,13 @@ export function useAkceLetu() {
   };
 }
 
-/** „OK-CWF přistání 12:44:31“ s tlačítkem ZPĚT. */
+/** „OK-CWF přistání 12:45“ (na minuty) s tlačítkem ZPĚT. */
 export function oznamitAkci(
   oznamit: ReturnType<typeof useOznamit>,
   p: Provedeno,
   akce: Akce,
   zpet: () => void,
 ) {
-  const cas = p.cas ? ` ${hodinyMinutySekundy(new Date(p.cas))}` : "";
+  const cas = p.cas ? ` ${hodinyMinuty(p.cas)}` : "";
   oznamit({ text: `${p.rejstrik} ${NAZEV[akce]}${cas}`, zpet });
 }

@@ -68,7 +68,7 @@ export function PrehledLetu({
   }
   const akce = { provest, pristat, bezi };
   const ve = (stav: Stav) => lety.filter((l) => l.stav === stav);
-  const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.cas_vzletu)));
+  const veVzduchu = dvojice(ve("VE_VZDUCHU").sort(podle((l) => l.vzlet_namereno)));
   const naplanovane = dvojice(ve("NAPLANOVAN").sort(podle((l) => l.zalozeno)));
   const ukoncene = ve("UKONCEN").sort(podle((l) => l.cas_pristani, true));
   const zrusene = ve("ZRUSEN").sort(podle((l) => l.zruseno, true));

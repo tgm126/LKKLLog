@@ -200,7 +200,7 @@ CREATE FUNCTION lkkl.audit_hodnota(p_sloupec text, p_hodnota jsonb) RETURNS text
         WHEN jsonb_typeof(p_hodnota) = 'boolean' THEN
             CASE WHEN p_hodnota::boolean THEN 'ano' ELSE 'ne' END
         WHEN p_sloupec IN ('cas_vzletu', 'cas_pristani', 'cas') THEN
-            to_char((p_hodnota #>> '{}')::timestamptz AT TIME ZONE 'UTC', 'HH24:MI:SS')
+            to_char(lkkl.na_minuty((p_hodnota #>> '{}')::timestamptz) AT TIME ZONE 'UTC', 'HH24:MI')
         WHEN p_sloupec IN ('pozvanka_odeslana', 'zablokovano_do') THEN
             to_char((p_hodnota #>> '{}')::timestamptz AT TIME ZONE 'UTC', 'FMDD. FMMM. YYYY HH24:MI')
         ELSE p_hodnota #>> '{}'
@@ -324,11 +324,27 @@ BEGIN
         IF NEW.cas > now() THEN
             RAISE EXCEPTION 'Čas nesmí být v budoucnosti.';
         END IF;
-    ELSIF NEW.cas_vzletu > now() OR NEW.cas_pristani > now() THEN
+    ELSIF NEW.vzlet_namereno > now() OR NEW.pristani_namereno > now() THEN
         RAISE EXCEPTION 'Čas nesmí být v budoucnosti.';
     END IF;
     RETURN NEW;
 END $$;
+
+
+--
+-- Name: doba_letu_min(timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: lkkl; Owner: -
+--
+
+CREATE FUNCTION lkkl.doba_letu_min(p_vzlet timestamp with time zone, p_pristani timestamp with time zone) RETURNS integer
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+    RETURN CASE WHEN (p_pristani IS NOT NULL) THEN (GREATEST((1)::numeric, floor(((EXTRACT(epoch FROM (p_pristani - p_vzlet)) + (30)::numeric) / (60)::numeric))))::integer ELSE NULL::integer END;
+
+
+--
+-- Name: FUNCTION doba_letu_min(p_vzlet timestamp with time zone, p_pristani timestamp with time zone); Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON FUNCTION lkkl.doba_letu_min(p_vzlet timestamp with time zone, p_pristani timestamp with time zone) IS 'Doba letu v celých minutách z naměřených časů: čistý čas zaokrouhlený (30 s a víc nahoru), nejméně 1 minuta; bez přistání prázdná.';
 
 
 --
@@ -427,20 +443,21 @@ CREATE FUNCTION lkkl.let_letadlo_volne() RETURNS trigger
 DECLARE
     r record;
 BEGIN
-    IF NEW.cas_vzletu IS NULL OR NEW.zruseni_duvod_id IS NOT NULL THEN
+    IF NEW.vzlet_namereno IS NULL OR NEW.zruseni_duvod_id IS NOT NULL THEN
         RETURN NEW;
     END IF;
-    SELECT l.id, a.rejstrik, l.cas_pristani
+    SELECT l.id, a.rejstrik, l.pristani_namereno
     INTO r
     FROM lkkl.let l
     JOIN lkkl.lov_letadlo a ON a.id = l.letadlo_id
     WHERE l.letadlo_id = NEW.letadlo_id AND l.id <> NEW.id
-      AND l.cas_vzletu IS NOT NULL AND l.zruseni_duvod_id IS NULL
-      AND tstzrange(l.cas_vzletu, l.cas_pristani) && tstzrange(NEW.cas_vzletu, NEW.cas_pristani)
-    ORDER BY l.cas_vzletu
+      AND l.vzlet_namereno IS NOT NULL AND l.zruseni_duvod_id IS NULL
+      AND tstzrange(l.vzlet_namereno, l.pristani_namereno)
+          && tstzrange(NEW.vzlet_namereno, NEW.pristani_namereno)
+    ORDER BY l.vzlet_namereno
     LIMIT 1;
     IF FOUND THEN
-        IF r.cas_pristani IS NULL THEN
+        IF r.pristani_namereno IS NULL THEN
             RAISE EXCEPTION '% už letí (%).', r.rejstrik, lkkl.let_popis_hlasky(r.id);
         END IF;
         RAISE EXCEPTION '% má v tu dobu jiný let (%).', r.rejstrik, lkkl.let_popis_hlasky(r.id);
@@ -482,7 +499,7 @@ DECLARE
     r record;
 BEGIN
     SELECT o.id AS osoba_id, o.jmeno || ' ' || o.prijmeni AS osoba, a.rejstrik, l2.id AS let2_id,
-           l2.cas_pristani
+           l2.pristani_namereno
     INTO r
     FROM lkkl.let l
     JOIN lkkl.posadka p ON p.let_id = l.id
@@ -493,13 +510,14 @@ BEGIN
     JOIN lkkl.lov_letadlo a ON a.id = l2.letadlo_id
     JOIN lkkl.lov_osoba o ON o.id = p.osoba_id
     WHERE l.id = p_let_id
-      AND l.cas_vzletu IS NOT NULL AND l.zruseni_duvod_id IS NULL
-      AND l2.cas_vzletu IS NOT NULL AND l2.zruseni_duvod_id IS NULL
+      AND l.vzlet_namereno IS NOT NULL AND l.zruseni_duvod_id IS NULL
+      AND l2.vzlet_namereno IS NOT NULL AND l2.zruseni_duvod_id IS NULL
       -- bez přistání = ve vzduchu (rozsah bez horní meze); přistání a vzlet ve stejnou chvíli jde
-      AND tstzrange(l.cas_vzletu, l.cas_pristani) && tstzrange(l2.cas_vzletu, l2.cas_pristani)
+      AND tstzrange(l.vzlet_namereno, l.pristani_namereno)
+          && tstzrange(l2.vzlet_namereno, l2.pristani_namereno)
     LIMIT 1;
     IF FOUND THEN
-        IF r.cas_pristani IS NULL THEN
+        IF r.pristani_namereno IS NULL THEN
             RAISE EXCEPTION 'Let %: % už letí na % (%).', p_let_id, r.osoba, r.rejstrik,
                 lkkl.let_popis_hlasky(r.let2_id, r.osoba_id);
         END IF;
@@ -687,13 +705,13 @@ BEGIN
     END IF;
 
     -- T&G: jen během letu a nejvýš tolik, kolik přistání bylo „navíc“.
-    SELECT count(*), coalesce(bool_or(cas < l.cas_vzletu OR cas > l.cas_pristani), false)
+    SELECT count(*), coalesce(bool_or(cas < l.vzlet_namereno OR cas > l.pristani_namereno), false)
     INTO v_tg, v_tg_mimo
     FROM lkkl.let_tg WHERE let_id = l.id;
     IF v_tg > 0 AND (v_kat_kod = 'KLUZAK' OR v_je_vlecny) THEN
         RAISE EXCEPTION 'Let %: T&G jde jen u motorového letadla, ne u kluzáku ani vlečné.', l.id;
     END IF;
-    IF v_tg > 0 AND (l.cas_vzletu IS NULL OR v_tg_mimo) THEN
+    IF v_tg > 0 AND (l.vzlet_namereno IS NULL OR v_tg_mimo) THEN
         RAISE EXCEPTION 'Let %: čas T&G je mimo dobu letu.', l.id;
     END IF;
     IF v_tg > l.pocet_pristani - 1 THEN
@@ -718,6 +736,22 @@ END $$;
 
 
 --
+-- Name: na_minuty(timestamp with time zone); Type: FUNCTION; Schema: lkkl; Owner: -
+--
+
+CREATE FUNCTION lkkl.na_minuty(p_cas timestamp with time zone) RETURNS timestamp with time zone
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+    RETURN to_timestamp((((946684800)::numeric + (floor(((EXTRACT(epoch FROM (p_cas - '2000-01-01 00:00:00+00'::timestamp with time zone)) + (30)::numeric) / (60)::numeric)) * (60)::numeric)))::double precision);
+
+
+--
+-- Name: FUNCTION na_minuty(p_cas timestamp with time zone); Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON FUNCTION lkkl.na_minuty(p_cas timestamp with time zone) IS 'Čas zaokrouhlený na nejbližší celou minutu (od 30 s nahoru).';
+
+
+--
 -- Name: nevyprazdnovat(); Type: FUNCTION; Schema: lkkl; Owner: -
 --
 
@@ -727,6 +761,22 @@ CREATE FUNCTION lkkl.nevyprazdnovat() RETURNS trigger
 BEGIN
     RAISE EXCEPTION 'Tabulka % se nevyprazdňuje.', TG_TABLE_NAME;
 END $$;
+
+
+--
+-- Name: pristani_na_minuty(timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: lkkl; Owner: -
+--
+
+CREATE FUNCTION lkkl.pristani_na_minuty(p_vzlet timestamp with time zone, p_pristani timestamp with time zone) RETURNS timestamp with time zone
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+    RETURN to_timestamp(((((946684800)::numeric + EXTRACT(epoch FROM (lkkl.na_minuty(p_vzlet) - '2000-01-01 00:00:00+00'::timestamp with time zone))) + ((60 * lkkl.doba_letu_min(p_vzlet, p_pristani)))::numeric))::double precision);
+
+
+--
+-- Name: FUNCTION pristani_na_minuty(p_vzlet timestamp with time zone, p_pristani timestamp with time zone); Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON FUNCTION lkkl.pristani_na_minuty(p_vzlet timestamp with time zone, p_pristani timestamp with time zone) IS 'Přistání na minuty = vzlet na minuty + doba; bez přistání prázdné.';
 
 
 --
@@ -1046,13 +1096,9 @@ CREATE TABLE lkkl.let (
     misto_vzletu_popis text,
     misto_pristani_id bigint,
     misto_pristani_popis text,
-    cas_vzletu timestamp with time zone,
-    cas_pristani timestamp with time zone,
-    doba_min integer GENERATED ALWAYS AS (
-CASE
-    WHEN (cas_pristani IS NOT NULL) THEN (GREATEST((1)::numeric, floor(((EXTRACT(epoch FROM (cas_pristani - cas_vzletu)) + (30)::numeric) / (60)::numeric))))::integer
-    ELSE NULL::integer
-END) STORED,
+    vzlet_namereno timestamp with time zone,
+    pristani_namereno timestamp with time zone,
+    doba_min integer GENERATED ALWAYS AS (lkkl.doba_letu_min(vzlet_namereno, pristani_namereno)) STORED,
     pocet_pristani smallint,
     pob smallint,
     platce_id bigint,
@@ -1066,6 +1112,8 @@ END) STORED,
     verze integer DEFAULT 1 NOT NULL,
     uloha_id bigint,
     prezkouseni_id bigint,
+    cas_vzletu timestamp with time zone GENERATED ALWAYS AS (lkkl.na_minuty(vzlet_namereno)) STORED,
+    cas_pristani timestamp with time zone GENERATED ALWAYS AS (lkkl.pristani_na_minuty(vzlet_namereno, pristani_namereno)) STORED,
     CONSTRAINT let_misto_pristani_popis_check CHECK ((btrim(misto_pristani_popis) <> ''::text)),
     CONSTRAINT let_misto_vzletu_popis_check CHECK ((btrim(misto_vzletu_popis) <> ''::text)),
     CONSTRAINT let_pob_check CHECK (((pob >= 1) AND (pob <= 20))),
@@ -1073,9 +1121,9 @@ END) STORED,
     CONSTRAINT misto_pristani_jedno CHECK (((misto_pristani_id IS NULL) <> (misto_pristani_popis IS NULL))),
     CONSTRAINT misto_vzletu_jedno CHECK (((misto_vzletu_id IS NULL) <> (misto_vzletu_popis IS NULL))),
     CONSTRAINT neni_vlastni_vlek CHECK ((vlecny_let_id <> id)),
-    CONSTRAINT pocet_pristani_po_pristani CHECK ((((cas_pristani IS NULL) AND (pocet_pristani IS NULL)) OR ((cas_pristani IS NOT NULL) AND (pocet_pristani >= 1)))),
+    CONSTRAINT pocet_pristani_po_pristani CHECK ((((pristani_namereno IS NULL) AND (pocet_pristani IS NULL)) OR ((pristani_namereno IS NOT NULL) AND (pocet_pristani >= 1)))),
     CONSTRAINT prave_jeden_platce CHECK ((plati_aeroklub = (platce_id IS NULL))),
-    CONSTRAINT pristani_po_vzletu CHECK (((cas_pristani IS NULL) OR ((cas_vzletu IS NOT NULL) AND (cas_pristani >= cas_vzletu)))),
+    CONSTRAINT pristani_po_vzletu CHECK (((pristani_namereno IS NULL) OR ((vzlet_namereno IS NOT NULL) AND (pristani_namereno >= vzlet_namereno)))),
     CONSTRAINT zruseni_uplne CHECK ((((zruseni_duvod_id IS NULL) = (zruseno IS NULL)) AND ((zrusil_id IS NULL) OR (zruseno IS NOT NULL))))
 );
 
@@ -1130,17 +1178,24 @@ COMMENT ON COLUMN lkkl.let.misto_pristani_popis IS 'Přistání do terénu (popi
 
 
 --
--- Name: COLUMN let.cas_vzletu; Type: COMMENT; Schema: lkkl; Owner: -
+-- Name: COLUMN let.vzlet_namereno; Type: COMMENT; Schema: lkkl; Owner: -
 --
 
-COMMENT ON COLUMN lkkl.let.cas_vzletu IS 'UTC, na sekundy; čas určuje server.';
+COMMENT ON COLUMN lkkl.let.vzlet_namereno IS 'Naměřený vzlet (UTC, na sekundy – určuje server); ručně zadaný na celé minuty. Jinde než v kontrolách a stopkách se nepoužívá – čte se cas_vzletu.';
+
+
+--
+-- Name: COLUMN let.pristani_namereno; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON COLUMN lkkl.let.pristani_namereno IS 'Naměřené přistání (UTC, na sekundy – určuje server); ručně zadané na celé minuty. Jinde než v kontrolách se nepoužívá – čte se cas_pristani.';
 
 
 --
 -- Name: COLUMN let.doba_min; Type: COMMENT; Schema: lkkl; Owner: -
 --
 
-COMMENT ON COLUMN lkkl.let.doba_min IS 'Doba letu v celých minutách (30 s a víc nahoru), nejméně 1 minuta – počítá databáze.';
+COMMENT ON COLUMN lkkl.let.doba_min IS 'Doba letu v celých minutách: čistý naměřený čas zaokrouhlený (30 s a víc nahoru), nejméně 1 minuta; = cas_pristani − cas_vzletu.';
 
 
 --
@@ -1176,6 +1231,20 @@ COMMENT ON COLUMN lkkl.let.uloha_id IS 'Úloha z osnovy; povinnost podle účelu
 --
 
 COMMENT ON COLUMN lkkl.let.prezkouseni_id IS 'Typ přezkoušení – právě u účelu Přezkoušení (povinný, když pro kategorii letadla nějaký je); úloha se pak nezadává.';
+
+
+--
+-- Name: COLUMN let.cas_vzletu; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON COLUMN lkkl.let.cas_vzletu IS 'Vzlet na minuty (UTC): naměřený zaokrouhlený na nejbližší minutu.';
+
+
+--
+-- Name: COLUMN let.cas_pristani; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON COLUMN lkkl.let.cas_pristani IS 'Přistání na minuty (UTC) = cas_vzletu + doba_min.';
 
 
 --
@@ -2449,7 +2518,8 @@ CREATE VIEW lkkl.v_let AS
     (((ulo.kod)::text || '/'::text) || (ul.kod)::text) AS uloha_oznaceni,
     l.prezkouseni_id,
     (((pr.kod)::text || ' '::text) || (pr.nazev)::text) AS prezkouseni,
-    (pr.kod)::text AS prezkouseni_kod
+    (pr.kod)::text AS prezkouseni_kod,
+    l.vzlet_namereno
    FROM (((((((((((((((lkkl.let l
      JOIN lkkl.lov_letadlo a ON ((a.id = l.letadlo_id)))
      JOIN lkkl.lov_typ t ON ((t.id = a.typ_id)))
@@ -2475,6 +2545,13 @@ CREATE VIEW lkkl.v_let AS
 --
 
 COMMENT ON VIEW lkkl.v_let IS 'Lety s odvozeným stavem, dnem (UTC datum vzletu), vlekem, účtovanou dobou, příznakem „dodatečně“, druhem provozu (PLACHTARSKY = kluzák a vlečný let, MOTOROVY = ostatní) a příznakem překročené maximální doby letu (jen ve vzduchu, podle now()).';
+
+
+--
+-- Name: COLUMN v_let.vzlet_namereno; Type: COMMENT; Schema: lkkl; Owner: -
+--
+
+COMMENT ON COLUMN lkkl.v_let.vzlet_namereno IS 'Naměřený vzlet na sekundy – jen pro stopky letu ve vzduchu.';
 
 
 --
@@ -3005,7 +3082,7 @@ ALTER TABLE ONLY lkkl.let
 --
 
 ALTER TABLE ONLY lkkl.let
-    ADD CONSTRAINT letadlo_bez_prekryvu EXCLUDE USING gist (letadlo_id WITH =, tstzrange(cas_vzletu, cas_pristani) WITH &&) WHERE (((cas_vzletu IS NOT NULL) AND (zruseni_duvod_id IS NULL)));
+    ADD CONSTRAINT letadlo_bez_prekryvu EXCLUDE USING gist (letadlo_id WITH =, tstzrange(vzlet_namereno, pristani_namereno) WITH &&) WHERE (((vzlet_namereno IS NOT NULL) AND (zruseni_duvod_id IS NULL)));
 
 
 --
@@ -3677,7 +3754,7 @@ CREATE TRIGGER audit_nevyprazdnovat BEFORE TRUNCATE ON lkkl.audit FOR EACH STATE
 -- Name: let let_cas_ne_v_budoucnosti; Type: TRIGGER; Schema: lkkl; Owner: -
 --
 
-CREATE TRIGGER let_cas_ne_v_budoucnosti BEFORE INSERT OR UPDATE OF cas_vzletu, cas_pristani ON lkkl.let FOR EACH ROW EXECUTE FUNCTION lkkl.cas_ne_v_budoucnosti();
+CREATE TRIGGER let_cas_ne_v_budoucnosti BEFORE INSERT OR UPDATE OF vzlet_namereno, pristani_namereno ON lkkl.let FOR EACH ROW EXECUTE FUNCTION lkkl.cas_ne_v_budoucnosti();
 
 
 --
@@ -3698,7 +3775,7 @@ CREATE CONSTRAINT TRIGGER let_kontrola AFTER INSERT OR UPDATE ON lkkl.let DEFERR
 -- Name: let let_letadlo_volne; Type: TRIGGER; Schema: lkkl; Owner: -
 --
 
-CREATE TRIGGER let_letadlo_volne BEFORE INSERT OR UPDATE OF letadlo_id, cas_vzletu, cas_pristani, zruseni_duvod_id ON lkkl.let FOR EACH ROW EXECUTE FUNCTION lkkl.let_letadlo_volne();
+CREATE TRIGGER let_letadlo_volne BEFORE INSERT OR UPDATE OF letadlo_id, vzlet_namereno, pristani_namereno, zruseni_duvod_id ON lkkl.let FOR EACH ROW EXECUTE FUNCTION lkkl.let_letadlo_volne();
 
 
 --

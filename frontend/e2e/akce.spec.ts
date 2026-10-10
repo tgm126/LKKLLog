@@ -12,7 +12,7 @@ test("vzlet a Zpět, T&G a přistání z pásku", async ({ page }) => {
 
   const planovany = page.locator(".let.naplanovan", { hasText: "OK-3819" });
   await planovany.getByRole("button", { name: "Vzlet" }).click();
-  await expect(oznameni).toContainText(/OK-3819 vzlet \d\d:\d\d:\d\d/);
+  await expect(oznameni).toContainText(/OK-3819 vzlet \d\d:\d\dZPĚT/);
   await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-3819" })).toBeVisible();
   await oznameni.getByRole("button", { name: "ZPĚT" }).click();
   await expect(planovany).toBeVisible();

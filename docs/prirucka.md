@@ -83,6 +83,9 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
   **Počítač** (okno od 1200 px): provozní deska. Data jsou stejná.
 - **Čas je UTC.** Nahoře sluneční časy letiště: TB / TE začátek a konec občanského soumraku,
   SR / SS východ a západ Slunce.
+- **Časy letu jsou na minuty** a doba letu je vždy přesně přistání − vzlet. Aplikace měří na
+  sekundy (stopky letu ve vzduchu), pak vzlet zaokrouhlí na nejbližší minutu a dobu z čistého
+  času; přistání = vzlet + doba, takže se od hodin při stisku může lišit o minutu.
 - **Žlutý pruh TESTOVACÍ PROVOZ** – zkušební provoz, lety se mohou smazat.
 - **Načítám… / bez spojení:** při načítání je to vidět; když server do 15 s neodpoví nebo
   vypadne signál, aplikace to řekne (přehled ukáže poslední známé údaje s časem) a akci

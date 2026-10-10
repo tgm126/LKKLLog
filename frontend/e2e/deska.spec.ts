@@ -65,7 +65,7 @@ test("deska: akce z pásku, Ctrl+Z, detail v panelu a úprava", async ({ page })
   await mfv().getByRole("button", { name: /T&G/ }).click();
   await expect(mfv().getByRole("button", { name: /T&G/ })).toHaveText("T&G 2");
   await mfv().getByRole("button", { name: "Přistál" }).click();
-  await expect(oznameni).toContainText(/OK-MFV přistání \d\d:\d\d:\d\d/);
+  await expect(oznameni).toContainText(/OK-MFV přistání \d\d:\d\dZPĚT/);
   await expect(mfv()).toHaveCount(0);
   // Ctrl+Z = ZPĚT, dokud je oznámení vidět
   await page.keyboard.press("Control+z");

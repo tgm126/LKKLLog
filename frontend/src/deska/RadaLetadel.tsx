@@ -59,8 +59,8 @@ export function RadaLetadel({
               const stav = a.mimo_provoz ? "mimo" : leti ? "vzduch" : plan ? "naplanovan" : "";
               const popis = a.mimo_provoz
                 ? "mimo provoz"
-                : leti?.cas_vzletu
-                  ? `letí ${stopky(leti.cas_vzletu, ted).slice(0, -3)}`
+                : leti?.vzlet_namereno
+                  ? `letí ${stopky(leti.vzlet_namereno, ted).slice(0, -3)}`
                   : plan
                     ? "naplánován"
                     : dnes.length > 0

@@ -153,7 +153,7 @@ přetrženém laně – vlečná letí dál).
 - Sluneční časy počítá server pro souřadnice domovského letiště (knihovna `astral`).
 
 ### 3.4 Zpět
-Po VZLET, PŘISTÁL a T&G se na 6 s ukáže lišta „OK-CWF přistání 12:44:31 · ZPĚT“. Zpět vrátí
+Po VZLET, PŘISTÁL a T&G se na 6 s ukáže lišta „OK-CWF přistání 12:45 · ZPĚT“ (čas na minuty, 3.6). Zpět vrátí
 let do stavu před akcí (vzlet → naplánovaný, přistání → ve vzduchu, T&G → bez posledního
 času). V auditu zůstane obojí (akce i návrat).
 
@@ -172,6 +172,48 @@ plátce a poznámka. **Neupravuje se** letadlo, účel ani způsob vzletu –
 takový let se zruší s důvodem „Založeno omylem“ a založí znovu (mění se s nimi pravidla
 posádky, úlohy i vleku). Zrušení a obnovení vleku platí pro oba lety dvojice. Zrušený let
 nejde upravit, jen obnovit.
+
+### 3.6 Časy letu: měření na sekundy, vše ostatní na minuty (10. 10. 2026, db/046)
+Sekundy jsou **jen měření** (VZLET, PŘISTÁL a T&G stiskem tlačítka, `now()` serveru). Všude
+jinde – pásky, deník, detail, úpravy, historie, souhrny, účetnictví – jsou časy na celé
+minuty a **doba letu = přistání − vzlet** vždy přesně sedí. Dřív se doba počítala ze sekund
+zaokrouhlením a časy se zobrazovaly useknuté (vzlet 10:00:20, přistání 10:10:50 → 10:00–10:10,
+ale doba 11 minut).
+
+Pravidlo (varianta „od vzletu“):
+1. **vzlet** = naměřený vzlet zaokrouhlený na nejbližší minutu (od 30 s nahoru);
+2. **doba** = čistý naměřený čas zaokrouhlený na nejbližší minutu, nejméně 1 minuta (krátký
+   let „počítat“, rozhodnutí 3 níže);
+3. **přistání** = vzlet + doba – může se od hodin při stisku lišit až o minutu, vzlet se po
+   přistání nemění.
+
+Odmítnuté varianty: zaokrouhlit vzlet i přistání zvlášť (doba by se od čistého času lišila
+o ±1 minutu); zarovnat na střed letu (vzlet by se po přistání u části letů posunul o minutu).
+
+Tabulka `let` (vše odvozené ze dvou naměřených sloupců, jinde se sekundy nepoužívají):
+
+| Sloupec | Typ | Význam |
+|---|---|---|
+| `vzlet_namereno` | `timestamptz` | naměřený vzlet na sekundy (ručně zadaný = celé minuty) |
+| `pristani_namereno` | `timestamptz` | naměřené přistání na sekundy (ručně zadané = celé minuty) |
+| `cas_vzletu` | generovaný | vzlet na minuty (pravidlo 1) |
+| `doba_min` | generovaný | doba v minutách (pravidlo 2, beze změny proti dřívějšku) |
+| `cas_pristani` | generovaný | přistání na minuty = `cas_vzletu + doba_min` (pravidlo 3) |
+
+- Zapisuje se jen do `*_namereno`; kdo čte „čas vzletu/přistání“ (pohledy, server, souhrny,
+  den letu, historie), dostane minuty. Zápis do generovaného sloupce databáze odmítne.
+- **Fyzická pravidla** (letadlo a osoba bez překryvu, čas ne v budoucnosti, T&G uvnitř letu,
+  vzlet vleku stejný) hlídá databáze nad naměřenými časy.
+- **T&G** (`let_tg.cas`) zůstává měřením na sekundy; ukazuje se zaokrouhlené na minuty.
+- **Ruční čas** (proběhlý let, úprava v detailu) se zadává jen v minutách a uloží se s :00 –
+  doba je pak přesně rozdíl. Úprava jen jednoho z časů zachová druhý tak, jak je zobrazený
+  (server ho přepíše jeho minutovou hodnotou), aby doba odpovídala tomu, co obsluha vidí.
+- Pohled `v_let` dává minutové časy a navíc `vzlet_namereno` pro **stopky** letu ve vzduchu
+  a pro **pořadí** letů, které vzlétly v téže minutě (ve vzduchu nejdéle letící nahoře,
+  výchozí způsob vzletu kluzáku podle posledního vzletu). Sekundy ukazují už jen stopky a hodiny v hlavičce; oznámení po akci, detail
+  i historie jsou na minuty.
+- **Stávající data** se nepřevádějí: doba se počítá stejně jako dřív, posune se jen
+  zobrazené přistání (nejvýš o minutu).
 
 ## 4. Frontend
 

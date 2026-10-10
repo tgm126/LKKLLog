@@ -1132,8 +1132,11 @@ export interface components {
             misto_pristani_id: number | null;
             misto_pristani_popis: string | null;
             misto_pristani: string | null;
+            /** @description Na minuty (docs/modul-lety.md 3.6); stejně tak přistání a časy T&G. */
             cas_vzletu: string | null;
             cas_pristani: string | null;
+            /** @description Naměřený vzlet na sekundy – jen pro stopky letu ve vzduchu. */
+            vzlet_namereno: string | null;
             doba_min: number | null;
             doba_uctovana_min: number | null;
             pocet_pristani: number | null;
@@ -1509,8 +1512,11 @@ export interface components {
             misto_vzletu: string | null;
             /** @description Jen když není moje letiště. */
             misto_pristani: string | null;
+            /** @description Na minuty (docs/modul-lety.md 3.6); stejně tak přistání. */
             cas_vzletu: string | null;
             cas_pristani: string | null;
+            /** @description Naměřený vzlet na sekundy – jen pro stopky letu ve vzduchu. */
+            vzlet_namereno: string | null;
             doba_uctovana_min: number | null;
             pocet_pristani: number | null;
             /** @description Počet osob na palubě (u výcviku, sóla a přezkoušení spočítaný z posádky). */
