@@ -13,25 +13,36 @@ test("vzlet a Zpět, T&G a přistání z pásku", async ({ page }) => {
   const planovany = page.locator(".let.naplanovan", { hasText: "OK-3819" });
   await planovany.getByRole("button", { name: "Vzlet" }).click();
   await expect(oznameni).toContainText(/OK-3819 vzlet \d\d:\d\d:\d\d/);
-  await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-3819" })).toBeVisible();
+  await expect(
+    page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-3819" }),
+  ).toBeVisible();
   await oznameni.getByRole("button", { name: "ZPĚT" }).click();
   await expect(planovany).toBeVisible();
   await expect(oznameni).toBeHidden();
 
   const mfv = page.locator(".let.problem", { hasText: "OK-MFV" });
+  // Akce jsou pod páskem, ne v jeho klikací ploše (telefon by při stisku zvýraznil celý pásek).
+  await expect(mfv.getByRole("button", { name: "Přistál" })).toBeVisible();
+  await expect(page.locator(".let-par button")).toHaveCount(0);
   await mfv.getByRole("button", { name: /T&G/ }).click();
   await expect(oznameni).toContainText("OK-MFV T&G");
   await expect(mfv.getByRole("button", { name: /T&G/ })).toHaveText("T&G 2");
   await mfv.getByRole("button", { name: "Přistál" }).click();
   await expect(
-    page.locator(".denik-radek.ukoncen", { hasText: "OK-MFV" }).locator(".denik-pristani"),
+    page
+      .locator(".denik-radek.ukoncen", { hasText: "OK-MFV" })
+      .locator(".denik-pristani"),
   ).toHaveText("3");
 });
 
-test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ page }) => {
+test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({
+  page,
+}) => {
   const par = page.locator(".let.naplanovan", { hasText: "OK-6722" });
   await par.getByRole("button", { name: "Vzlet" }).click();
-  const veVzduchu = page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" });
+  const veVzduchu = page.locator(".let:is(.vzduch, .problem)", {
+    hasText: "OK-6722",
+  });
   await expect(veVzduchu.locator(".let-par")).toHaveCount(2);
   await expect(veVzduchu).toContainText("Z 526 · vlečná");
   await expect(veVzduchu).not.toContainText("vleče");
@@ -39,9 +50,14 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
   await expect(veVzduchu.getByRole("button", { name: /T&G/ })).toHaveCount(0);
 
   // Ťuknutí na polovinu vlečné otevře její detail.
-  await veVzduchu.locator(".let-par", { hasText: "OK-CRA" }).getByText("Adam Admin").click();
+  await veVzduchu
+    .locator(".let-par", { hasText: "OK-CRA" })
+    .getByText("Adam Admin")
+    .click();
   await expect(page.locator(".obrazovka .let-hlava")).toContainText("OK-CRA");
-  await expect(page.getByRole("button", { name: /Vleče/ })).toContainText("OK-6722");
+  await expect(page.getByRole("button", { name: /Vleče/ })).toContainText(
+    "OK-6722",
+  );
   // Let kratší než minuta: dialog – počítat (1 minuta), nebo zrušit.
   await page.getByRole("button", { name: "Přistál" }).click();
   const dialog = page.getByRole("dialog");
@@ -51,14 +67,23 @@ test("vlek ve vzduchu jako dvojice, detail ťuknutím na polovinu", async ({ pag
   await page.getByRole("button", { name: "Zpět", exact: true }).click();
 
   // Vlečná přistála – kluzák zůstal ve vzduchu sám; vlečná v deníku s účelem „vlek“.
-  const kluzak = page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" });
+  const kluzak = page.locator(".let:is(.vzduch, .problem)", {
+    hasText: "OK-6722",
+  });
   await expect(kluzak.locator(".let-par")).toHaveCount(1);
-  const vlek = page.locator(".denik-radek.ukoncen .seda", { hasText: /· vlek$/ });
+  const vlek = page.locator(".denik-radek.ukoncen .seda", {
+    hasText: /· vlek$/,
+  });
   await expect(vlek).toHaveCount(1);
   // Kluzák po přetrženém laně: zrušit jako přerušený vzlet (vlečná zůstane ukončená).
   await kluzak.getByRole("button", { name: "Přistál" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Zrušit – přerušený vzlet" }).click();
-  await expect(page.getByRole("status")).toHaveText(/OK-6722 zrušen – přerušený vzlet/);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Zrušit – přerušený vzlet" })
+    .click();
+  await expect(page.getByRole("status")).toHaveText(
+    /OK-6722 zrušen – přerušený vzlet/,
+  );
   await expect(vlek).toHaveCount(1);
 });
 
@@ -84,7 +109,10 @@ test("osoba ve vzduchu nemůže vzlétnout jinde", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText(
     /Petr Pilot už letí na OK-2817 \(vzlet \d\d:\d\d UTC\)\./,
   );
-  await expect(page.getByRole("status")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByRole("status")).toHaveCSS(
+    "color",
+    "rgb(255, 255, 255)",
+  );
 });
 
 test("průvodce: VZLET TEĎ", async ({ page }) => {
@@ -99,29 +127,35 @@ test("průvodce: VZLET TEĎ", async ({ page }) => {
   const dal = page.getByRole("button", { name: "Dál" });
   await expect(dal).toBeDisabled();
   await page.getByRole("button", { name: "Já (Adam Admin)" }).click();
-  await expect(page.getByRole("button", { name: "Já (Adam Admin)" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(
+    page.getByRole("button", { name: "Já (Adam Admin)" }),
+  ).toHaveAttribute("aria-pressed", "true");
   await dal.click();
 
   await expect(page.getByText("3 / 3 · Let")).toBeVisible();
   // Rozpracovaný pásek nahoře ukazuje, co je vybrané; místo vzletu předvyplněné domovským.
   await expect(page.locator(".let.rozpracovany")).toContainText("Adam Admin");
-  await expect(page.getByRole("button", { name: /Místo vzletu\s*LKKL Kladno/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Místo vzletu\s*LKKL Kladno/ }),
+  ).toBeVisible();
   // Výchozí způsob vzletu = jak se dnes naposledy vzlétalo s kluzákem (předchozí test: aerovlek).
-  await expect(page.getByRole("button", { name: "Aerovlek", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(
+    page.getByRole("button", { name: "Aerovlek", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Naviják", exact: true }).click();
-  await expect(page.locator(".let.rozpracovany .stitky-pasku")).toContainText("naviják");
+  await expect(page.locator(".let.rozpracovany .stitky-pasku")).toContainText(
+    "naviják",
+  );
   // Hradí předvyplněný PIC.
-  await expect(page.getByRole("button", { name: /Hradí\s*Adam Admin/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Hradí\s*Adam Admin/ }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Vzlet teď" }).click();
 
   await expect(page.getByRole("status")).toContainText(/OK-6722 vzlet/);
-  await expect(page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" })).toContainText("Adam Admin");
+  await expect(
+    page.locator(".let:is(.vzduch, .problem)", { hasText: "OK-6722" }),
+  ).toContainText("Adam Admin");
 });
 
 test("průvodce: proběhlý let s časy prstem", async ({ page }) => {
@@ -143,16 +177,23 @@ test("průvodce: proběhlý let s časy prstem", async ({ page }) => {
   await page.getByRole("button", { name: "2", exact: true }).click(); // přistání celkem
   await page.getByRole("button", { name: "Uložit proběhlý let" }).click();
 
-  await expect(page.getByRole("status")).toHaveText(/OK-CRA proběhlý let 10:00–10:45 uložen/);
+  await expect(page.getByRole("status")).toHaveText(
+    /OK-CRA proběhlý let 10:00–10:45 uložen/,
+  );
 });
 
-test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page }) => {
+test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({
+  page,
+}) => {
   await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Výcvik", exact: true }).click();
   // Za instruktora se rychle nabízí jen kdo má oprávnění instruktora kluzáků (FI(S)).
   const instruktor = page.locator(".blok", { hasText: "Instruktor (PIC)" });
-  await expect(instruktor.getByRole("button")).toHaveText(["Já (Adam Admin)", "Hledat…"]);
+  await expect(instruktor.getByRole("button")).toHaveText([
+    "Já (Adam Admin)",
+    "Hledat…",
+  ]);
   await instruktor.getByRole("button", { name: "Já (Adam Admin)" }).click();
   const zak = page.locator(".blok", { hasText: "Pilot ve výcviku" });
   await zak.getByRole("button", { name: "Hledat…" }).click();
@@ -170,7 +211,9 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
   const ulohyIU = uloha.locator(".seznam-voleb").getByRole("button");
   await expect(ulohyIU.first()).toHaveText("IU/1 Seznamovací let");
   await expect(ulohyIU.last()).toHaveText("IU/13 Traťový navigační let");
-  await uloha.getByRole("button", { name: "IU/4 Navijákové vzlety, okruh a přistání" }).click();
+  await uloha
+    .getByRole("button", { name: "IU/4 Navijákové vzlety, okruh a přistání" })
+    .click();
   // Vybraná osnova a úloha zůstanou samy, ostatní se skryjí.
   await expect(uloha.getByRole("button")).toHaveText([
     /^IU –/,
@@ -180,7 +223,9 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
   await expect(page.getByRole("status")).toHaveText(/OK-3819 naplánován/);
 });
 
-test("průvodce: přezkoušení s typem a examinátorem podle typu", async ({ page }) => {
+test("průvodce: přezkoušení s typem a examinátorem podle typu", async ({
+  page,
+}) => {
   await page.getByRole("button", { name: "Nový let", exact: true }).click();
   await page.getByRole("button", { name: /^OK-3819/ }).click();
   await page.getByRole("button", { name: "Přezk.", exact: true }).click();
@@ -193,10 +238,15 @@ test("průvodce: přezkoušení s typem a examinátorem podle typu", async ({ pa
     "AOC-FI-S Ověření způsobilosti instruktora FI(S)",
   ]);
   await typ.getByRole("button", { name: /^PC-CLOUD/ }).click();
-  await expect(typ.getByRole("button")).toHaveText(["PC-CLOUD Přezkoušení pro lety v oblacích"]);
+  await expect(typ.getByRole("button")).toHaveText([
+    "PC-CLOUD Přezkoušení pro lety v oblacích",
+  ]);
   // Examinátor: kdo smí PC-CLOUD (FE(S)) – admin.
   const examinator = page.locator(".blok", { hasText: "Examinátor (PIC)" });
-  await expect(examinator.getByRole("button")).toHaveText(["Já (Adam Admin)", "Hledat…"]);
+  await expect(examinator.getByRole("button")).toHaveText([
+    "Já (Adam Admin)",
+    "Hledat…",
+  ]);
   await examinator.getByRole("button", { name: "Já (Adam Admin)" }).click();
   const zkouseny = page.locator(".blok", { hasText: "Přezkoušený" });
   await zkouseny.getByRole("button", { name: "Hledat…" }).click();

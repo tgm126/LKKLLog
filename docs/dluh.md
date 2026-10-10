@@ -18,6 +18,7 @@ nasazeno v2.24.0–v2.24.2); body, které se udělaly, tu nejsou.
 | `frontend/src/{provoz,osoby,sprava,vycvik}/api.ts` | čtyři kopie `useMutation + oznamit` → jedna pomůcka `useMutaceApi` | drobné |
 | `frontend/src/deska/{RadaLetadel,Souhrny,CasovaOsa}.tsx` | vazba lety ↔ letadla přes text `rejstrik` místo `letadlo_id` | funguje (rejstřík je jedinečný); změnit při úpravě desky |
 | `frontend/src/komponenty/Dialog.tsx` | na desce je dialog mobilní „bottom sheet“ 480 px i na 1920 px – desktopová podoba (uprostřed, u kurzoru) | návrh desktopu (docs/modul-desktop.md) zatím dialog neřeší |
+| `frontend/src/deska/{Pasky,PasekDeska}.tsx` | tlačítka akcí (VZLET, PŘISTÁL, T&G) jsou uvnitř klikacího pásku s rolí odkazu – nepovolené vnoření a výjimka `closest("button")`; na mobilu se to 10. 10. 2026 vyřešilo akcemi pod polovinou pásku (`lety/Pasek.tsx`) | na desce se ovládá myší, zvýraznění po ťuknutí tam není; změnit při úpravě pásku desky |
 | `frontend/src/deska/PanelDetailu.tsx` | komentář v hlavičce popisuje starší podobu (křížek vedle pásku) | opravit při příštím zásahu |
 
 ## Vědomě neprovedeno (s důvodem)

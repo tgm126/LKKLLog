@@ -12,8 +12,7 @@
     "hlava cas"
     "posadka cas"
     "stitky stitky"
-    "varovani varovani"
-    "akce akce";
+    "varovani varovani";
 
   /* čas vpravo nejméně --sirka-casu, delší obsah (rejstřík vlečné OK-CUO 78) si místo vezme */
   grid-template-columns: minmax(0, 1fr) minmax(var(--sirka-casu), max-content);
@@ -24,8 +23,9 @@
   cursor: pointer;
 }
 
-/* Vlek: kluzák a vlečná v jednom pásku, mezi nimi silná čára */
-.let-par + .let-par {
+/* Vlek: kluzák a vlečná v jednom pásku, mezi nimi silná čára (ve vzduchu je mezi nimi
+   i řádek akcí kluzáku) */
+.let-par ~ .let-par {
   border-top: var(--okraj-pasku) solid var(--barva-obrys);
 }
 
@@ -127,10 +127,10 @@
   font-weight: var(--tloustka-tucna);
 }
 
-/* Akce pod páskem: T&G a PŘISTÁL v řádku (PŘISTÁL širší), VZLET přes celou šířku */
+/* Akce pod polovinou pásku (mimo klikací plochu): T&G a PŘISTÁL v řádku (PŘISTÁL širší),
+   VZLET přes celou šířku */
 .let-akce {
   display: flex;
-  grid-area: akce;
   gap: var(--mezera-2);
   padding: var(--mezera-2) var(--mezera-3);
   border-top: var(--ramecek-sirka) solid var(--barva-prepazka);
