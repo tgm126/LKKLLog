@@ -25,3 +25,13 @@ export function useTik(): Date {
   useEffect(() => pripojit(() => setCas(ted())), []);
   return cas;
 }
+
+/** Teď zaokrouhlené dolů na minutu; překreslí jen při změně minuty (stejný časovač). Pro
+ *  hranice výběru času („nejde budoucnost“): obrazovka otevřená dlouho nebo probuzená z
+ *  pozadí nesmí nabízet čas z doby, kdy se naposledy překreslila. */
+export function useMinuta(): Date {
+  const minuta = () => Math.floor(ted().getTime() / 60_000);
+  const [m, setM] = useState(minuta);
+  useEffect(() => pripojit(() => setM(minuta())), []);
+  return new Date(m * 60_000);
+}

@@ -9,6 +9,7 @@ import { useOznamit } from "../komponenty/Oznameni";
 import { Tlacitko } from "../komponenty/Tlacitko";
 import { Udaj, Udaje } from "../komponenty/Udaje";
 import { useMujProvoz } from "../provoz/api";
+import { useMinuta } from "../tik";
 import { useJa } from "../uzivatel";
 import { oznamitAkci, type Provedeno } from "./akce";
 import type { LetadloNabidka, Nabidky, Ucel } from "./api";
@@ -653,8 +654,9 @@ export function ProbehlyLet({
   const [pocet, setPocet] = useState(1);
   const [upravuji, setUpravuji] = useState(false);
 
-  // Minuty od půlnoci UTC zvoleného dne. Dnes nejde vybrat budoucnost.
-  const nyni = ted();
+  // Minuty od půlnoci UTC zvoleného dne. Dnes nejde vybrat budoucnost (hranice se posouvá
+  // s každou minutou, i když obrazovka jen leží otevřená).
+  const nyni = useMinuta();
   const zacatekDne =
     Date.UTC(nyni.getUTCFullYear(), nyni.getUTCMonth(), nyni.getUTCDate()) -
     (den === "vcera" ? 86_400_000 : 0);

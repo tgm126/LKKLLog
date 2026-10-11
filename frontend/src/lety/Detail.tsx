@@ -3,12 +3,13 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 import { poslat } from "../api";
-import { doba, hodinyMinuty, ted } from "../cas";
+import { doba, hodinyMinuty } from "../cas";
 import { Hlaska } from "../komponenty/Hlaska";
 import { Blok, Obrazovka, useZpet } from "../komponenty/Obrazovka";
 import { Oznameni, useOznamit } from "../komponenty/Oznameni";
 import { Stitek, type BarvaStitku } from "../komponenty/Stitek";
 import { Tlacitko } from "../komponenty/Tlacitko";
+import { useMinuta } from "../tik";
 import { useJa, useJenCteni } from "../uzivatel";
 import { useAkceLetu, type Provedeno } from "./akce";
 import { useDetail, useNabidky, type DetailLetu, type Nabidky, type Stav } from "./api";
@@ -177,7 +178,7 @@ export function DetailBloky({ let_: l, nabidky }: { let_: DetailLetu; nabidky: N
     zakladDne.getUTCMonth(),
     zakladDne.getUTCDate(),
   );
-  const nyni = ted();
+  const nyni = useMinuta();
   const dnes = zacatekDne === Date.UTC(nyni.getUTCFullYear(), nyni.getUTCMonth(), nyni.getUTCDate());
   const limit = dnes ? minutyUtc(nyni) : 1439;
 
