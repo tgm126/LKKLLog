@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { prihlasit, pripravitData } from "./pomocne";
+import { prihlasit, pripravitData, vybratCas } from "./pomocne";
 
 // Průvodce novým letem – varianty, které nepokrývá akce.spec.ts (aerovlek, místo, plátce).
 
@@ -61,10 +61,7 @@ test("průvodce: proběhlý aerovlek z jiného letiště, platí aeroklub", asyn
   await page.getByRole("button", { name: "Proběhlý let" }).click();
   await page.getByRole("button", { name: "Včera" }).click();
   // Vzlet, přistání kluzáku a přistání vlečné – další pole se po výběru otevře samo.
-  for (const cas of ["10:00", "10:45", "10:10"]) {
-    await page.getByRole("button", { name: "10", exact: true }).click();
-    await page.getByRole("button", { name: cas }).click();
-  }
+  for (const cas of ["10:00", "10:45", "10:10"]) await vybratCas(page, cas);
   await expect(page.getByText('Doba letu 45"')).toBeVisible();
   await page.getByRole("button", { name: "Uložit proběhlý let" }).click();
   await expect(page.getByRole("status")).toHaveText(/OK-3819 proběhlý let 10:00–10:45 uložen/);

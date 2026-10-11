@@ -4,7 +4,10 @@ import { Tlacitko } from "../komponenty/Tlacitko";
 import "./Volby.css";
 
 // Výběr času prstem bez psaní (maketa pruvodce-mobil-v4.html): pole vedle sebe (vzlet,
-// přistání…), ťuknutí na pole → mřížka hodin → mřížka minut po pěti → doladění −1 / +1.
+// přistání…), ťuknutí na pole → mřížka hodin → mřížka minut po pěti → řádek přesných minut
+// (10:40–10:44); teprve přesná minuta pole uzavře (průvodce pak otevře další pole).
+// Pětiminutovka čas jen nastaví – dřív ho rovnou uzavřela a −1 / +1 pak patřilo dalšímu,
+// prázdnému poli, takže 10:42 nešlo zadat (11. 10. 2026). −1 / +1 doladí aktivní pole.
 // Čas v minutách od půlnoci UTC zvoleného dne.
 
 const dve = (n: number) => String(n).padStart(2, "0");
@@ -52,6 +55,12 @@ export function VolbaCasu<K extends string>({
   doplnek?: ReactNode;
 }) {
   const [hodina, setHodina] = useState<number | null>(null);
+  /** Vybraná pětiminutovka (první minuta) – pod mřížkou řádek jejích přesných minut. */
+  const [petice, setPetice] = useState<number | null>(null);
+  const zavrit = () => {
+    setHodina(null);
+    setPetice(null);
+  };
   const min = pole.find((p) => p.klic === aktivni)?.min ?? null;
   return (
     <>
@@ -62,7 +71,7 @@ export function VolbaCasu<K extends string>({
             className="cisla"
             aria-pressed={aktivni === p.klic}
             onClick={() => {
-              setHodina(null);
+              zavrit();
               aktivovat(aktivni === p.klic ? null : p.klic);
             }}
           >
@@ -80,21 +89,40 @@ export function VolbaCasu<K extends string>({
             ))}
           </div>
         ) : (
-          <div className="mrizka-casu cisla">
-            {Array.from({ length: 12 }, (_, k) => hodina * 60 + k * 5).map((m) => (
-              <Tlacitko
-                key={m}
-                aria-pressed={m === min}
-                disabled={m > limit}
-                onClick={() => {
-                  setHodina(null);
-                  nastavit(aktivni, m, true);
-                }}
-              >
-                {hhmm(m)}
-              </Tlacitko>
-            ))}
-          </div>
+          <>
+            <div className="mrizka-casu cisla">
+              {Array.from({ length: 12 }, (_, k) => hodina * 60 + k * 5).map((m) => (
+                <Tlacitko
+                  key={m}
+                  aria-pressed={min !== null && min >= m && min < m + 5}
+                  disabled={m > limit}
+                  onClick={() => {
+                    setPetice(m);
+                    nastavit(aktivni, m, false);
+                  }}
+                >
+                  {hhmm(m)}
+                </Tlacitko>
+              ))}
+            </div>
+            {petice !== null && (
+              <div className="mrizka-casu cisla" role="group" aria-label="Přesná minuta">
+                {Array.from({ length: 5 }, (_, k) => petice + k).map((m) => (
+                  <Tlacitko
+                    key={m}
+                    aria-pressed={m === min}
+                    disabled={m > limit}
+                    onClick={() => {
+                      zavrit();
+                      nastavit(aktivni, m, true);
+                    }}
+                  >
+                    {hhmm(m)}
+                  </Tlacitko>
+                ))}
+              </div>
+            )}
+          </>
         ))}
       {(aktivni !== null || doplnek) && (
         <div className="doladeni">

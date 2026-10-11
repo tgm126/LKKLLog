@@ -35,3 +35,12 @@ export async function prihlasit(page: Page) {
   await page.getByRole("button", { name: "Přihlásit" }).click();
   await expect(page.getByRole("button", { name: /Nový let/ }).first()).toBeVisible();
 }
+
+/** Čas ve výběru prstem jako člověk: hodina → pětiminutovka → přesná minuta („10:42“). */
+export async function vybratCas(page: Page, cas: string) {
+  const [h = 0, m = 0] = cas.split(":").map(Number);
+  const petice = `${String(h).padStart(2, "0")}:${String(m - (m % 5)).padStart(2, "0")}`;
+  await page.getByRole("button", { name: String(h).padStart(2, "0"), exact: true }).click();
+  await page.getByRole("button", { name: petice, exact: true }).first().click();
+  await page.getByRole("group", { name: "Přesná minuta" }).getByRole("button", { name: cas }).click();
+}

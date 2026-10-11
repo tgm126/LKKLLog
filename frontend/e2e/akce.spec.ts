@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { prihlasit, pripravitData } from "./pomocne";
+import { prihlasit, pripravitData, vybratCas } from "./pomocne";
 
 // Akce z pásků a průvodce novým letem (docs/modul-lety.md); lety z e2e_priprava.py.
 
@@ -137,16 +137,15 @@ test("průvodce: proběhlý let s časy prstem", async ({ page }) => {
 
   await expect(page.getByText("Proběhlý let", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Včera" }).click();
-  await page.getByRole("button", { name: "10", exact: true }).click();
-  await page.getByRole("button", { name: "10:00" }).click();
+  // Přesná minuta (10:42 dřív nešlo – po pětiminutovce se otevřelo přistání).
+  await vybratCas(page, "10:02");
   // Po vzletu se samo otevře přistání.
-  await page.getByRole("button", { name: "10", exact: true }).click();
-  await page.getByRole("button", { name: "10:45" }).click();
+  await vybratCas(page, "10:47");
   await expect(page.getByText('Doba letu 45"')).toBeVisible();
   await page.getByRole("button", { name: "2", exact: true }).click(); // přistání celkem
   await page.getByRole("button", { name: "Uložit proběhlý let" }).click();
 
-  await expect(page.getByRole("status")).toHaveText(/OK-CRA proběhlý let 10:00–10:45 uložen/);
+  await expect(page.getByRole("status")).toHaveText(/OK-CRA proběhlý let 10:02–10:47 uložen/);
 });
 
 test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page }) => {

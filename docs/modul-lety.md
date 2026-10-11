@@ -114,8 +114,10 @@ pod účelem). **Místo vzletu**,
 = poslední evidované přistání letadla** (`v_lov_letadlo.poloha`, db/037; bez přistání moje
 letiště), místo přistání = moje letiště (rozhodnuto 8. 10. 2026) – ťuknutím se změní (místo: hledání letiště nebo popis místa); u aerovleku platí
 místo přistání pro kluzák i vlečnou. Proběhlý let: časy vzletu,
-přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin a minut,
-−1 / +1 a doba letu.
+přistání (a přistání vlečné) vedle sebe, aktivní zvýrazněný, pod ním mřížka hodin, pak
+pětiminutovek a pod nimi řádek přesných minut (10:40–10:44); přesná minuta pole uzavře
+a otevře další, −1 / +1 doladí aktivní pole, doba letu. (Dřív pětiminutovka pole rovnou
+uzavřela a −1 / +1 pak patřilo dalšímu, prázdnému poli – 10:42 nešlo zadat; 11. 10. 2026.)
 **Nabídka osob podle oprávnění** (db/021, 022, 024; model `docs/navrh-opravneni.md`):
 oprávnění osoby (FI(S), FE(S), vlekař…) opravňuje k **rolím v letu** (`lov_role`: instruktor =
 výcvik · PIC, dozor = sólo · dozor, vlekař = vlečný let · PIC)

@@ -137,6 +137,8 @@ nejde změnit. Pro zápis se odhlásím a přihlásím normálně.
 - Chybějící údaj ukáže „vyberte“ / „Chybí: …“.
 - Zakončení: **VZLET TEĎ** · **Naplánovat** · **Proběhlý let** (výběr času vzletu
   a přistání; nesmí být v budoucnosti; let se označí „dodatečně“).
+- **Čas prstem:** hodina → pětiminutovka (10:40) → přesná minuta (10:42); po přesné minutě
+  se otevře další pole. Tlačítka −1 / +1 doladí právě vybrané pole.
 
 ## B5. Detail letu
 - Údaje se opravují **na místě** (klik na pole): posádka, POB, úloha (u přezkoušení typ
