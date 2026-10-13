@@ -160,6 +160,9 @@ test("průvodce: úloha ve dvou krocích – osnova, pak úloha", async ({ page 
   await zak.getByRole("button", { name: "Hledat…" }).click();
   await zak.getByRole("button", { name: "Nela Nová" }).click();
   await page.getByRole("button", { name: "Dál" }).click();
+  // Způsob vzletu kluzáku v pořadí číselníku: aerovlek, naviják (db/049).
+  const zpusob = page.locator(".blok", { hasText: "Způsob vzletu" });
+  await expect(zpusob.getByRole("button")).toHaveText(["Aerovlek", "Naviják"]);
 
   const uloha = page.locator(".blok", { hasText: "Úloha" });
   await expect(uloha.locator(".cipy").getByRole("button")).toHaveText([

@@ -595,7 +595,9 @@ def nabidky(_: Prihlaseny = Depends(prihlaseny), conn: Connection = Depends(spoj
         "letadla": letadla,
         "ucely": ucely,
         "pic_id": conn.execute("SELECT id FROM lkkl.lov_funkce WHERE kod = 'PIC'").fetchone()["id"],
-        "zpusoby": conn.execute("SELECT id, kod, nazev FROM lkkl.v_lov_zpusob_vzletu").fetchall(),
+        "zpusoby": conn.execute(
+            "SELECT id, kod, nazev FROM lkkl.v_lov_zpusob_vzletu ORDER BY poradi"
+        ).fetchall(),
         "duvody_zruseni": conn.execute(
             "SELECT id, kod, nazev FROM lkkl.v_lov_duvod_zruseni"
         ).fetchall(),

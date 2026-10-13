@@ -32,7 +32,7 @@ Průběžný seznam. Definice jsou v SQL skriptech `db/`; tabulky první verze v
 | `v_lov_letadlo` | pohled | platná letadla s typem, kategorií, počtem míst a **polohou** (poslední evidované přistání – `poloha` kód letiště nebo popis, zvlášť `poloha_letiste_id` / `poloha_popis`: výchozí místo vzletu nového letu); pořadí kategorie → typ → rejstřík; mimo provoz jsou vidět, ale nejdou vybrat | 017, 031, 035, 037 |
 | `lov_letiste` | číselník | česká letiště; kódem je ICAO; domovské (nejvýš jedno), souřadnice, nadmořská výška [ft], rychlá volba (nabízí se hned, ostatní přes Hledat…) | 003, 008, 028 |
 | `lov_ucel` | číselník | účel letu: NORMALNI, VYCVIK, VYCVIK_SOLO (název „Sólo pod dozorem“), PREZKOUSENI (vlek se odvodí z vazby); `uloha_povinna` (u přezkoušení ne – místo úlohy typ přezkoušení) | 008, 016, 041 |
-| `lov_zpusob_vzletu` | číselník | VLASTNI, NAVIJAK, VLEK | 008 |
+| `lov_zpusob_vzletu` | číselník | VLASTNI, VLEK (aerovlek), NAVIJAK – v tomto pořadí | 008, 049 |
 | `lov_funkce` | číselník | funkce jmenovitě uvedené osoby: PIC, ZAK (název „Pilot ve výcviku“), PREZKOUSENY, DOZOR; `na_palube` (počítá se do POB) | 008, 041 |
 | `lov_duvod_zruseni` | číselník | důvod zrušení letu | 008 |
 | `lov_osnova` | číselník (evidenční) | osnova (skupina úloh) → kategorie letadla (povinná od 042); **`kod` = oficiální označení** (IU, IA, II), `nazev` bez něj („Výcvik SPL…“); `v_lov_osnova.popis` = „IU – Výcvik SPL…“; kluzáky podle Programu výcviku AeČR v.6 (úprava AK Kladno); spravuje se v editoru výcviku (desktop) | 016, 019, 040, 042 |

@@ -158,7 +158,7 @@ export function useNovyLet(nabidky: Nabidky, zavrit: () => void, letadloId?: num
     });
 
   // Rozpracovaný let do pásku nahoře: co je zatím vybrané.
-  const zpusobKod = kluzak ? (novy.zpusob ?? "NAVIJAK") : "VLASTNI";
+  const zpusobKod = kluzak ? (novy.zpusob ?? "VLEK") : "VLASTNI";
   const rozpracovany: LetPasku | null = letadlo
     ? {
         stav: "ROZPRACOVANY",
@@ -257,9 +257,13 @@ const vychoziMistoVzletu = (a: LetadloNabidka): Misto | undefined =>
     ? { id: a.poloha_letiste_id, popis: a.poloha_popis }
     : undefined;
 
-/** Výchozí způsob vzletu kluzáku podle posledního (db: zpusob_kluzaku), jinak naviják. */
+/** Výchozí způsob vzletu kluzáku podle posledního dnešního (db: zpusob_kluzaku), jinak aerovlek
+ *  (rozhodnuto 13. 10. 2026). */
 const vychoziZpusob = (nabidky: Nabidky) =>
-  nabidky.zpusob_kluzaku === "VLEK" ? ("VLEK" as const) : ("NAVIJAK" as const);
+  nabidky.zpusob_kluzaku === "NAVIJAK" ? ("NAVIJAK" as const) : ("VLEK" as const);
+
+/** Způsoby vzletu kluzáku v pořadí číselníku (v_lov_zpusob_vzletu). */
+const jeZpusobKluzaku = (kod: string): kod is "NAVIJAK" | "VLEK" => kod === "NAVIJAK" || kod === "VLEK";
 
 // --- bloky -----------------------------------------------------------------------------------
 
@@ -393,18 +397,21 @@ export function BlokPob({ n }: { n: NovyLet }) {
   );
 }
 
-/** Způsob vzletu kluzáku (naviják, aerovlek). */
+/** Způsob vzletu kluzáku (aerovlek, naviják – pořadí z číselníku). */
 export function BlokZpusobu({ n }: { n: NovyLet }) {
   if (!n.kluzak) return null;
   return (
     <Blok nadpis="Způsob vzletu">
       <BlokTelo>
         <div className="segmenty">
-          {(["NAVIJAK", "VLEK"] as const).map((z) => (
-            <Tlacitko key={z} aria-pressed={n.novy.zpusob === z} onClick={() => n.zmenit({ zpusob: z })}>
-              {n.nabidky.zpusoby.find((zp) => zp.kod === z)?.nazev}
-            </Tlacitko>
-          ))}
+          {n.nabidky.zpusoby.map(
+            ({ kod, nazev }) =>
+              jeZpusobKluzaku(kod) && (
+                <Tlacitko key={kod} aria-pressed={n.novy.zpusob === kod} onClick={() => n.zmenit({ zpusob: kod })}>
+                  {nazev}
+                </Tlacitko>
+              ),
+          )}
         </div>
       </BlokTelo>
     </Blok>

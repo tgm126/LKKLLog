@@ -25,7 +25,7 @@ Zapomněl jsem zapsat? Večer doma nový let → **Proběhlý let** s časy (→
 ## A2. Plachtařský provoz (jsem na startu, případně u stolu)
 1. **Ráno:** v Můj provoz vyberu **osoby v provozu** (→ B6) – nabídky posádky pak ukazují
    jen je.
-2. **Startovní pořadí:** lety předem **naplánuji** (kluzák, posádka, naviják / aerovlek;
+2. **Startovní pořadí:** lety předem **naplánuji** (kluzák, posádka, aerovlek / naviják;
    u aerovleku vlečná a vlekař) (→ B4). V přehledu čekají modře v pořadí založení.
 3. **Při provozu:** **VZLET** u naplánovaného letu – u aerovleku jedním stiskem kluzák
    i vlečná; **PŘISTÁL** u každého zvlášť (vlečná obvykle dřív).

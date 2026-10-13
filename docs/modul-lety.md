@@ -104,7 +104,9 @@ ve skupinách podle kategorie (barva podle stavu jako v přehledu), všechny ste
 řádky: rejstřík · typ · stav (mimo provoz, letí, naplánován; jinak prázdný); „vlečná“ se
 neuvádí, soukromé letadlo má bílou dlaždici a **světle šedý** rejstřík (8. 10. 2026; tlumená
 šedá `--barva-seda-svetla`, běžná šedá se od černé málo lišila). Volby v blocích (karta
-s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku, osoby jako **čipy**
+s hlavičkou): účel, způsob vzletu a den jako **segmenty** v jednom řádku (pořadí z číselníku;
+způsob vzletu kluzáku **aerovlek, naviják** – výchozí podle posledního dnešního vzletu kluzáku,
+jinak aerovlek; db/049, 13. 10. 2026), osoby jako **čipy**
 („Hledat…“ otevře hledání podle jména; po výběru zůstane jen vybraná osoba plně modře
 a „Hledat…“, ťuknutím na ni se nabídka znovu otevře – stejně u vlekaře), chybějící povinná volba má
 v hlavičce bloku „vyberte“. Úloha: osnova, pak seznam úloh „kód · název“. U přezkoušení je
